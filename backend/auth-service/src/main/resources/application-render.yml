@@ -1,12 +1,11 @@
 # Render.com profile for auth-service
-# Spring Boot will use JDBC_DATABASE_URL (which has jdbc: prefix)
-# over DATABASE_URL when available
+# start.sh converts DATABASE_URL to SPRING_DATASOURCE_URL/USERNAME/PASSWORD
 
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=auth
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
@@ -19,9 +18,9 @@ spring:
         default_schema: auth
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   flyway:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    user: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
@@ -30,7 +29,7 @@ spring:
     create-schemas: true
 
 server:
-  port: ${PORT:8081}
+  port: ${PORT:10000}
 
 # Actuator endpoints
 management:
