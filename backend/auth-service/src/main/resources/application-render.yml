@@ -1,10 +1,9 @@
 # Render.com profile for auth-service
-# Render provides DATABASE_URL in format postgresql://user:pass@host:port/db
-# Spring needs jdbc:postgresql://host:port/db with separate user/pass
+# Render auto-injects DATABASE_URL but Spring needs jdbc: prefix
+# We explicitly configure both datasource and flyway
 
 spring:
   datasource:
-    # Render provides connection string, we extract components
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
@@ -15,6 +14,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  # Explicitly configure Flyway to use same connection
+  flyway:
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    enabled: true
+    baseline-on-migrate: true
 
 server:
   port: ${PORT:8081}
