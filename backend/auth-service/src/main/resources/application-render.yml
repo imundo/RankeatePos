@@ -1,0 +1,26 @@
+# Render.com profile for auth-service
+# Uses Render PostgreSQL connection
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: ${PORT:8081}
+
+jwt:
+  secret: ${JWT_SECRET:render-super-secret-key-2024-min-32-chars}
+  expiration: 86400000
+
+logging:
+  level:
+    com.poscl: INFO

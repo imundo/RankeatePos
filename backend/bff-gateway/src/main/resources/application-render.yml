@@ -1,0 +1,23 @@
+# Render.com profile for bff-gateway
+# Uses environment variables from Render service connections
+
+spring:
+  application:
+    name: bff-gateway
+
+# Service URLs from Render environment variables
+services:
+  auth:
+    url: ${AUTH_SERVICE_URL:http://pos-auth-service}
+  catalog:
+    url: ${CATALOG_SERVICE_URL:http://pos-catalog-service}
+  sales:
+    url: ${SALES_SERVICE_URL:http://pos-sales-service}
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    com.poscl: INFO
+    org.springframework.web: INFO

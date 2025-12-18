@@ -1,0 +1,148 @@
+# Render.com Blueprint - POS Chile
+# Deploy: https://render.com/deploy?repo=https://github.com/imundo/RankeatePos
+
+# ==================================================
+# DATABASES
+# ==================================================
+databases:
+  - name: pos-auth-db
+    databaseName: auth_db
+    user: postgres
+    plan: free
+    region: oregon
+
+  - name: pos-catalog-db
+    databaseName: catalog_db
+    user: postgres
+    plan: free
+    region: oregon
+
+  - name: pos-sales-db
+    databaseName: sales_db
+    user: postgres
+    plan: free
+    region: oregon
+
+# ==================================================
+# BACKEND SERVICES
+# ==================================================
+services:
+  # Auth Service
+  - type: web
+    name: pos-auth-service
+    runtime: docker
+    dockerfilePath: ./backend/auth-service/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pos-auth-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pos-auth-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pos-auth-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Catalog Service
+  - type: web
+    name: pos-catalog-service
+    runtime: docker
+    dockerfilePath: ./backend/catalog-service/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pos-catalog-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pos-catalog-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pos-catalog-db
+          property: password
+
+  # Sales Service
+  - type: web
+    name: pos-sales-service
+    runtime: docker
+    dockerfilePath: ./backend/sales-service/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pos-sales-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pos-sales-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pos-sales-db
+          property: password
+
+  # BFF Gateway
+  - type: web
+    name: pos-bff-gateway
+    runtime: docker
+    dockerfilePath: ./backend/bff-gateway/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: pos-auth-service
+          type: web
+          property: hostport
+      - key: CATALOG_SERVICE_URL
+        fromService:
+          name: pos-catalog-service
+          type: web
+          property: hostport
+      - key: SALES_SERVICE_URL
+        fromService:
+          name: pos-sales-service
+          type: web
+          property: hostport
+
+  # Frontend
+  - type: web
+    name: pos-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/pos-app/Dockerfile
+    dockerContext: ./frontend/pos-app
+    plan: free
+    region: oregon
+    envVars:
+      - key: API_URL
+        fromService:
+          name: pos-bff-gateway
+          type: web
+          property: hostport

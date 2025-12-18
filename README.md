@@ -1,117 +1,68 @@
-# 🏪 SaaS POS + Inventario + Finanzas (Chile-Ready)
+# 🛒 POS Chile - Sistema de Punto de Venta
 
-Sistema SaaS orientado a microempresas chilenas (panaderías, charcuterías, minimarkets) para controlar ventas (POS), stock, finanzas básica y promociones.
+Sistema completo de punto de venta para panaderías, minimarkets y cafeterías en Chile.
 
-## 🚀 Características
+## 🚀 Demo Rápida
 
-- **POS Mobile-First**: Venta rápida con soporte offline
-- **Inventario**: Control de stock, movimientos, mermas, alertas
-- **Multi-tenant**: Empresas aisladas con branding propio
-- **Chile-Ready**: CLP, IVA 19%, boleta simple, RUT
-- **Plantillas por Rubro**: Panadería, Charcutería, Minimarket
+### Credenciales de prueba
+| Empresa | Email | Password |
+|---------|-------|----------|
+| Panadería El Trigal | `admin@eltrigal.cl` | `demo1234` |
+| Minimarket Don Pedro | `admin@donpedro.cl` | `demo1234` |
+
+## 🐳 Ejecución Local (Docker)
+
+```bash
+cd docker
+docker-compose up -d
+```
+
+**URL Local:** http://localhost:4200
+
+## ☁️ Despliegue en Render.com
+
+### Opción 1: Deploy automático con Blueprint
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/imundo/RankeatePos)
+
+### Opción 2: Manual
+
+1. Ve a [Render Dashboard](https://dashboard.render.com/)
+2. Click "New" → "Blueprint"
+3. Conecta tu repositorio GitHub
+4. Render detectará `render.yaml` y creará todos los servicios
+
+### Servicios creados automáticamente:
+- 3 bases de datos PostgreSQL (auth, catalog, sales)
+- 5 web services (auth, catalog, sales, bff-gateway, frontend)
 
 ## 📁 Estructura del Proyecto
 
 ```
-inventario/
 ├── backend/
-│   ├── api-gateway/          # Spring Cloud Gateway
-│   ├── auth-service/         # Autenticación, usuarios, tenants
-│   ├── catalog-service/      # Productos, categorías, precios
-│   ├── inventory-service/    # Stock, movimientos, alertas
-│   ├── sales-service/        # POS, ventas, caja
-│   ├── partners-service/     # Clientes, proveedores
-│   ├── reporting-service/    # Reportes y dashboards
-│   └── shared-lib/           # Librería común
+│   ├── auth-service/       # Autenticación y usuarios
+│   ├── catalog-service/    # Productos y categorías
+│   ├── sales-service/      # Ventas y caja
+│   └── bff-gateway/        # API Gateway para frontend
 ├── frontend/
-│   └── pos-app/              # Angular 18 PWA
+│   └── pos-app/           # Angular 18 + PrimeNG
 ├── docker/
-│   ├── docker-compose.yml
-│   └── .env.example
-├── docs/
-│   └── api/                  # OpenAPI specs
-└── scripts/
-    └── seed-data/            # Datos semilla por rubro
+│   └── docker-compose.yml  # Orquestación local
+└── render.yaml             # Configuración Render.com
 ```
 
-## 🛠️ Tecnologías
+## 🔧 Tecnologías
 
-### Backend
-- Java 21 + Spring Boot 3.2
-- PostgreSQL 16
-- Flyway (migraciones)
-- JWT + Spring Security
-- OpenAPI/Swagger
+- **Backend:** Java 21 + Spring Boot 3.2
+- **Frontend:** Angular 18 + PrimeNG
+- **Base de Datos:** PostgreSQL 16
+- **Containerización:** Docker + Docker Compose
 
-### Frontend
-- Angular 18 (Standalone Components)
-- PrimeNG (UI Components)
-- Signals (State Management)
-- IndexedDB + Dexie.js (Offline)
-- PWA + Workbox
+## 📋 Características
 
-### DevOps
-- Docker + Docker Compose
-- GitHub Actions (CI/CD)
-
-## 🏃 Quick Start
-
-### Requisitos
-- Java 21+
-- Node.js 20+
-- Docker & Docker Compose
-- PostgreSQL 16 (o usar Docker)
-
-### Desarrollo Local
-
-```bash
-# 1. Clonar repositorio
-git clone <repo-url>
-cd inventario
-
-# 2. Iniciar servicios con Docker
-cd docker
-cp .env.example .env
-docker-compose up -d postgres
-
-# 3. Backend (cada servicio en terminal separada)
-cd backend/auth-service
-./mvnw spring-boot:run
-
-# 4. Frontend
-cd frontend/pos-app
-npm install
-npm start
-```
-
-### Docker Compose (todo junto)
-
-```bash
-cd docker
-docker-compose up --build
-```
-
-Acceder a:
-- **Frontend**: http://localhost:4200
-- **API Gateway**: http://localhost:8080
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-
-## 📋 Roles del Sistema
-
-| Rol | Permisos |
-|-----|----------|
-| **OWNER_ADMIN** | Todo + configuración + auditoría |
-| **MANAGER** | Supervisa POS/caja, aprueba descuentos, anula ventas |
-| **CASHIER** | Vender, gestionar su caja |
-| **STOCKKEEPER** | Movimientos de inventario, recepción |
-
-## 🇨🇱 Configuración Chile
-
-- **Moneda**: CLP (sin decimales)
-- **Impuesto**: IVA 19%
-- **Zona horaria**: America/Santiago
-- **Documentos**: Boleta simple interna (MVP), DTE en v2
-
-## 📄 Licencia
-
-MIT License
+- ✅ Punto de venta responsive
+- ✅ Multi-tenant (múltiples empresas)
+- ✅ Dashboard con métricas
+- ✅ Gestión de inventario
+- ✅ Control de caja
+- ✅ Demo data incluido
