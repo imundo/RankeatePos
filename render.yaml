@@ -20,7 +20,6 @@ databases:
     plan: free
     region: oregon
 
-
 # ==================================================
 # BACKEND SERVICES
 # ==================================================
@@ -29,14 +28,14 @@ services:
   - type: web
     name: pos-auth-service
     runtime: docker
-    dockerfilePath: ./backend/auth-service/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
+    dockerfilePath: ./auth-service/Dockerfile
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: docker
+        value: render
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: pos-auth-db
@@ -56,14 +55,14 @@ services:
   - type: web
     name: pos-catalog-service
     runtime: docker
-    dockerfilePath: ./backend/catalog-service/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
+    dockerfilePath: ./catalog-service/Dockerfile
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: docker
+        value: render
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: pos-catalog-db
@@ -81,14 +80,14 @@ services:
   - type: web
     name: pos-sales-service
     runtime: docker
-    dockerfilePath: ./backend/sales-service/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
+    dockerfilePath: ./sales-service/Dockerfile
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: docker
+        value: render
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: pos-sales-db
@@ -106,8 +105,8 @@ services:
   - type: web
     name: pos-bff-gateway
     runtime: docker
-    dockerfilePath: ./backend/bff-gateway/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
+    dockerfilePath: ./bff-gateway/Dockerfile
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
@@ -118,24 +117,24 @@ services:
         fromService:
           name: pos-auth-service
           type: web
-          property: hostport
+          property: host
       - key: CATALOG_SERVICE_URL
         fromService:
           name: pos-catalog-service
           type: web
-          property: hostport
+          property: host
       - key: SALES_SERVICE_URL
         fromService:
           name: pos-sales-service
           type: web
-          property: hostport
+          property: host
 
   # Frontend
   - type: web
     name: pos-frontend
     runtime: docker
-    dockerfilePath: ./frontend/pos-app/Dockerfile
-    dockerContext: ./frontend/pos-app
+    rootDir: frontend/pos-app
+    dockerfilePath: ./Dockerfile
     plan: free
     region: oregon
     envVars:
@@ -143,4 +142,4 @@ services:
         fromService:
           name: pos-bff-gateway
           type: web
-          property: hostport
+          property: host
