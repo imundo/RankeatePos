@@ -134,7 +134,7 @@ services:
     name: pos-frontend
     runtime: docker
     rootDir: frontend/pos-app
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.render
     plan: free
     region: oregon
     envVars:
