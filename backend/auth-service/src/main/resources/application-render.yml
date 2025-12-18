@@ -32,6 +32,16 @@ spring:
 server:
   port: ${PORT:8081}
 
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
 jwt:
   secret: ${JWT_SECRET:render-super-secret-key-2024-min-32-chars}
   expiration: 86400000
@@ -39,5 +49,5 @@ jwt:
 logging:
   level:
     com.poscl: INFO
-    org.flywaydb: DEBUG
+    org.flywaydb: INFO
     org.hibernate: INFO

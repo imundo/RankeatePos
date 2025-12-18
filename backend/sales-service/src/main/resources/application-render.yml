@@ -30,7 +30,17 @@ spring:
 server:
   port: ${PORT:8083}
 
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
 logging:
   level:
     com.poscl: INFO
-    org.flywaydb: DEBUG
+    org.flywaydb: INFO
