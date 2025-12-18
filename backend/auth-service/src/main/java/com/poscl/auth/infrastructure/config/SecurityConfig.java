@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/health").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated());

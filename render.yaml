@@ -25,7 +25,7 @@ services:
     dockerfilePath: ./auth-service/Dockerfile.render
     plan: free
     region: oregon
-    healthCheckPath: /actuator/health
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -42,7 +42,7 @@ services:
     dockerfilePath: ./catalog-service/Dockerfile.render
     plan: free
     region: oregon
-    healthCheckPath: /actuator/health
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -57,7 +57,7 @@ services:
     dockerfilePath: ./sales-service/Dockerfile.render
     plan: free
     region: oregon
-    healthCheckPath: /actuator/health
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -72,7 +72,7 @@ services:
     dockerfilePath: ./bff-gateway/Dockerfile
     plan: free
     region: oregon
-    healthCheckPath: /actuator/health
+    healthCheckPath: /health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
