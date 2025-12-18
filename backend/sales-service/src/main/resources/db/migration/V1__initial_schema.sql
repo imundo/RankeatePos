@@ -2,13 +2,13 @@
 -- Sales Service - Initial Schema
 -- =====================================================
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Using gen_random_uuid() - native in PostgreSQL 13+
 
 -- =====================================================
 -- CASH_REGISTER (Caja registradora)
 -- =====================================================
 CREATE TABLE cash_registers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     branch_id UUID NOT NULL,
     
@@ -29,7 +29,7 @@ CREATE INDEX idx_cash_registers_branch ON cash_registers(branch_id);
 -- CASH_SESSION (Sesión de caja / turno)
 -- =====================================================
 CREATE TABLE cash_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     register_id UUID NOT NULL REFERENCES cash_registers(id),
     user_id UUID NOT NULL,
@@ -57,7 +57,7 @@ CREATE INDEX idx_cash_sessions_estado ON cash_sessions(tenant_id, estado);
 -- SALE (Venta)
 -- =====================================================
 CREATE TABLE sales (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     session_id UUID NOT NULL REFERENCES cash_sessions(id),
     
@@ -104,7 +104,7 @@ CREATE INDEX idx_sales_estado ON sales(tenant_id, estado);
 -- SALE_ITEM (Línea de venta)
 -- =====================================================
 CREATE TABLE sale_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     
     variant_id UUID NOT NULL,
@@ -127,7 +127,7 @@ CREATE INDEX idx_sale_items_variant ON sale_items(variant_id);
 -- SALE_PAYMENT (Pago de venta)
 -- =====================================================
 CREATE TABLE sale_payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     
     medio VARCHAR(30) NOT NULL, -- EFECTIVO, DEBITO, CREDITO, TRANSFERENCIA
@@ -143,7 +143,7 @@ CREATE INDEX idx_sale_payments_sale ON sale_payments(sale_id);
 -- OUTBOX (Eventos para integración)
 -- =====================================================
 CREATE TABLE outbox_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     aggregate_type VARCHAR(50) NOT NULL, -- Sale, CashSession
     aggregate_id UUID NOT NULL,

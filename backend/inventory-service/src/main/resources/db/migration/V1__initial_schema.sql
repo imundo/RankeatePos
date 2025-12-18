@@ -2,13 +2,13 @@
 -- Inventory Service - Initial Schema
 -- =====================================================
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Using gen_random_uuid() - native in PostgreSQL 13+
 
 -- =====================================================
 -- STOCK (Stock actual por variante y sucursal)
 -- =====================================================
 CREATE TABLE stock (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     branch_id UUID NOT NULL,
     variant_id UUID NOT NULL,
@@ -29,7 +29,7 @@ CREATE INDEX idx_stock_variant ON stock(variant_id);
 -- STOCK_MOVEMENT (Movimiento de inventario)
 -- =====================================================
 CREATE TABLE stock_movements (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     branch_id UUID NOT NULL,
     variant_id UUID NOT NULL,
@@ -59,7 +59,7 @@ CREATE INDEX idx_movements_reference ON stock_movements(reference_type, referenc
 -- STOCK_ADJUSTMENT (Ajuste de inventario)
 -- =====================================================
 CREATE TABLE stock_adjustments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     branch_id UUID NOT NULL,
     
@@ -83,7 +83,7 @@ CREATE INDEX idx_adjustments_tenant ON stock_adjustments(tenant_id);
 -- STOCK_ADJUSTMENT_ITEM (Línea de ajuste)
 -- =====================================================
 CREATE TABLE stock_adjustment_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     adjustment_id UUID NOT NULL REFERENCES stock_adjustments(id) ON DELETE CASCADE,
     variant_id UUID NOT NULL,
     
@@ -100,7 +100,7 @@ CREATE INDEX idx_adjustment_items_adjustment ON stock_adjustment_items(adjustmen
 -- STOCK_ALERT (Alertas de stock bajo)
 -- =====================================================
 CREATE TABLE stock_alerts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     branch_id UUID NOT NULL,
     variant_id UUID NOT NULL,

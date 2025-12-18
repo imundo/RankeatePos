@@ -2,13 +2,13 @@
 -- Catalog Service - Initial Schema
 -- =====================================================
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Using gen_random_uuid() - native in PostgreSQL 13+
 
 -- =====================================================
 -- CATEGORY (Categoría de productos)
 -- =====================================================
 CREATE TABLE categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     
     nombre VARCHAR(100) NOT NULL,
@@ -34,7 +34,7 @@ CREATE INDEX idx_categories_parent ON categories(parent_id);
 -- TAX (Impuesto)
 -- =====================================================
 CREATE TABLE taxes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     
     nombre VARCHAR(50) NOT NULL,
@@ -54,7 +54,7 @@ CREATE INDEX idx_taxes_tenant ON taxes(tenant_id);
 -- UNIT (Unidad de medida)
 -- =====================================================
 CREATE TABLE units (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID,  -- NULL = unidad global del sistema
     
     codigo VARCHAR(10) NOT NULL,
@@ -81,7 +81,7 @@ INSERT INTO units (id, tenant_id, codigo, nombre, permite_decimales) VALUES
 -- PRODUCT (Producto base)
 -- =====================================================
 CREATE TABLE products (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     
     sku VARCHAR(50) NOT NULL,
@@ -118,7 +118,7 @@ CREATE INDEX idx_products_activo ON products(tenant_id, activo) WHERE activo = t
 -- PRODUCT_VARIANT (Variante de producto)
 -- =====================================================
 CREATE TABLE product_variants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL,
     
@@ -159,7 +159,7 @@ CREATE INDEX idx_variants_activo ON product_variants(tenant_id, activo) WHERE ac
 -- PRICE_HISTORY (Historial de precios)
 -- =====================================================
 CREATE TABLE price_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     variant_id UUID NOT NULL REFERENCES product_variants(id),
     
     costo_anterior INT,

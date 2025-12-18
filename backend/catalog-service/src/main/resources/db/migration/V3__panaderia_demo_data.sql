@@ -93,7 +93,7 @@ VALUES
 
 INSERT INTO stock (id, tenant_id, variant_id, branch_id, cantidad_actual, cantidad_reservada, created_at)
 SELECT 
-    uuid_generate_v4(),
+    gen_random_uuid(),
     'a1000000-0000-0000-0000-000000000001',
     pv.id,
     'a2000000-0000-0000-0000-000000000001',

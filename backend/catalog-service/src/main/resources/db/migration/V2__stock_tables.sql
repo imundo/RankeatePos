@@ -6,7 +6,7 @@
 -- STOCK (Stock actual por variante/sucursal)
 -- =====================================================
 CREATE TABLE stock (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     variant_id UUID NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
     branch_id UUID NOT NULL,
@@ -28,7 +28,7 @@ CREATE INDEX idx_stock_variant ON stock(variant_id);
 -- STOCK_MOVEMENTS (Historial de movimientos)
 -- =====================================================
 CREATE TABLE stock_movements (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     variant_id UUID NOT NULL REFERENCES product_variants(id),
     branch_id UUID NOT NULL,

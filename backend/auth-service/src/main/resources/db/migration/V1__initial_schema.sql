@@ -3,14 +3,13 @@
 -- POS Chile - Sistema de Punto de Venta
 -- =====================================================
 
--- Extensión para UUIDs
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Using gen_random_uuid() - native in PostgreSQL 13+ (no extension needed)
 
 -- =====================================================
 -- TENANT (Empresa)
 -- =====================================================
 CREATE TABLE tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Datos empresa Chile
     rut VARCHAR(12) NOT NULL UNIQUE,
@@ -46,7 +45,7 @@ CREATE INDEX idx_tenants_activo ON tenants(activo) WHERE activo = true;
 -- BRANCH (Sucursal)
 -- =====================================================
 CREATE TABLE branches (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id),
     
     nombre VARCHAR(100) NOT NULL,
@@ -73,7 +72,7 @@ CREATE INDEX idx_branches_activa ON branches(tenant_id, activa) WHERE activa = t
 -- ROLE (Rol del sistema)
 -- =====================================================
 CREATE TABLE roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id), -- NULL = rol global del sistema
     
     nombre VARCHAR(50) NOT NULL,
@@ -96,7 +95,7 @@ CREATE INDEX idx_roles_tenant ON roles(tenant_id);
 -- USER (Usuario)
 -- =====================================================
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id),
     
     email VARCHAR(255) NOT NULL,
@@ -154,7 +153,7 @@ CREATE INDEX idx_user_branches_branch ON user_branches(branch_id);
 -- REFRESH_TOKEN
 -- =====================================================
 CREATE TABLE refresh_tokens (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
     token VARCHAR(500) NOT NULL UNIQUE,
@@ -167,3 +166,4 @@ CREATE TABLE refresh_tokens (
 
 CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+
