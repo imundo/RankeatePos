@@ -7,21 +7,19 @@
 databases:
   - name: pos-auth-db
     databaseName: auth_db
-    user: postgres
     plan: free
     region: oregon
 
   - name: pos-catalog-db
     databaseName: catalog_db
-    user: postgres
     plan: free
     region: oregon
 
   - name: pos-sales-db
     databaseName: sales_db
-    user: postgres
     plan: free
     region: oregon
+
 
 # ==================================================
 # BACKEND SERVICES
