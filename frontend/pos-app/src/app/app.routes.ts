@@ -1,0 +1,58 @@
+import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
+
+export const routes: Routes = [
+    {
+        path: '',
+        redirectTo: 'pos',
+        pathMatch: 'full'
+    },
+    {
+        path: 'auth',
+        loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+    },
+    {
+        path: 'pos',
+        loadComponent: () => import('./features/pos/pos.component').then(m => m.PosComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'catalog',
+        loadChildren: () => import('./features/catalog/catalog.routes').then(m => m.CATALOG_ROUTES),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'inventory',
+        loadComponent: () => import('./features/inventory/inventory.component').then(m => m.InventoryComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'reports',
+        loadComponent: () => import('./features/reports/sales-report.component').then(m => m.SalesReportComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'company',
+        loadComponent: () => import('./features/settings/company-management/company-management.component').then(m => m.CompanyManagementComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'earnings',
+        loadComponent: () => import('./features/earnings/daily-earnings.component').then(m => m.DailyEarningsComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: '**',
+        redirectTo: 'pos'
+    }
+];

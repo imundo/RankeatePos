@@ -1,0 +1,27 @@
+# Docker Compose para desarrollo local
+# Usar: docker-compose -f docker-compose-local.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pos-postgres-local
+    command:
+      - "postgres"
+      - "-c"
+      - "password_encryption=md5"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_local_data:

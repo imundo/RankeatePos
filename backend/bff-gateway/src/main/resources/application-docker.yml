@@ -1,0 +1,24 @@
+# Docker profile for bff-gateway
+# Uses environment variables from docker-compose.yml
+
+spring:
+  application:
+    name: bff-gateway
+
+# Service URLs for Docker environment
+services:
+  auth:
+    url: http://auth-service:8081
+  catalog:
+    url: http://catalog-service:8082
+  sales:
+    url: http://sales-service:8083
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.poscl: INFO
+    org.springframework.web: INFO
+

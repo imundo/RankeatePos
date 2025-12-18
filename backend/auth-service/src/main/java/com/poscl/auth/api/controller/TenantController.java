@@ -1,0 +1,162 @@
+package com.poscl.auth.api.controller;
+
+import com.poscl.auth.domain.entity.Tenant;
+import com.poscl.auth.domain.repository.TenantRepository;
+import jakarta.validation.Valid;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+/**
+ * Controller para gestión de datos de empresa/tenant
+ * Usado en módulo de Gestión de Empresa y Configuración
+ */
+@RestController
+@RequestMapping("/api/tenants")
+@RequiredArgsConstructor
+@Slf4j
+@CrossOrigin(origins = "*")
+public class TenantController {
+
+    private final TenantRepository tenantRepository;
+
+    /**
+     * Obtiene los datos del tenant actual
+     */
+    @GetMapping("/current")
+    public ResponseEntity<TenantDto> getCurrentTenant(
+            @RequestHeader("X-Tenant-Id") UUID tenantId) {
+
+        log.info("GET /api/tenants/current - TenantId: {}", tenantId);
+        return tenantRepository.findById(tenantId)
+                .map(this::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Actualiza los datos del tenant
+     */
+    @PutMapping("/current")
+    public ResponseEntity<TenantDto> updateTenant(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @Valid @RequestBody UpdateTenantRequest request) {
+
+        log.info("PUT /api/tenants/current - TenantId: {}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant no encontrado"));
+
+        if (request.getNombreFantasia() != null)
+            tenant.setNombreFantasia(request.getNombreFantasia());
+        if (request.getRazonSocial() != null)
+            tenant.setRazonSocial(request.getRazonSocial());
+        if (request.getRut() != null)
+            tenant.setRut(request.getRut());
+        if (request.getGiro() != null)
+            tenant.setGiro(request.getGiro());
+        if (request.getDireccion() != null)
+            tenant.setDireccion(request.getDireccion());
+        if (request.getComuna() != null)
+            tenant.setComuna(request.getComuna());
+        if (request.getCiudad() != null)
+            tenant.setCiudad(request.getCiudad());
+        if (request.getTelefono() != null)
+            tenant.setTelefono(request.getTelefono());
+        if (request.getEmail() != null)
+            tenant.setEmail(request.getEmail());
+        if (request.getSitioWeb() != null)
+            tenant.setSitioWeb(request.getSitioWeb());
+        if (request.getLogoUrl() != null)
+            tenant.setLogoUrl(request.getLogoUrl());
+
+        tenant = tenantRepository.save(tenant);
+        log.info("Tenant actualizado: {}", tenant.getDisplayName());
+
+        return ResponseEntity.ok(toDto(tenant));
+    }
+
+    /**
+     * Actualiza el logo del tenant
+     */
+    @PutMapping("/current/logo")
+    public ResponseEntity<TenantDto> updateLogo(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestBody UpdateLogoRequest request) {
+
+        log.info("PUT /api/tenants/current/logo - TenantId: {}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant no encontrado"));
+
+        tenant.setLogoUrl(request.getLogoUrl());
+        tenant = tenantRepository.save(tenant);
+
+        return ResponseEntity.ok(toDto(tenant));
+    }
+
+    private TenantDto toDto(Tenant tenant) {
+        return TenantDto.builder()
+                .id(tenant.getId())
+                .rut(tenant.getRut())
+                .razonSocial(tenant.getRazonSocial())
+                .nombreFantasia(tenant.getNombreFantasia())
+                .giro(tenant.getGiro())
+                .direccion(tenant.getDireccion())
+                .comuna(tenant.getComuna())
+                .ciudad(tenant.getCiudad())
+                .telefono(tenant.getTelefono())
+                .email(tenant.getEmail())
+                .sitioWeb(tenant.getSitioWeb())
+                .logoUrl(tenant.getLogoUrl())
+                .activo(tenant.getActivo())
+                .build();
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TenantDto {
+        private UUID id;
+        private String rut;
+        private String razonSocial;
+        private String nombreFantasia;
+        private String giro;
+        private String direccion;
+        private String comuna;
+        private String ciudad;
+        private String telefono;
+        private String email;
+        private String sitioWeb;
+        private String logoUrl;
+        private Boolean activo;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateTenantRequest {
+        private String razonSocial;
+        private String nombreFantasia;
+        private String rut;
+        private String giro;
+        private String direccion;
+        private String comuna;
+        private String ciudad;
+        private String telefono;
+        private String email;
+        private String sitioWeb;
+        private String logoUrl;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateLogoRequest {
+        private String logoUrl;
+    }
+}

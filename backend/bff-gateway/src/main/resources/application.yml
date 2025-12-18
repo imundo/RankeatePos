@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bff-gateway
+
+# Service URLs
+services:
+  auth:
+    url: http://localhost:8081
+  catalog:
+    url: http://localhost:8082
+  sales:
+    url: http://localhost:8083
+
+# JWT Config (same as auth-service)
+jwt:
+  secret: poscl-super-secret-key-2024-minimum-32-chars
+
+# Logging
+logging:
+  level:
+    com.poscl.bff: DEBUG
+    org.springframework.web: INFO
+
+# CORS
+cors:
+  allowed-origins: http://localhost:4200,http://127.0.0.1:4200

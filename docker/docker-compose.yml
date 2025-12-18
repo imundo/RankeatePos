@@ -1,0 +1,138 @@
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: pos-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pos-network
+
+  # ===========================================
+  # Auth Service
+  # ===========================================
+  auth-service:
+    build:
+      context: ../backend
+      dockerfile: auth-service/Dockerfile
+    container_name: pos-auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-here-must-be-at-least-32-chars-long}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos-network
+
+  # ===========================================
+  # Catalog Service
+  # ===========================================
+  catalog-service:
+    build:
+      context: ../backend
+      dockerfile: catalog-service/Dockerfile
+    container_name: pos-catalog-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: catalog_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos-network
+
+  # ===========================================
+  # Sales Service
+  # ===========================================
+  sales-service:
+    build:
+      context: ../backend
+      dockerfile: sales-service/Dockerfile
+    container_name: pos-sales-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: sales_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos-network
+
+  # ===========================================
+  # BFF Gateway
+  # ===========================================
+  bff-gateway:
+    build:
+      context: ../backend
+      dockerfile: bff-gateway/Dockerfile
+    container_name: pos-bff-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AUTH_SERVICE_URL: http://auth-service:8081
+      CATALOG_SERVICE_URL: http://catalog-service:8082
+      SALES_SERVICE_URL: http://sales-service:8083
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - catalog-service
+      - sales-service
+    networks:
+      - pos-network
+
+  # ===========================================
+  # Frontend Angular
+  # ===========================================
+  frontend:
+    build:
+      context: ../frontend/pos-app
+      dockerfile: Dockerfile
+    container_name: pos-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - bff-gateway
+    networks:
+      - pos-network
+
+volumes:
+  postgres_data:
+
+
+networks:
+  pos-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.npm
+
+# Build outputs
+**/target/
+**/dist/
+**/build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Docker volumes
+docker/postgres_data/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Java
+*.class
+*.jar
+!**/lib/*.jar
+
+# Angular
+.angular/
+.sass-cache/
+
+# Coverage
+coverage/
+*.lcov
