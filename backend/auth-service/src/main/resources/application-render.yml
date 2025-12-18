@@ -1,11 +1,13 @@
 # Render.com profile for auth-service
-# Uses Render PostgreSQL connection
+# Render provides DATABASE_URL in format postgresql://user:pass@host:port/db
+# Spring needs jdbc:postgresql://host:port/db with separate user/pass
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    # Render provides connection string, we extract components
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -24,3 +26,4 @@ jwt:
 logging:
   level:
     com.poscl: INFO
+    org.flywaydb: INFO
