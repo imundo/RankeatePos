@@ -11,7 +11,7 @@ spring:
       maximum-pool-size: 5
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -31,7 +31,7 @@ spring:
 server:
   port: ${PORT:10000}
 
-# Actuator endpoints
+# Actuator endpoints - simplified health check
 management:
   endpoints:
     web:
@@ -39,7 +39,10 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: never
+  health:
+    db:
+      enabled: false
 
 jwt:
   secret: ${JWT_SECRET:render-super-secret-key-2024-min-32-chars}
@@ -50,3 +53,4 @@ logging:
     com.poscl: INFO
     org.flywaydb: INFO
     org.hibernate: INFO
+    org.springframework.boot.actuate: DEBUG
