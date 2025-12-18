@@ -1,5 +1,6 @@
 # Render.com Blueprint - POS Chile
-# Deploy: https://render.com/deploy?repo=https://github.com/imundo/RankeatePos
+# Note: We construct SPRING_DATASOURCE_URL with jdbc: prefix since
+# Render's connectionString uses postgresql:// which Spring doesn't accept
 
 # ==================================================
 # DATABASES
@@ -36,23 +37,23 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      - key: DATABASE_HOST
+      - key: DB_HOST
         fromDatabase:
           name: pos-auth-db
           property: host
-      - key: DATABASE_PORT
+      - key: DB_PORT
         fromDatabase:
           name: pos-auth-db
           property: port
-      - key: DATABASE_NAME
+      - key: DB_NAME
         fromDatabase:
           name: pos-auth-db
           property: database
-      - key: DATABASE_USER
+      - key: DB_USER
         fromDatabase:
           name: pos-auth-db
           property: user
-      - key: DATABASE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: pos-auth-db
           property: password
@@ -71,23 +72,23 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      - key: DATABASE_HOST
+      - key: DB_HOST
         fromDatabase:
           name: pos-catalog-db
           property: host
-      - key: DATABASE_PORT
+      - key: DB_PORT
         fromDatabase:
           name: pos-catalog-db
           property: port
-      - key: DATABASE_NAME
+      - key: DB_NAME
         fromDatabase:
           name: pos-catalog-db
           property: database
-      - key: DATABASE_USER
+      - key: DB_USER
         fromDatabase:
           name: pos-catalog-db
           property: user
-      - key: DATABASE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: pos-catalog-db
           property: password
@@ -104,23 +105,23 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      - key: DATABASE_HOST
+      - key: DB_HOST
         fromDatabase:
           name: pos-sales-db
           property: host
-      - key: DATABASE_PORT
+      - key: DB_PORT
         fromDatabase:
           name: pos-sales-db
           property: port
-      - key: DATABASE_NAME
+      - key: DB_NAME
         fromDatabase:
           name: pos-sales-db
           property: database
-      - key: DATABASE_USER
+      - key: DB_USER
         fromDatabase:
           name: pos-sales-db
           property: user
-      - key: DATABASE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: pos-sales-db
           property: password
