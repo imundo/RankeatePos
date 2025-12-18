@@ -1,0 +1,40 @@
+# Multi-stage build for auth-service (Render version)
+# Uses startup script to convert DATABASE_URL to JDBC format
+
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /build
+
+# Copy everything needed
+COPY pom.xml ./pom.xml
+COPY shared-lib ./shared-lib
+COPY auth-service ./auth-service
+
+# Install parent POM first (non-recursive), then shared-lib, then auth-service
+RUN mvn install -N -DskipTests -B && \
+    mvn -f shared-lib/pom.xml clean install -DskipTests -B && \
+    mvn -f auth-service/pom.xml clean package -DskipTests -B
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Install shell for startup script
+RUN apk add --no-cache bash
+
+# Copy JAR and startup script
+COPY --from=build /build/auth-service/target/*.jar app.jar
+COPY auth-service/start.sh start.sh
+RUN chmod +x start.sh
+
+# Environment - use render profile
+ENV SPRING_PROFILES_ACTIVE=render
+ENV PORT=10000
+
+# Health check  
+HEALTHCHECK --interval=30s --timeout=3s --start-period=120s \
+    CMD wget -q --spider http://localhost:${PORT}/actuator/health || exit 1
+
+EXPOSE 10000
+
+# Use startup script instead of direct java command
+CMD ["./start.sh"]

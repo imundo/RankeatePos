@@ -1,6 +1,8 @@
 # Render.com Blueprint - POS Chile
-# Note: We construct SPRING_DATASOURCE_URL with jdbc: prefix since
-# Render's connectionString uses postgresql:// which Spring doesn't accept
+# Deploy: https://render.com/deploy?repo=https://github.com/imundo/RankeatePos
+#
+# This configuration uses Dockerfile.render for backend services
+# which includes a startup script that converts DATABASE_URL to JDBC format
 
 # ==================================================
 # DATABASES
@@ -30,33 +32,15 @@ services:
     name: pos-auth-service
     runtime: docker
     rootDir: backend
-    dockerfilePath: ./auth-service/Dockerfile
+    dockerfilePath: ./auth-service/Dockerfile.render
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: render
-      - key: DB_HOST
+      - key: DATABASE_URL
         fromDatabase:
           name: pos-auth-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: pos-auth-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: pos-auth-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: pos-auth-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: pos-auth-db
-          property: password
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
 
@@ -65,66 +49,30 @@ services:
     name: pos-catalog-service
     runtime: docker
     rootDir: backend
-    dockerfilePath: ./catalog-service/Dockerfile
+    dockerfilePath: ./catalog-service/Dockerfile.render
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: render
-      - key: DB_HOST
+      - key: DATABASE_URL
         fromDatabase:
           name: pos-catalog-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: pos-catalog-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: pos-catalog-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: pos-catalog-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: pos-catalog-db
-          property: password
+          property: connectionString
 
   # Sales Service
   - type: web
     name: pos-sales-service
     runtime: docker
     rootDir: backend
-    dockerfilePath: ./sales-service/Dockerfile
+    dockerfilePath: ./sales-service/Dockerfile.render
     plan: free
     region: oregon
     healthCheckPath: /actuator/health
     envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: render
-      - key: DB_HOST
+      - key: DATABASE_URL
         fromDatabase:
           name: pos-sales-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: pos-sales-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: pos-sales-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: pos-sales-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: pos-sales-db
-          property: password
+          property: connectionString
 
   # BFF Gateway
   - type: web
