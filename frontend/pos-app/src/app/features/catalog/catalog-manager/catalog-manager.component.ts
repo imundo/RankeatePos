@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -17,51 +18,52 @@ import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 
 interface Category {
-    id: string;
-    nombre: string;
-    descripcion?: string;
-    orden: number;
-    activa: boolean;
-    icon?: string;
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  orden: number;
+  activa: boolean;
+  icon?: string;
 }
 
 interface Product {
-    id: string;
-    sku: string;
-    nombre: string;
-    descripcion?: string;
-    categoryId?: string;
-    categoryName?: string;
-    imagenUrl?: string;
-    activo: boolean;
-    variants: ProductVariant[];
+  id: string;
+  sku: string;
+  nombre: string;
+  descripcion?: string;
+  categoryId?: string;
+  categoryName?: string;
+  imagenUrl?: string;
+  activo: boolean;
+  variants: ProductVariant[];
 }
 
 interface ProductVariant {
-    id: string;
-    sku: string;
-    precioBruto: number;
-    precioNeto: number;
-    costo?: number;
-    stock?: number;
+  id: string;
+  sku: string;
+  precioBruto: number;
+  precioNeto: number;
+  costo?: number;
+  stock?: number;
 }
 
 @Component({
-    selector: 'app-catalog-manager',
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        ButtonModule,
-        InputTextModule,
-        DialogModule,
-        ToastModule,
-        DropdownModule,
-        InputNumberModule,
-        TabViewModule
-    ],
-    providers: [MessageService],
-    template: `
+  selector: 'app-catalog-manager',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    InputTextModule,
+    DialogModule,
+    ToastModule,
+    DropdownModule,
+    InputNumberModule,
+    TabViewModule
+  ],
+  providers: [MessageService],
+  template: `
     <div class="catalog-manager">
       <!-- Header -->
       <header class="manager-header">
@@ -320,7 +322,7 @@ interface ProductVariant {
 
     <p-toast position="bottom-center"></p-toast>
   `,
-    styles: [`
+  styles: [`
     .catalog-manager {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -502,269 +504,269 @@ interface ProductVariant {
   `]
 })
 export class CatalogManagerComponent implements OnInit {
-    private http = inject(HttpClient);
-    private authService = inject(AuthService);
-    private messageService = inject(MessageService);
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private messageService = inject(MessageService);
 
-    // State
-    categories = signal<Category[]>([]);
-    products = signal<Product[]>([]);
-    activeTab: 'categories' | 'products' = 'categories';
-    filterCategory = '';
+  // State
+  categories = signal<Category[]>([]);
+  products = signal<Product[]>([]);
+  activeTab: 'categories' | 'products' = 'categories';
+  filterCategory = '';
 
-    // Dialog state
-    showCategoryDialog = false;
-    showProductDialog = false;
-    editingCategory: Category | null = null;
-    editingProduct: Product | null = null;
-    isDragover = false;
+  // Dialog state
+  showCategoryDialog = false;
+  showProductDialog = false;
+  editingCategory: Category | null = null;
+  editingProduct: Product | null = null;
+  isDragover = false;
 
-    // Form models
-    categoryForm = {
-        nombre: '',
-        descripcion: '',
-        orden: 1
+  // Form models
+  categoryForm = {
+    nombre: '',
+    descripcion: '',
+    orden: 1
+  };
+
+  productForm = {
+    sku: '',
+    nombre: '',
+    descripcion: '',
+    categoryId: '',
+    precioBruto: 0,
+    costo: 0,
+    imagenUrl: ''
+  };
+
+  // Category icons
+  private categoryIcons: Record<string, string> = {
+    'panadería': '🥖', 'panaderia': '🥖', 'panes': '🥖',
+    'pastelería': '🍰', 'pasteleria': '🍰', 'pasteles': '🍰',
+    'empanadas': '🥟',
+    'cafetería': '☕', 'cafeteria': '☕', 'café': '☕',
+    'bebidas': '🥤', 'bebidas frías': '🥤',
+    'galletas': '🍪',
+    'snacks': '🍿',
+    'lácteos': '🥛', 'lacteos': '🥛',
+    'abarrotes': '🛒',
+    'limpieza': '🧹'
+  };
+
+  filteredProducts = computed(() => {
+    if (!this.filterCategory) return this.products();
+    return this.products().filter(p => p.categoryId === this.filterCategory);
+  });
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  async loadData(): Promise<void> {
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    const headers = { 'X-Tenant-Id': tenantId };
+
+    try {
+      const [cats, prods] = await Promise.all([
+        this.http.get<Category[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise(),
+        this.http.get<any>(`${environment.catalogUrl}/products`, { headers }).toPromise()
+      ]);
+
+      this.categories.set(cats || []);
+      this.products.set(prods?.content || prods || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  getCategoryIcon(name: string): string {
+    return this.categoryIcons[name.toLowerCase()] || '📦';
+  }
+
+  getProductsInCategory(categoryId: string): number {
+    return this.products().filter(p => p.categoryId === categoryId).length;
+  }
+
+  formatPrice(value: number): string {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+  }
+
+  // Category CRUD
+  openCategoryDialog(category?: Category): void {
+    this.editingCategory = category || null;
+    this.categoryForm = {
+      nombre: category?.nombre || '',
+      descripcion: category?.descripcion || '',
+      orden: category?.orden || this.categories().length + 1
+    };
+    this.showCategoryDialog = true;
+  }
+
+  editCategory(category: Category): void {
+    this.openCategoryDialog(category);
+  }
+
+  async saveCategory(): Promise<void> {
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    const headers = { 'X-Tenant-Id': tenantId };
+
+    try {
+      if (this.editingCategory) {
+        await this.http.put(
+          `${environment.catalogUrl}/categories/${this.editingCategory.id}`,
+          this.categoryForm,
+          { headers }
+        ).toPromise();
+      } else {
+        await this.http.post(
+          `${environment.catalogUrl}/categories`,
+          this.categoryForm,
+          { headers }
+        ).toPromise();
+      }
+
+      this.messageService.add({ severity: 'success', summary: 'Categoría guardada' });
+      this.showCategoryDialog = false;
+      this.loadData();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error al guardar categoría' });
+    }
+  }
+
+  async deleteCategory(category: Category): Promise<void> {
+    if (!confirm(`¿Eliminar categoría "${category.nombre}"?`)) return;
+
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    try {
+      await this.http.delete(
+        `${environment.catalogUrl}/categories/${category.id}`,
+        { headers: { 'X-Tenant-Id': tenantId } }
+      ).toPromise();
+
+      this.messageService.add({ severity: 'success', summary: 'Categoría eliminada' });
+      this.loadData();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error al eliminar' });
+    }
+  }
+
+  // Product CRUD
+  openProductDialog(product?: Product): void {
+    this.editingProduct = product || null;
+    this.productForm = {
+      sku: product?.sku || '',
+      nombre: product?.nombre || '',
+      descripcion: product?.descripcion || '',
+      categoryId: product?.categoryId || '',
+      precioBruto: product?.variants?.[0]?.precioBruto || 0,
+      costo: product?.variants?.[0]?.costo || 0,
+      imagenUrl: product?.imagenUrl || ''
+    };
+    this.showProductDialog = true;
+  }
+
+  editProduct(product: Product): void {
+    this.openProductDialog(product);
+  }
+
+  async saveProduct(): Promise<void> {
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    const headers = {
+      'X-Tenant-Id': tenantId,
+      'X-User-Id': this.authService.user()?.id || ''
     };
 
-    productForm = {
-        sku: '',
-        nombre: '',
-        descripcion: '',
-        categoryId: '',
-        precioBruto: 0,
-        costo: 0,
-        imagenUrl: ''
+    const payload = {
+      sku: this.productForm.sku,
+      nombre: this.productForm.nombre,
+      descripcion: this.productForm.descripcion,
+      categoryId: this.productForm.categoryId || null,
+      imagenUrl: this.productForm.imagenUrl,
+      variants: [{
+        sku: this.productForm.sku,
+        precioBruto: this.productForm.precioBruto,
+        precioNeto: Math.round(this.productForm.precioBruto / 1.19),
+        costo: this.productForm.costo
+      }]
     };
 
-    // Category icons
-    private categoryIcons: Record<string, string> = {
-        'panadería': '🥖', 'panaderia': '🥖', 'panes': '🥖',
-        'pastelería': '🍰', 'pasteleria': '🍰', 'pasteles': '🍰',
-        'empanadas': '🥟',
-        'cafetería': '☕', 'cafeteria': '☕', 'café': '☕',
-        'bebidas': '🥤', 'bebidas frías': '🥤',
-        'galletas': '🍪',
-        'snacks': '🍿',
-        'lácteos': '🥛', 'lacteos': '🥛',
-        'abarrotes': '🛒',
-        'limpieza': '🧹'
+    try {
+      if (this.editingProduct) {
+        await this.http.put(
+          `${environment.catalogUrl}/products/${this.editingProduct.id}`,
+          payload,
+          { headers }
+        ).toPromise();
+      } else {
+        await this.http.post(
+          `${environment.catalogUrl}/products`,
+          payload,
+          { headers }
+        ).toPromise();
+      }
+
+      this.messageService.add({ severity: 'success', summary: 'Producto guardado' });
+      this.showProductDialog = false;
+      this.loadData();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error al guardar producto' });
+    }
+  }
+
+  async deleteProduct(product: Product): Promise<void> {
+    if (!confirm(`¿Eliminar producto "${product.nombre}"?`)) return;
+
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    try {
+      await this.http.delete(
+        `${environment.catalogUrl}/products/${product.id}`,
+        { headers: { 'X-Tenant-Id': tenantId, 'X-User-Id': this.authService.user()?.id || '' } }
+      ).toPromise();
+
+      this.messageService.add({ severity: 'success', summary: 'Producto eliminado' });
+      this.loadData();
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Error al eliminar' });
+    }
+  }
+
+  // Image handling
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragover = true;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragover = false;
+
+    const file = event.dataTransfer?.files[0];
+    if (file && file.type.startsWith('image/')) {
+      this.handleImageFile(file);
+    }
+  }
+
+  onFileSelect(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.handleImageFile(file);
+    }
+  }
+
+  private handleImageFile(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.productForm.imagenUrl = e.target?.result as string;
     };
-
-    filteredProducts = computed(() => {
-        if (!this.filterCategory) return this.products();
-        return this.products().filter(p => p.categoryId === this.filterCategory);
-    });
-
-    ngOnInit(): void {
-        this.loadData();
-    }
-
-    async loadData(): Promise<void> {
-        const tenantId = this.authService.tenant()?.id;
-        if (!tenantId) return;
-
-        const headers = { 'X-Tenant-Id': tenantId };
-
-        try {
-            const [cats, prods] = await Promise.all([
-                this.http.get<Category[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise(),
-                this.http.get<any>(`${environment.catalogUrl}/products`, { headers }).toPromise()
-            ]);
-
-            this.categories.set(cats || []);
-            this.products.set(prods?.content || prods || []);
-        } catch (error) {
-            console.error('Error loading data:', error);
-        }
-    }
-
-    getCategoryIcon(name: string): string {
-        return this.categoryIcons[name.toLowerCase()] || '📦';
-    }
-
-    getProductsInCategory(categoryId: string): number {
-        return this.products().filter(p => p.categoryId === categoryId).length;
-    }
-
-    formatPrice(value: number): string {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
-    }
-
-    // Category CRUD
-    openCategoryDialog(category?: Category): void {
-        this.editingCategory = category || null;
-        this.categoryForm = {
-            nombre: category?.nombre || '',
-            descripcion: category?.descripcion || '',
-            orden: category?.orden || this.categories().length + 1
-        };
-        this.showCategoryDialog = true;
-    }
-
-    editCategory(category: Category): void {
-        this.openCategoryDialog(category);
-    }
-
-    async saveCategory(): Promise<void> {
-        const tenantId = this.authService.tenant()?.id;
-        if (!tenantId) return;
-
-        const headers = { 'X-Tenant-Id': tenantId };
-
-        try {
-            if (this.editingCategory) {
-                await this.http.put(
-                    `${environment.catalogUrl}/categories/${this.editingCategory.id}`,
-                    this.categoryForm,
-                    { headers }
-                ).toPromise();
-            } else {
-                await this.http.post(
-                    `${environment.catalogUrl}/categories`,
-                    this.categoryForm,
-                    { headers }
-                ).toPromise();
-            }
-
-            this.messageService.add({ severity: 'success', summary: 'Categoría guardada' });
-            this.showCategoryDialog = false;
-            this.loadData();
-        } catch (error) {
-            this.messageService.add({ severity: 'error', summary: 'Error al guardar categoría' });
-        }
-    }
-
-    async deleteCategory(category: Category): Promise<void> {
-        if (!confirm(`¿Eliminar categoría "${category.nombre}"?`)) return;
-
-        const tenantId = this.authService.tenant()?.id;
-        if (!tenantId) return;
-
-        try {
-            await this.http.delete(
-                `${environment.catalogUrl}/categories/${category.id}`,
-                { headers: { 'X-Tenant-Id': tenantId } }
-            ).toPromise();
-
-            this.messageService.add({ severity: 'success', summary: 'Categoría eliminada' });
-            this.loadData();
-        } catch (error) {
-            this.messageService.add({ severity: 'error', summary: 'Error al eliminar' });
-        }
-    }
-
-    // Product CRUD
-    openProductDialog(product?: Product): void {
-        this.editingProduct = product || null;
-        this.productForm = {
-            sku: product?.sku || '',
-            nombre: product?.nombre || '',
-            descripcion: product?.descripcion || '',
-            categoryId: product?.categoryId || '',
-            precioBruto: product?.variants?.[0]?.precioBruto || 0,
-            costo: product?.variants?.[0]?.costo || 0,
-            imagenUrl: product?.imagenUrl || ''
-        };
-        this.showProductDialog = true;
-    }
-
-    editProduct(product: Product): void {
-        this.openProductDialog(product);
-    }
-
-    async saveProduct(): Promise<void> {
-        const tenantId = this.authService.tenant()?.id;
-        if (!tenantId) return;
-
-        const headers = {
-            'X-Tenant-Id': tenantId,
-            'X-User-Id': this.authService.user()?.id || ''
-        };
-
-        const payload = {
-            sku: this.productForm.sku,
-            nombre: this.productForm.nombre,
-            descripcion: this.productForm.descripcion,
-            categoryId: this.productForm.categoryId || null,
-            imagenUrl: this.productForm.imagenUrl,
-            variants: [{
-                sku: this.productForm.sku,
-                precioBruto: this.productForm.precioBruto,
-                precioNeto: Math.round(this.productForm.precioBruto / 1.19),
-                costo: this.productForm.costo
-            }]
-        };
-
-        try {
-            if (this.editingProduct) {
-                await this.http.put(
-                    `${environment.catalogUrl}/products/${this.editingProduct.id}`,
-                    payload,
-                    { headers }
-                ).toPromise();
-            } else {
-                await this.http.post(
-                    `${environment.catalogUrl}/products`,
-                    payload,
-                    { headers }
-                ).toPromise();
-            }
-
-            this.messageService.add({ severity: 'success', summary: 'Producto guardado' });
-            this.showProductDialog = false;
-            this.loadData();
-        } catch (error) {
-            this.messageService.add({ severity: 'error', summary: 'Error al guardar producto' });
-        }
-    }
-
-    async deleteProduct(product: Product): Promise<void> {
-        if (!confirm(`¿Eliminar producto "${product.nombre}"?`)) return;
-
-        const tenantId = this.authService.tenant()?.id;
-        if (!tenantId) return;
-
-        try {
-            await this.http.delete(
-                `${environment.catalogUrl}/products/${product.id}`,
-                { headers: { 'X-Tenant-Id': tenantId, 'X-User-Id': this.authService.user()?.id || '' } }
-            ).toPromise();
-
-            this.messageService.add({ severity: 'success', summary: 'Producto eliminado' });
-            this.loadData();
-        } catch (error) {
-            this.messageService.add({ severity: 'error', summary: 'Error al eliminar' });
-        }
-    }
-
-    // Image handling
-    onDragOver(event: DragEvent): void {
-        event.preventDefault();
-        this.isDragover = true;
-    }
-
-    onDrop(event: DragEvent): void {
-        event.preventDefault();
-        this.isDragover = false;
-
-        const file = event.dataTransfer?.files[0];
-        if (file && file.type.startsWith('image/')) {
-            this.handleImageFile(file);
-        }
-    }
-
-    onFileSelect(event: Event): void {
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-            this.handleImageFile(file);
-        }
-    }
-
-    private handleImageFile(file: File): void {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.productForm.imagenUrl = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-    }
+    reader.readAsDataURL(file);
+  }
 }
