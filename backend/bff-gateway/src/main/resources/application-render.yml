@@ -5,23 +5,23 @@ spring:
   application:
     name: bff-gateway
 
-# Service URLs from Render environment variables
+# Service URLs - full HTTPS URLs for Render
 services:
   auth:
-    url: ${AUTH_SERVICE_URL:http://pos-auth-service}
+    url: ${AUTH_SERVICE_URL:https://pos-auth-service.onrender.com}
   catalog:
-    url: ${CATALOG_SERVICE_URL:http://pos-catalog-service}
+    url: ${CATALOG_SERVICE_URL:https://pos-catalog-service.onrender.com}
   sales:
-    url: ${SALES_SERVICE_URL:http://pos-sales-service}
+    url: ${SALES_SERVICE_URL:https://pos-sales-service.onrender.com}
 
 server:
   port: ${PORT:8080}
 
-# CORS configuration - allow frontend and internal requests
+# CORS configuration - allow frontend requests
 cors:
   allowed-origins: https://pos-frontend-nqfq.onrender.com,https://pos-frontend.onrender.com,http://localhost:4200
 
 logging:
   level:
-    com.poscl: INFO
-    org.springframework.web: INFO
+    com.poscl: DEBUG
+    org.springframework.web.reactive: DEBUG

@@ -77,20 +77,11 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: render
       - key: AUTH_SERVICE_URL
-        fromService:
-          name: pos-auth-service
-          type: web
-          property: host
+        value: https://pos-auth-service.onrender.com
       - key: CATALOG_SERVICE_URL
-        fromService:
-          name: pos-catalog-service
-          type: web
-          property: host
+        value: https://pos-catalog-service.onrender.com
       - key: SALES_SERVICE_URL
-        fromService:
-          name: pos-sales-service
-          type: web
-          property: host
+        value: https://pos-sales-service.onrender.com
 
   # Frontend
   - type: web
