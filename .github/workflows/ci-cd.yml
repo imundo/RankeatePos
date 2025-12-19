@@ -16,6 +16,9 @@ jobs:
   # ===========================================
   test-backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     
     services:
       postgres:
@@ -41,28 +44,24 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: backend/**/pom.xml
       
       - name: Build and install shared-lib
-        working-directory: backend/shared-lib
-        run: ../mvnw clean install -B -DskipTests
+        run: mvn -f shared-lib/pom.xml clean install -B -DskipTests
       
       - name: Build auth-service
-        working-directory: backend/auth-service
-        run: ../mvnw clean package -B -DskipTests
+        run: mvn -f auth-service/pom.xml clean package -B -DskipTests
         env:
           SPRING_PROFILES_ACTIVE: test
       
       - name: Build catalog-service
-        working-directory: backend/catalog-service
-        run: ../mvnw clean package -B -DskipTests
+        run: mvn -f catalog-service/pom.xml clean package -B -DskipTests
       
       - name: Build sales-service
-        working-directory: backend/sales-service
-        run: ../mvnw clean package -B -DskipTests
+        run: mvn -f sales-service/pom.xml clean package -B -DskipTests
       
       - name: Build bff-gateway
-        working-directory: backend/bff-gateway
-        run: ../mvnw clean package -B -DskipTests
+        run: mvn -f bff-gateway/pom.xml clean package -B -DskipTests
 
   # ===========================================
   # Frontend Build & Test
@@ -127,7 +126,6 @@ jobs:
       - name: Deploy BFF Gateway
         run: |
           if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_BFF }}" ]; then
-            # Wait a bit for backend services to start
             sleep 30
             curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_BFF }}"
             echo "✅ BFF Gateway deploy triggered"
@@ -146,14 +144,5 @@ jobs:
       
       - name: Deployment Summary
         run: |
-          echo "## 🚀 Deployment Triggered"
-          echo ""
-          echo "Services are being deployed to Render."
-          echo "Check the Render dashboard for deployment status."
-          echo ""
-          echo "### Services:"
-          echo "- Auth Service"
-          echo "- Catalog Service"
-          echo "- Sales Service"
-          echo "- BFF Gateway"
-          echo "- Frontend"
+          echo "🚀 Deployment triggered for all services"
+          echo "Check Render dashboard for status"
