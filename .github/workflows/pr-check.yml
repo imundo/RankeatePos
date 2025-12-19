@@ -1,0 +1,68 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [master, develop]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+
+jobs:
+  # Quick backend syntax check
+  backend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Compile shared-lib
+        working-directory: backend/shared-lib
+        run: ../mvnw compile -B -q
+      
+      - name: Compile all services
+        run: |
+          cd backend/auth-service && ../mvnw compile -B -q &
+          cd backend/catalog-service && ../mvnw compile -B -q &
+          cd backend/sales-service && ../mvnw compile -B -q &
+          cd backend/bff-gateway && ../mvnw compile -B -q &
+          wait
+
+  # Quick frontend check
+  frontend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/pos-app/package-lock.json
+      
+      - name: Install and lint
+        working-directory: frontend/pos-app
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build:prod
+
+  # Validate render.yaml
+  validate-render-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate render.yaml syntax
+        run: |
+          if ! python3 -c "import yaml; yaml.safe_load(open('render.yaml'))"; then
+            echo "❌ render.yaml has YAML syntax errors"
+            exit 1
+          fi
+          echo "✅ render.yaml is valid YAML"
