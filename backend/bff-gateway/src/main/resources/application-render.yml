@@ -17,6 +17,10 @@ services:
 server:
   port: ${PORT:8080}
 
+# CORS configuration - allow frontend and internal requests
+cors:
+  allowed-origins: https://pos-frontend-nqfq.onrender.com,https://pos-frontend.onrender.com,http://localhost:4200
+
 logging:
   level:
     com.poscl: INFO
