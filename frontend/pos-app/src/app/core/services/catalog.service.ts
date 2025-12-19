@@ -50,6 +50,7 @@ export interface Product {
     descripcion?: string;
     categoryId?: string;
     categoryName?: string;
+    imagenUrl?: string;
     unidad: string;
     tipoProducto: string;
     activo: boolean;
