@@ -8,9 +8,9 @@ COPY package.json package-lock.json ./
 # Install dependencies - use install with legacy-peer-deps for compatibility
 RUN npm install --legacy-peer-deps
 
-# Copy source and build
+# Copy source and build for Docker local environment
 COPY . .
-RUN npm run build:prod
+RUN npm run build:docker
 
 # Runtime stage
 FROM nginx:alpine
