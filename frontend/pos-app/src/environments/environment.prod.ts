@@ -1,7 +1,7 @@
 export const environment = {
     production: true,
-    apiUrl: '/api',
-    authUrl: '/api',
-    catalogUrl: '/api',
-    salesUrl: '/api'
+    apiUrl: 'https://pos-bff-gateway.onrender.com/api',
+    authUrl: 'https://pos-bff-gateway.onrender.com/api',
+    catalogUrl: 'https://pos-bff-gateway.onrender.com/api',
+    salesUrl: 'https://pos-bff-gateway.onrender.com/api'
 };
