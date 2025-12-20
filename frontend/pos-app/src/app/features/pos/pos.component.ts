@@ -72,43 +72,46 @@ interface CartItem {
       <div class="pos-main">
         <!-- Products Grid -->
         <section class="products-section">
-          <!-- Search -->
-          <div class="search-container mb-2">
-            <span class="search-icon">🔍</span>
-            <input 
-              type="text" 
-              [(ngModel)]="searchQuery"
-              placeholder="Buscar producto o escanear código..."
-              (keyup.enter)="onSearch()"
-              class="search-input w-full"
-            />
-            @if (searchQuery) {
-              <button class="search-clear" (click)="searchQuery = ''">✕</button>
-            }
-          </div>
+          <!-- Sticky Filters Container -->
+          <div class="sticky-filters">
+            <!-- Search -->
+            <div class="search-container">
+              <span class="search-icon">🔍</span>
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery"
+                placeholder="Buscar producto o escanear código..."
+                (keyup.enter)="onSearch()"
+                class="search-input w-full"
+              />
+              @if (searchQuery) {
+                <button class="search-clear" (click)="searchQuery = ''">✕</button>
+              }
+            </div>
 
-          <!-- Category Pills -->
-          <div class="category-pills">
-            <button 
-              class="category-pill"
-              [class.active]="!selectedCategory()"
-              (click)="selectCategory(null)"
-            >
-              <span class="pill-icon">📦</span>
-              Todo
-              <span class="pill-count">{{ products().length }}</span>
-            </button>
-            @for (category of categories(); track category.id) {
+            <!-- Category Pills -->
+            <div class="category-pills">
               <button 
                 class="category-pill"
-                [class.active]="selectedCategory() === category.id"
-                (click)="selectCategory(category.id)"
+                [class.active]="!selectedCategory()"
+                (click)="selectCategory(null)"
               >
-                <span class="pill-icon">{{ getCategoryIcon(category.nombre) }}</span>
-                {{ category.nombre }}
-                <span class="pill-count">{{ getCategoryCount(category.id) }}</span>
+                <span class="pill-icon">📦</span>
+                Todo
+                <span class="pill-count">{{ products().length }}</span>
               </button>
-            }
+              @for (category of categories(); track category.id) {
+                <button 
+                  class="category-pill"
+                  [class.active]="selectedCategory() === category.id"
+                  (click)="selectCategory(category.id)"
+                >
+                  <span class="pill-icon">{{ getCategoryIcon(category.nombre) }}</span>
+                  {{ category.nombre }}
+                  <span class="pill-count">{{ getCategoryCount(category.id) }}</span>
+                </button>
+              }
+            </div>
           </div>
 
           <!-- Products Grid with Cards -->
@@ -559,8 +562,27 @@ interface CartItem {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 1.5rem;
+      padding: 0;
       overflow-y: auto;
+    }
+
+    .sticky-filters {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
+      backdrop-filter: blur(20px);
+      padding: 1rem 1.5rem;
+      margin-bottom: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      
+      .search-container {
+        margin-bottom: 0.75rem;
+      }
+    }
+
+    .pos-grid {
+      padding: 1rem 1.5rem 2rem;
     }
 
     .search-bar {
