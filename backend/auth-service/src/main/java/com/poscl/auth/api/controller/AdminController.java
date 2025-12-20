@@ -5,6 +5,7 @@ import com.poscl.auth.application.service.TenantService;
 import com.poscl.auth.application.service.UserService;
 import com.poscl.auth.domain.entity.Tenant;
 import com.poscl.auth.domain.entity.User;
+import com.poscl.shared.dto.BusinessType;
 import com.poscl.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -90,6 +91,16 @@ public class AdminController {
     public ResponseEntity<WizardResultDto> createTenantWithWizard(@Valid @RequestBody TenantWizardRequest request) {
         log.info("POST /api/admin/tenants/wizard - Creating tenant: {}", request.getRazonSocial());
 
+        // Parse businessType from String to enum
+        BusinessType businessType = BusinessType.OTRO;
+        try {
+            if (request.getBusinessType() != null && !request.getBusinessType().isBlank()) {
+                businessType = BusinessType.valueOf(request.getBusinessType().toUpperCase());
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("BusinessType inválido: {}, usando OTRO", request.getBusinessType());
+        }
+
         // Create tenant
         Tenant tenant = tenantService.create(TenantRequest.builder()
                 .rut(request.getRut())
@@ -99,7 +110,7 @@ public class AdminController {
                 .direccion(request.getDireccion())
                 .comuna(request.getComuna())
                 .region(request.getRegion())
-                .businessType(request.getBusinessType())
+                .businessType(businessType)
                 .plan(request.getPlan())
                 .build());
 

@@ -1,5 +1,6 @@
 package com.poscl.auth.api.dto;
 
+import com.poscl.shared.dto.BusinessType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,6 @@ public class TenantRequest {
     private String region;
     private String ciudad;
     private String telefono;
-    private String businessType;
+    private BusinessType businessType;
     private String plan;
 }
