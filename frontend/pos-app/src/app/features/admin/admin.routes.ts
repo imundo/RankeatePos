@@ -2,6 +2,10 @@ import { Routes } from '@angular/router';
 
 export const ADMIN_ROUTES: Routes = [
     {
+        path: 'login',
+        loadComponent: () => import('./admin-login.component').then(m => m.AdminLoginComponent)
+    },
+    {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
