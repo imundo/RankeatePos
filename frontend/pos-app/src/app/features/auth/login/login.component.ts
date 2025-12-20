@@ -55,8 +55,9 @@ import { AuthService } from '@core/auth/auth.service';
           <!-- Business Type Indicator -->
           <div class="business-badges">
             <span class="badge">🥖 Panaderías</span>
-            <span class="badge">🛒 Minimarkets</span>
-            <span class="badge">☕ Cafeterías</span>
+            <span class="badge">🎓 Cursos</span>
+            <span class="badge">📚 Editorial</span>
+            <span class="badge">🛒 Comercio</span>
           </div>
 
           <!-- Login Form -->
@@ -136,13 +137,23 @@ import { AuthService } from '@core/auth/auth.service';
           <!-- Demo Credentials -->
           <div class="demo-section">
             <div class="demo-divider">
-              <span>Credenciales de prueba</span>
+              <span>Demos por industria</span>
             </div>
-            <div class="demo-cards">
+            <div class="demo-cards four-cols">
               <button class="demo-card" (click)="fillDemo('admin@eltrigal.cl', 'demo1234')">
                 <span class="demo-icon">🥖</span>
                 <span class="demo-name">Panadería El Trigal</span>
                 <span class="demo-email">admin&#64;eltrigal.cl</span>
+              </button>
+              <button class="demo-card" (click)="fillDemo('admin@aprende.cl', 'demo1234')">
+                <span class="demo-icon">🎓</span>
+                <span class="demo-name">AcademiaOnline Pro</span>
+                <span class="demo-email">admin&#64;aprende.cl</span>
+              </button>
+              <button class="demo-card" (click)="fillDemo('admin@imprenta.cl', 'demo1234')">
+                <span class="demo-icon">📚</span>
+                <span class="demo-name">Editorial Creativa</span>
+                <span class="demo-email">admin&#64;imprenta.cl</span>
               </button>
               <button class="demo-card" (click)="fillDemo('admin@donpedro.cl', 'demo1234')">
                 <span class="demo-icon">🛒</span>
@@ -504,17 +515,22 @@ import { AuthService } from '@core/auth/auth.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.75rem;
+      
+      &.four-cols {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
     }
 
     .demo-card {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.25rem;
-      padding: 0.75rem;
+      gap: 0.2rem;
+      padding: 0.6rem 0.4rem;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -526,7 +542,7 @@ import { AuthService } from '@core/auth/auth.service';
     }
 
     .demo-icon {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
     }
 
     .demo-name {

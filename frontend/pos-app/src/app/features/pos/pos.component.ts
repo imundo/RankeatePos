@@ -15,6 +15,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 
 import { AuthService } from '@core/auth/auth.service';
 import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
+import { IndustryMockDataService } from '@core/services/industry-mock.service';
 import { environment } from '@env/environment';
 
 interface CartItem {
@@ -52,7 +53,7 @@ interface CartItem {
           @if (tenantLogo()) {
             <img [src]="tenantLogo()" alt="Logo" class="tenant-logo" />
           } @else {
-            <h1 class="logo">🏪 POS</h1>
+            <span class="logo-emoji">{{ industryConfig().icon }}</span>
           }
           <span class="tenant-name">{{ tenantName() }}</span>
         </div>
@@ -1689,6 +1690,7 @@ export class PosComponent implements OnInit {
   private authService = inject(AuthService);
   private offlineService = inject(OfflineService);
   private messageService = inject(MessageService);
+  private industryService = inject(IndustryMockDataService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -1719,26 +1721,29 @@ export class PosComponent implements OnInit {
 
   hasUrgentDocs = () => this.expiringDocs().some(d => d.daysLeft <= 7);
 
-  // Category icons mapping
+  // Category icons mapping - multi-industry support
   private categoryIcons: Record<string, string> = {
-    'panadería': '🥖',
-    'panaderia': '🥖',
-    'panes': '🥖',
-    'pastelería': '🍰',
-    'pasteleria': '🍰',
-    'pasteles': '🍰',
-    'empanadas': '🥟',
-    'cafetería': '☕',
-    'cafeteria': '☕',
-    'café': '☕',
-    'bebidas': '🥤',
-    'bebidas frías': '🥤',
-    'galletas': '🍪',
-    'snacks': '🍿',
-    'lácteos': '🥛',
-    'lacteos': '🥛',
-    'abarrotes': '🛒',
-    'limpieza': '🧹',
+    // Panadería
+    'panadería': '🥖', 'panaderia': '🥖', 'panes': '🥖',
+    'pastelería': '🍰', 'pasteleria': '🍰', 'pasteles': '🍰',
+    'empanadas': '🥟', 'cafetería': '☕', 'cafeteria': '☕', 'café': '☕',
+    // Cursos/Academia
+    'desarrollo web': '💻', 'programación': '💻', 'programacion': '💻',
+    'marketing digital': '📱', 'marketing': '📱', 'redes sociales': '📱',
+    'diseño ux/ui': '🎨', 'diseño': '🎨', 'ux': '🎨', 'ui': '🎨',
+    'liderazgo': '👔', 'gestión': '👔', 'gestion': '👔',
+    'finanzas personales': '💰', 'finanzas': '💰', 'inversiones': '💰',
+    // Editorial/Imprenta
+    'libros impresos': '📕', 'libros': '📕', 'libro': '📕',
+    'revistas': '📰', 'revista': '📰', 'publicaciones': '📰',
+    'catálogos': '📋', 'catalogos': '📋', 'catálogo': '📋',
+    'folletos': '📄', 'trípticos': '📄', 'dípticos': '📄',
+    'tarjetas': '🪪', 'tarjetas de visita': '🪪',
+    // Minimarket
+    'bebidas': '🥤', 'bebidas frías': '🥤', 'gaseosas': '🥤',
+    'snacks': '🍿', 'galletas': '🍪', 'dulces': '🍬',
+    'lácteos': '🥛', 'lacteos': '🥛', 'leche': '🥛',
+    'abarrotes': '🛒', 'limpieza': '🧹',
     'otro': '📦'
   };
 
@@ -1748,8 +1753,11 @@ export class PosComponent implements OnInit {
     const name = this.tenantName().toLowerCase();
     if (name.includes('trigal')) return '/assets/logos/eltrigal.png';
     if (name.includes('pedro')) return '/assets/logos/donpedro.png';
+    if (name.includes('academia') || name.includes('aprende')) return '';  // Uses emoji
+    if (name.includes('editorial') || name.includes('imprenta')) return '';  // Uses emoji
     return '';
   });
+  industryConfig = computed(() => this.industryService.getIndustryConfig());
   pendingCount = this.offlineService.pendingCount;
 
   filteredProducts = computed(() => {
