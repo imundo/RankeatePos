@@ -12,6 +12,9 @@ public enum BusinessType {
     FERRETERIA("Ferretería", "Venta de herramientas y materiales"),
     LIBRERIA("Librería", "Venta de útiles escolares y oficina"),
     FARMACIA("Farmacia", "Venta de medicamentos y productos de salud"),
+    SERVICIOS("Servicios", "Servicios profesionales y consultoría"),
+    EDUCACION("Educación", "Cursos, capacitaciones y formación"),
+    IMPRENTA("Imprenta", "Servicios de impresión y editorial"),
     OTRO("Otro", "Negocio genérico");
 
     private final String displayName;
