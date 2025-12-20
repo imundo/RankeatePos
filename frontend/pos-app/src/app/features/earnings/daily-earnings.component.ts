@@ -306,6 +306,11 @@ interface DailySummary {
       @media (max-width: 1024px) {
         grid-template-columns: 1fr;
       }
+      
+      @media (max-width: 600px) {
+        padding: 1rem;
+        gap: 1rem;
+      }
     }
 
     .calendar-section {
@@ -313,6 +318,11 @@ interface DailySummary {
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 1.5rem;
+      
+      @media (max-width: 600px) {
+        padding: 1rem;
+        border-radius: 16px;
+      }
     }
 
     .calendar-header {
@@ -439,6 +449,11 @@ interface DailySummary {
       grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
       margin-top: 1.5rem;
+      
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
     }
 
     .summary-card {
@@ -449,25 +464,46 @@ interface DailySummary {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 12px;
+      min-width: 0;
+      overflow: hidden;
       
       &.accent {
         background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
         border-color: rgba(16, 185, 129, 0.3);
       }
+      
+      @media (max-width: 600px) {
+        padding: 0.875rem;
+        gap: 0.5rem;
+      }
     }
 
     .summary-icon {
       font-size: 1.5rem;
+      flex-shrink: 0;
+      
+      @media (max-width: 600px) {
+        font-size: 1.25rem;
+      }
     }
 
     .summary-info {
       display: flex;
       flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .summary-value {
       font-size: 1rem;
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      
+      @media (max-width: 600px) {
+        font-size: 0.9rem;
+      }
     }
 
     .summary-label {
@@ -480,6 +516,11 @@ interface DailySummary {
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 1.5rem;
+      
+      @media (max-width: 600px) {
+        padding: 1rem;
+        border-radius: 16px;
+      }
     }
 
     .detail-header {
@@ -491,6 +532,12 @@ interface DailySummary {
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        flex-wrap: wrap;
+        
+        @media (max-width: 600px) {
+          font-size: 1.1rem;
+          gap: 0.5rem;
+        }
       }
     }
 
