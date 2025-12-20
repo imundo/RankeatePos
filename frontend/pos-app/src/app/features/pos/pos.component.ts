@@ -57,16 +57,29 @@ interface CartItem {
           <span class="tenant-name">{{ tenantName() }}</span>
         </div>
         <div class="header-right">
+          <!-- Document Expiry Alert -->
+          @if (expiringDocs().length > 0) {
+            <button class="alert-badge" [class.urgent]="hasUrgentDocs()" (click)="showDocsModal = true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              {{ expiringDocs().length }}
+            </button>
+          }
+          
+          <!-- Pending Sales -->
           @if (pendingCount() > 0) {
-            <span class="badge badge-warning">
+            <button class="badge badge-warning" (click)="showPendingModal = true">
               {{ pendingCount() }} pendientes
-            </span>
+            </button>
           }
           <button class="btn btn-outline" (click)="showMenu = true">
             <i class="pi pi-bars"></i>
           </button>
         </div>
       </header>
+
 
       <!-- Main Content -->
       <div class="pos-main">
@@ -326,6 +339,102 @@ interface CartItem {
         </div>
       </p-dialog>
 
+      <!-- Pending Sales Modal -->
+      <p-dialog 
+        [(visible)]="showPendingModal" 
+        header="Ventas Pendientes"
+        [modal]="true"
+        [style]="{width: '95vw', maxWidth: '600px'}"
+        [closable]="true"
+      >
+        <div class="pending-modal">
+          @if (pendingSales().length === 0) {
+            <div class="empty-pending">
+              <span class="empty-icon">✅</span>
+              <p>No hay ventas pendientes</p>
+            </div>
+          } @else {
+            <div class="pending-list">
+              @for (sale of pendingSales(); track sale.id) {
+                <div class="pending-item">
+                  <div class="pending-info">
+                    <div class="pending-header">
+                      <span class="pending-id">#{{ sale.numero || sale.id.slice(0,8) }}</span>
+                      <span class="pending-date">{{ sale.fecha | date:'dd/MM HH:mm' }}</span>
+                    </div>
+                    <div class="pending-details">
+                      <span class="pending-items">{{ sale.items?.length || 0 }} items</span>
+                      <span class="pending-total">{{ formatPrice(sale.total) }}</span>
+                    </div>
+                  </div>
+                  <div class="pending-actions">
+                    <button class="btn-approve" (click)="approveSale(sale.id)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </button>
+                    <button class="btn-reject" (click)="rejectSale(sale.id)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </p-dialog>
+
+      <!-- Document Expiry Modal -->
+      <p-dialog 
+        [(visible)]="showDocsModal" 
+        header="Documentos por Vencer"
+        [modal]="true"
+        [style]="{width: '95vw', maxWidth: '500px'}"
+        [closable]="true"
+      >
+        <div class="docs-modal">
+          @for (doc of expiringDocs(); track doc.id) {
+            <div class="doc-item" [class.urgent]="doc.daysLeft <= 7" [class.warning]="doc.daysLeft > 7 && doc.daysLeft <= 30">
+              <div class="doc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <div class="doc-info">
+                <span class="doc-name">{{ doc.nombre }}</span>
+                <span class="doc-expiry">
+                  @if (doc.daysLeft <= 0) {
+                    ¡Vencido!
+                  } @else if (doc.daysLeft === 1) {
+                    Vence mañana
+                  } @else {
+                    Vence en {{ doc.daysLeft }} días
+                  }
+                </span>
+              </div>
+              <div class="doc-status">
+                @if (doc.daysLeft <= 0) {
+                  <span class="status-badge expired">Vencido</span>
+                } @else if (doc.daysLeft <= 7) {
+                  <span class="status-badge urgent">Urgente</span>
+                } @else {
+                  <span class="status-badge warning">Próximo</span>
+                }
+              </div>
+            </div>
+          }
+          @if (expiringDocs().length === 0) {
+            <div class="empty-docs">
+              <span>✅</span>
+              <p>Todos los documentos están al día</p>
+            </div>
+          }
+        </div>
+      </p-dialog>
+
       <!-- Menu Sidebar -->
       @if (showMenu) {
         <div class="menu-overlay" (click)="showMenu = false"></div>
@@ -451,6 +560,22 @@ interface CartItem {
                 <span class="item-text">Configuración</span>
               </button>
             </div>
+
+            <!-- Marketing -->
+            <div class="menu-section">
+              <span class="section-title">Marketing</span>
+              <button class="menu-item" routerLink="/menu-generator" (click)="showMenu = false">
+                <div class="item-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/>
+                    <line x1="9" y1="17" x2="11" y2="17"/>
+                  </svg>
+                </div>
+                <span class="item-text">Generador de Carta</span>
+                <span class="item-badge new">Premium</span>
+              </button>
+            </div>
           </nav>
 
           <div class="menu-footer">
@@ -546,6 +671,236 @@ interface CartItem {
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      }
+    }
+
+    .alert-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.65rem;
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: pulse-subtle 2s infinite;
+      
+      svg { width: 14px; height: 14px; }
+      
+      &.urgent {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        animation: pulse-urgent 1s infinite;
+      }
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes pulse-subtle {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0); }
+    }
+
+    @keyframes pulse-urgent {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
+    /* Pending Sales Modal */
+    .pending-modal {
+      .pending-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .pending-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+      }
+      
+      .pending-info {
+        flex: 1;
+      }
+      
+      .pending-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.35rem;
+      }
+      
+      .pending-id {
+        font-weight: 600;
+        color: #6366F1;
+      }
+      
+      .pending-date {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .pending-details {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+      }
+      
+      .pending-items {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      
+      .pending-total {
+        color: #10B981;
+        font-weight: 600;
+      }
+      
+      .pending-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+      
+      .btn-approve, .btn-reject {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        
+        svg { width: 20px; height: 20px; }
+      }
+      
+      .btn-approve {
+        background: linear-gradient(135deg, #10B981, #059669);
+        color: white;
+        
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+      }
+      
+      .btn-reject {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        
+        &:hover {
+          background: rgba(239, 68, 68, 0.3);
+          transform: scale(1.1);
+        }
+      }
+      
+      .empty-pending {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.6);
+        
+        .empty-icon {
+          font-size: 3rem;
+          display: block;
+          margin-bottom: 1rem;
+        }
+      }
+    }
+
+    /* Document Expiry Modal */
+    .docs-modal {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      
+      .doc-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        
+        &.warning { border-left: 3px solid #eab308; }
+        &.urgent { border-left: 3px solid #ef4444; }
+      }
+      
+      .doc-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(99, 102, 241, 0.2);
+        border-radius: 10px;
+        color: #a5b4fc;
+        
+        svg { width: 20px; height: 20px; }
+      }
+      
+      .doc-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      
+      .doc-name {
+        font-weight: 500;
+      }
+      
+      .doc-expiry {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .status-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        
+        &.warning {
+          background: rgba(234, 179, 8, 0.2);
+          color: #fbbf24;
+        }
+        
+        &.urgent {
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+        }
+        
+        &.expired {
+          background: rgba(239, 68, 68, 0.3);
+          color: #fca5a5;
+        }
+      }
+      
+      .empty-docs {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        
+        span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+      }
     }
 
     .pos-main {
@@ -1344,8 +1699,25 @@ export class PosComponent implements OnInit {
   searchQuery = '';
   showPaymentDialog = false;
   showMenu = false;
+  showPendingModal = false;
+  showDocsModal = false;
   selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' = 'EFECTIVO';
   cashReceived = 0;
+
+  // Pending sales (demo data)
+  pendingSales = signal<any[]>([
+    { id: 'sale-001', numero: '00123', fecha: new Date(), total: 15500, items: [{}, {}] },
+    { id: 'sale-002', numero: '00124', fecha: new Date(Date.now() - 3600000), total: 8750, items: [{}] },
+  ]);
+
+  // Document expiry alerts (demo data)
+  expiringDocs = signal<any[]>([
+    { id: 'doc-1', nombre: 'Patente Comercial', daysLeft: 5 },
+    { id: 'doc-2', nombre: 'Permiso Sanitario', daysLeft: 28 },
+    { id: 'doc-3', nombre: 'Certificado SII', daysLeft: 0 },
+  ]);
+
+  hasUrgentDocs = () => this.expiringDocs().some(d => d.daysLeft <= 7);
 
   // Category icons mapping
   private categoryIcons: Record<string, string> = {
@@ -1682,5 +2054,34 @@ export class PosComponent implements OnInit {
   logout(): void {
     this.showMenu = false;
     this.authService.logout();
+  }
+
+  // Pending sales methods
+  approveSale(saleId: string): void {
+    const sales = this.pendingSales().filter(s => s.id !== saleId);
+    this.pendingSales.set(sales);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Venta aprobada',
+      detail: 'La venta fue aprobada exitosamente',
+      life: 2000
+    });
+    if (sales.length === 0) {
+      this.showPendingModal = false;
+    }
+  }
+
+  rejectSale(saleId: string): void {
+    const sales = this.pendingSales().filter(s => s.id !== saleId);
+    this.pendingSales.set(sales);
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Venta rechazada',
+      detail: 'La venta fue rechazada',
+      life: 2000
+    });
+    if (sales.length === 0) {
+      this.showPendingModal = false;
+    }
   }
 }
