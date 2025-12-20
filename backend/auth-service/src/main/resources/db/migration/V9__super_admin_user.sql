@@ -28,7 +28,7 @@ VALUES (
     true,
     true,
     CURRENT_TIMESTAMP
-) ON CONFLICT (email) DO NOTHING;
+) ON CONFLICT (id) DO NOTHING;
 
 -- Assign SAAS_ADMIN role to super admin user
 INSERT INTO user_roles (user_id, role_id)
