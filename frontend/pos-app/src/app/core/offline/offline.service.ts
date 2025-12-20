@@ -80,13 +80,29 @@ export class OfflineService {
 
     // === Productos ===
 
-    async cacheProducts(products: CachedProduct[]): Promise<void> {
+    /**
+     * Cache products for the current tenant.
+     * Automatically clears cache if tenant has changed.
+     */
+    async cacheProducts(products: CachedProduct[], tenantId?: string): Promise<void> {
+        // Check if tenant changed - if so, clear old cache
+        const storedTenant = localStorage.getItem('pos_cached_tenant');
+        if (tenantId && storedTenant && storedTenant !== tenantId) {
+            console.log(`Tenant changed from ${storedTenant} to ${tenantId}, clearing cache`);
+            await this.clearCache();
+        }
+
+        // Store current tenant
+        if (tenantId) {
+            localStorage.setItem('pos_cached_tenant', tenantId);
+        }
+
         const withSyncTime = products.map(p => ({
             ...p,
             syncedAt: new Date()
         }));
         await this.db.products.bulkPut(withSyncTime);
-        console.log(`Cached ${products.length} products`);
+        console.log(`Cached ${products.length} products for tenant ${tenantId || 'unknown'}`);
     }
 
     async getCachedProducts(): Promise<CachedProduct[]> {

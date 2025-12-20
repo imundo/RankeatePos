@@ -1874,7 +1874,7 @@ export class PosComponent implements OnInit {
           syncedAt: new Date()
         }));
 
-        await this.offlineService.cacheProducts(cached);
+        await this.offlineService.cacheProducts(cached, tenantId);
         this.products.set(cached);
 
         this.messageService.add({
