@@ -17,7 +17,11 @@ interface MenuStyle {
   textColor: string;
   accentColor: string;
   fontFamily: string;
-  layout: 'modern' | 'classic' | 'minimal';
+  layout: 'modern' | 'classic' | 'minimal' | 'elegant' | 'neon';
+  headerBackground?: string; // URL or data URI for header background image
+  headerOverlay: number; // Overlay opacity 0-100
+  cornerRadius: 'none' | 'subtle' | 'rounded' | 'pill';
+  cardStyle: 'flat' | 'elevated' | 'glassmorphism';
 }
 
 interface MenuConfig {
@@ -28,6 +32,7 @@ interface MenuConfig {
   showImages: boolean;
   selectedCategories: string[];
   style: MenuStyle;
+  logoInQR: boolean; // Embed logo in QR code
 }
 
 @Component({
@@ -115,35 +120,58 @@ interface MenuConfig {
               Estilo
             </h3>
             <div class="layout-options">
-              <button 
-                class="layout-btn" 
-                [class.active]="config.style.layout === 'modern'"
-                (click)="config.style.layout = 'modern'"
-              >
-                <span class="layout-icon">✨</span>
-                Moderno
+              <button class="layout-btn" [class.active]="config.style.layout === 'modern'"
+                (click)="config.style.layout = 'modern'">
+                <span class="layout-icon">✨</span>Moderno
               </button>
-              <button 
-                class="layout-btn" 
-                [class.active]="config.style.layout === 'classic'"
-                (click)="config.style.layout = 'classic'"
-              >
-                <span class="layout-icon">📜</span>
-                Clásico
+              <button class="layout-btn" [class.active]="config.style.layout === 'classic'"
+                (click)="config.style.layout = 'classic'">
+                <span class="layout-icon">📜</span>Clásico
               </button>
-              <button 
-                class="layout-btn" 
-                [class.active]="config.style.layout === 'minimal'"
-                (click)="config.style.layout = 'minimal'"
-              >
-                <span class="layout-icon">◻️</span>
-                Minimal
+              <button class="layout-btn" [class.active]="config.style.layout === 'minimal'"
+                (click)="config.style.layout = 'minimal'">
+                <span class="layout-icon">◻️</span>Minimal
+              </button>
+              <button class="layout-btn" [class.active]="config.style.layout === 'elegant'"
+                (click)="config.style.layout = 'elegant'">
+                <span class="layout-icon">💎</span>Elegante
+              </button>
+              <button class="layout-btn" [class.active]="config.style.layout === 'neon'"
+                (click)="config.style.layout = 'neon'">
+                <span class="layout-icon">🌟</span>Neón
               </button>
             </div>
+
+            <!-- Header Background -->
+            <div class="form-group" style="margin-top: 1rem;">
+              <label>Fondo del Header</label>
+              <div class="header-bg-upload" (click)="headerBgInput.click()">
+                @if (config.style.headerBackground) {
+                  <img [src]="config.style.headerBackground" alt="Header bg" />
+                  <button class="remove-bg-btn" (click)="removeHeaderBg($event)">✕</button>
+                } @else {
+                  <div class="upload-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17l3-6 3 6"/>
+                    </svg>
+                    <span>Subir imagen</span>
+                  </div>
+                }
+              </div>
+              <input #headerBgInput type="file" accept="image/*" (change)="onHeaderBgUpload($event)" hidden />
+            </div>
+
+            @if (config.style.headerBackground) {
+              <div class="form-group">
+                <label>Opacidad overlay: {{ config.style.headerOverlay }}%</label>
+                <input type="range" min="0" max="80" [(ngModel)]="config.style.headerOverlay" class="slider" />
+              </div>
+            }
+
             <div class="color-pickers">
               <div class="color-picker-item">
                 <label>Principal</label>
-                <div class="color-preview" [style.background]="config.style.primaryColor" 
+                <div class="color-preview" [style.background]="config.style.primaryColor"
                      (click)="showColorPicker('primaryColor')">
                 </div>
               </div>
@@ -164,6 +192,19 @@ interface MenuConfig {
                 <div class="color-preview" [style.background]="config.style.accentColor"
                      (click)="showColorPicker('accentColor')">
                 </div>
+              </div>
+            </div>
+
+            <!-- Card Style -->
+            <div class="form-group" style="margin-top: 1rem;">
+              <label>Estilo de tarjetas</label>
+              <div class="style-pills">
+                <button class="pill" [class.active]="config.style.cardStyle === 'flat'"
+                  (click)="config.style.cardStyle = 'flat'">Plano</button>
+                <button class="pill" [class.active]="config.style.cardStyle === 'elevated'"
+                  (click)="config.style.cardStyle = 'elevated'">Elevado</button>
+                <button class="pill" [class.active]="config.style.cardStyle === 'glassmorphism'"
+                  (click)="config.style.cardStyle = 'glassmorphism'">Glass</button>
               </div>
             </div>
           </div>
@@ -532,25 +573,106 @@ interface MenuConfig {
 
     .layout-options {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
     }
 
     .layout-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.75rem;
+      gap: 0.2rem;
+      padding: 0.5rem 0.25rem;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      .layout-icon { font-size: 1rem; }
+      
+      &:hover { background: rgba(255, 255, 255, 0.1); }
+      
+      &.active {
+        background: rgba(139, 92, 246, 0.2);
+        border-color: #8B5CF6;
+        color: white;
+      }
+    }
+
+    .header-bg-upload {
+      width: 100%;
+      height: 80px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
       border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      &:hover { border-color: #8B5CF6; }
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove-bg-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.9);
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 12px;
+        
+        &:hover { background: #EF4444; }
+      }
+    }
+
+    .slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      -webkit-appearance: none;
+      margin-top: 0.5rem;
+      
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #8B5CF6;
+        cursor: pointer;
+      }
+    }
+
+    .style-pills {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .pill {
+      flex: 1;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
       color: rgba(255, 255, 255, 0.7);
       font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.2s;
-      
-      .layout-icon { font-size: 1.25rem; }
       
       &:hover { background: rgba(255, 255, 255, 0.1); }
       
@@ -1043,6 +1165,7 @@ export class MenuGeneratorComponent implements OnInit {
     showDescriptions: true,
     showImages: true,
     selectedCategories: [],
+    logoInQR: true,
     style: {
       primaryColor: '#8B5CF6',
       secondaryColor: '#EC4899',
@@ -1050,7 +1173,10 @@ export class MenuGeneratorComponent implements OnInit {
       textColor: '#1a1a1a',
       accentColor: '#10B981',
       fontFamily: 'Inter, sans-serif',
-      layout: 'modern'
+      layout: 'modern',
+      headerOverlay: 40,
+      cornerRadius: 'rounded',
+      cardStyle: 'elevated'
     }
   };
 
@@ -1133,13 +1259,28 @@ export class MenuGeneratorComponent implements OnInit {
     }
   }
 
+  onHeaderBgUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.config.style.headerBackground = e.target?.result as string;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  removeHeaderBg(event: Event): void {
+    event.stopPropagation();
+    this.config.style.headerBackground = undefined;
+  }
+
   showColorPicker(colorKey: string): void {
-    // For now, cycle through preset colors
     const presets: Record<string, string[]> = {
-      primaryColor: ['#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#EC4899', '#F43F5E'],
-      secondaryColor: ['#EC4899', '#F43F5E', '#8B5CF6', '#6366F1', '#10B981', '#F59E0B'],
-      backgroundColor: ['#ffffff', '#FAFAFA', '#F5F5F4', '#1a1a1a', '#0f172a'],
-      accentColor: ['#10B981', '#F59E0B', '#EC4899', '#6366F1', '#EF4444']
+      primaryColor: ['#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#EC4899', '#F43F5E', '#D4AF37', '#1a1a1a'],
+      secondaryColor: ['#EC4899', '#F43F5E', '#8B5CF6', '#6366F1', '#10B981', '#F59E0B', '#C0C0C0', '#333333'],
+      backgroundColor: ['#ffffff', '#FAFAFA', '#F5F5F4', '#1a1a1a', '#0f172a', '#FDF6E9', '#F0FFF4'],
+      accentColor: ['#10B981', '#F59E0B', '#EC4899', '#6366F1', '#EF4444', '#D4AF37', '#00D9FF']
     };
 
     const colors = presets[colorKey] || [];
@@ -1156,16 +1297,45 @@ export class MenuGeneratorComponent implements OnInit {
   async generateQR(): Promise<void> {
     this.showQRModal = true;
 
-    // Wait for canvas to be available
     setTimeout(async () => {
       if (this.qrCanvas?.nativeElement) {
         const url = `https://${this.getMenuUrl()}`;
-        await QRCode.toCanvas(this.qrCanvas.nativeElement, url, {
-          width: 200,
+        const canvas = this.qrCanvas.nativeElement;
+
+        // Generate QR with high error correction for logo overlay
+        await QRCode.toCanvas(canvas, url, {
+          width: 220,
           margin: 2,
+          errorCorrectionLevel: 'H',
           color: { dark: '#1a1a1a', light: '#ffffff' }
         });
-        this.qrDataUrl.set(this.qrCanvas.nativeElement.toDataURL('image/png'));
+
+        // Embed logo in center if enabled and logo exists
+        if (this.config.logoInQR && this.logoUrl()) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              const logoSize = canvas.width * 0.25;
+              const x = (canvas.width - logoSize) / 2;
+              const y = (canvas.height - logoSize) / 2;
+
+              // White background circle for logo
+              ctx.fillStyle = 'white';
+              ctx.beginPath();
+              ctx.arc(canvas.width / 2, canvas.height / 2, logoSize / 2 + 5, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Draw logo
+              ctx.drawImage(img, x, y, logoSize, logoSize);
+              this.qrDataUrl.set(canvas.toDataURL('image/png'));
+            };
+            img.src = this.logoUrl();
+          }
+        } else {
+          this.qrDataUrl.set(canvas.toDataURL('image/png'));
+        }
       }
     }, 100);
   }
