@@ -1,8 +1,9 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '@env/environment';
+import { OfflineService } from '../offline/offline.service';
 
 export interface AuthUser {
     id: string;
@@ -68,10 +69,17 @@ export class AuthService {
 
     isAuthenticated = computed(() => !!this.userSignal() && !!this.getToken());
 
+    private offlineService = inject(OfflineService);
+
     constructor(
         private http: HttpClient,
         private router: Router
-    ) { }
+    ) {
+        // Clear offline cache if no active session (e.g., user refreshed without being logged in)
+        if (!this.getToken()) {
+            this.clearOfflineCache();
+        }
+    }
 
     register(request: RegisterRequest): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${environment.authUrl}/auth/register`, request).pipe(
@@ -107,9 +115,20 @@ export class AuthService {
         localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(TENANT_KEY);
+        localStorage.removeItem('pos_cached_tenant');
         this.userSignal.set(null);
         this.tenantSignal.set(null);
+        this.clearOfflineCache();
         this.router.navigate(['/auth/login']);
+    }
+
+    /**
+     * Clear IndexedDB offline cache
+     */
+    private clearOfflineCache(): void {
+        this.offlineService.clearCache().catch(err => {
+            console.warn('Failed to clear offline cache:', err);
+        });
     }
 
     getToken(): string | null {
