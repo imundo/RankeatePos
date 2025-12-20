@@ -52,6 +52,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'menu-generator',
+        loadComponent: () => import('./features/menu-generator/menu-generator.component').then(m => m.MenuGeneratorComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: '**',
         redirectTo: 'pos'
     }
