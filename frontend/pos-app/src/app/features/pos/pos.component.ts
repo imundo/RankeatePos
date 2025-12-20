@@ -88,7 +88,7 @@ interface CartItem {
           </div>
 
           <!-- Category Pills -->
-          <div class="category-pills mb-2" style="display: flex; flex-wrap: nowrap; gap: 0.75rem; overflow-x: auto;">
+          <div class="category-pills">
             <button 
               class="category-pill"
               [class.active]="!selectedCategory()"
@@ -598,9 +598,65 @@ interface CartItem {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 1rem;
+      margin-top: 1rem;
       
       @media (min-width: 1200px) {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+    }
+
+    .category-pills {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.75rem;
+      overflow-x: auto;
+      padding: 0.75rem 0;
+      margin-bottom: 0.5rem;
+      scrollbar-width: none;
+      
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .category-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      
+      &.active {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.4);
+      }
+      
+      .pill-icon {
+        font-size: 1rem;
+      }
+      
+      .pill-count {
+        padding: 0.15rem 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
       }
     }
 
