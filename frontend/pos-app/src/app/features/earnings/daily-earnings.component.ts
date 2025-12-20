@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -123,8 +123,17 @@ interface DailySummary {
           </div>
         </section>
 
+        <!-- Resizable Splitter -->
+        <div 
+          class="splitter"
+          (mousedown)="startResize($event)"
+          [class.dragging]="isDragging()"
+        >
+          <div class="splitter-line"></div>
+        </div>
+
         <!-- Day Detail Section -->
-        <section class="detail-section">
+        <section class="detail-section" [style.flex]="'1'">
           <div class="detail-header">
             <h3>
               📅 {{ selectedDateFormatted() }}
@@ -298,18 +307,49 @@ interface DailySummary {
     }
 
     .earnings-content {
-      display: grid;
-      grid-template-columns: 400px 1fr;
-      gap: 1.5rem;
+      display: flex;
+      gap: 0;
       padding: 1.5rem;
+      min-height: calc(100vh - 120px);
       
       @media (max-width: 1024px) {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        gap: 1rem;
       }
       
       @media (max-width: 600px) {
         padding: 1rem;
-        gap: 1rem;
+      }
+    }
+
+    /* Resizable Splitter */
+    .splitter {
+      width: 12px;
+      cursor: col-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      
+      &:hover, &.dragging {
+        background: rgba(99, 102, 241, 0.1);
+        
+        .splitter-line {
+          background: #6366F1;
+        }
+      }
+      
+      .splitter-line {
+        width: 4px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        transition: all 0.2s;
+      }
+      
+      @media (max-width: 1024px) {
+        display: none;
       }
     }
 
@@ -797,10 +837,62 @@ export class DailyEarningsComponent implements OnInit {
 
   weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+  // Resizable splitter properties
+  isDragging = signal(false);
+  leftPanelWidth = signal(400);
+
   // Mock sales data for demo
   private salesData = signal<Record<string, DailySummary>>({});
 
+  // Splitter resize methods
+  startResize(event: MouseEvent) {
+    event.preventDefault();
+    this.isDragging.set(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (!this.isDragging()) return;
+
+    const container = document.querySelector('.earnings-content') as HTMLElement;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const newWidth = event.clientX - containerRect.left - 24; // 24px for padding
+
+    // Constrain width between 250px and 600px
+    const constrainedWidth = Math.max(250, Math.min(600, newWidth));
+    this.leftPanelWidth.set(constrainedWidth);
+
+    // Update calendar-section width
+    const calendarSection = document.querySelector('.calendar-section') as HTMLElement;
+    if (calendarSection) {
+      calendarSection.style.width = `${constrainedWidth}px`;
+      calendarSection.style.flexShrink = '0';
+    }
+  }
+
+  @HostListener('document:mouseup')
+  onMouseUp() {
+    if (this.isDragging()) {
+      this.isDragging.set(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  }
+
   ngOnInit() {
+    // Set initial width
+    setTimeout(() => {
+      const calendarSection = document.querySelector('.calendar-section') as HTMLElement;
+      if (calendarSection) {
+        calendarSection.style.width = `${this.leftPanelWidth()}px`;
+        calendarSection.style.flexShrink = '0';
+      }
+    }, 0);
+
     this.loadSalesData();
   }
 
