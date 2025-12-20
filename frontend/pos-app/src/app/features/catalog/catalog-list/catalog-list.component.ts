@@ -395,6 +395,13 @@ type SortOption = 'nombre' | 'precio' | 'stock';
       padding: 1rem 1.5rem;
       gap: 1rem;
       flex-wrap: wrap;
+      position: sticky;
+      top: 72px;
+      z-index: 90;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 0.5rem;
     }
 
     .categories-bar {
