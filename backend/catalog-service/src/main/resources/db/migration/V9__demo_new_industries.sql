@@ -9,13 +9,13 @@
 -- =====================================================
 
 -- Categories for Academia
-INSERT INTO categories (id, tenant_id, nombre, descripcion, icon, orden, activa, created_at)
+INSERT INTO categories (id, tenant_id, nombre, descripcion, orden, activa, created_at)
 VALUES
-    ('cat-3001-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 'Desarrollo Web', 'Cursos de programación y desarrollo web', '💻', 1, true, NOW()),
-    ('cat-3001-0000-0000-000000000002', 'a3000000-0000-0000-0000-000000000003', 'Marketing Digital', 'Publicidad y redes sociales', '📱', 2, true, NOW()),
-    ('cat-3001-0000-0000-000000000003', 'a3000000-0000-0000-0000-000000000003', 'Diseño UX/UI', 'Experiencia de usuario e interfaces', '🎨', 3, true, NOW()),
-    ('cat-3001-0000-0000-000000000004', 'a3000000-0000-0000-0000-000000000003', 'Liderazgo', 'Habilidades de gestión y liderazgo', '👔', 4, true, NOW()),
-    ('cat-3001-0000-0000-000000000005', 'a3000000-0000-0000-0000-000000000003', 'Finanzas', 'Educación financiera e inversiones', '💰', 5, true, NOW());
+    ('cat-3001-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 'Desarrollo Web', 'Cursos de programación y desarrollo web', 1, true, NOW()),
+    ('cat-3001-0000-0000-000000000002', 'a3000000-0000-0000-0000-000000000003', 'Marketing Digital', 'Publicidad y redes sociales', 2, true, NOW()),
+    ('cat-3001-0000-0000-000000000003', 'a3000000-0000-0000-0000-000000000003', 'Diseño UX/UI', 'Experiencia de usuario e interfaces', 3, true, NOW()),
+    ('cat-3001-0000-0000-000000000004', 'a3000000-0000-0000-0000-000000000003', 'Liderazgo', 'Habilidades de gestión y liderazgo', 4, true, NOW()),
+    ('cat-3001-0000-0000-000000000005', 'a3000000-0000-0000-0000-000000000003', 'Finanzas', 'Educación financiera e inversiones', 5, true, NOW());
 
 -- Products for Academia (Cursos)
 INSERT INTO products (id, tenant_id, sku, nombre, descripcion, category_id, unit_id, activo, created_at)
@@ -76,13 +76,13 @@ VALUES
 -- =====================================================
 
 -- Categories for Editorial
-INSERT INTO categories (id, tenant_id, nombre, descripcion, icon, orden, activa, created_at)
+INSERT INTO categories (id, tenant_id, nombre, descripcion, orden, activa, created_at)
 VALUES
-    ('cat-4001-0000-0000-000000000001', 'a4000000-0000-0000-0000-000000000004', 'Libros Impresos', 'Libros físicos encuadernados', '📕', 1, true, NOW()),
-    ('cat-4001-0000-0000-000000000002', 'a4000000-0000-0000-0000-000000000004', 'Revistas', 'Publicaciones periódicas', '📰', 2, true, NOW()),
-    ('cat-4001-0000-0000-000000000003', 'a4000000-0000-0000-0000-000000000004', 'Catálogos', 'Catálogos corporativos', '📋', 3, true, NOW()),
-    ('cat-4001-0000-0000-000000000004', 'a4000000-0000-0000-0000-000000000004', 'Folletos', 'Material promocional', '📄', 4, true, NOW()),
-    ('cat-4001-0000-0000-000000000005', 'a4000000-0000-0000-0000-000000000004', 'Tarjetas', 'Tarjetas de presentación', '🪪', 5, true, NOW());
+    ('cat-4001-0000-0000-000000000001', 'a4000000-0000-0000-0000-000000000004', 'Libros Impresos', 'Libros físicos encuadernados', 1, true, NOW()),
+    ('cat-4001-0000-0000-000000000002', 'a4000000-0000-0000-0000-000000000004', 'Revistas', 'Publicaciones periódicas', 2, true, NOW()),
+    ('cat-4001-0000-0000-000000000003', 'a4000000-0000-0000-0000-000000000004', 'Catálogos', 'Catálogos corporativos', 3, true, NOW()),
+    ('cat-4001-0000-0000-000000000004', 'a4000000-0000-0000-0000-000000000004', 'Folletos', 'Material promocional', 4, true, NOW()),
+    ('cat-4001-0000-0000-000000000005', 'a4000000-0000-0000-0000-000000000004', 'Tarjetas', 'Tarjetas de presentación', 5, true, NOW());
 
 -- Products for Editorial
 INSERT INTO products (id, tenant_id, sku, nombre, descripcion, category_id, unit_id, activo, created_at)
