@@ -33,31 +33,31 @@ import { AuthService } from '@core/auth/auth.service';
           <div class="branding">
             <div class="logo-container">
               <svg class="logo-icon" viewBox="0 0 48 48" fill="none">
-                <rect x="4" y="8" width="40" height="32" rx="4" fill="url(#gradient1)"/>
-                <rect x="8" y="14" width="20" height="4" rx="2" fill="white" opacity="0.9"/>
-                <rect x="8" y="22" width="32" height="3" rx="1.5" fill="white" opacity="0.6"/>
-                <rect x="8" y="28" width="32" height="3" rx="1.5" fill="white" opacity="0.6"/>
-                <rect x="8" y="34" width="16" height="3" rx="1.5" fill="white" opacity="0.6"/>
-                <circle cx="38" cy="16" r="6" fill="#10B981"/>
-                <path d="M35 16L37 18L41 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <!-- Smart brain/rocket hybrid icon -->
+                <circle cx="24" cy="24" r="20" fill="url(#smartGradient)"/>
+                <path d="M24 12c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10z" fill="white" opacity="0.3"/>
+                <path d="M24 16l-6 12h4v8l6-12h-4z" fill="white"/>
+                <circle cx="24" cy="18" r="2" fill="#10B981"/>
+                <circle cx="18" cy="24" r="1.5" fill="#F59E0B"/>
+                <circle cx="30" cy="24" r="1.5" fill="#F59E0B"/>
                 <defs>
-                  <linearGradient id="gradient1" x1="4" y1="8" x2="44" y2="40" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#6366F1"/>
-                    <stop offset="1" stop-color="#8B5CF6"/>
+                  <linearGradient id="smartGradient" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3B82F6"/>
+                    <stop offset="0.5" stop-color="#8B5CF6"/>
+                    <stop offset="1" stop-color="#EC4899"/>
                   </linearGradient>
                 </defs>
               </svg>
             </div>
-            <h1 class="app-name">POS Chile</h1>
-            <p class="app-tagline">Sistema de Punto de Venta Inteligente</p>
+            <h1 class="app-name">SmartPos</h1>
+            <p class="app-tagline">Inteligencia para tu negocio</p>
           </div>
 
           <!-- Business Type Indicator -->
           <div class="business-badges">
-            <span class="badge">🥖 Panaderías</span>
-            <span class="badge">🎓 Cursos</span>
-            <span class="badge">📚 Editorial</span>
-            <span class="badge">🛒 Comercio</span>
+            <span class="badge">🚀 +500 negocios</span>
+            <span class="badge">⭐ 4.9 estrellas</span>
+            <span class="badge">🔥 Gratis 14 días</span>
           </div>
 
           <!-- Login Form -->
@@ -172,34 +172,42 @@ import { AuthService } from '@core/auth/auth.service';
 
         <!-- Features Showcase -->
         <div class="features-panel">
-          <h2>Potencia tu negocio</h2>
+          <h2>🚀 Transforma tu negocio</h2>
+          <p class="features-subtitle">La plataforma #1 en punto de venta inteligente</p>
           <ul class="features-list">
             <li>
-              <span class="feature-icon">⚡</span>
+              <span class="feature-icon">💰</span>
               <div>
-                <strong>Ventas rápidas</strong>
-                <span>Interfaz optimizada para atención ágil</span>
+                <strong>Vende 3x más rápido</strong>
+                <span>Interfaz intuitiva que reduce errores y acelera cada transacción</span>
               </div>
             </li>
             <li>
-              <span class="feature-icon">📊</span>
+              <span class="feature-icon">📈</span>
               <div>
-                <strong>Reportes en tiempo real</strong>
-                <span>Visualiza tus ventas al instante</span>
+                <strong>Decisiones con datos reales</strong>
+                <span>Reportes y analytics que revelan oportunidades de crecimiento</span>
               </div>
             </li>
             <li>
-              <span class="feature-icon">📱</span>
+              <span class="feature-icon">🌐</span>
               <div>
-                <strong>Modo offline</strong>
-                <span>Sigue vendiendo sin internet</span>
+                <strong>Nunca pierdas una venta</strong>
+                <span>Modo offline inteligente - vende sin internet, sincroniza después</span>
               </div>
             </li>
             <li>
-              <span class="feature-icon">🔒</span>
+              <span class="feature-icon">🛡️</span>
               <div>
-                <strong>100% Seguro</strong>
-                <span>Tus datos siempre protegidos</span>
+                <strong>Tu negocio protegido 24/7</strong>
+                <span>Encriptación bancaria y backups automáticos en la nube</span>
+              </div>
+            </li>
+            <li>
+              <span class="feature-icon">🎯</span>
+              <div>
+                <strong>Multi-industria</strong>
+                <span>Retail, servicios, cursos, editorial - adaptado a tu negocio</span>
               </div>
             </li>
           </ul>
@@ -592,7 +600,14 @@ import { AuthService } from '@core/auth/auth.service';
       font-size: 1.75rem;
       font-weight: 700;
       color: white;
+      margin: 0 0 0.5rem;
+    }
+
+    .features-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.6);
       margin: 0 0 2rem;
+      font-weight: 400;
     }
 
     .features-list {
