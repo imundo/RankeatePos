@@ -40,4 +40,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.tenant.id = :tenantId AND u.deletedAt IS NULL AND " +
             "(LOWER(u.email) LIKE %:search% OR LOWER(u.nombre) LIKE %:search% OR LOWER(u.apellido) LIKE %:search%)")
     Page<User> searchByTenantId(UUID tenantId, String search, Pageable pageable);
+
+    // Global methods for Admin API
+    boolean existsByEmail(String email);
+
+    Page<User> findByEmailContainingIgnoreCaseOrNombreContainingIgnoreCase(String email, String nombre,
+            Pageable pageable);
 }

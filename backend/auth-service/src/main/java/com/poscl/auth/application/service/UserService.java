@@ -258,4 +258,79 @@ public class UserService {
                                 .createdAt(user.getCreatedAt())
                                 .build();
         }
+
+        // ==================== Admin API Methods ====================
+
+        /**
+         * Cuenta total de usuarios en la plataforma (Super Admin)
+         */
+        public long countAll() {
+                return userRepository.count();
+        }
+
+        /**
+         * Lista usuarios globalmente con búsqueda y filtro por tenant (Super Admin)
+         */
+        @Transactional(readOnly = true)
+        public Page<User> findAll(String search, UUID tenantId, Pageable pageable) {
+                if (tenantId != null) {
+                        if (search != null && !search.isBlank()) {
+                                return userRepository.searchByTenantId(tenantId, search.toLowerCase(), pageable);
+                        }
+                        return userRepository.findByTenant_IdAndDeletedAtIsNull(tenantId, pageable);
+                }
+
+                if (search != null && !search.isBlank()) {
+                        return userRepository.findByEmailContainingIgnoreCaseOrNombreContainingIgnoreCase(search,
+                                        search, pageable);
+                }
+
+                return userRepository.findAll(pageable);
+        }
+
+        /**
+         * Crea un usuario para un tenant específico (usado por Admin Wizard)
+         */
+        public User createForTenant(UUID tenantId, com.poscl.auth.api.dto.UserRequest request) {
+                log.info("Creando usuario admin para tenant {}: {}", tenantId, request.getEmail());
+
+                // Verificar email único globalmente
+                if (userRepository.existsByEmail(request.getEmail())) {
+                        throw new DomainException("EMAIL_EXISTS",
+                                        "Ya existe un usuario con ese email", HttpStatus.CONFLICT);
+                }
+
+                Tenant tenant = tenantRepository.findById(tenantId)
+                                .orElseThrow(() -> new DomainException("TENANT_NOT_FOUND",
+                                                "Tenant no encontrado", HttpStatus.NOT_FOUND));
+
+                // Obtener rol
+                Set<Role> roles = new HashSet<>();
+                if (request.getRoleName() != null) {
+                        Role role = roleRepository.findByNombre(request.getRoleName())
+                                        .orElseThrow(() -> new DomainException("ROLE_NOT_FOUND",
+                                                        "Rol no encontrado: " + request.getRoleName(),
+                                                        HttpStatus.NOT_FOUND));
+                        roles.add(role);
+                }
+
+                User user = User.builder()
+                                .tenant(tenant)
+                                .email(request.getEmail())
+                                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                                .nombre(request.getNombre())
+                                .apellido(request.getApellido())
+                                .telefono(request.getTelefono())
+                                .activo(true)
+                                .emailVerificado(false)
+                                .roles(roles)
+                                .branches(new HashSet<>())
+                                .createdAt(Instant.now())
+                                .build();
+
+                user = userRepository.save(user);
+                log.info("Usuario admin creado: {} - ID: {}", user.getEmail(), user.getId());
+
+                return user;
+        }
 }
