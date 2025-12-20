@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,33 +7,35 @@ import { MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { AuthService } from '@core/auth/auth.service';
 import { CatalogService, Category, Product } from '@core/services/catalog.service';
+import { jsPDF } from 'jspdf';
+import * as QRCode from 'qrcode';
 
 interface MenuStyle {
-    primaryColor: string;
-    secondaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    accentColor: string;
-    fontFamily: string;
-    layout: 'modern' | 'classic' | 'minimal';
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  fontFamily: string;
+  layout: 'modern' | 'classic' | 'minimal';
 }
 
 interface MenuConfig {
-    title: string;
-    subtitle: string;
-    showPrices: boolean;
-    showDescriptions: boolean;
-    showImages: boolean;
-    selectedCategories: string[];
-    style: MenuStyle;
+  title: string;
+  subtitle: string;
+  showPrices: boolean;
+  showDescriptions: boolean;
+  showImages: boolean;
+  selectedCategories: string[];
+  style: MenuStyle;
 }
 
 @Component({
-    selector: 'app-menu-generator',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, ToastModule, ColorPickerModule],
-    providers: [MessageService],
-    template: `
+  selector: 'app-menu-generator',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, ToastModule, ColorPickerModule],
+  providers: [MessageService],
+  template: `
     <div class="menu-generator-container">
       <!-- Header -->
       <header class="generator-header">
@@ -317,22 +319,9 @@ interface MenuConfig {
             <h2>Tu Código QR</h2>
             <div class="qr-display">
               <div class="qr-code-large">
-                <svg viewBox="0 0 100 100" fill="currentColor">
-                  <rect x="0" y="0" width="30" height="30"/><rect x="35" y="0" width="10" height="10"/>
-                  <rect x="55" y="0" width="10" height="10"/><rect x="70" y="0" width="30" height="30"/>
-                  <rect x="5" y="5" width="20" height="20" fill="white"/><rect x="75" y="5" width="20" height="20" fill="white"/>
-                  <rect x="10" y="10" width="10" height="10"/><rect x="80" y="10" width="10" height="10"/>
-                  <rect x="0" y="35" width="10" height="10"/><rect x="20" y="35" width="10" height="10"/>
-                  <rect x="35" y="35" width="30" height="30"/><rect x="70" y="35" width="10" height="10"/>
-                  <rect x="90" y="35" width="10" height="10"/><rect x="40" y="40" width="20" height="20" fill="white"/>
-                  <rect x="45" y="45" width="10" height="10"/>
-                  <rect x="0" y="70" width="30" height="30"/><rect x="35" y="70" width="10" height="10"/>
-                  <rect x="55" y="70" width="10" height="10"/><rect x="70" y="70" width="10" height="10"/>
-                  <rect x="90" y="70" width="10" height="10"/><rect x="5" y="75" width="20" height="20" fill="white"/>
-                  <rect x="10" y="80" width="10" height="10"/><rect x="70" y="90" width="30" height="10"/>
-                </svg>
+                <canvas #qrCanvas></canvas>
               </div>
-              <p class="qr-url">menu.turestaurante.cl/{{ tenantName().toLowerCase().replace(' ', '-') }}</p>
+              <p class="qr-url">{{ getMenuUrl() }}</p>
             </div>
             <div class="qr-actions">
               <button class="btn-secondary" (click)="downloadQR()">
@@ -357,7 +346,7 @@ interface MenuConfig {
 
     <p-toast position="bottom-center"></p-toast>
   `,
-    styles: [`
+  styles: [`
     .menu-generator-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -1031,179 +1020,288 @@ interface MenuConfig {
   `]
 })
 export class MenuGeneratorComponent implements OnInit {
-    private authService = inject(AuthService);
-    private catalogService = inject(CatalogService);
-    private messageService = inject(MessageService);
+  private authService = inject(AuthService);
+  private catalogService = inject(CatalogService);
+  private messageService = inject(MessageService);
 
-    // State
-    categories = signal<Category[]>([]);
-    products = signal<Product[]>([]);
-    logoUrl = signal<string>('');
-    previewDevice = signal<'desktop' | 'mobile'>('desktop');
-    showQRModal = false;
+  @ViewChild('qrCanvas') qrCanvas!: ElementRef<HTMLCanvasElement>;
 
-    tenantName = computed(() => this.authService.tenant()?.nombre || 'Mi Restaurante');
+  // State
+  categories = signal<Category[]>([]);
+  products = signal<Product[]>([]);
+  logoUrl = signal<string>('');
+  previewDevice = signal<'desktop' | 'mobile'>('desktop');
+  showQRModal = false;
+  qrDataUrl = signal<string>('');
 
-    config: MenuConfig = {
-        title: '',
-        subtitle: '',
-        showPrices: true,
-        showDescriptions: true,
-        showImages: true,
-        selectedCategories: [],
-        style: {
-            primaryColor: '#8B5CF6',
-            secondaryColor: '#EC4899',
-            backgroundColor: '#ffffff',
-            textColor: '#1a1a1a',
-            accentColor: '#10B981',
-            fontFamily: 'Inter, sans-serif',
-            layout: 'modern'
-        }
+  tenantName = computed(() => this.authService.tenant()?.nombre || 'Mi Restaurante');
+
+  config: MenuConfig = {
+    title: '',
+    subtitle: '',
+    showPrices: true,
+    showDescriptions: true,
+    showImages: true,
+    selectedCategories: [],
+    style: {
+      primaryColor: '#8B5CF6',
+      secondaryColor: '#EC4899',
+      backgroundColor: '#ffffff',
+      textColor: '#1a1a1a',
+      accentColor: '#10B981',
+      fontFamily: 'Inter, sans-serif',
+      layout: 'modern'
+    }
+  };
+
+  ngOnInit(): void {
+    this.loadCategories();
+    this.loadProducts();
+    this.config.title = this.tenantName();
+  }
+
+  loadCategories(): void {
+    this.catalogService.getCategories().subscribe({
+      next: (cats) => {
+        this.categories.set(cats);
+        // Select all by default
+        this.config.selectedCategories = cats.map(c => c.id);
+      },
+      error: (err) => console.error('Error loading categories:', err)
+    });
+  }
+
+  loadProducts(): void {
+    this.catalogService.getProducts().subscribe({
+      next: (response: any) => {
+        const prods = response.content || response || [];
+        this.products.set(prods);
+      },
+      error: (err) => console.error('Error loading products:', err)
+    });
+  }
+
+  isCategorySelected(catId: string): boolean {
+    return this.config.selectedCategories.includes(catId);
+  }
+
+  toggleCategory(catId: string): void {
+    const idx = this.config.selectedCategories.indexOf(catId);
+    if (idx > -1) {
+      this.config.selectedCategories.splice(idx, 1);
+    } else {
+      this.config.selectedCategories.push(catId);
+    }
+  }
+
+  selectAllCategories(): void {
+    if (this.allCategoriesSelected()) {
+      this.config.selectedCategories = [];
+    } else {
+      this.config.selectedCategories = this.categories().map(c => c.id);
+    }
+  }
+
+  allCategoriesSelected(): boolean {
+    return this.config.selectedCategories.length === this.categories().length;
+  }
+
+  getCategoryProductCount(catId: string): number {
+    return this.products().filter(p => p.categoryId === catId).length;
+  }
+
+  getSelectedCategories(): Category[] {
+    return this.categories().filter(c => this.config.selectedCategories.includes(c.id));
+  }
+
+  getProductsByCategory(catId: string): Product[] {
+    return this.products().filter(p => p.categoryId === catId);
+  }
+
+  getHeaderGradient(): string {
+    return `linear-gradient(135deg, ${this.config.style.primaryColor}, ${this.config.style.secondaryColor})`;
+  }
+
+  onLogoUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.logoUrl.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  showColorPicker(colorKey: string): void {
+    // For now, cycle through preset colors
+    const presets: Record<string, string[]> = {
+      primaryColor: ['#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#EC4899', '#F43F5E'],
+      secondaryColor: ['#EC4899', '#F43F5E', '#8B5CF6', '#6366F1', '#10B981', '#F59E0B'],
+      backgroundColor: ['#ffffff', '#FAFAFA', '#F5F5F4', '#1a1a1a', '#0f172a'],
+      accentColor: ['#10B981', '#F59E0B', '#EC4899', '#6366F1', '#EF4444']
     };
 
-    ngOnInit(): void {
-        this.loadCategories();
-        this.loadProducts();
-        this.config.title = this.tenantName();
-    }
+    const colors = presets[colorKey] || [];
+    const currentIdx = colors.indexOf((this.config.style as any)[colorKey]);
+    const nextIdx = (currentIdx + 1) % colors.length;
+    (this.config.style as any)[colorKey] = colors[nextIdx];
+  }
 
-    loadCategories(): void {
-        this.catalogService.getCategories().subscribe({
-            next: (cats) => {
-                this.categories.set(cats);
-                // Select all by default
-                this.config.selectedCategories = cats.map(c => c.id);
-            },
-            error: (err) => console.error('Error loading categories:', err)
+  getMenuUrl(): string {
+    const slug = this.tenantName().toLowerCase().replace(/\s+/g, '-');
+    return `menu.rankeatepos.cl/${slug}`;
+  }
+
+  async generateQR(): Promise<void> {
+    this.showQRModal = true;
+
+    // Wait for canvas to be available
+    setTimeout(async () => {
+      if (this.qrCanvas?.nativeElement) {
+        const url = `https://${this.getMenuUrl()}`;
+        await QRCode.toCanvas(this.qrCanvas.nativeElement, url, {
+          width: 200,
+          margin: 2,
+          color: { dark: '#1a1a1a', light: '#ffffff' }
         });
+        this.qrDataUrl.set(this.qrCanvas.nativeElement.toDataURL('image/png'));
+      }
+    }, 100);
+  }
+
+  downloadQR(): void {
+    if (this.qrDataUrl()) {
+      const link = document.createElement('a');
+      link.download = `menu-qr-${this.tenantName().toLowerCase().replace(/\s+/g, '-')}.png`;
+      link.href = this.qrDataUrl();
+      link.click();
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'QR Descargado',
+        detail: 'El código QR se guardó en tu dispositivo',
+        life: 3000
+      });
+    }
+  }
+
+  copyQRLink(): void {
+    const link = `https://${this.getMenuUrl()}`;
+    navigator.clipboard?.writeText(link);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Enlace copiado',
+      detail: 'El enlace fue copiado al portapapeles',
+      life: 3000
+    });
+  }
+
+  exportPDF(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Generando PDF',
+      detail: 'Tu carta se está exportando...',
+      life: 3000
+    });
+
+    const doc = new jsPDF();
+    const title = this.config.title || this.tenantName();
+    let yPos = 20;
+
+    // Header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, 105, yPos, { align: 'center' });
+    yPos += 10;
+
+    if (this.config.subtitle) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'italic');
+      doc.text(this.config.subtitle, 105, yPos, { align: 'center' });
+      yPos += 15;
+    } else {
+      yPos += 10;
     }
 
-    loadProducts(): void {
-        this.catalogService.getProducts().subscribe({
-            next: (response: any) => {
-                const prods = response.content || response || [];
-                this.products.set(prods);
-            },
-            error: (err) => console.error('Error loading products:', err)
-        });
-    }
+    // Line separator
+    doc.setDrawColor(139, 92, 246);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, 190, yPos);
+    yPos += 15;
 
-    isCategorySelected(catId: string): boolean {
-        return this.config.selectedCategories.includes(catId);
-    }
+    // Categories and products
+    this.getSelectedCategories().forEach(category => {
+      // Check if we need a new page
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
 
-    toggleCategory(catId: string): void {
-        const idx = this.config.selectedCategories.indexOf(catId);
-        if (idx > -1) {
-            this.config.selectedCategories.splice(idx, 1);
-        } else {
-            this.config.selectedCategories.push(catId);
+      // Category name
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(139, 92, 246);
+      doc.text(category.nombre, 20, yPos);
+      yPos += 8;
+
+      // Products
+      doc.setTextColor(0, 0, 0);
+      const products = this.getProductsByCategory(category.id);
+
+      products.forEach(product => {
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
         }
-    }
 
-    selectAllCategories(): void {
-        if (this.allCategoriesSelected()) {
-            this.config.selectedCategories = [];
-        } else {
-            this.config.selectedCategories = this.categories().map(c => c.id);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(product.nombre, 25, yPos);
+
+        if (this.config.showPrices && product.variants?.length) {
+          const price = this.formatPrice(product.variants[0].precioBruto || 0);
+          doc.setFont('helvetica', 'normal');
+          doc.text(price, 190, yPos, { align: 'right' });
         }
-    }
+        yPos += 5;
 
-    allCategoriesSelected(): boolean {
-        return this.config.selectedCategories.length === this.categories().length;
-    }
-
-    getCategoryProductCount(catId: string): number {
-        return this.products().filter(p => p.categoryId === catId).length;
-    }
-
-    getSelectedCategories(): Category[] {
-        return this.categories().filter(c => this.config.selectedCategories.includes(c.id));
-    }
-
-    getProductsByCategory(catId: string): Product[] {
-        return this.products().filter(p => p.categoryId === catId);
-    }
-
-    getHeaderGradient(): string {
-        return `linear-gradient(135deg, ${this.config.style.primaryColor}, ${this.config.style.secondaryColor})`;
-    }
-
-    onLogoUpload(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.logoUrl.set(e.target?.result as string);
-            };
-            reader.readAsDataURL(input.files[0]);
+        if (this.config.showDescriptions && product.descripcion) {
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          const lines = doc.splitTextToSize(product.descripcion, 150);
+          doc.text(lines, 25, yPos);
+          yPos += lines.length * 4;
+          doc.setTextColor(0, 0, 0);
         }
-    }
+        yPos += 3;
+      });
+      yPos += 8;
+    });
 
-    showColorPicker(colorKey: string): void {
-        // For now, cycle through preset colors
-        const presets: Record<string, string[]> = {
-            primaryColor: ['#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#EC4899', '#F43F5E'],
-            secondaryColor: ['#EC4899', '#F43F5E', '#8B5CF6', '#6366F1', '#10B981', '#F59E0B'],
-            backgroundColor: ['#ffffff', '#FAFAFA', '#F5F5F4', '#1a1a1a', '#0f172a'],
-            accentColor: ['#10B981', '#F59E0B', '#EC4899', '#6366F1', '#EF4444']
-        };
+    // Footer
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado por RankeatePos - ${new Date().toLocaleDateString('es-CL')}`, 105, 285, { align: 'center' });
 
-        const colors = presets[colorKey] || [];
-        const currentIdx = colors.indexOf((this.config.style as any)[colorKey]);
-        const nextIdx = (currentIdx + 1) % colors.length;
-        (this.config.style as any)[colorKey] = colors[nextIdx];
-    }
+    // Save
+    doc.save(`carta-${title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
 
-    generateQR(): void {
-        this.showQRModal = true;
-    }
+    this.messageService.add({
+      severity: 'success',
+      summary: 'PDF Generado',
+      detail: 'La carta fue exportada exitosamente',
+      life: 3000
+    });
+  }
 
-    downloadQR(): void {
-        this.messageService.add({
-            severity: 'success',
-            summary: 'QR Descargado',
-            detail: 'El código QR se guardó en tu dispositivo',
-            life: 3000
-        });
-    }
-
-    copyQRLink(): void {
-        const link = `https://menu.turestaurante.cl/${this.tenantName().toLowerCase().replace(' ', '-')}`;
-        navigator.clipboard?.writeText(link);
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Enlace copiado',
-            detail: 'El enlace fue copiado al portapapeles',
-            life: 3000
-        });
-    }
-
-    exportPDF(): void {
-        this.messageService.add({
-            severity: 'info',
-            summary: 'Generando PDF',
-            detail: 'Tu carta se está exportando...',
-            life: 3000
-        });
-
-        // Simular generación
-        setTimeout(() => {
-            this.messageService.add({
-                severity: 'success',
-                summary: 'PDF Generado',
-                detail: 'La carta fue exportada exitosamente',
-                life: 3000
-            });
-        }, 2000);
-    }
-
-    formatPrice(amount: number): string {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP',
-            minimumFractionDigits: 0
-        }).format(amount);
-    }
+  formatPrice(amount: number): string {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0
+    }).format(amount);
+  }
 }
