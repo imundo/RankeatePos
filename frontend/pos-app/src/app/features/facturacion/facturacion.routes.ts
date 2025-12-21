@@ -33,5 +33,9 @@ export const FACTURACION_ROUTES: Routes = [
     {
         path: 'configuracion',
         loadComponent: () => import('./pages/config-facturacion.component').then(m => m.ConfigFacturacionComponent)
+    },
+    {
+        path: 'certificacion',
+        loadComponent: () => import('./pages/certificacion.component').then(m => m.CertificacionComponent)
     }
 ];
