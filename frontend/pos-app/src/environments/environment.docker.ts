@@ -5,5 +5,6 @@ export const environment = {
     apiUrl: 'http://localhost:8080/api',
     authUrl: 'http://localhost:8080/api',
     catalogUrl: 'http://localhost:8080/api',
-    salesUrl: 'http://localhost:8080/api'
+    salesUrl: 'http://localhost:8080/api',
+    billingUrl: 'http://localhost:8080/api'
 };
