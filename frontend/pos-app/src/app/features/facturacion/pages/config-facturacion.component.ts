@@ -4,28 +4,28 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterLink } from '@angular/router';
 
 interface ConfigEmpresa {
-    rut: string;
-    razonSocial: string;
-    giro: string;
-    direccion: string;
-    comuna: string;
-    ciudad: string;
-    telefono: string;
-    email: string;
-    nombreRepresentante: string;
-    rutRepresentante: string;
-    actividadEconomica: string;
-    resolucionSii: string;
-    fechaResolucion: string;
-    ambiente: 'certificacion' | 'produccion';
-    logoUrl?: string;
+  rut: string;
+  razonSocial: string;
+  giro: string;
+  direccion: string;
+  comuna: string;
+  ciudad: string;
+  telefono: string;
+  email: string;
+  nombreRepresentante: string;
+  rutRepresentante: string;
+  actividadEconomica: string;
+  resolucionSii: string;
+  fechaResolucion: string;
+  ambiente: 'certificacion' | 'produccion';
+  logoUrl?: string;
 }
 
 @Component({
-    selector: 'app-config-facturacion',
-    standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
-    template: `
+  selector: 'app-config-facturacion',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  template: `
     <div class="config-container">
       <!-- Header -->
       <header class="page-header">
@@ -247,20 +247,26 @@ interface ConfigEmpresa {
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .config-container {
       padding: 1.5rem;
       max-width: 1000px;
       margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
     }
 
     .page-header h1 {
       font-size: 1.5rem;
       margin: 0;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0.25rem 0 0;
     }
 
@@ -271,28 +277,31 @@ interface ConfigEmpresa {
       justify-content: center;
       gap: 0.5rem;
       padding: 1.5rem;
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       margin: 1.5rem 0;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .status-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .status-icon {
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
       font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .status-item.completed .status-icon {
@@ -303,7 +312,7 @@ interface ConfigEmpresa {
     .status-line {
       width: 60px;
       height: 2px;
-      background: var(--border-color);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .status-line.completed {
@@ -317,10 +326,11 @@ interface ConfigEmpresa {
     }
 
     .card {
-      background: var(--card-bg, #fff);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .card-header {
@@ -333,6 +343,7 @@ interface ConfigEmpresa {
     .card h2 {
       margin: 0 0 1.5rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .card-header h2 {
@@ -341,11 +352,17 @@ interface ConfigEmpresa {
 
     .btn-edit {
       padding: 0.5rem 1rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
       cursor: pointer;
       font-size: 0.875rem;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .btn-edit:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     /* Form */
@@ -368,18 +385,26 @@ interface ConfigEmpresa {
       font-size: 0.875rem;
       font-weight: 500;
       margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .form-group input {
       padding: 0.75rem 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
       font-size: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
     }
 
     .form-group input:focus {
       outline: none;
-      border-color: var(--primary-color);
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
 
     .form-actions {
@@ -388,15 +413,18 @@ interface ConfigEmpresa {
       gap: 0.75rem;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .btn-primary, .btn-secondary {
       padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-primary {
@@ -405,14 +433,25 @@ interface ConfigEmpresa {
       color: white;
     }
 
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
     .btn-secondary {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     /* Info Grid */
@@ -433,13 +472,14 @@ interface ConfigEmpresa {
 
     .info-item .label {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
       margin-bottom: 0.25rem;
     }
 
     .info-item .value {
       font-weight: 500;
+      color: white;
     }
 
     .empty-config {
@@ -448,7 +488,7 @@ interface ConfigEmpresa {
     }
 
     .empty-config p {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin-bottom: 1rem;
     }
 
@@ -464,17 +504,22 @@ interface ConfigEmpresa {
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1rem;
-      border-radius: 8px;
+      border-radius: 10px;
     }
 
     .cert-status.valid {
-      background: #dcfce7;
-      color: #16a34a;
+      background: rgba(34, 197, 94, 0.2);
+      color: #22C55E;
+    }
+
+    .cert-details p {
+      margin: 0.25rem 0;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .cert-upload .upload-zone {
-      border: 2px dashed var(--border-color);
-      border-radius: 12px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
       padding: 2rem;
       text-align: center;
       cursor: pointer;
@@ -482,8 +527,8 @@ interface ConfigEmpresa {
     }
 
     .cert-upload .upload-zone:hover {
-      border-color: var(--primary-color);
-      background: rgba(99,102,241,0.05);
+      border-color: #6366F1;
+      background: rgba(99, 102, 241, 0.1);
     }
 
     .cert-upload .icon {
@@ -492,15 +537,17 @@ interface ConfigEmpresa {
       margin-bottom: 0.5rem;
     }
 
+    .cert-upload p { color: rgba(255, 255, 255, 0.8); margin: 0.25rem 0; }
+
     .cert-upload .hint {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       font-size: 0.8rem;
     }
 
     .cert-form {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       gap: 1rem;
       align-items: flex-end;
@@ -531,22 +578,25 @@ interface ConfigEmpresa {
       flex-direction: column;
       align-items: center;
       padding: 1.5rem;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      transition: all 0.2s;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .ambiente-option:hover .option-content {
-      border-color: var(--primary-color);
+      border-color: rgba(99, 102, 241, 0.5);
+      transform: translateY(-4px);
     }
 
     .ambiente-option.selected .option-content {
-      border-color: var(--primary-color);
-      background: rgba(99,102,241,0.1);
+      border-color: #6366F1;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
     }
 
     .ambiente-option.disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
@@ -557,20 +607,22 @@ interface ConfigEmpresa {
 
     .option-title {
       font-weight: 600;
+      color: white;
     }
 
     .option-desc {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .ambiente-notice {
       margin-top: 1rem;
       padding: 0.75rem 1rem;
-      background: #fef3c7;
-      border-radius: 8px;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      border-radius: 10px;
       font-size: 0.875rem;
-      color: #92400e;
+      color: #F97316;
     }
 
     /* Quick Links */
@@ -585,15 +637,18 @@ interface ConfigEmpresa {
       flex-direction: column;
       align-items: center;
       padding: 1rem;
-      background: var(--bg-secondary);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
       text-decoration: none;
-      color: inherit;
+      color: white;
       transition: all 0.2s;
     }
 
     .quick-link:hover {
-      background: rgba(99,102,241,0.1);
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
     }
 
     .link-icon {
@@ -627,112 +682,112 @@ interface ConfigEmpresa {
   `]
 })
 export class ConfigFacturacionComponent implements OnInit {
-    private fb = inject(FormBuilder);
+  private fb = inject(FormBuilder);
 
-    config = signal<ConfigEmpresa | null>(null);
-    certificado = signal<{ nombre: string; rut: string; vencimiento: string } | null>(null);
-    ambiente = signal<'certificacion' | 'produccion'>('certificacion');
-    editando = signal(false);
-    guardando = signal(false);
-    certFile = signal<File | null>(null);
-    certPassword = '';
-    subiendoCert = signal(false);
+  config = signal<ConfigEmpresa | null>(null);
+  certificado = signal<{ nombre: string; rut: string; vencimiento: string } | null>(null);
+  ambiente = signal<'certificacion' | 'produccion'>('certificacion');
+  editando = signal(false);
+  guardando = signal(false);
+  certFile = signal<File | null>(null);
+  certPassword = '';
+  subiendoCert = signal(false);
 
-    empresaForm: FormGroup = this.fb.group({
-        rut: ['', Validators.required],
-        razonSocial: ['', Validators.required],
-        giro: ['', Validators.required],
-        direccion: ['', Validators.required],
-        comuna: ['', Validators.required],
-        ciudad: ['', Validators.required],
-        telefono: [''],
-        email: ['', Validators.email],
-        resolucionSii: [''],
-        fechaResolucion: ['']
-    });
+  empresaForm: FormGroup = this.fb.group({
+    rut: ['', Validators.required],
+    razonSocial: ['', Validators.required],
+    giro: ['', Validators.required],
+    direccion: ['', Validators.required],
+    comuna: ['', Validators.required],
+    ciudad: ['', Validators.required],
+    telefono: [''],
+    email: ['', Validators.email],
+    resolucionSii: [''],
+    fechaResolucion: ['']
+  });
 
-    ngOnInit() {
-        this.cargarConfiguracion();
+  ngOnInit() {
+    this.cargarConfiguracion();
+  }
+
+  cargarConfiguracion() {
+    // TODO: Cargar configuración desde el backend
+    // Por ahora usa datos mock
+    const stored = localStorage.getItem('config_empresa');
+    if (stored) {
+      const config = JSON.parse(stored);
+      this.config.set(config);
+      this.empresaForm.patchValue(config);
     }
+  }
 
-    cargarConfiguracion() {
-        // TODO: Cargar configuración desde el backend
-        // Por ahora usa datos mock
-        const stored = localStorage.getItem('config_empresa');
-        if (stored) {
-            const config = JSON.parse(stored);
-            this.config.set(config);
-            this.empresaForm.patchValue(config);
-        }
+  tieneConfigBasica(): boolean {
+    return !!this.config();
+  }
+
+  tieneCertificado(): boolean {
+    return !!this.certificado();
+  }
+
+  tieneCaf(): boolean {
+    // TODO: Verificar si hay CAFs cargados
+    return false;
+  }
+
+  puedeProduccion(): boolean {
+    return this.tieneConfigBasica() && this.tieneCertificado() && this.tieneCaf();
+  }
+
+  guardarEmpresa() {
+    if (!this.empresaForm.valid) return;
+
+    this.guardando.set(true);
+
+    // Simular guardado
+    setTimeout(() => {
+      const config = this.empresaForm.value as ConfigEmpresa;
+      this.config.set(config);
+      localStorage.setItem('config_empresa', JSON.stringify(config));
+      this.guardando.set(false);
+      this.editando.set(false);
+    }, 1000);
+  }
+
+  cancelarEdicion() {
+    this.editando.set(false);
+    if (this.config()) {
+      this.empresaForm.patchValue(this.config()!);
     }
+  }
 
-    tieneConfigBasica(): boolean {
-        return !!this.config();
+  onCertFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.certFile.set(input.files[0]);
     }
+  }
 
-    tieneCertificado(): boolean {
-        return !!this.certificado();
-    }
+  subirCertificado() {
+    // TODO: Implementar subida de certificado
+    this.subiendoCert.set(true);
+    setTimeout(() => {
+      this.certificado.set({
+        nombre: this.certFile()!.name,
+        rut: this.config()?.rut || '12.345.678-9',
+        vencimiento: '31/12/2025'
+      });
+      this.certFile.set(null);
+      this.certPassword = '';
+      this.subiendoCert.set(false);
+    }, 2000);
+  }
 
-    tieneCaf(): boolean {
-        // TODO: Verificar si hay CAFs cargados
-        return false;
-    }
+  cambiarCertificado() {
+    this.certificado.set(null);
+  }
 
-    puedeProduccion(): boolean {
-        return this.tieneConfigBasica() && this.tieneCertificado() && this.tieneCaf();
-    }
-
-    guardarEmpresa() {
-        if (!this.empresaForm.valid) return;
-
-        this.guardando.set(true);
-
-        // Simular guardado
-        setTimeout(() => {
-            const config = this.empresaForm.value as ConfigEmpresa;
-            this.config.set(config);
-            localStorage.setItem('config_empresa', JSON.stringify(config));
-            this.guardando.set(false);
-            this.editando.set(false);
-        }, 1000);
-    }
-
-    cancelarEdicion() {
-        this.editando.set(false);
-        if (this.config()) {
-            this.empresaForm.patchValue(this.config()!);
-        }
-    }
-
-    onCertFileSelect(event: Event) {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files.length > 0) {
-            this.certFile.set(input.files[0]);
-        }
-    }
-
-    subirCertificado() {
-        // TODO: Implementar subida de certificado
-        this.subiendoCert.set(true);
-        setTimeout(() => {
-            this.certificado.set({
-                nombre: this.certFile()!.name,
-                rut: this.config()?.rut || '12.345.678-9',
-                vencimiento: '31/12/2025'
-            });
-            this.certFile.set(null);
-            this.certPassword = '';
-            this.subiendoCert.set(false);
-        }, 2000);
-    }
-
-    cambiarCertificado() {
-        this.certificado.set(null);
-    }
-
-    cambiarAmbiente(ambiente: 'certificacion' | 'produccion') {
-        if (ambiente === 'produccion' && !this.puedeProduccion()) return;
-        this.ambiente.set(ambiente);
-    }
+  cambiarAmbiente(ambiente: 'certificacion' | 'produccion') {
+    if (ambiente === 'produccion' && !this.puedeProduccion()) return;
+    this.ambiente.set(ambiente);
+  }
 }

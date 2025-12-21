@@ -7,10 +7,10 @@ import { FacturacionService, EmitirDteRequest, EmitirDteItem, TipoDte } from '..
 type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
 
 @Component({
-    selector: 'app-emitir-documento',
-    standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
-    template: `
+  selector: 'app-emitir-documento',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  template: `
     <div class="emitir-container">
       <!-- Header -->
       <header class="page-header">
@@ -342,7 +342,7 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       </footer>
     </div>
   `,
-    styles: [`
+  styles: [`
     .emitir-container {
       max-width: 900px;
       margin: 0 auto;
@@ -350,6 +350,8 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
     }
 
     .page-header {
@@ -357,20 +359,28 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     }
 
     .back-btn {
-      color: var(--text-secondary, #666);
+      color: rgba(255, 255, 255, 0.6);
       text-decoration: none;
       font-size: 0.875rem;
       margin-bottom: 0.5rem;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
     }
+
+    .back-btn:hover { color: white; }
 
     .header-content h1 {
       font-size: 1.5rem;
       margin: 0;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0.25rem 0 0;
     }
 
@@ -396,39 +406,48 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--bg-secondary, #e0e0e0);
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
       margin-bottom: 0.5rem;
       transition: all 0.3s;
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .step.active .step-circle {
       background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-color: transparent;
       color: white;
       transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
     }
 
     .step.completed .step-circle {
       background: #10B981;
       color: white;
+      border-color: transparent;
     }
 
     .step-label {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.4);
     }
 
     .step.active .step-label {
-      color: var(--primary-color, #6366F1);
+      color: #6366F1;
       font-weight: 600;
+    }
+
+    .step.completed .step-label {
+      color: #10B981;
     }
 
     .progress-bar {
       height: 4px;
-      background: var(--bg-secondary, #e0e0e0);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
       overflow: hidden;
     }
@@ -446,16 +465,18 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     }
 
     .step-panel {
-      background: var(--card-bg, #fff);
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
       border-radius: 16px;
       padding: 2rem;
-      border: 1px solid var(--border-color, #e0e0e0);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .step-panel h2 {
       font-size: 1.25rem;
       margin: 0 0 1.5rem;
       text-align: center;
+      color: rgba(255, 255, 255, 0.9);
     }
 
     /* Tipo Documento */
@@ -470,21 +491,24 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       flex-direction: column;
       align-items: center;
       padding: 1.5rem;
-      border: 2px solid var(--border-color, #e0e0e0);
+      border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      background: var(--bg-secondary, #f5f5f5);
+      background: rgba(255, 255, 255, 0.03);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
+      color: white;
     }
 
     .tipo-card:hover {
-      border-color: var(--primary-color, #6366F1);
-      background: white;
+      border-color: rgba(99, 102, 241, 0.5);
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateY(-4px);
     }
 
     .tipo-card.selected {
-      border-color: var(--primary-color, #6366F1);
-      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+      border-color: #6366F1;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
     }
 
     .tipo-card .icon {
@@ -499,27 +523,28 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
 
     .tipo-card .codigo {
       font-size: 0.75rem;
-      color: var(--primary-color);
+      color: #6366F1;
       margin-top: 0.25rem;
     }
 
     .tipo-card .desc {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin-top: 0.5rem;
       text-align: center;
     }
 
     /* Receptor Form */
     .required-notice {
-      background: #fef3c7;
-      color: #92400e;
+      background: rgba(249, 115, 22, 0.15);
+      color: #F97316;
       padding: 0.75rem 1rem;
       border-radius: 8px;
       margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      border: 1px solid rgba(249, 115, 22, 0.3);
     }
 
     .receptor-form {
@@ -547,26 +572,33 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       font-size: 0.875rem;
       font-weight: 500;
       margin-bottom: 0.5rem;
-      color: var(--text-primary);
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .form-group input {
       padding: 0.75rem 1rem;
-      border: 1px solid var(--border-color, #e0e0e0);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 8px;
       font-size: 1rem;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
     }
 
     .form-group input:focus {
       outline: none;
-      border-color: var(--primary-color, #6366F1);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .form-group .hint {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.4);
       margin-top: 0.25rem;
     }
 
@@ -580,11 +612,11 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       grid-template-columns: 1fr 80px 120px 120px 40px;
       gap: 0.5rem;
       padding: 0.75rem 1rem;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
       font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
     }
 
@@ -600,13 +632,23 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       grid-template-columns: 1fr 80px 120px 120px 40px;
       gap: 0.5rem;
       align-items: center;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
     }
 
     .item-row input {
       padding: 0.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 6px;
       font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .item-row input:focus {
+      border-color: #6366F1;
+      outline: none;
     }
 
     .col-total {
@@ -651,33 +693,36 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     }
 
     .totales-grid {
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.05);
       padding: 1rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 10px;
       min-width: 250px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .total-row {
       display: flex;
       justify-content: space-between;
       padding: 0.5rem 0;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .total-row.total {
-      border-top: 2px solid var(--border-color);
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
       margin-top: 0.5rem;
       padding-top: 0.75rem;
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #10B981;
     }
 
     /* Confirmación */
     .resumen-card {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 12px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .resumen-header {
@@ -686,11 +731,11 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       align-items: center;
       margin-bottom: 1rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .tipo-badge {
-      background: var(--primary-color);
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
@@ -701,7 +746,7 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     .total-display {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #10B981;
     }
 
     .resumen-section {
@@ -710,8 +755,13 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
 
     .resumen-section h3 {
       font-size: 0.875rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0 0 0.5rem;
+    }
+
+    .resumen-section p {
+      margin: 0.25rem 0;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .resumen-item {
@@ -719,10 +769,11 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       justify-content: space-between;
       font-size: 0.875rem;
       padding: 0.25rem 0;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .resumen-totales {
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
       padding-top: 1rem;
       margin-top: 1rem;
     }
@@ -731,12 +782,13 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       display: flex;
       justify-content: space-between;
       padding: 0.25rem 0;
+      color: rgba(255, 255, 255, 0.6);
     }
 
     .resumen-totales .row.total {
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #10B981;
     }
 
     .opciones-envio {
@@ -750,14 +802,25 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
       cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s;
+    }
+
+    .checkbox-option:hover {
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .checkbox-option input {
       width: 18px;
       height: 18px;
+      accent-color: #6366F1;
+    }
+
+    .checkbox-option span {
+      color: rgba(255, 255, 255, 0.8);
     }
 
     /* Navigation */
@@ -770,17 +833,24 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
 
     .btn-secondary, .btn-primary, .btn-success {
       padding: 0.875rem 2rem;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-secondary {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary {
@@ -796,13 +866,15 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     }
 
     .btn-primary:hover, .btn-success:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.4);
     }
 
     .btn-secondary:disabled, .btn-primary:disabled, .btn-success:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .spinner {
@@ -836,143 +908,143 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
   `]
 })
 export class EmitirDocumentoComponent {
-    private fb = inject(FormBuilder);
-    private router = inject(Router);
-    private facturacionService = inject(FacturacionService);
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private facturacionService = inject(FacturacionService);
 
-    pasos = [
-        { num: 1, label: 'Tipo' },
-        { num: 2, label: 'Receptor' },
-        { num: 3, label: 'Items' },
-        { num: 4, label: 'Confirmar' }
-    ];
+  pasos = [
+    { num: 1, label: 'Tipo' },
+    { num: 2, label: 'Receptor' },
+    { num: 3, label: 'Items' },
+    { num: 4, label: 'Confirmar' }
+  ];
 
-    paso = signal(1);
-    tipoSeleccionado = signal<TipoDocumento | null>(null);
-    loading = signal(false);
-    enviarSii = true;
-    enviarEmail = false;
+  paso = signal(1);
+  tipoSeleccionado = signal<TipoDocumento | null>(null);
+  loading = signal(false);
+  enviarSii = true;
+  enviarEmail = false;
 
-    receptorForm: FormGroup = this.fb.group({
-        rut: [''],
-        razonSocial: [''],
-        giro: [''],
-        email: ['', Validators.email],
-        direccion: [''],
-        comuna: [''],
-        ciudad: ['']
+  receptorForm: FormGroup = this.fb.group({
+    rut: [''],
+    razonSocial: [''],
+    giro: [''],
+    email: ['', Validators.email],
+    direccion: [''],
+    comuna: [''],
+    ciudad: ['']
+  });
+
+  items = signal<EmitirDteItem[]>([
+    { nombreItem: '', cantidad: 1, precioUnitario: 0 }
+  ]);
+
+  subtotal = computed(() =>
+    this.items().reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0)
+  );
+
+  neto = computed(() => Math.round(this.subtotal() / 1.19));
+  iva = computed(() => this.subtotal() - this.neto());
+  total = computed(() => this.subtotal());
+
+  seleccionarTipo(tipo: TipoDocumento) {
+    this.tipoSeleccionado.set(tipo);
+  }
+
+  puedeAvanzar(): boolean {
+    switch (this.paso()) {
+      case 1: return this.tipoSeleccionado() !== null;
+      case 2: return this.tipoSeleccionado() === 'BOLETA' ||
+        (!!this.receptorForm.value.rut && !!this.receptorForm.value.razonSocial);
+      case 3: return this.items().some(i => i.nombreItem && i.cantidad > 0 && i.precioUnitario > 0);
+      default: return true;
+    }
+  }
+
+  siguiente() {
+    if (this.puedeAvanzar() && this.paso() < 4) {
+      this.paso.update(p => p + 1);
+    }
+  }
+
+  anterior() {
+    if (this.paso() > 1) {
+      this.paso.update(p => p - 1);
+    }
+  }
+
+  addItem() {
+    this.items.update(items => [...items, { nombreItem: '', cantidad: 1, precioUnitario: 0 }]);
+  }
+
+  removeItem(index: number) {
+    if (this.items().length > 1) {
+      this.items.update(items => items.filter((_, i) => i !== index));
+    }
+  }
+
+  updateItem(index: number, field: keyof EmitirDteItem, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.items.update(items => {
+      const updated = [...items];
+      if (field === 'cantidad' || field === 'precioUnitario') {
+        (updated[index] as any)[field] = parseFloat(value) || 0;
+      } else {
+        (updated[index] as any)[field] = value;
+      }
+      return updated;
     });
+  }
 
-    items = signal<EmitirDteItem[]>([
-        { nombreItem: '', cantidad: 1, precioUnitario: 0 }
-    ]);
-
-    subtotal = computed(() =>
-        this.items().reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0)
-    );
-
-    neto = computed(() => Math.round(this.subtotal() / 1.19));
-    iva = computed(() => this.subtotal() - this.neto());
-    total = computed(() => this.subtotal());
-
-    seleccionarTipo(tipo: TipoDocumento) {
-        this.tipoSeleccionado.set(tipo);
+  formatRut() {
+    const rut = this.receptorForm.value.rut;
+    if (rut) {
+      this.receptorForm.patchValue({ rut: this.facturacionService.formatRut(rut) });
     }
+  }
 
-    puedeAvanzar(): boolean {
-        switch (this.paso()) {
-            case 1: return this.tipoSeleccionado() !== null;
-            case 2: return this.tipoSeleccionado() === 'BOLETA' ||
-                (!!this.receptorForm.value.rut && !!this.receptorForm.value.razonSocial);
-            case 3: return this.items().some(i => i.nombreItem && i.cantidad > 0 && i.precioUnitario > 0);
-            default: return true;
-        }
-    }
+  formatCurrency(value: number): string {
+    return this.facturacionService.formatCurrency(value);
+  }
 
-    siguiente() {
-        if (this.puedeAvanzar() && this.paso() < 4) {
-            this.paso.update(p => p + 1);
-        }
-    }
+  async emitir() {
+    this.loading.set(true);
 
-    anterior() {
-        if (this.paso() > 1) {
-            this.paso.update(p => p - 1);
-        }
-    }
+    const request: EmitirDteRequest = {
+      receptorRut: this.receptorForm.value.rut || undefined,
+      receptorRazonSocial: this.receptorForm.value.razonSocial || undefined,
+      receptorGiro: this.receptorForm.value.giro || undefined,
+      receptorDireccion: this.receptorForm.value.direccion || undefined,
+      receptorComuna: this.receptorForm.value.comuna || undefined,
+      receptorEmail: this.receptorForm.value.email || undefined,
+      items: this.items().map(item => ({
+        nombreItem: item.nombreItem,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario
+      })),
+      enviarSii: this.enviarSii,
+      enviarEmail: this.enviarEmail
+    };
 
-    addItem() {
-        this.items.update(items => [...items, { nombreItem: '', cantidad: 1, precioUnitario: 0 }]);
-    }
+    const emitFn = this.tipoSeleccionado() === 'BOLETA'
+      ? this.facturacionService.emitirBoleta(request)
+      : this.tipoSeleccionado() === 'FACTURA'
+        ? this.facturacionService.emitirFactura(request)
+        : this.tipoSeleccionado() === 'NOTA_CREDITO'
+          ? this.facturacionService.emitirNotaCredito(request)
+          : this.facturacionService.emitirNotaDebito(request);
 
-    removeItem(index: number) {
-        if (this.items().length > 1) {
-            this.items.update(items => items.filter((_, i) => i !== index));
-        }
-    }
-
-    updateItem(index: number, field: keyof EmitirDteItem, event: Event) {
-        const value = (event.target as HTMLInputElement).value;
-        this.items.update(items => {
-            const updated = [...items];
-            if (field === 'cantidad' || field === 'precioUnitario') {
-                (updated[index] as any)[field] = parseFloat(value) || 0;
-            } else {
-                (updated[index] as any)[field] = value;
-            }
-            return updated;
-        });
-    }
-
-    formatRut() {
-        const rut = this.receptorForm.value.rut;
-        if (rut) {
-            this.receptorForm.patchValue({ rut: this.facturacionService.formatRut(rut) });
-        }
-    }
-
-    formatCurrency(value: number): string {
-        return this.facturacionService.formatCurrency(value);
-    }
-
-    async emitir() {
-        this.loading.set(true);
-
-        const request: EmitirDteRequest = {
-            receptorRut: this.receptorForm.value.rut || undefined,
-            receptorRazonSocial: this.receptorForm.value.razonSocial || undefined,
-            receptorGiro: this.receptorForm.value.giro || undefined,
-            receptorDireccion: this.receptorForm.value.direccion || undefined,
-            receptorComuna: this.receptorForm.value.comuna || undefined,
-            receptorEmail: this.receptorForm.value.email || undefined,
-            items: this.items().map(item => ({
-                nombreItem: item.nombreItem,
-                cantidad: item.cantidad,
-                precioUnitario: item.precioUnitario
-            })),
-            enviarSii: this.enviarSii,
-            enviarEmail: this.enviarEmail
-        };
-
-        const emitFn = this.tipoSeleccionado() === 'BOLETA'
-            ? this.facturacionService.emitirBoleta(request)
-            : this.tipoSeleccionado() === 'FACTURA'
-                ? this.facturacionService.emitirFactura(request)
-                : this.tipoSeleccionado() === 'NOTA_CREDITO'
-                    ? this.facturacionService.emitirNotaCredito(request)
-                    : this.facturacionService.emitirNotaDebito(request);
-
-        emitFn.subscribe({
-            next: (dte) => {
-                this.loading.set(false);
-                // Navegar a detalle del documento
-                this.router.navigate(['/facturacion/documentos', dte.id]);
-            },
-            error: (err) => {
-                this.loading.set(false);
-                console.error('Error emitiendo documento', err);
-                alert('Error al emitir documento: ' + (err.error?.message || err.message));
-            }
-        });
-    }
+    emitFn.subscribe({
+      next: (dte) => {
+        this.loading.set(false);
+        // Navegar a detalle del documento
+        this.router.navigate(['/facturacion/documentos', dte.id]);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        console.error('Error emitiendo documento', err);
+        alert('Error al emitir documento: ' + (err.error?.message || err.message));
+      }
+    });
+  }
 }

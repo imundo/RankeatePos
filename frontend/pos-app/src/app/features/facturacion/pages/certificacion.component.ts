@@ -5,31 +5,31 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 interface TestCase {
-    numero: number;
-    nombre: string;
-    descripcion: string;
-    tipoDte: string;
-    codigoSii: number;
-    folio: number;
-    montoTotal: number;
-    resultadoEsperado: string;
-    valido: boolean;
-    trackId: string;
-    estadoSii: string;
-    errorMessage: string;
+  numero: number;
+  nombre: string;
+  descripcion: string;
+  tipoDte: string;
+  codigoSii: number;
+  folio: number;
+  montoTotal: number;
+  resultadoEsperado: string;
+  valido: boolean;
+  trackId: string;
+  estadoSii: string;
+  errorMessage: string;
 }
 
 interface Requisito {
-    tipo: string;
-    codigo: number;
-    cantidad_minima: number;
+  tipo: string;
+  codigo: number;
+  cantidad_minima: number;
 }
 
 @Component({
-    selector: 'app-certificacion',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-certificacion',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="cert-container">
       <!-- Header -->
       <header class="page-header">
@@ -251,20 +251,26 @@ interface Requisito {
       </section>
     </div>
   `,
-    styles: [`
+  styles: [`
     .cert-container {
       padding: 1.5rem;
       max-width: 1100px;
       margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
     }
 
     .page-header h1 {
       font-size: 1.5rem;
       margin: 0;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0.25rem 0 0;
     }
 
@@ -274,28 +280,29 @@ interface Requisito {
       align-items: center;
       gap: 1.5rem;
       padding: 1.5rem;
-      border-radius: 12px;
+      border-radius: 14px;
       margin: 1.5rem 0;
+      backdrop-filter: blur(12px);
     }
 
     .status-banner.PENDIENTE {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      border: 1px solid #f59e0b;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.4);
     }
 
     .status-banner.EN_PROCESO {
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-      border: 1px solid #3b82f6;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
     }
 
     .status-banner.APROBADO {
-      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-      border: 1px solid #22c55e;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
     }
 
     .status-banner.RECHAZADO {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
-      border: 1px solid #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
     }
 
     .status-icon {
@@ -305,25 +312,28 @@ interface Requisito {
     .status-content h2 {
       margin: 0;
       font-size: 1.25rem;
+      color: white;
     }
 
     .status-content p {
       margin: 0.25rem 0 0;
-      opacity: 0.8;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     /* Steps */
     .steps-section {
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .steps-section h2 {
       margin: 0 0 1.5rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .steps-timeline {
@@ -336,25 +346,26 @@ interface Requisito {
       display: flex;
       gap: 1rem;
       padding: 1rem;
-      border-radius: 8px;
-      background: var(--bg-secondary);
-      transition: all 0.2s;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s;
     }
 
     .step.active {
-      background: rgba(99,102,241,0.1);
-      border: 1px solid var(--primary-color);
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.5);
     }
 
     .step.completed {
-      opacity: 0.7;
+      opacity: 0.6;
     }
 
     .step-number {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--primary-color);
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
       color: white;
       display: flex;
       align-items: center;
@@ -364,18 +375,19 @@ interface Requisito {
     }
 
     .step.completed .step-number {
-      background: #22c55e;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
     }
 
     .step-content h3 {
       margin: 0;
       font-size: 1rem;
+      color: white;
     }
 
     .step-content p {
       margin: 0.25rem 0 0;
       font-size: 0.875rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .step-content .btn-primary {
@@ -391,16 +403,18 @@ interface Requisito {
 
     /* Requisitos */
     .requisitos-section {
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .requisitos-section h2 {
       margin: 0 0 1rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .requisitos-grid {
@@ -413,14 +427,14 @@ interface Requisito {
       display: flex;
       gap: 0.75rem;
       padding: 1rem;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .requisito-card.check {
-      border-color: #22c55e;
-      background: rgba(34,197,94,0.1);
+      border-color: rgba(34, 197, 94, 0.5);
+      background: rgba(34, 197, 94, 0.1);
     }
 
     .req-icon {
@@ -429,26 +443,29 @@ interface Requisito {
 
     .requisito-card strong {
       display: block;
+      color: white;
     }
 
     .requisito-card p {
       margin: 0.25rem 0 0;
       font-size: 0.8rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     /* Test Cases */
     .testcases-section {
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .testcases-section h2 {
       margin: 0 0 1rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .testcases-table {
@@ -464,74 +481,80 @@ interface Requisito {
       text-align: left;
       padding: 0.75rem;
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     td {
       padding: 0.75rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     tr.success {
-      background: rgba(34,197,94,0.05);
+      background: rgba(34, 197, 94, 0.1);
     }
 
     tr.error {
-      background: rgba(239,68,68,0.05);
+      background: rgba(239, 68, 68, 0.1);
     }
 
     td strong {
       display: block;
+      color: white;
     }
 
     td .desc {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .badge {
-      background: var(--bg-secondary);
+      background: rgba(99, 102, 241, 0.2);
+      color: #6366F1;
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 0.7rem;
+      font-weight: 600;
     }
 
     .status {
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 0.75rem;
+      font-weight: 600;
     }
 
-    .status.enviado { background: #dbeafe; color: #2563eb; }
-    .status.aceptado { background: #dcfce7; color: #16a34a; }
-    .status.rechazado { background: #fee2e2; color: #dc2626; }
-    .status.pending { background: #f3f4f6; color: #6b7280; }
+    .status.enviado { background: rgba(59, 130, 246, 0.2); color: #3B82F6; }
+    .status.aceptado { background: rgba(34, 197, 94, 0.2); color: #22C55E; }
+    .status.rechazado { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+    .status.pending { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
 
     code {
       font-size: 0.7rem;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.1);
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     /* Resultado */
     .resultado-card {
       margin-top: 1.5rem;
       padding: 1.5rem;
-      border-radius: 12px;
+      border-radius: 14px;
     }
 
     .resultado-card.success {
-      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-      border: 1px solid #22c55e;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
     }
 
     .resultado-card.error {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
-      border: 1px solid #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
     }
 
     .resultado-header {
@@ -546,22 +569,24 @@ interface Requisito {
 
     .resultado-header h3 {
       margin: 0;
+      color: white;
     }
 
     .resultado-header p {
       margin: 0.25rem 0 0;
-      opacity: 0.8;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .errores-list {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid rgba(0,0,0,0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .errores-list h4 {
       margin: 0 0 0.5rem;
       font-size: 0.9rem;
+      color: white;
     }
 
     .errores-list ul {
@@ -571,19 +596,22 @@ interface Requisito {
 
     .errores-list li {
       font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     /* Help */
     .help-section {
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .help-section h2 {
       margin: 0 0 1rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .help-cards {
@@ -597,15 +625,18 @@ interface Requisito {
       flex-direction: column;
       align-items: center;
       padding: 1rem;
-      background: var(--bg-secondary);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
       text-decoration: none;
-      color: inherit;
+      color: white;
       transition: all 0.2s;
     }
 
     .help-card:hover {
-      background: rgba(99,102,241,0.1);
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
     }
 
     .help-icon {
@@ -616,11 +647,14 @@ interface Requisito {
     /* Buttons */
     .btn-primary, .btn-success {
       padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       border: none;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-primary {
@@ -628,14 +662,25 @@ interface Requisito {
       color: white;
     }
 
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
     .btn-success {
       background: linear-gradient(135deg, #22c55e, #16a34a);
       color: white;
     }
 
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    }
+
     .btn-primary:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     .spinner {
@@ -665,126 +710,126 @@ interface Requisito {
   `]
 })
 export class CertificacionComponent implements OnInit {
-    private http = inject(HttpClient);
+  private http = inject(HttpClient);
 
-    estadoCertificacion = signal<'PENDIENTE' | 'EN_PROCESO' | 'APROBADO' | 'RECHAZADO'>('PENDIENTE');
-    paso = signal(1);
-    testCases = signal<TestCase[]>([]);
-    enviando = signal(false);
-    resultado = signal<{ exito: boolean; mensaje: string; pasaron: number; total: number; errores: string[] } | null>(null);
+  estadoCertificacion = signal<'PENDIENTE' | 'EN_PROCESO' | 'APROBADO' | 'RECHAZADO'>('PENDIENTE');
+  paso = signal(1);
+  testCases = signal<TestCase[]>([]);
+  enviando = signal(false);
+  resultado = signal<{ exito: boolean; mensaje: string; pasaron: number; total: number; errores: string[] } | null>(null);
 
-    configCompleta = signal(false);
-    tieneCertificado = signal(false);
-    tieneCafs = signal(false);
+  configCompleta = signal(false);
+  tieneCertificado = signal(false);
+  tieneCafs = signal(false);
 
-    ngOnInit() {
-        this.verificarRequisitos();
+  ngOnInit() {
+    this.verificarRequisitos();
+  }
+
+  verificarRequisitos() {
+    // TODO: Verificar desde el backend
+    const config = localStorage.getItem('config_empresa');
+    this.configCompleta.set(!!config);
+
+    // Simular estado
+    this.tieneCertificado.set(false);
+    this.tieneCafs.set(false);
+  }
+
+  getStatusTitle(): string {
+    const titles: Record<string, string> = {
+      'PENDIENTE': 'Certificación Pendiente',
+      'EN_PROCESO': 'Certificación en Proceso',
+      'APROBADO': '¡Certificación Aprobada!',
+      'RECHAZADO': 'Certificación Rechazada'
+    };
+    return titles[this.estadoCertificacion()];
+  }
+
+  getStatusDescription(): string {
+    const descriptions: Record<string, string> = {
+      'PENDIENTE': 'Complete los pasos para obtener la certificación SII',
+      'EN_PROCESO': 'Documentos enviados, esperando respuesta del SII',
+      'APROBADO': 'Ya puede emitir documentos en ambiente de producción',
+      'RECHAZADO': 'Revise los errores y vuelva a intentar'
+    };
+    return descriptions[this.estadoCertificacion()];
+  }
+
+  verificarConfiguracion() {
+    // Verificar que todo esté configurado
+    if (!this.configCompleta()) {
+      alert('Complete la configuración de empresa primero');
+      return;
     }
 
-    verificarRequisitos() {
-        // TODO: Verificar desde el backend
-        const config = localStorage.getItem('config_empresa');
-        this.configCompleta.set(!!config);
+    this.paso.set(2);
+  }
 
-        // Simular estado
-        this.tieneCertificado.set(false);
-        this.tieneCafs.set(false);
+  generarSetPruebas() {
+    const config = JSON.parse(localStorage.getItem('config_empresa') || '{}');
+
+    // Simular generación de set
+    this.testCases.set([
+      { numero: 1, nombre: 'Factura Afecta Simple', descripcion: 'Múltiples productos afectos', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 1, montoTotal: 50000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 2, nombre: 'Factura Exenta', descripcion: 'Productos exentos de IVA', tipoDte: 'FACTURA_EXENTA', codigoSii: 34, folio: 1, montoTotal: 100000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 3, nombre: 'Factura con Descuento', descripcion: 'Descuento porcentual', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 2, montoTotal: 90000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 4, nombre: 'Factura con Recargo', descripcion: 'Recargo por flete', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 3, montoTotal: 124950, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 5, nombre: 'Boleta Simple', descripcion: 'Venta a consumidor final', tipoDte: 'BOLETA_ELECTRONICA', codigoSii: 39, folio: 1, montoTotal: 15970, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 6, nombre: 'Boleta con Descuento', descripcion: 'Descuento promocional', tipoDte: 'BOLETA_ELECTRONICA', codigoSii: 39, folio: 2, montoTotal: 8492, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 7, nombre: 'NC Anulación', descripcion: 'Anula factura completa', tipoDte: 'NOTA_CREDITO', codigoSii: 61, folio: 1, montoTotal: 50000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 8, nombre: 'NC Descuento', descripcion: 'Descuento posterior', tipoDte: 'NOTA_CREDITO', codigoSii: 61, folio: 2, montoTotal: 5950, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 9, nombre: 'ND Intereses', descripcion: 'Cobro de intereses mora', tipoDte: 'NOTA_DEBITO', codigoSii: 56, folio: 1, montoTotal: 2975, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
+      { numero: 10, nombre: 'Guía de Despacho', descripcion: 'Traslado mercadería', tipoDte: 'GUIA_DESPACHO', codigoSii: 52, folio: 1, montoTotal: 595000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' }
+    ]);
+
+    this.paso.set(3);
+  }
+
+  enviarAlSii() {
+    this.enviando.set(true);
+    this.estadoCertificacion.set('EN_PROCESO');
+
+    // Simular envío
+    setTimeout(() => {
+      const updated = this.testCases().map(tc => ({
+        ...tc,
+        valido: true,
+        trackId: 'MOCK-CERT-' + Date.now() + '-' + tc.numero,
+        estadoSii: 'ENVIADO'
+      }));
+      this.testCases.set(updated);
+      this.enviando.set(false);
+      this.paso.set(4);
+    }, 3000);
+  }
+
+  verificarResultados() {
+    // Simular verificación
+    const allPassed = this.testCases().every(tc => tc.valido);
+
+    this.resultado.set({
+      exito: allPassed,
+      mensaje: allPassed ? '✅ Todos los documentos fueron aceptados' : '❌ Algunos documentos fueron rechazados',
+      pasaron: this.testCases().filter(tc => tc.valido).length,
+      total: this.testCases().length,
+      errores: []
+    });
+
+    if (allPassed) {
+      this.estadoCertificacion.set('APROBADO');
+    } else {
+      this.estadoCertificacion.set('RECHAZADO');
     }
+  }
 
-    getStatusTitle(): string {
-        const titles: Record<string, string> = {
-            'PENDIENTE': 'Certificación Pendiente',
-            'EN_PROCESO': 'Certificación en Proceso',
-            'APROBADO': '¡Certificación Aprobada!',
-            'RECHAZADO': 'Certificación Rechazada'
-        };
-        return titles[this.estadoCertificacion()];
+  activarProduccion() {
+    if (confirm('¿Está seguro de activar el ambiente de producción? Los documentos emitidos serán reales y tendrán validez tributaria.')) {
+      alert('Ambiente de producción activado. ¡Ya puede emitir documentos oficiales!');
     }
+  }
 
-    getStatusDescription(): string {
-        const descriptions: Record<string, string> = {
-            'PENDIENTE': 'Complete los pasos para obtener la certificación SII',
-            'EN_PROCESO': 'Documentos enviados, esperando respuesta del SII',
-            'APROBADO': 'Ya puede emitir documentos en ambiente de producción',
-            'RECHAZADO': 'Revise los errores y vuelva a intentar'
-        };
-        return descriptions[this.estadoCertificacion()];
-    }
-
-    verificarConfiguracion() {
-        // Verificar que todo esté configurado
-        if (!this.configCompleta()) {
-            alert('Complete la configuración de empresa primero');
-            return;
-        }
-
-        this.paso.set(2);
-    }
-
-    generarSetPruebas() {
-        const config = JSON.parse(localStorage.getItem('config_empresa') || '{}');
-
-        // Simular generación de set
-        this.testCases.set([
-            { numero: 1, nombre: 'Factura Afecta Simple', descripcion: 'Múltiples productos afectos', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 1, montoTotal: 50000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 2, nombre: 'Factura Exenta', descripcion: 'Productos exentos de IVA', tipoDte: 'FACTURA_EXENTA', codigoSii: 34, folio: 1, montoTotal: 100000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 3, nombre: 'Factura con Descuento', descripcion: 'Descuento porcentual', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 2, montoTotal: 90000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 4, nombre: 'Factura con Recargo', descripcion: 'Recargo por flete', tipoDte: 'FACTURA_ELECTRONICA', codigoSii: 33, folio: 3, montoTotal: 124950, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 5, nombre: 'Boleta Simple', descripcion: 'Venta a consumidor final', tipoDte: 'BOLETA_ELECTRONICA', codigoSii: 39, folio: 1, montoTotal: 15970, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 6, nombre: 'Boleta con Descuento', descripcion: 'Descuento promocional', tipoDte: 'BOLETA_ELECTRONICA', codigoSii: 39, folio: 2, montoTotal: 8492, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 7, nombre: 'NC Anulación', descripcion: 'Anula factura completa', tipoDte: 'NOTA_CREDITO', codigoSii: 61, folio: 1, montoTotal: 50000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 8, nombre: 'NC Descuento', descripcion: 'Descuento posterior', tipoDte: 'NOTA_CREDITO', codigoSii: 61, folio: 2, montoTotal: 5950, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 9, nombre: 'ND Intereses', descripcion: 'Cobro de intereses mora', tipoDte: 'NOTA_DEBITO', codigoSii: 56, folio: 1, montoTotal: 2975, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' },
-            { numero: 10, nombre: 'Guía de Despacho', descripcion: 'Traslado mercadería', tipoDte: 'GUIA_DESPACHO', codigoSii: 52, folio: 1, montoTotal: 595000, resultadoEsperado: 'Aceptado', valido: false, trackId: '', estadoSii: '', errorMessage: '' }
-        ]);
-
-        this.paso.set(3);
-    }
-
-    enviarAlSii() {
-        this.enviando.set(true);
-        this.estadoCertificacion.set('EN_PROCESO');
-
-        // Simular envío
-        setTimeout(() => {
-            const updated = this.testCases().map(tc => ({
-                ...tc,
-                valido: true,
-                trackId: 'MOCK-CERT-' + Date.now() + '-' + tc.numero,
-                estadoSii: 'ENVIADO'
-            }));
-            this.testCases.set(updated);
-            this.enviando.set(false);
-            this.paso.set(4);
-        }, 3000);
-    }
-
-    verificarResultados() {
-        // Simular verificación
-        const allPassed = this.testCases().every(tc => tc.valido);
-
-        this.resultado.set({
-            exito: allPassed,
-            mensaje: allPassed ? '✅ Todos los documentos fueron aceptados' : '❌ Algunos documentos fueron rechazados',
-            pasaron: this.testCases().filter(tc => tc.valido).length,
-            total: this.testCases().length,
-            errores: []
-        });
-
-        if (allPassed) {
-            this.estadoCertificacion.set('APROBADO');
-        } else {
-            this.estadoCertificacion.set('RECHAZADO');
-        }
-    }
-
-    activarProduccion() {
-        if (confirm('¿Está seguro de activar el ambiente de producción? Los documentos emitidos serán reales y tendrán validez tributaria.')) {
-            alert('Ambiente de producción activado. ¡Ya puede emitir documentos oficiales!');
-        }
-    }
-
-    formatCurrency(value: number): string {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
-    }
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+  }
 }

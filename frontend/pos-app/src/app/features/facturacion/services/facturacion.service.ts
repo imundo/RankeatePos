@@ -167,6 +167,14 @@ export class FacturacionService {
         return this.http.get(`${this.baseUrl}/dte/${id}/pdf`, { responseType: 'blob' });
     }
 
+    enviarEmail(id: string, email: string): Observable<void> {
+        return this.http.post<void>(`${this.baseUrl}/dte/${id}/enviar-email`, { email });
+    }
+
+    reenviarSii(id: string): Observable<Dte> {
+        return this.http.post<Dte>(`${this.baseUrl}/dte/${id}/reenviar-sii`, {});
+    }
+
     getLibroVentas(desde: string, hasta: string, tipoDte?: string): Observable<Dte[]> {
         let params = new HttpParams()
             .set('desde', desde)

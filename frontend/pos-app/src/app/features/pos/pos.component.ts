@@ -16,6 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { AuthService } from '@core/auth/auth.service';
 import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
+import { FacturacionService } from '../facturacion/services/facturacion.service';
 import { environment } from '@env/environment';
 
 interface CartItem {
@@ -1969,6 +1970,7 @@ export class PosComponent implements OnInit {
   private offlineService = inject(OfflineService);
   private messageService = inject(MessageService);
   private industryService = inject(IndustryMockDataService);
+  private facturacionService = inject(FacturacionService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -1993,8 +1995,18 @@ export class PosComponent implements OnInit {
   processingPayment = signal(false);
   showSuccessModal = false;
   lastSaleTotal = 0;
-  lastSaleDocumento: { tipo: string; folio: number } | null = null;
+  lastSaleDocumento: { id?: string; tipo: string; tipoDte?: string; folio: number } | null = null;
 
+  // POS Session Management - Generate or retrieve persistent session ID for this terminal
+  posSessionId: string = (() => {
+    const storageKey = 'pos_session_id';
+    let sessionId = localStorage.getItem(storageKey);
+    if (!sessionId) {
+      sessionId = `POS-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem(storageKey, sessionId);
+    }
+    return sessionId;
+  })();
 
   // Pending sales (demo data)
   pendingSales = signal<any[]>([
@@ -2283,7 +2295,7 @@ export class PosComponent implements OnInit {
 
     const saleData = {
       commandId,
-      sessionId: 'temp-session-id',
+      sessionId: this.posSessionId,
       items: this.cartItems().map(item => ({
         variantId: item.variantId,
         productSku: item.productSku,
@@ -2336,7 +2348,9 @@ export class PosComponent implements OnInit {
             const dteResult = await this.http.post<any>(endpoint, dteRequest).toPromise();
 
             this.lastSaleDocumento = {
+              id: dteResult?.id,
               tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
+              tipoDte: dteResult?.tipoDte || (this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA'),
               folio: dteResult?.folio || Math.floor(Math.random() * 10000) + 1
             };
           } catch (billingError) {
@@ -2430,27 +2444,115 @@ export class PosComponent implements OnInit {
   }
 
   imprimirDocumento() {
-    // TODO: Integrar con impresora térmica o generar PDF
+    if (!this.lastSaleDocumento) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin documento',
+        detail: 'No hay documento para imprimir',
+        life: 2000
+      });
+      return;
+    }
+
     this.messageService.add({
       severity: 'info',
-      summary: 'Imprimiendo...',
-      detail: 'Enviando a impresora',
+      summary: 'Generando PDF...',
+      detail: 'Preparando documento para impresión',
       life: 2000
     });
-    window.print();
+
+    if (!this.lastSaleDocumento.id) {
+      window.print();
+      return;
+    }
+
+    this.facturacionService.getPdf(this.lastSaleDocumento.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const printWindow = window.open(url);
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        } else {
+          // Si bloqueado popup, descargar directamente
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${this.lastSaleDocumento?.tipoDte}-${this.lastSaleDocumento?.folio}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      },
+      error: (err) => {
+        console.error('Error obteniendo PDF:', err);
+        // Fallback a window.print()
+        window.print();
+      }
+    });
   }
 
   enviarPorEmail() {
-    if (!this.clienteEmail) {
-      const email = prompt('Email del cliente:');
-      if (!email) return;
+    let email = this.clienteEmail;
+
+    if (!email) {
+      const inputEmail = prompt('Email del cliente:');
+      if (!inputEmail || !inputEmail.includes('@')) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Email requerido',
+          detail: 'Ingrese un email válido',
+          life: 2000
+        });
+        return;
+      }
+      email = inputEmail;
     }
-    // TODO: Llamar al backend para enviar email
+
+    if (!this.lastSaleDocumento) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin documento',
+        detail: 'No hay documento para enviar',
+        life: 2000
+      });
+      return;
+    }
+
     this.messageService.add({
-      severity: 'success',
-      summary: 'Email enviado',
-      detail: 'El documento fue enviado al cliente',
-      life: 3000
+      severity: 'info',
+      summary: 'Enviando...',
+      detail: `Enviando documento a ${email}`,
+      life: 2000
+    });
+
+    if (!this.lastSaleDocumento.id) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin ID',
+        detail: 'Documento no tiene ID para enviar',
+        life: 2000
+      });
+      return;
+    }
+
+    this.facturacionService.enviarEmail(this.lastSaleDocumento.id, email).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Email enviado',
+          detail: `Documento enviado a ${email}`,
+          life: 3000
+        });
+      },
+      error: (err) => {
+        console.error('Error enviando email:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo enviar el email',
+          life: 3000
+        });
+      }
     });
   }
 

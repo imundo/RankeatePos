@@ -4,10 +4,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FacturacionService, Dte } from '../services/facturacion.service';
 
 @Component({
-    selector: 'app-detalle-documento',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    template: `
+  selector: 'app-detalle-documento',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
     <div class="detalle-container">
       @if (loading()) {
         <div class="loading-state">
@@ -208,11 +208,14 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .detalle-container {
       padding: 1.5rem;
       max-width: 1200px;
       margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
     }
 
     .loading-state {
@@ -223,8 +226,8 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid var(--border-color);
-      border-top-color: var(--primary-color);
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #6366F1;
       border-radius: 50%;
       margin: 0 auto 1rem;
       animation: spin 1s linear infinite;
@@ -235,12 +238,17 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     }
 
     .back-btn {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.6);
       text-decoration: none;
       font-size: 0.875rem;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
       margin-bottom: 1rem;
+      transition: color 0.2s;
     }
+
+    .back-btn:hover { color: white; }
 
     .header-content {
       display: flex;
@@ -262,6 +270,9 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     .header-info h1 {
       margin: 0;
       font-size: 1.5rem;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .header-actions {
@@ -271,22 +282,34 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
 
     .btn-secondary, .btn-primary {
       padding: 0.75rem 1.25rem;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-secondary {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary {
       background: linear-gradient(135deg, #6366F1, #8B5CF6);
       border: none;
       color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
     }
 
     .content-grid {
@@ -296,16 +319,18 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     }
 
     .card {
-      background: var(--card-bg, #fff);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       margin-bottom: 1rem;
     }
 
     .card h3 {
       margin: 0 0 1rem;
       font-size: 1rem;
+      color: rgba(255, 255, 255, 0.9);
     }
 
     .info-grid {
@@ -321,13 +346,14 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
 
     .info-item .label {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
       margin-bottom: 0.25rem;
     }
 
     .info-item .value {
       font-weight: 600;
+      color: white;
     }
 
     .receptor-main {
@@ -338,14 +364,15 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     .receptor-nombre {
       font-weight: 600;
       font-size: 1.1rem;
+      color: white;
     }
 
     .receptor-rut {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .no-receptor {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       font-style: italic;
     }
 
@@ -358,14 +385,14 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
       text-align: left;
       padding: 0.75rem;
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
-      border-bottom: 2px solid var(--border-color);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
     }
 
     .items-table td {
       padding: 0.75rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .items-table .right {
@@ -375,11 +402,12 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     .item-nombre {
       display: block;
       font-weight: 500;
+      color: white;
     }
 
     .item-desc {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .totales-list {
@@ -391,15 +419,16 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
       display: flex;
       justify-content: space-between;
       padding: 0.5rem 0;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .total-row.total {
-      border-top: 2px solid var(--border-color);
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
       margin-top: 0.5rem;
       padding-top: 1rem;
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #10B981;
     }
 
     .estado-timeline {
@@ -410,7 +439,7 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
       display: flex;
       gap: 0.75rem;
       padding: 0.75rem 0;
-      border-left: 2px solid var(--border-color);
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
       margin-left: 0.75rem;
       padding-left: 1rem;
       position: relative;
@@ -422,7 +451,7 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -447,16 +476,17 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
 
     .timeline-title {
       font-weight: 500;
+      color: white;
     }
 
     .timeline-date {
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .timeline-glosa {
       font-size: 0.8rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .full-width {
@@ -472,37 +502,41 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
     .action-btn {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s;
+      text-decoration: none;
     }
 
     .action-btn:hover {
-      border-color: var(--primary-color);
-      background: rgba(99,102,241,0.05);
+      border-color: #6366F1;
+      background: rgba(99, 102, 241, 0.1);
     }
 
     .action-btn.warning:hover {
       border-color: #f59e0b;
-      background: rgba(245,158,11,0.05);
+      background: rgba(245, 158, 11, 0.1);
     }
 
     .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.75rem;
       border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 500;
+      font-size: 0.7rem;
+      font-weight: 600;
       margin-left: 0.5rem;
+      text-transform: uppercase;
     }
 
-    .badge.aceptado { background: #dcfce7; color: #16a34a; }
-    .badge.pendiente { background: #fef3c7; color: #d97706; }
-    .badge.rechazado { background: #fee2e2; color: #dc2626; }
-    .badge.borrador { background: #e0e7ff; color: #4f46e5; }
+    .badge.aceptado { background: rgba(34, 197, 94, 0.2); color: #22C55E; }
+    .badge.pendiente { background: rgba(249, 115, 22, 0.2); color: #F97316; }
+    .badge.rechazado { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+    .badge.borrador { background: rgba(99, 102, 241, 0.2); color: #6366F1; }
 
     @media (max-width: 1024px) {
       .content-grid {
@@ -522,102 +556,102 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
   `]
 })
 export class DetalleDocumentoComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private facturacionService = inject(FacturacionService);
+  private route = inject(ActivatedRoute);
+  private facturacionService = inject(FacturacionService);
 
-    documento = signal<Dte | null>(null);
-    loading = signal(false);
+  documento = signal<Dte | null>(null);
+  loading = signal(false);
 
-    ngOnInit() {
-        const id = this.route.snapshot.paramMap.get('id');
-        if (id) {
-            this.cargarDocumento(id);
-        }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.cargarDocumento(id);
     }
+  }
 
-    cargarDocumento(id: string) {
-        this.loading.set(true);
-        this.facturacionService.getDte(id).subscribe({
-            next: (doc) => {
-                this.documento.set(doc);
-                this.loading.set(false);
-            },
-            error: (err) => {
-                console.error('Error cargando documento', err);
-                this.loading.set(false);
-            }
-        });
-    }
+  cargarDocumento(id: string) {
+    this.loading.set(true);
+    this.facturacionService.getDte(id).subscribe({
+      next: (doc) => {
+        this.documento.set(doc);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando documento', err);
+        this.loading.set(false);
+      }
+    });
+  }
 
-    getTipoIcon(): string {
-        const tipo = this.documento()?.tipoDte;
-        const icons: Record<string, string> = {
-            'BOLETA_ELECTRONICA': '🧾',
-            'FACTURA_ELECTRONICA': '📄',
-            'NOTA_CREDITO': '🔻',
-            'NOTA_DEBITO': '🔺'
-        };
-        return icons[tipo || ''] || '📄';
-    }
+  getTipoIcon(): string {
+    const tipo = this.documento()?.tipoDte;
+    const icons: Record<string, string> = {
+      'BOLETA_ELECTRONICA': '🧾',
+      'FACTURA_ELECTRONICA': '📄',
+      'NOTA_CREDITO': '🔻',
+      'NOTA_DEBITO': '🔺'
+    };
+    return icons[tipo || ''] || '📄';
+  }
 
-    formatDate(date: string): string {
-        return new Date(date).toLocaleDateString('es-CL');
-    }
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('es-CL');
+  }
 
-    formatDateTime(date: string): string {
-        return new Date(date).toLocaleString('es-CL');
-    }
+  formatDateTime(date: string): string {
+    return new Date(date).toLocaleString('es-CL');
+  }
 
-    formatCurrency(value: number): string {
-        return this.facturacionService.formatCurrency(value);
-    }
+  formatCurrency(value: number): string {
+    return this.facturacionService.formatCurrency(value);
+  }
 
-    descargarXml() {
-        const doc = this.documento();
-        if (!doc) return;
+  descargarXml() {
+    const doc = this.documento();
+    if (!doc) return;
 
-        this.facturacionService.getXml(doc.id).subscribe({
-            next: (xml) => {
-                const blob = new Blob([xml], { type: 'application/xml' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${doc.tipoDte}_${doc.folio}.xml`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-            },
-            error: (err) => console.error('Error descargando XML', err)
-        });
-    }
+    this.facturacionService.getXml(doc.id).subscribe({
+      next: (xml) => {
+        const blob = new Blob([xml], { type: 'application/xml' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${doc.tipoDte}_${doc.folio}.xml`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error descargando XML', err)
+    });
+  }
 
-    descargarPdf() {
-        const doc = this.documento();
-        if (!doc) return;
+  descargarPdf() {
+    const doc = this.documento();
+    if (!doc) return;
 
-        this.facturacionService.getPdf(doc.id).subscribe({
-            next: (blob) => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${doc.tipoDte}_${doc.folio}.pdf`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-            },
-            error: (err) => console.error('Error descargando PDF', err)
-        });
-    }
+    this.facturacionService.getPdf(doc.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${doc.tipoDte}_${doc.folio}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error descargando PDF', err)
+    });
+  }
 
-    consultarEstado() {
-        // TODO: Implementar consulta de estado al SII
-        alert('Consultando estado al SII...');
-    }
+  consultarEstado() {
+    // TODO: Implementar consulta de estado al SII
+    alert('Consultando estado al SII...');
+  }
 
-    enviarPorEmail() {
-        // TODO: Implementar envío por email
-        alert('Enviando documento por email...');
-    }
+  enviarPorEmail() {
+    // TODO: Implementar envío por email
+    alert('Enviando documento por email...');
+  }
 
-    imprimir() {
-        window.print();
-    }
+  imprimir() {
+    window.print();
+  }
 }

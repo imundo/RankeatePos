@@ -4,10 +4,10 @@ import { RouterLink } from '@angular/router';
 import { FacturacionService, Caf } from '../services/facturacion.service';
 
 @Component({
-    selector: 'app-gestion-caf',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    template: `
+  selector: 'app-gestion-caf',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
     <div class="caf-container">
       <!-- Header -->
       <header class="page-header">
@@ -182,11 +182,14 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       </section>
     </div>
   `,
-    styles: [`
+  styles: [`
     .caf-container {
       padding: 1.5rem;
       max-width: 1200px;
       margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
     }
 
     .page-header {
@@ -199,10 +202,13 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     .page-header h1 {
       font-size: 1.5rem;
       margin: 0;
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0.25rem 0 0;
     }
 
@@ -211,29 +217,37 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       background: linear-gradient(135deg, #6366F1, #8B5CF6);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-primary:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
     }
 
     .btn-primary:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
     .btn-secondary {
       padding: 0.75rem 1.5rem;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
       font-weight: 500;
       cursor: pointer;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     /* Alert */
@@ -241,13 +255,13 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       display: flex;
       gap: 1rem;
       padding: 1rem 1.25rem;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 1.5rem;
     }
 
     .alert.warning {
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.4);
     }
 
     .alert-icon {
@@ -256,12 +270,12 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
 
     .alert-content strong {
       display: block;
-      color: #92400e;
+      color: #F97316;
     }
 
     .alert-content p {
       margin: 0.25rem 0 0;
-      color: #a16207;
+      color: rgba(255, 255, 255, 0.7);
       font-size: 0.875rem;
     }
 
@@ -272,7 +286,8 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -280,7 +295,8 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     }
 
     .modal {
-      background: var(--card-bg, #fff);
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
       width: 100%;
       max-width: 500px;
@@ -293,12 +309,13 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       justify-content: space-between;
       align-items: center;
       padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .modal-header h2 {
       margin: 0;
       font-size: 1.25rem;
+      color: white;
     }
 
     .close-btn {
@@ -306,8 +323,11 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       border: none;
       font-size: 1.25rem;
       cursor: pointer;
-      opacity: 0.5;
+      color: rgba(255, 255, 255, 0.5);
+      transition: color 0.2s;
     }
+
+    .close-btn:hover { color: white; }
 
     .modal-body {
       padding: 1.5rem;
@@ -318,12 +338,12 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       justify-content: flex-end;
       gap: 0.75rem;
       padding: 1rem 1.5rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .upload-zone {
-      border: 2px dashed var(--border-color);
-      border-radius: 12px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
       padding: 3rem 2rem;
       text-align: center;
       cursor: pointer;
@@ -332,8 +352,8 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     }
 
     .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--primary-color);
-      background: rgba(99,102,241,0.05);
+      border-color: #6366F1;
+      background: rgba(99, 102, 241, 0.1);
     }
 
     .upload-icon {
@@ -345,33 +365,36 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     .upload-text {
       font-weight: 600;
       margin: 0;
+      color: white;
     }
 
     .upload-hint {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       font-size: 0.875rem;
       margin: 0.5rem 0 0;
     }
 
     .info-box {
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.05);
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .info-box h4 {
       margin: 0 0 0.5rem;
       font-size: 0.875rem;
+      color: white;
     }
 
     .info-box p {
       margin: 0.25rem 0;
       font-size: 0.8rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.6);
     }
 
     .info-box a {
-      color: var(--primary-color);
+      color: #6366F1;
     }
 
     /* CAF Cards */
@@ -383,24 +406,26 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     }
 
     .caf-card {
-      background: var(--card-bg, #fff);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
       padding: 1.5rem;
-      transition: all 0.2s;
+      transition: all 0.3s;
     }
 
     .caf-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
     }
 
     .caf-card.warning {
-      border-color: #f59e0b;
+      border-color: rgba(249, 115, 22, 0.5);
     }
 
     .caf-card.danger {
-      border-color: #ef4444;
-      background: #fef2f2;
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.1);
     }
 
     .caf-header {
@@ -412,18 +437,20 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
 
     .caf-tipo {
       font-weight: 600;
+      color: white;
     }
 
     .caf-badge {
-      padding: 0.25rem 0.75rem;
+      padding: 0.35rem 0.75rem;
       border-radius: 20px;
       font-size: 0.7rem;
       font-weight: 600;
+      text-transform: uppercase;
     }
 
-    .caf-badge.success { background: #dcfce7; color: #16a34a; }
-    .caf-badge.warning { background: #fef3c7; color: #d97706; }
-    .caf-badge.danger { background: #fee2e2; color: #dc2626; }
+    .caf-badge.success { background: rgba(34, 197, 94, 0.2); color: #22C55E; }
+    .caf-badge.warning { background: rgba(249, 115, 22, 0.2); color: #F97316; }
+    .caf-badge.danger { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
 
     .caf-stats {
       margin-bottom: 1rem;
@@ -439,33 +466,36 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     .stat-number {
       font-size: 2rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #6366F1;
     }
 
+    .caf-card.warning .stat-number { color: #F97316; }
+    .caf-card.danger .stat-number { color: #EF4444; }
+
     .stat-label {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       font-size: 0.875rem;
     }
 
     .progress-bar {
       height: 6px;
-      background: var(--bg-secondary);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 3px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: var(--primary-color);
+      background: linear-gradient(90deg, #6366F1, #8B5CF6);
       transition: width 0.3s;
     }
 
     .progress-fill.warning {
-      background: #f59e0b;
+      background: linear-gradient(90deg, #F97316, #FB923C);
     }
 
     .progress-fill.danger {
-      background: #ef4444;
+      background: linear-gradient(90deg, #EF4444, #F87171);
     }
 
     .caf-details {
@@ -480,11 +510,15 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     }
 
     .detail-row span:first-child {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .detail-row span:last-child {
+      color: white;
     }
 
     .detail-row.danger span:last-child {
-      color: #ef4444;
+      color: #EF4444;
     }
 
     .caf-actions {
@@ -495,17 +529,19 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
     .action-btn {
       flex: 1;
       padding: 0.5rem;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
       cursor: pointer;
       font-size: 0.8rem;
       transition: all 0.2s;
+      color: white;
     }
 
     .action-btn.danger:hover {
-      border-color: #ef4444;
-      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.1);
+      color: #EF4444;
     }
 
     /* Empty state */
@@ -513,37 +549,42 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
       grid-column: 1 / -1;
       text-align: center;
       padding: 4rem 2rem;
-      background: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .empty-state .icon {
       font-size: 4rem;
       display: block;
       margin-bottom: 1rem;
+      opacity: 0.5;
     }
 
     .empty-state h3 {
       margin: 0 0 0.5rem;
+      color: rgba(255, 255, 255, 0.9);
     }
 
     .empty-state p {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
       margin: 0 0 1.5rem;
     }
 
     /* Guide */
     .guide-section {
-      background: var(--card-bg);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
       padding: 1.5rem;
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .guide-section h2 {
       margin: 0 0 1.5rem;
       font-size: 1.1rem;
+      color: white;
     }
 
     .guide-cards {
@@ -571,12 +612,13 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
 
     .guide-card h4 {
       margin: 0 0 0.5rem;
+      color: white;
     }
 
     .guide-card p {
       margin: 0;
       font-size: 0.875rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .spinner {
@@ -607,97 +649,97 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
   `]
 })
 export class GestionCafComponent implements OnInit {
-    private facturacionService = inject(FacturacionService);
+  private facturacionService = inject(FacturacionService);
 
-    cafs = signal<Caf[]>([]);
-    showUpload = signal(false);
-    selectedFile = signal<File | null>(null);
-    uploading = signal(false);
-    isDragover = false;
+  cafs = signal<Caf[]>([]);
+  showUpload = signal(false);
+  selectedFile = signal<File | null>(null);
+  uploading = signal(false);
+  isDragover = false;
 
-    cafsBajos = signal<Caf[]>([]);
+  cafsBajos = signal<Caf[]>([]);
 
-    ngOnInit() {
+  ngOnInit() {
+    this.cargarCafs();
+  }
+
+  cargarCafs() {
+    this.facturacionService.listarCafs().subscribe({
+      next: (cafs) => {
+        this.cafs.set(cafs);
+        this.cafsBajos.set(cafs.filter(c => c.porcentajeUso > 80 && !c.vencido && !c.agotado));
+      },
+      error: (err) => console.error('Error cargando CAFs', err)
+    });
+  }
+
+  abrirUpload() {
+    this.showUpload.set(true);
+    this.selectedFile.set(null);
+  }
+
+  cerrarUpload() {
+    this.showUpload.set(false);
+    this.selectedFile.set(null);
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.isDragover = true;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    this.isDragover = false;
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.selectedFile.set(files[0]);
+    }
+  }
+
+  onFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile.set(input.files[0]);
+    }
+  }
+
+  subirCaf() {
+    const file = this.selectedFile();
+    if (!file) return;
+
+    this.uploading.set(true);
+    this.facturacionService.subirCaf(file).subscribe({
+      next: () => {
+        this.uploading.set(false);
+        this.cerrarUpload();
         this.cargarCafs();
-    }
+        alert('CAF subido exitosamente');
+      },
+      error: (err) => {
+        this.uploading.set(false);
+        console.error('Error subiendo CAF', err);
+        alert('Error al subir CAF: ' + (err.error?.message || err.message));
+      }
+    });
+  }
 
-    cargarCafs() {
-        this.facturacionService.listarCafs().subscribe({
-            next: (cafs) => {
-                this.cafs.set(cafs);
-                this.cafsBajos.set(cafs.filter(c => c.porcentajeUso > 80 && !c.vencido && !c.agotado));
-            },
-            error: (err) => console.error('Error cargando CAFs', err)
-        });
-    }
-
-    abrirUpload() {
-        this.showUpload.set(true);
-        this.selectedFile.set(null);
-    }
-
-    cerrarUpload() {
-        this.showUpload.set(false);
-        this.selectedFile.set(null);
-    }
-
-    onDragOver(event: DragEvent) {
-        event.preventDefault();
-        this.isDragover = true;
-    }
-
-    onDrop(event: DragEvent) {
-        event.preventDefault();
-        this.isDragover = false;
-        const files = event.dataTransfer?.files;
-        if (files && files.length > 0) {
-            this.selectedFile.set(files[0]);
+  desactivar(caf: Caf) {
+    if (confirm(`¿Seguro que deseas desactivar este CAF? Los folios restantes ya no podrán usarse.`)) {
+      this.facturacionService.desactivarCaf(caf.id).subscribe({
+        next: () => {
+          this.cargarCafs();
+          alert('CAF desactivado');
+        },
+        error: (err) => {
+          console.error('Error desactivando CAF', err);
+          alert('Error al desactivar CAF');
         }
+      });
     }
+  }
 
-    onFileSelect(event: Event) {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files.length > 0) {
-            this.selectedFile.set(input.files[0]);
-        }
-    }
-
-    subirCaf() {
-        const file = this.selectedFile();
-        if (!file) return;
-
-        this.uploading.set(true);
-        this.facturacionService.subirCaf(file).subscribe({
-            next: () => {
-                this.uploading.set(false);
-                this.cerrarUpload();
-                this.cargarCafs();
-                alert('CAF subido exitosamente');
-            },
-            error: (err) => {
-                this.uploading.set(false);
-                console.error('Error subiendo CAF', err);
-                alert('Error al subir CAF: ' + (err.error?.message || err.message));
-            }
-        });
-    }
-
-    desactivar(caf: Caf) {
-        if (confirm(`¿Seguro que deseas desactivar este CAF? Los folios restantes ya no podrán usarse.`)) {
-            this.facturacionService.desactivarCaf(caf.id).subscribe({
-                next: () => {
-                    this.cargarCafs();
-                    alert('CAF desactivado');
-                },
-                error: (err) => {
-                    console.error('Error desactivando CAF', err);
-                    alert('Error al desactivar CAF');
-                }
-            });
-        }
-    }
-
-    formatDate(date: string): string {
-        return new Date(date).toLocaleDateString('es-CL');
-    }
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('es-CL');
+  }
 }
