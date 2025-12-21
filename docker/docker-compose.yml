@@ -115,6 +115,29 @@ services:
       - pos-network
 
   # ===========================================
+  # Billing Service (Facturación Electrónica)
+  # ===========================================
+  billing-service:
+    build:
+      context: ../backend
+      dockerfile: billing-service/Dockerfile
+    container_name: pos-billing-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: billing_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos-network
+
+  # ===========================================
   # Frontend Angular
   # ===========================================
   frontend:

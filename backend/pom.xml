@@ -26,6 +26,7 @@
         <module>catalog-service</module>
         <module>inventory-service</module>
         <module>sales-service</module>
+        <module>billing-service</module>
     </modules>
 
     <properties>
