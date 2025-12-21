@@ -35,6 +35,7 @@ public class ChileSiiProvider implements BillingProvider {
     private final SiiTimbreGenerator timbreGenerator;
     private final SiiPdfGenerator pdfGenerator;
     private final CertificateManager certificateManager;
+    private final com.poscl.billing.infrastructure.sii.SiiClient siiClient;
 
     @Override
     public Pais getPais() {
@@ -98,32 +99,46 @@ public class ChileSiiProvider implements BillingProvider {
         return pdfGenerator.generateHtml(dte, tedXml);
     }
 
+    // Variable temporal para almacenar el DTE actual para envío
+    private Dte currentDte;
+
+    /**
+     * Establecer DTE para envío (usado internamente)
+     */
+    public void setCurrentDte(Dte dte) {
+        this.currentDte = dte;
+    }
+
     @Override
     public SendResult send(String signedXml, UUID tenantId) {
         log.info("Enviando DTE al SII para tenant {}", tenantId);
         
-        // TODO: Implementar envío real al SII
-        // Por ahora simula envío exitoso
-        // El envío real requiere:
-        // 1. Obtener token de autenticación del SII
-        // 2. Construir sobre XML (EnvioDTE)
-        // 3. Enviar via web service
-        // 4. Procesar respuesta
+        if (currentDte == null) {
+            log.warn("No hay DTE configurado para envío, simulando...");
+            String trackId = "TRACK-" + System.currentTimeMillis();
+            return SendResult.ok(trackId);
+        }
         
-        String trackId = "TRACK-" + System.currentTimeMillis();
-        log.info("DTE enviado (simulado) - TrackId: {}", trackId);
-        
-        return SendResult.ok(trackId);
+        // Envío real al SII
+        return siiClient.enviarDte(signedXml, currentDte, tenantId);
     }
 
     @Override
     public StatusResult checkStatus(String trackId, UUID tenantId) {
         log.debug("Consultando estado de {} para tenant {}", trackId, tenantId);
         
-        // TODO: Implementar consulta real de estado al SII
-        // Requiere llamar al web service de consulta con el trackId
+        if (currentDte != null) {
+            return siiClient.consultarEstadoEnvio(trackId, currentDte.getEmisorRut(), tenantId);
+        }
         
         return StatusResult.pending();
+    }
+
+    /**
+     * Consultar estado de un DTE específico
+     */
+    public StatusResult checkDteStatus(Dte dte, UUID tenantId) {
+        return siiClient.consultarEstadoDte(dte, tenantId);
     }
 
     @Override
