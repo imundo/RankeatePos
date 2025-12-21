@@ -67,6 +67,11 @@ export const routes: Routes = [
         // TODO: Add adminGuard to verify SAAS_ADMIN role
     },
     {
+        path: 'facturacion',
+        loadChildren: () => import('./features/facturacion/facturacion.routes').then(m => m.FACTURACION_ROUTES),
+        canActivate: [authGuard]
+    },
+    {
         path: '**',
         redirectTo: 'pos'
     }

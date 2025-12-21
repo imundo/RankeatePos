@@ -7,5 +7,6 @@ export const environment = {
     // Direct service URLs (for fallback or specific cases)
     authUrl: 'http://localhost:8080/api',
     catalogUrl: 'http://localhost:8080/api',
-    salesUrl: 'http://localhost:8080/api'
+    salesUrl: 'http://localhost:8080/api',
+    billingUrl: 'http://localhost:8080/api'
 };

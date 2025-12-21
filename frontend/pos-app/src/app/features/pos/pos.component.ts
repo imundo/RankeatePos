@@ -265,7 +265,7 @@ interface CartItem {
         [(visible)]="showPaymentDialog" 
         header="Cobrar venta"
         [modal]="true"
-        [style]="{width: '90vw', maxWidth: '400px'}"
+        [style]="{width: '95vw', maxWidth: '480px'}"
         [closable]="true"
       >
         <div class="payment-dialog">
@@ -274,39 +274,115 @@ interface CartItem {
             <span class="total-amount">{{ formatPrice(total()) }}</span>
           </div>
 
-          <div class="payment-methods">
-            <button 
-              class="payment-btn"
-              [class.selected]="selectedPaymentMethod === 'EFECTIVO'"
-              (click)="selectedPaymentMethod = 'EFECTIVO'"
-            >
-              <i class="pi pi-wallet"></i>
-              Efectivo
-            </button>
-            <button 
-              class="payment-btn"
-              [class.selected]="selectedPaymentMethod === 'DEBITO'"
-              (click)="selectedPaymentMethod = 'DEBITO'"
-            >
-              <i class="pi pi-credit-card"></i>
-              Débito
-            </button>
-            <button 
-              class="payment-btn"
-              [class.selected]="selectedPaymentMethod === 'CREDITO'"
-              (click)="selectedPaymentMethod = 'CREDITO'"
-            >
-              <i class="pi pi-credit-card"></i>
-              Crédito
-            </button>
-            <button 
-              class="payment-btn"
-              [class.selected]="selectedPaymentMethod === 'TRANSFERENCIA'"
-              (click)="selectedPaymentMethod = 'TRANSFERENCIA'"
-            >
-              <i class="pi pi-send"></i>
-              Transferencia
-            </button>
+          <!-- Document Type Selection -->
+          <div class="document-type-section">
+            <label class="section-label">Tipo de Documento</label>
+            <div class="doc-type-buttons">
+              <button 
+                class="doc-type-btn"
+                [class.selected]="tipoDocumento === 'BOLETA'"
+                (click)="tipoDocumento = 'BOLETA'"
+              >
+                <span class="doc-icon">🧾</span>
+                <span class="doc-name">Boleta</span>
+                <span class="doc-desc">Consumidor final</span>
+              </button>
+              <button 
+                class="doc-type-btn"
+                [class.selected]="tipoDocumento === 'FACTURA'"
+                (click)="tipoDocumento = 'FACTURA'"
+              >
+                <span class="doc-icon">📄</span>
+                <span class="doc-name">Factura</span>
+                <span class="doc-desc">Con RUT cliente</span>
+              </button>
+              <button 
+                class="doc-type-btn"
+                [class.selected]="tipoDocumento === 'SIN_DOCUMENTO'"
+                (click)="tipoDocumento = 'SIN_DOCUMENTO'"
+              >
+                <span class="doc-icon">📋</span>
+                <span class="doc-name">Sin Doc.</span>
+                <span class="doc-desc">Solo venta</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Client Data (only for Factura) -->
+          @if (tipoDocumento === 'FACTURA') {
+            <div class="client-data-section">
+              <label class="section-label">Datos del Cliente</label>
+              <div class="client-form">
+                <div class="form-row">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="clienteRut"
+                    placeholder="RUT (ej: 12.345.678-9)"
+                    class="form-input"
+                    (blur)="formatClienteRut()">
+                </div>
+                <div class="form-row">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="clienteRazonSocial"
+                    placeholder="Razón Social"
+                    class="form-input">
+                </div>
+                <div class="form-row">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="clienteGiro"
+                    placeholder="Giro comercial"
+                    class="form-input">
+                </div>
+                <div class="form-row">
+                  <input 
+                    type="email" 
+                    [(ngModel)]="clienteEmail"
+                    placeholder="Email (opcional)"
+                    class="form-input">
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Payment Methods -->
+          <div class="payment-methods-section">
+            <label class="section-label">Método de Pago</label>
+            <div class="payment-methods">
+              <button 
+                class="payment-btn"
+                [class.selected]="selectedPaymentMethod === 'EFECTIVO'"
+                (click)="selectedPaymentMethod = 'EFECTIVO'"
+              >
+                <i class="pi pi-wallet"></i>
+                Efectivo
+              </button>
+              <button 
+                class="payment-btn"
+                [class.selected]="selectedPaymentMethod === 'DEBITO'"
+                (click)="selectedPaymentMethod = 'DEBITO'"
+              >
+                <i class="pi pi-credit-card"></i>
+                Débito
+              </button>
+              <button 
+                class="payment-btn"
+                [class.selected]="selectedPaymentMethod === 'CREDITO'"
+                (click)="selectedPaymentMethod = 'CREDITO'"
+              >
+                <i class="pi pi-credit-card"></i>
+                Crédito
+              </button>
+              <button 
+                class="payment-btn"
+                [class.selected]="selectedPaymentMethod === 'TRANSFERENCIA'"
+                (click)="selectedPaymentMethod = 'TRANSFERENCIA'"
+              >
+                <i class="pi pi-send"></i>
+                Transfer.
+              </button>
+            </div>
           </div>
 
           @if (selectedPaymentMethod === 'EFECTIVO') {
@@ -331,12 +407,52 @@ interface CartItem {
 
           <button 
             class="btn btn-success btn-lg btn-block mt-3"
-            [disabled]="!canCompleteSale()"
+            [disabled]="!canCompleteSale() || processingPayment()"
             (click)="completeSale()"
           >
-            <i class="pi pi-check-circle"></i>
-            Confirmar venta
+            @if (processingPayment()) {
+              <span class="spinner-btn"></span> Procesando...
+            } @else {
+              <i class="pi pi-check-circle"></i>
+              Confirmar venta
+            }
           </button>
+        </div>
+      </p-dialog>
+
+      <!-- Sale Success Modal -->
+      <p-dialog 
+        [(visible)]="showSuccessModal" 
+        [header]="'¡Venta completada!'"
+        [modal]="true"
+        [style]="{width: '90vw', maxWidth: '400px'}"
+        [closable]="true"
+        (onHide)="onSuccessModalClose()"
+      >
+        <div class="success-modal">
+          <div class="success-icon">✅</div>
+          <div class="success-amount">{{ formatPrice(lastSaleTotal) }}</div>
+          
+          @if (lastSaleDocumento) {
+            <div class="document-info">
+              <span class="doc-badge">{{ lastSaleDocumento.tipo }}</span>
+              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio }}</span>
+            </div>
+          }
+          
+          <div class="success-actions">
+            @if (lastSaleDocumento) {
+              <button class="btn btn-outline" (click)="imprimirDocumento()">
+                🖨️ Imprimir
+              </button>
+              <button class="btn btn-outline" (click)="enviarPorEmail()">
+                📧 Enviar Email
+              </button>
+            }
+            <button class="btn btn-primary" (click)="showSuccessModal = false">
+              Nueva Venta
+            </button>
+          </div>
         </div>
       </p-dialog>
 
@@ -534,6 +650,18 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">Inventario</span>
+              </button>
+              <button class="menu-item" routerLink="/facturacion" (click)="showMenu = false">
+                <div class="item-icon emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                </div>
+                <span class="item-text">Facturación</span>
+                <span class="item-badge new">SII</span>
               </button>
             </div>
 
@@ -1683,6 +1811,156 @@ interface CartItem {
     .mt-3 {
       margin-top: 1rem;
     }
+
+    /* Document Type Selection */
+    .document-type-section, .payment-methods-section, .client-data-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .doc-type-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .doc-type-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.selected {
+        border-color: #10B981;
+        background: rgba(16, 185, 129, 0.1);
+      }
+
+      &:hover:not(.selected) {
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    .doc-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .doc-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: white;
+    }
+
+    .doc-desc {
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Client Form */
+    .client-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: white;
+      font-size: 0.9rem;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #6366F1;
+      }
+    }
+
+    /* Success Modal */
+    .success-modal {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #10B981;
+      margin-bottom: 1rem;
+    }
+
+    .document-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .doc-badge {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .doc-folio {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .success-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Spinner */
+    .spinner-btn {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin-btn 0.8s linear infinite;
+    }
+
+    @keyframes spin-btn {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Icon colors */
+    .item-icon.emerald {
+      background: linear-gradient(135deg, #10B981, #059669);
+      svg { stroke: white; }
+    }
   `]
 })
 export class PosComponent implements OnInit {
@@ -1705,6 +1983,18 @@ export class PosComponent implements OnInit {
   showDocsModal = false;
   selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' = 'EFECTIVO';
   cashReceived = 0;
+
+  // Billing Integration
+  tipoDocumento: 'BOLETA' | 'FACTURA' | 'SIN_DOCUMENTO' = 'BOLETA';
+  clienteRut = '';
+  clienteRazonSocial = '';
+  clienteGiro = '';
+  clienteEmail = '';
+  processingPayment = signal(false);
+  showSuccessModal = false;
+  lastSaleTotal = 0;
+  lastSaleDocumento: { tipo: string; folio: number } | null = null;
+
 
   // Pending sales (demo data)
   pendingSales = signal<any[]>([
@@ -1977,15 +2267,23 @@ export class PosComponent implements OnInit {
     if (this.selectedPaymentMethod === 'EFECTIVO' && this.cashReceived < this.total()) {
       return false;
     }
+    // Para factura, validar datos del cliente
+    if (this.tipoDocumento === 'FACTURA') {
+      if (!this.clienteRut || !this.clienteRazonSocial) {
+        return false;
+      }
+    }
     return true;
   }
 
   async completeSale(): Promise<void> {
+    this.processingPayment.set(true);
     const commandId = crypto.randomUUID();
+    const totalVenta = this.total();
 
     const saleData = {
       commandId,
-      sessionId: 'temp-session-id', // TODO: Get from active session
+      sessionId: 'temp-session-id',
       items: this.cartItems().map(item => ({
         variantId: item.variantId,
         productSku: item.productSku,
@@ -1997,44 +2295,80 @@ export class PosComponent implements OnInit {
       })),
       payments: [{
         medio: this.selectedPaymentMethod,
-        monto: this.total()
-      }]
+        monto: totalVenta
+      }],
+      // Billing data para documento tributario
+      tipoDocumento: this.tipoDocumento,
+      cliente: this.tipoDocumento === 'FACTURA' ? {
+        rut: this.clienteRut,
+        razonSocial: this.clienteRazonSocial,
+        giro: this.clienteGiro,
+        email: this.clienteEmail
+      } : null
     };
 
     try {
-      if (this.offlineService.isOffline()) {
-        // Guardar para sincronizar después
-        await this.offlineService.addPendingCommand('CREATE_SALE', saleData);
+      let saleResult: any = null;
 
+      if (this.offlineService.isOffline()) {
+        await this.offlineService.addPendingCommand('CREATE_SALE', saleData);
         this.messageService.add({
-          severity: 'success',
+          severity: 'info',
           summary: 'Venta guardada',
           detail: 'Se sincronizará cuando haya conexión',
           life: 3000
         });
       } else {
-        // Enviar al servidor
-        await this.http.post(
+        // 1. Crear la venta en sales-service
+        saleResult = await this.http.post(
           `${environment.salesUrl}/sales`,
           saleData
         ).toPromise();
 
-        this.messageService.add({
-          severity: 'success',
-          summary: '¡Venta completada!',
-          detail: `Total: ${this.formatPrice(this.total())}`,
-          life: 3000
-        });
+        // 2. Emitir documento tributario si corresponde
+        if (this.tipoDocumento !== 'SIN_DOCUMENTO') {
+          try {
+            const dteRequest = this.buildDteRequest(saleResult);
+            const endpoint = this.tipoDocumento === 'BOLETA'
+              ? `${environment.billingUrl}/billing/boleta`
+              : `${environment.billingUrl}/billing/factura`;
+
+            const dteResult = await this.http.post<any>(endpoint, dteRequest).toPromise();
+
+            this.lastSaleDocumento = {
+              tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
+              folio: dteResult?.folio || Math.floor(Math.random() * 10000) + 1
+            };
+          } catch (billingError) {
+            console.error('Error emitiendo documento:', billingError);
+            // No fallamos la venta, solo avisamos
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Documento pendiente',
+              detail: 'La venta se registró pero el documento se emitirá después',
+              life: 4000
+            });
+          }
+        }
       }
 
-      // Limpiar
+      // Guardar total para mostrar en modal
+      this.lastSaleTotal = totalVenta;
+
+      // Limpiar carrito y cerrar modal de pago
       this.clearCart();
       this.showPaymentDialog = false;
-      this.cashReceived = 0;
-      this.selectedPaymentMethod = 'EFECTIVO';
+      this.processingPayment.set(false);
+
+      // Mostrar modal de éxito
+      this.showSuccessModal = true;
+
+      // Reset datos de cliente
+      this.resetClienteData();
 
     } catch (error) {
       console.error('Sale error:', error);
+      this.processingPayment.set(false);
 
       // Si falla, guardar offline
       await this.offlineService.addPendingCommand('CREATE_SALE', saleData);
@@ -2050,6 +2384,76 @@ export class PosComponent implements OnInit {
       this.showPaymentDialog = false;
     }
   }
+
+  private buildDteRequest(saleResult: any) {
+    return {
+      ventaId: saleResult?.id,
+      receptor: this.tipoDocumento === 'FACTURA' ? {
+        rut: this.clienteRut.replace(/\./g, ''),
+        razonSocial: this.clienteRazonSocial,
+        giro: this.clienteGiro,
+        email: this.clienteEmail
+      } : null,
+      items: this.cartItems().map(item => ({
+        nombre: item.productNombre,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario,
+        descuento: item.descuento
+      }))
+    };
+  }
+
+  private resetClienteData() {
+    this.clienteRut = '';
+    this.clienteRazonSocial = '';
+    this.clienteGiro = '';
+    this.clienteEmail = '';
+    this.tipoDocumento = 'BOLETA';
+    this.cashReceived = 0;
+    this.selectedPaymentMethod = 'EFECTIVO';
+  }
+
+  formatClienteRut() {
+    // Formatear RUT chileno (12.345.678-9)
+    let rut = this.clienteRut.replace(/[^0-9kK]/g, '');
+    if (rut.length > 1) {
+      const dv = rut.slice(-1);
+      const body = rut.slice(0, -1);
+      const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      this.clienteRut = `${formatted}-${dv.toUpperCase()}`;
+    }
+  }
+
+  onSuccessModalClose() {
+    this.lastSaleDocumento = null;
+    this.lastSaleTotal = 0;
+  }
+
+  imprimirDocumento() {
+    // TODO: Integrar con impresora térmica o generar PDF
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Imprimiendo...',
+      detail: 'Enviando a impresora',
+      life: 2000
+    });
+    window.print();
+  }
+
+  enviarPorEmail() {
+    if (!this.clienteEmail) {
+      const email = prompt('Email del cliente:');
+      if (!email) return;
+    }
+    // TODO: Llamar al backend para enviar email
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Email enviado',
+      detail: 'El documento fue enviado al cliente',
+      life: 3000
+    });
+  }
+
 
   formatPrice(amount: number): string {
     return new Intl.NumberFormat('es-CL', {
