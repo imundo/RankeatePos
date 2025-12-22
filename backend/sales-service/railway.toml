@@ -1,7 +1,7 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "sales-service/Dockerfile"
 
 [deploy]
-healthcheckPath = "/health"
+healthcheckPath = "/actuator/health"
 restartPolicyType = "ON_FAILURE"

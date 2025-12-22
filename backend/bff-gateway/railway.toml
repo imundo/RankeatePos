@@ -1,7 +1,7 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "bff-gateway/Dockerfile"
 
 [deploy]
-healthcheckPath = "/health"
+healthcheckPath = "/actuator/health"
 restartPolicyType = "ON_FAILURE"
