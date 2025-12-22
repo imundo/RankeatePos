@@ -139,7 +139,7 @@ import { AuthService } from '@core/auth/auth.service';
             <div class="demo-divider">
               <span>Demos por industria</span>
             </div>
-            <div class="demo-cards four-cols">
+            <div class="demo-cards five-cols">
               <button class="demo-card" (click)="fillDemo('admin@eltrigal.cl', 'demo1234')">
                 <span class="demo-icon">🥖</span>
                 <span class="demo-name">Panadería El Trigal</span>
@@ -147,7 +147,7 @@ import { AuthService } from '@core/auth/auth.service';
               </button>
               <button class="demo-card" (click)="fillDemo('admin@aprende.cl', 'demo1234')">
                 <span class="demo-icon">🎓</span>
-                <span class="demo-name">AcademiaOnline Pro</span>
+                <span class="demo-name">Academia Pro</span>
                 <span class="demo-email">admin&#64;aprende.cl</span>
               </button>
               <button class="demo-card" (click)="fillDemo('admin@imprenta.cl', 'demo1234')">
@@ -157,8 +157,13 @@ import { AuthService } from '@core/auth/auth.service';
               </button>
               <button class="demo-card" (click)="fillDemo('admin@donpedro.cl', 'demo1234')">
                 <span class="demo-icon">🛒</span>
-                <span class="demo-name">Minimarket Don Pedro</span>
+                <span class="demo-name">Minimarket</span>
                 <span class="demo-email">admin&#64;donpedro.cl</span>
+              </button>
+              <button class="demo-card" (click)="fillDemo('admin@laselecta.cl', 'Test123!')">
+                <span class="demo-icon">🧀</span>
+                <span class="demo-name">Charcutería La Selecta</span>
+                <span class="demo-email">admin&#64;laselecta.cl</span>
               </button>
             </div>
 
@@ -527,6 +532,15 @@ import { AuthService } from '@core/auth/auth.service';
       &.four-cols {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.5rem;
+      }
+      
+      &.five-cols {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        
+        @media (max-width: 400px) {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
     }
 
