@@ -160,7 +160,7 @@ import { AuthService } from '@core/auth/auth.service';
                 <span class="demo-name">Minimarket</span>
                 <span class="demo-email">admin&#64;donpedro.cl</span>
               </button>
-              <button class="demo-card" (click)="fillDemo('admin@laselecta.cl', 'Test123!')">
+              <button class="demo-card" (click)="fillDemo('admin@laselecta.cl', 'demo1234')">
                 <span class="demo-icon">🧀</span>
                 <span class="demo-name">Charcutería La Selecta</span>
                 <span class="demo-email">admin&#64;laselecta.cl</span>

@@ -24,12 +24,12 @@ VALUES
 ('b5000000-0000-0000-0000-000000000002', 'a5000000-0000-0000-0000-000000000005', 'Local Las Condes', 'CHA-002', 'Isidora Goyenechea 2800', 'Las Condes', '+56977771112', false, true, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
--- Users for Charcutería (password: Test123!)
+-- Users for Charcutería (password: demo1234)
 INSERT INTO users (id, tenant_id, email, password_hash, nombre, apellido, telefono, activo, email_verificado, created_at)
 VALUES
-('c5000000-0000-0000-0000-000000000001', 'a5000000-0000-0000-0000-000000000005', 'admin@laselecta.cl', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjqLBcOhDK9ym7XAMCsxqkEpDvEZS.', 'Martín', 'Fernández', '+56977771110', true, true, CURRENT_TIMESTAMP),
-('c5000000-0000-0000-0000-000000000002', 'a5000000-0000-0000-0000-000000000005', 'cajero@laselecta.cl', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjqLBcOhDK9ym7XAMCsxqkEpDvEZS.', 'Carolina', 'Muñoz', '+56977771113', true, true, CURRENT_TIMESTAMP),
-('c5000000-0000-0000-0000-000000000003', 'a5000000-0000-0000-0000-000000000005', 'encargado@laselecta.cl', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjqLBcOhDK9ym7XAMCsxqkEpDvEZS.', 'Pedro', 'Soto', '+56977771114', true, true, CURRENT_TIMESTAMP)
+('c5000000-0000-0000-0000-000000000001', 'a5000000-0000-0000-0000-000000000005', 'admin@laselecta.cl', '$2a$10$5ljXdm1W4iDg/DTzKa35x.jbDFx/S7rWsTiDOqLsciitlq1vi8Ska', 'Martín', 'Fernández', '+56977771110', true, true, CURRENT_TIMESTAMP),
+('c5000000-0000-0000-0000-000000000002', 'a5000000-0000-0000-0000-000000000005', 'cajero@laselecta.cl', '$2a$10$5ljXdm1W4iDg/DTzKa35x.jbDFx/S7rWsTiDOqLsciitlq1vi8Ska', 'Carolina', 'Muñoz', '+56977771113', true, true, CURRENT_TIMESTAMP),
+('c5000000-0000-0000-0000-000000000003', 'a5000000-0000-0000-0000-000000000005', 'encargado@laselecta.cl', '$2a$10$5ljXdm1W4iDg/DTzKa35x.jbDFx/S7rWsTiDOqLsciitlq1vi8Ska', 'Pedro', 'Soto', '+56977771114', true, true, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- Assign roles (assuming roles exist from V2)
