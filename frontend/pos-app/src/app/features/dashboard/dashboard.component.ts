@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '@core/auth/auth.service';
 import { SalesService } from '@core/services/sales.service';
+import { IndustryMockDataService } from '@core/services/industry-mock.service';
 import { environment } from '@env/environment';
 
 interface DashboardStats {
@@ -584,6 +585,7 @@ interface DashboardStats {
 export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private salesService = inject(SalesService);
+  private industryMockService = inject(IndustryMockDataService);
   private http = inject(HttpClient);
 
   stats = signal<DashboardStats>({
@@ -622,10 +624,11 @@ export class DashboardComponent implements OnInit {
       this.salesService.getDashboardStats().subscribe({
         next: (data) => {
           if (data) {
+            const mockData = this.industryMockService.getMockDashboardData();
             this.stats.set({
-              ventasHoy: data.ventasHoy || 125400,
-              transacciones: data.transacciones || 23,
-              topProducto: data.topProducto || 'Pan Marraqueta',
+              ventasHoy: data.ventasHoy || mockData.ventasHoy,
+              transacciones: data.transacciones || mockData.transacciones,
+              topProducto: data.topProducto || mockData.topProducto,
               stockBajo: data.stockBajo || 3
             });
           }
@@ -642,13 +645,8 @@ export class DashboardComponent implements OnInit {
       { id: 'v002', numero: '#0025', total: 12300, cliente: 'Cliente', estado: 'PENDIENTE', hora: '11:52' },
     ]);
 
-    // Load top products (mock for demo)
-    this.topProducts.set([
-      { nombre: 'Pan Marraqueta', cantidad: 45, total: 6750 },
-      { nombre: 'Empanada Pino', cantidad: 28, total: 56000 },
-      { nombre: 'Café Espresso', cantidad: 22, total: 26400 },
-      { nombre: 'Torta Chocolate', cantidad: 8, total: 96000 },
-    ]);
+    // Load top products from service (industry-specific mock)
+    this.topProducts.set(this.industryMockService.getMockTopProducts());
   }
 
   loadTenantLogo() {
@@ -662,10 +660,11 @@ export class DashboardComponent implements OnInit {
   }
 
   loadMockData() {
+    const mockData = this.industryMockService.getMockDashboardData();
     this.stats.set({
-      ventasHoy: 125400,
-      transacciones: 23,
-      topProducto: 'Pan Marraqueta',
+      ventasHoy: mockData.ventasHoy,
+      transacciones: mockData.transacciones,
+      topProducto: mockData.topProducto,
       stockBajo: 3
     });
 

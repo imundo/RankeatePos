@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { SalesService, DailyStats } from '@core/services/sales.service';
+import { IndustryMockDataService } from '@core/services/industry-mock.service';
 
 interface DayData {
   date: Date;
@@ -831,6 +832,7 @@ interface DailySummary {
 export class DailyEarningsComponent implements OnInit {
   private authService = inject(AuthService);
   private salesService = inject(SalesService);
+  private industryMockService = inject(IndustryMockDataService);
 
   currentDate = signal(new Date());
   selectedDate = signal(new Date());
@@ -962,12 +964,11 @@ export class DailyEarningsComponent implements OnInit {
           totalTransacciones: totalTx,
           ventasAprobadas: approved,
           ventasRechazadas: totalTx - approved,
-          productosMasVendidos: [
-            { nombre: 'Pan Marraqueta', cantidad: Math.floor(Math.random() * 40) + 10, total: Math.floor(Math.random() * 10000) + 2000 },
-            { nombre: 'Empanada Pino', cantidad: Math.floor(Math.random() * 25) + 5, total: Math.floor(Math.random() * 30000) + 10000 },
-            { nombre: 'Café Espresso', cantidad: Math.floor(Math.random() * 20) + 8, total: Math.floor(Math.random() * 15000) + 5000 },
-            { nombre: 'Torta Chocolate', cantidad: Math.floor(Math.random() * 8) + 2, total: Math.floor(Math.random() * 50000) + 20000 },
-          ],
+          productosMasVendidos: this.industryMockService.getMockTopProducts().slice(0, 4).map(p => ({
+            nombre: p.nombre,
+            cantidad: Math.floor(Math.random() * 30) + 10,
+            total: Math.floor(Math.random() * 20000) + 5000
+          })),
           ventasPorHora: [
             { hora: '8', total: Math.floor(Math.random() * 20000) },
             { hora: '9', total: Math.floor(Math.random() * 35000) },
