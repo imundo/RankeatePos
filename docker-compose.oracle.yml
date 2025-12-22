@@ -1,0 +1,166 @@
+# Docker Compose for Oracle Cloud Free Tier
+# All services run on a single ARM VM (4 CPUs, 24GB RAM)
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: pos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_DB: ${POSTGRES_DB:-posdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    container_name: pos-auth-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      JWT_SECRET: ${JWT_SECRET:-my-super-secret-jwt-key}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8081/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Catalog Service
+  catalog-service:
+    build:
+      context: ./backend
+      dockerfile: catalog-service/Dockerfile
+    container_name: pos-catalog-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/catalog_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8082/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Sales Service
+  sales-service:
+    build:
+      context: ./backend
+      dockerfile: sales-service/Dockerfile
+    container_name: pos-sales-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sales_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8083/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Billing Service
+  billing-service:
+    build:
+      context: ./backend
+      dockerfile: billing-service/Dockerfile
+    container_name: pos-billing-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/billing_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      SII_AMBIENTE: certificacion
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8084/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # BFF Gateway
+  bff-gateway:
+    build:
+      context: ./backend
+      dockerfile: bff-gateway/Dockerfile
+    container_name: pos-bff-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AUTH_SERVICE_URL: http://auth-service:8081
+      CATALOG_SERVICE_URL: http://catalog-service:8082
+      SALES_SERVICE_URL: http://sales-service:8083
+      BILLING_SERVICE_URL: http://billing-service:8084
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - catalog-service
+      - sales-service
+      - billing-service
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Angular)
+  frontend:
+    build:
+      context: ./frontend/pos-app
+      dockerfile: Dockerfile
+      args:
+        API_URL: http://${SERVER_IP:-localhost}:8080
+    container_name: pos-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "4200:80"
+    depends_on:
+      - bff-gateway
+
+volumes:
+  postgres_data:
+
+
+networks:
+  default:
+    name: pos-network
