@@ -3,34 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { CompanyService, CompanyBranding, CompanyDocument } from '@core/services/company.service';
 
-interface CompanyInfo {
-    nombre: string;
-    rut: string;
-    giro: string;
-    direccion: string;
-    comuna: string;
-    ciudad: string;
-    telefono: string;
-    email: string;
-    website: string;
-    logoUrl: string;
-}
-
-interface CompanyDocument {
-    id: string;
-    nombre: string;
-    tipo: string;
-    fechaVencimiento?: string;
-    archivo?: string;
-    estado: 'VIGENTE' | 'POR_VENCER' | 'VENCIDO';
-}
+// CompanyInfo is an alias for CompanyBranding display purposes
+type CompanyInfo = CompanyBranding;
 
 @Component({
-    selector: 'app-company-management',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-company-management',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="company-container">
       <header class="company-header">
         <div class="header-left">
@@ -143,11 +125,11 @@ interface CompanyDocument {
               <div class="color-pickers">
                 <div class="color-item">
                   <label>Color Primario</label>
-                  <input type="color" value="#6366F1" />
+                  <input type="color" [value]="primaryColor" (input)="onPrimaryColorChange($event)" />
                 </div>
                 <div class="color-item">
                   <label>Color Secundario</label>
-                  <input type="color" value="#EC4899" />
+                  <input type="color" [value]="secondaryColor" (input)="onSecondaryColorChange($event)" />
                 </div>
               </div>
             </div>
@@ -247,7 +229,7 @@ interface CompanyDocument {
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .company-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -637,120 +619,119 @@ interface CompanyDocument {
   `]
 })
 export class CompanyManagementComponent implements OnInit {
-    private authService = inject(AuthService);
+  private authService = inject(AuthService);
+  private companyService = inject(CompanyService);
 
-    activeTab: 'info' | 'branding' | 'documents' = 'info';
-    saving = signal(false);
-    showAddDocument = false;
+  activeTab: 'info' | 'branding' | 'documents' = 'info';
+  saving = signal(false);
+  showAddDocument = false;
 
-    companyInfo = signal<CompanyInfo>({
-        nombre: '',
-        rut: '',
-        giro: '',
-        direccion: '',
-        comuna: '',
-        ciudad: '',
-        telefono: '',
-        email: '',
-        website: '',
-        logoUrl: ''
+  // Use service signals
+  companyInfo = this.companyService.branding;
+  documents = this.companyService.documents;
+
+  // Color state
+  primaryColor = '#6366F1';
+  secondaryColor = '#EC4899';
+
+  newDocument = {
+    nombre: '',
+    tipo: 'PATENTE',
+    fechaVencimiento: ''
+  };
+
+  ngOnInit() {
+    this.loadCompanyData();
+  }
+
+  loadCompanyData() {
+    this.companyService.loadBranding();
+    this.companyService.loadDocuments();
+    this.companyService.refreshDocumentStatuses();
+
+    // Sync color inputs with service state
+    const branding = this.companyService.branding();
+    this.primaryColor = branding.primaryColor || '#6366F1';
+    this.secondaryColor = branding.secondaryColor || '#EC4899';
+  }
+
+  async saveChanges() {
+    this.saving.set(true);
+    try {
+      const data = this.companyInfo();
+      this.companyService.saveBranding({
+        ...data,
+        primaryColor: this.primaryColor,
+        secondaryColor: this.secondaryColor
+      });
+      await new Promise(r => setTimeout(r, 500)); // Brief delay for UX
+      console.log('Saved:', this.companyInfo());
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  onPrimaryColorChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.primaryColor = input.value;
+    this.companyService.updateColors(this.primaryColor, this.secondaryColor);
+  }
+
+  onSecondaryColorChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.secondaryColor = input.value;
+    this.companyService.updateColors(this.primaryColor, this.secondaryColor);
+  }
+
+  onLogoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.companyService.updateLogo(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeLogo() {
+    this.companyService.removeLogo();
+  }
+
+  addDocument() {
+    this.companyService.addDocument({
+      nombre: this.newDocument.nombre,
+      tipo: this.newDocument.tipo,
+      fechaVencimiento: this.newDocument.fechaVencimiento || undefined,
+      estado: 'VIGENTE'
     });
+    this.showAddDocument = false;
+    this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '' };
+  }
 
-    documents = signal<CompanyDocument[]>([]);
+  deleteDocument(id: string) {
+    this.companyService.deleteDocument(id);
+  }
 
-    newDocument = {
-        nombre: '',
-        tipo: 'PATENTE',
-        fechaVencimiento: ''
+  getDocumentIcon(tipo: string): string {
+    const icons: Record<string, string> = {
+      'PATENTE': '📜',
+      'SANITARIO': '🏥',
+      'BOMBEROS': '🚒',
+      'MUNICIPAL': '🏛️',
+      'TRIBUTARIO': '💰',
+      'OTRO': '📄'
     };
+    return icons[tipo] || '📄';
+  }
 
-    ngOnInit() {
-        this.loadCompanyData();
-    }
-
-    loadCompanyData() {
-        // Load from tenant or API
-        const tenant = this.authService.tenant();
-        if (tenant) {
-            this.companyInfo.update(info => ({
-                ...info,
-                nombre: tenant.nombre || '',
-                rut: tenant.rut || ''
-            }));
-        }
-
-        // Mock documents for demo
-        this.documents.set([
-            { id: '1', nombre: 'Patente Comercial 2024', tipo: 'PATENTE', fechaVencimiento: '2024-12-31', estado: 'VIGENTE' },
-            { id: '2', nombre: 'Resolución Sanitaria', tipo: 'SANITARIO', fechaVencimiento: '2024-06-15', estado: 'POR_VENCER' },
-        ]);
-    }
-
-    async saveChanges() {
-        this.saving.set(true);
-        try {
-            // TODO: Save to API
-            await new Promise(r => setTimeout(r, 1000));
-            console.log('Saved:', this.companyInfo());
-        } finally {
-            this.saving.set(false);
-        }
-    }
-
-    onLogoSelected(event: Event) {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.companyInfo.update(info => ({
-                    ...info,
-                    logoUrl: e.target?.result as string
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    removeLogo() {
-        this.companyInfo.update(info => ({ ...info, logoUrl: '' }));
-    }
-
-    addDocument() {
-        const newDoc: CompanyDocument = {
-            id: Date.now().toString(),
-            nombre: this.newDocument.nombre,
-            tipo: this.newDocument.tipo,
-            fechaVencimiento: this.newDocument.fechaVencimiento || undefined,
-            estado: 'VIGENTE'
-        };
-        this.documents.update(docs => [...docs, newDoc]);
-        this.showAddDocument = false;
-        this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '' };
-    }
-
-    deleteDocument(id: string) {
-        this.documents.update(docs => docs.filter(d => d.id !== id));
-    }
-
-    getDocumentIcon(tipo: string): string {
-        const icons: Record<string, string> = {
-            'PATENTE': '📜',
-            'SANITARIO': '🏥',
-            'BOMBEROS': '🚒',
-            'MUNICIPAL': '🏛️',
-            'TRIBUTARIO': '💰',
-            'OTRO': '📄'
-        };
-        return icons[tipo] || '📄';
-    }
-
-    getStatusLabel(estado: string): string {
-        const labels: Record<string, string> = {
-            'VIGENTE': '✓ Vigente',
-            'POR_VENCER': '⚠️ Por vencer',
-            'VENCIDO': '✗ Vencido'
-        };
-        return labels[estado] || estado;
-    }
+  getStatusLabel(estado: string): string {
+    const labels: Record<string, string> = {
+      'VIGENTE': '✓ Vigente',
+      'POR_VENCER': '⚠️ Por vencer',
+      'VENCIDO': '✗ Vencido'
+    };
+    return labels[estado] || estado;
+  }
 }
