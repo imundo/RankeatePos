@@ -1,0 +1,10 @@
+# Railway Project Configuration
+# Deploy all services with correct paths and environment variables
+
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
