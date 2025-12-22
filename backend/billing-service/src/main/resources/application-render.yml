@@ -1,0 +1,65 @@
+# Render.com profile for billing-service
+# start.sh converts DATABASE_URL to SPRING_DATASOURCE_URL/USERNAME/PASSWORD
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: billing
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: billing
+    default-schema: billing
+    create-schemas: true
+
+server:
+  port: ${PORT:10000}
+
+# Actuator endpoints - simplified health check
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    db:
+      enabled: false
+
+# SII Configuration for Render
+sii:
+  ambiente: ${SII_AMBIENTE:certificacion}
+  urls:
+    certificacion:
+      auth: https://maullin.sii.cl/cgi_dte/UPL/DTEUpload
+      consulta: https://maullin.sii.cl/cgi_dte/consultaDte
+      token: https://maullin.sii.cl/cgi_dte/gettoken.jws
+    produccion:
+      auth: https://palena.sii.cl/cgi_dte/UPL/DTEUpload
+      consulta: https://palena.sii.cl/cgi_dte/consultaDte
+      token: https://palena.sii.cl/cgi_dte/gettoken.jws
+
+logging:
+  level:
+    com.poscl: INFO
+    org.flywaydb: INFO
+    org.hibernate: INFO
+    org.springframework.boot.actuate: DEBUG

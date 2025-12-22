@@ -64,6 +64,23 @@ services:
           name: pos-db
           property: connectionString
 
+  # Billing Service (Electronic Invoicing)
+  - type: web
+    name: pos-billing-service
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./billing-service/Dockerfile.render
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pos-db
+          property: connectionString
+      - key: SII_AMBIENTE
+        value: certificacion
+
   # BFF Gateway
   - type: web
     name: pos-bff-gateway
@@ -82,6 +99,8 @@ services:
         value: https://pos-catalog-service.onrender.com
       - key: SALES_SERVICE_URL
         value: https://pos-sales-service.onrender.com
+      - key: BILLING_SERVICE_URL
+        value: https://pos-billing-service.onrender.com
 
   # Frontend
   - type: web
