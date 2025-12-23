@@ -30,9 +30,7 @@ ENV SPRING_PROFILES_ACTIVE=production
 ENV PORT=8084
 ENV SII_AMBIENTE=certificacion
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=90s \
-    CMD wget -q --spider http://localhost:8084/actuator/health || exit 1
+# Railway handles health checking externally
 
 EXPOSE 8084
 
