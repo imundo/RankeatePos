@@ -230,10 +230,7 @@ public class SiiCertificationService {
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
-        // Referencia a documento original
-        dte.setDteReferenciaId(1L); // Referencia a factura 1
-        dte.setTipoReferencia("33"); // Factura electrónica
-        dte.setRazonReferencia("ANULACION DE DOCUMENTO");
+        // Referencia a documento original (campos de referencia se añadirán después)
 
         List<DteDetalle> detalles = new ArrayList<>();
         detalles.add(createDetalle(1, "ANULACION FACTURA 1", 1, new BigDecimal("50000"), false));
@@ -258,9 +255,7 @@ public class SiiCertificationService {
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
-        dte.setDteReferenciaId(1L);
-        dte.setTipoReferencia("33");
-        dte.setRazonReferencia("DESCUENTO COMERCIAL POSTERIOR");
+        // Referencia a documento original (campos de referencia se añadirán después)
 
         List<DteDetalle> detalles = new ArrayList<>();
         detalles.add(createDetalle(1, "DESCUENTO 10%", 1, new BigDecimal("5000"), false));
@@ -287,9 +282,7 @@ public class SiiCertificationService {
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
-        dte.setDteReferenciaId(1L);
-        dte.setTipoReferencia("33");
-        dte.setRazonReferencia("COBRO DE INTERESES POR MORA");
+        // Referencia a documento original (campos de referencia se añadirán después)
 
         List<DteDetalle> detalles = new ArrayList<>();
         detalles.add(createDetalle(1, "INTERESES MORATORIOS", 1, new BigDecimal("2500"), false));
