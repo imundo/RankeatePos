@@ -49,7 +49,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        // Explicitly add all allowed origins
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "http://127.0.0.1:4200",
+                "https://pos-frontend-production-36ac.up.railway.app"));
         config.setAllowCredentials(true);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList(
