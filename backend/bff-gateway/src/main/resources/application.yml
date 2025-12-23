@@ -1,18 +1,35 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
+
+# Actuator configuration for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  server:
+    port: ${PORT:8080}
 
 spring:
   application:
     name: bff-gateway
 
-# Service URLs
+# Service URLs (configurable for Railway)
 services:
   auth:
-    url: http://localhost:8081
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}
   catalog:
-    url: http://localhost:8082
+    url: ${CATALOG_SERVICE_URL:http://localhost:8082}
   sales:
-    url: http://localhost:8083
+    url: ${SALES_SERVICE_URL:http://localhost:8083}
+  billing:
+    url: ${BILLING_SERVICE_URL:http://localhost:8084}
 
 # JWT Config (same as auth-service)
 jwt:

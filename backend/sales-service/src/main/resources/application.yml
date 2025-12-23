@@ -1,5 +1,20 @@
 server:
-  port: 8083
+  port: ${PORT:8083}
+
+# Actuator configuration for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  server:
+    port: ${PORT:8083}
 
 spring:
   application:
