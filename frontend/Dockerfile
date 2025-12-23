@@ -10,7 +10,7 @@ RUN npm install --legacy-peer-deps
 
 # Copy source and build
 COPY pos-app/ .
-RUN npm run build:docker
+RUN npm run build:railway
 
 # Runtime stage
 FROM nginx:alpine
