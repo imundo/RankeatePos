@@ -17,7 +17,8 @@ import java.util.*;
 /**
  * Generador del Set de Pruebas para Certificación SII
  * 
- * El SII requiere un conjunto específico de documentos para aprobar la certificación.
+ * El SII requiere un conjunto específico de documentos para aprobar la
+ * certificación.
  * Este servicio genera automáticamente todos los casos de prueba requeridos.
  * 
  * Referencia: https://www.sii.cl/factura_electronica/
@@ -35,29 +36,29 @@ public class SiiCertificationService {
      */
     public List<CertificationTestCase> generateTestSet(String emisorRut, String emisorRazonSocial) {
         log.info("Generando set de pruebas de certificación para {}", emisorRut);
-        
+
         List<CertificationTestCase> testCases = new ArrayList<>();
-        
+
         // === FACTURAS ELECTRÓNICAS (33) ===
         testCases.add(createFacturaAfecta(1, emisorRut, emisorRazonSocial));
         testCases.add(createFacturaExenta(2, emisorRut, emisorRazonSocial));
         testCases.add(createFacturaConDescuento(3, emisorRut, emisorRazonSocial));
         testCases.add(createFacturaConRecargo(4, emisorRut, emisorRazonSocial));
-        
+
         // === BOLETAS ELECTRÓNICAS (39) ===
         testCases.add(createBoletaSimple(5, emisorRut, emisorRazonSocial));
         testCases.add(createBoletaConDescuento(6, emisorRut, emisorRazonSocial));
-        
+
         // === NOTAS DE CRÉDITO (61) ===
         testCases.add(createNotaCreditoAnulacion(7, emisorRut, emisorRazonSocial));
         testCases.add(createNotaCreditoDescuento(8, emisorRut, emisorRazonSocial));
-        
+
         // === NOTAS DE DÉBITO (56) ===
         testCases.add(createNotaDebitoIntereses(9, emisorRut, emisorRazonSocial));
-        
+
         // === GUÍAS DE DESPACHO (52) ===
         testCases.add(createGuiaDespacho(10, emisorRut, emisorRazonSocial));
-        
+
         log.info("Set de pruebas generado: {} casos", testCases.size());
         return testCases;
     }
@@ -66,7 +67,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createFacturaAfecta(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.FACTURA_ELECTRONICA, num, rut, razonSocial);
-        
+
         // Receptor
         dte.setReceptorRut("76.XXX.XXX-X"); // Se reemplaza con RUT real
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
@@ -96,7 +97,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createFacturaExenta(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.FACTURA_EXENTA, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("77.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA EXENTA LTDA");
         dte.setReceptorGiro("SERVICIOS EXENTOS");
@@ -122,7 +123,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createFacturaConDescuento(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.FACTURA_ELECTRONICA, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("78.XXX.XXX-X");
         dte.setReceptorRazonSocial("CLIENTE CON DESCUENTO SA");
         dte.setReceptorGiro("RETAIL");
@@ -148,7 +149,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createFacturaConRecargo(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.FACTURA_ELECTRONICA, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("79.XXX.XXX-X");
         dte.setReceptorRazonSocial("CLIENTE CON RECARGO LTDA");
         dte.setReceptorGiro("DISTRIBUIDORA");
@@ -174,7 +175,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createBoletaSimple(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.BOLETA_ELECTRONICA, num, rut, razonSocial);
-        
+
         // Boleta sin receptor obligatorio
         dte.setReceptorRut("66666666-6"); // RUT genérico
         dte.setReceptorRazonSocial("CONSUMIDOR FINAL");
@@ -199,7 +200,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createBoletaConDescuento(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.BOLETA_ELECTRONICA, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("66666666-6");
         dte.setReceptorRazonSocial("CONSUMIDOR FINAL");
 
@@ -225,7 +226,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createNotaCreditoAnulacion(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.NOTA_CREDITO, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
@@ -253,7 +254,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createNotaCreditoDescuento(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.NOTA_CREDITO, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
@@ -282,7 +283,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createNotaDebitoIntereses(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.NOTA_DEBITO, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("76.XXX.XXX-X");
         dte.setReceptorRazonSocial("EMPRESA RECEPTORA DE PRUEBA");
 
@@ -311,7 +312,7 @@ public class SiiCertificationService {
 
     private CertificationTestCase createGuiaDespacho(int num, String rut, String razonSocial) {
         Dte dte = buildBaseDte(TipoDte.GUIA_DESPACHO, num, rut, razonSocial);
-        
+
         dte.setReceptorRut("80.XXX.XXX-X");
         dte.setReceptorRazonSocial("CLIENTE DESPACHO SA");
         dte.setReceptorDireccion("BODEGA NORTE 789");
@@ -358,11 +359,11 @@ public class SiiCertificationService {
         detalle.setCodigo("PROD-" + linea);
         detalle.setCantidad(new BigDecimal(cantidad));
         detalle.setPrecioUnitario(precio);
-        detalle.setExento(exento);
-        
+        detalle.setIndicadorExento(exento ? 1 : null);
+
         BigDecimal total = precio.multiply(new BigDecimal(cantidad));
         detalle.setMontoItem(total);
-        
+
         return detalle;
     }
 
@@ -380,7 +381,7 @@ public class SiiCertificationService {
             dte.setMontoIva(subtotal.multiply(IVA_RATE).setScale(0, RoundingMode.HALF_UP));
             dte.setMontoExento(BigDecimal.ZERO);
         }
-        
+
         dte.setMontoTotal(dte.getMontoNeto().add(dte.getMontoIva()).add(dte.getMontoExento()));
     }
 
@@ -417,7 +418,7 @@ public class SiiCertificationService {
         }
 
         boolean allPassed = failed == 0;
-        String message = allPassed 
+        String message = allPassed
                 ? "✅ Todos los casos de prueba pasaron. Listo para certificación."
                 : "❌ " + failed + " casos fallaron. Revisar errores.";
 
@@ -443,7 +444,7 @@ public class SiiCertificationService {
         private Dte dte;
         private Integer referenciaFolio;
         private String expectedResult;
-        
+
         // Resultado de la prueba
         private boolean valid;
         private String trackId;
