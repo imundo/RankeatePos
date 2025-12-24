@@ -2,7 +2,6 @@ package com.poscl.billing.infrastructure.providers;
 
 import com.poscl.billing.domain.enums.Pais;
 import com.poscl.shared.exception.BusinessConflictException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class BillingProviderFactory {
 
     private final Map<Pais, BillingProvider> providersByPais;
@@ -25,8 +23,7 @@ public class BillingProviderFactory {
         this.providersByPais = providers.stream()
                 .collect(Collectors.toMap(
                         BillingProvider::getPais,
-                        Function.identity()
-                ));
+                        Function.identity()));
         log.info("Billing providers registrados: {}", providersByPais.keySet());
     }
 
