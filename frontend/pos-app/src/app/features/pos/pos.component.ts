@@ -2247,10 +2247,10 @@ export class PosComponent implements OnInit {
   industryConfig = computed(() => this.industryService.getIndustryConfig());
   pendingCount = this.offlineService.pendingCount;
 
-  // Innovation module notifications (from DemoDataService)
-  whatsappNotifications = computed(() => this.demoDataService.getNotificationCounts().whatsapp);
-  reservationsToday = computed(() => this.demoDataService.getNotificationCounts().reservations);
-  kdsOrders = computed(() => this.demoDataService.getNotificationCounts().kds);
+  // Innovation module notifications (initialized in ngOnInit from DemoDataService)
+  whatsappNotifications = signal(3);
+  reservationsToday = signal(5);
+  kdsOrders = signal(3);
 
   filteredProducts = computed(() => {
     let result = this.products();
@@ -2303,6 +2303,12 @@ export class PosComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCachedProducts();
+
+    // Load notification counts from DemoDataService
+    const counts = this.demoDataService.getNotificationCounts();
+    this.whatsappNotifications.set(counts.whatsapp);
+    this.reservationsToday.set(counts.reservations);
+    this.kdsOrders.set(counts.kds);
   }
 
   async loadCachedProducts(): Promise<void> {
