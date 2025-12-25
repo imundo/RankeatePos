@@ -59,6 +59,41 @@ interface CartItem {
           <span class="tenant-name">{{ tenantName() }}</span>
         </div>
         <div class="header-right">
+          <!-- WhatsApp Notifications -->
+          @if (whatsappNotifications() > 0) {
+            <button class="notification-badge whatsapp" routerLink="/whatsapp" title="Mensajes de WhatsApp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+              <span class="badge-count">{{ whatsappNotifications() }}</span>
+            </button>
+          }
+
+          <!-- Reservations -->
+          @if (reservationsToday() > 0) {
+            <button class="notification-badge reservations" routerLink="/reservations" title="Reservas para hoy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span class="badge-count">{{ reservationsToday() }}</span>
+            </button>
+          }
+
+          <!-- KDS Orders -->
+          @if (kdsOrders() > 0) {
+            <button class="notification-badge kds" routerLink="/kds" title="Pedidos en cocina">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              <span class="badge-count">{{ kdsOrders() }}</span>
+            </button>
+          }
+
           <!-- Document Expiry Alert -->
           @if (expiringDocs().length > 0) {
             <button class="alert-badge" [class.urgent]="hasUrgentDocs()" (click)="showDocsModal = true">
@@ -848,6 +883,96 @@ interface CartItem {
       display: flex;
       align-items: center;
       gap: 0.75rem;
+    }
+
+    /* Innovation Notification Badges */
+    .notification-badge {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      
+      svg { width: 20px; height: 20px; }
+      
+      .badge-count {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+      
+      /* WhatsApp - Green */
+      &.whatsapp {
+        background: linear-gradient(135deg, rgba(37, 211, 102, 0.2), rgba(18, 140, 126, 0.1));
+        color: #25D366;
+        animation: pulse-whatsapp 2.5s infinite;
+        
+        .badge-count {
+          background: linear-gradient(135deg, #25D366, #128C7E);
+        }
+        
+        &:hover {
+          box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+        }
+      }
+      
+      /* Reservations - Purple */
+      &.reservations {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+        color: #8B5CF6;
+        
+        .badge-count {
+          background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        }
+        
+        &:hover {
+          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+        }
+      }
+      
+      /* KDS - Orange */
+      &.kds {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+        color: #F59E0B;
+        animation: pulse-kds 2s infinite;
+        
+        .badge-count {
+          background: linear-gradient(135deg, #F59E0B, #D97706);
+        }
+        
+        &:hover {
+          box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+        }
+      }
+    }
+    
+    @keyframes pulse-whatsapp {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(37, 211, 102, 0); }
+    }
+    
+    @keyframes pulse-kds {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
     }
 
     .badge-warning {
@@ -2119,6 +2244,11 @@ export class PosComponent implements OnInit {
   });
   industryConfig = computed(() => this.industryService.getIndustryConfig());
   pendingCount = this.offlineService.pendingCount;
+
+  // Innovation module notifications (demo values - will be connected to real services)
+  whatsappNotifications = signal(3);  // Unread WhatsApp messages
+  reservationsToday = signal(5);      // Reservations scheduled for today
+  kdsOrders = signal(4);              // Pending orders in kitchen
 
   filteredProducts = computed(() => {
     let result = this.products();
