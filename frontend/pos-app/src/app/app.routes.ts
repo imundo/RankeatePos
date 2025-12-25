@@ -52,6 +52,16 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'loyalty',
+        loadComponent: () => import('./features/loyalty/loyalty.component').then(m => m.LoyaltyComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'subscriptions',
+        loadComponent: () => import('./features/subscriptions/subscriptions.component').then(m => m.SubscriptionsComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'menu-generator',
         loadComponent: () => import('./features/menu-generator/menu-generator.component').then(m => m.MenuGeneratorComponent),
         canActivate: [authGuard]
