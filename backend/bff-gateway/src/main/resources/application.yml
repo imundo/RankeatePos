@@ -30,6 +30,8 @@ services:
     url: ${SALES_SERVICE_URL:http://localhost:8083}
   billing:
     url: ${BILLING_SERVICE_URL:http://localhost:8084}
+  operations:
+    url: ${OPERATIONS_SERVICE_URL:http://localhost:8086}
 
 # JWT Config (same as auth-service)
 jwt:
