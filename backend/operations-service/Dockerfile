@@ -1,19 +1,18 @@
-# Railway-specific Dockerfile for operations-service
-# Root Directory in Railway MUST be: backend/operations-service
-# This Dockerfile builds standalone without parent pom
+# Multi-stage build for operations-service
+# Build context is ../backend (includes parent pom and shared-lib)
 
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /build
 
-# Cache bust - update this to force rebuild: v2
-ARG CACHEBUST=2
+# Copy everything needed
+COPY pom.xml ./pom.xml
+COPY shared-lib ./shared-lib
+COPY operations-service ./operations-service
 
-# Copy standalone pom and sources from current context
-COPY ./pom-railway.xml ./pom.xml
-COPY ./src ./src
-
-# Build (skip tests for faster deployment)
-RUN mvn clean package -DskipTests -B -Dmaven.test.skip=true
+# Install parent POM first (non-recursive), then shared-lib, then operations-service
+RUN mvn install -N -DskipTests -B && \
+    mvn -f shared-lib/pom.xml clean install -DskipTests -B && \
+    mvn -f operations-service/pom.xml clean package -DskipTests -B
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -24,15 +23,15 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Copy JAR from build stage
-COPY --from=build /build/target/*.jar app.jar
+COPY --from=build /build/operations-service/target/*.jar app.jar
 
 # Environment
-ENV SPRING_PROFILES_ACTIVE=railway
+ENV SPRING_PROFILES_ACTIVE=docker
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=90s \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
     CMD wget -q --spider http://localhost:8086/actuator/health || exit 1
 
 EXPOSE 8086
 
-ENTRYPOINT ["java", "-Xmx256m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
