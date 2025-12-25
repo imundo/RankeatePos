@@ -16,6 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { AuthService } from '@core/auth/auth.service';
 import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
+import { DemoDataService } from '@core/services/demo-data.service';
 import { FacturacionService } from '../facturacion/services/facturacion.service';
 import { environment } from '@env/environment';
 
@@ -2154,6 +2155,7 @@ export class PosComponent implements OnInit {
   private messageService = inject(MessageService);
   private industryService = inject(IndustryMockDataService);
   private facturacionService = inject(FacturacionService);
+  private demoDataService = inject(DemoDataService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -2245,10 +2247,10 @@ export class PosComponent implements OnInit {
   industryConfig = computed(() => this.industryService.getIndustryConfig());
   pendingCount = this.offlineService.pendingCount;
 
-  // Innovation module notifications (demo values - will be connected to real services)
-  whatsappNotifications = signal(3);  // Unread WhatsApp messages
-  reservationsToday = signal(5);      // Reservations scheduled for today
-  kdsOrders = signal(4);              // Pending orders in kitchen
+  // Innovation module notifications (from DemoDataService)
+  whatsappNotifications = computed(() => this.demoDataService.getNotificationCounts().whatsapp);
+  reservationsToday = computed(() => this.demoDataService.getNotificationCounts().reservations);
+  kdsOrders = computed(() => this.demoDataService.getNotificationCounts().kds);
 
   filteredProducts = computed(() => {
     let result = this.products();
