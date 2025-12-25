@@ -691,6 +691,62 @@ interface CartItem {
               </button>
             </div>
 
+            <!-- Innovación -->
+            <div class="menu-section">
+              <span class="section-title">Innovación</span>
+              <button class="menu-item" routerLink="/loyalty" (click)="showMenu = false">
+                <div class="item-icon pink">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </div>
+                <span class="item-text">Lealtad</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
+              <button class="menu-item" routerLink="/kds" (click)="showMenu = false">
+                <div class="item-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
+                </div>
+                <span class="item-text">Cocina (KDS)</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
+              <button class="menu-item" routerLink="/whatsapp" (click)="showMenu = false">
+                <div class="item-icon whatsapp">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                  </svg>
+                </div>
+                <span class="item-text">WhatsApp</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
+              <button class="menu-item" routerLink="/reservations" (click)="showMenu = false">
+                <div class="item-icon indigo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <span class="item-text">Reservas</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
+              <button class="menu-item" routerLink="/subscriptions" (click)="showMenu = false">
+                <div class="item-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 01-9 9m0 0a9 9 0 01-9-9m18 0a9 9 0 00-9-9m0 18V3"/>
+                    <polyline points="16 17 12 21 8 17"/>
+                  </svg>
+                </div>
+                <span class="item-text">Suscripciones</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
+            </div>
+
             <!-- Marketing -->
             <div class="menu-section">
               <span class="section-title">Marketing</span>
@@ -1728,6 +1784,8 @@ interface CartItem {
       &.indigo { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(129, 140, 248, 0.1)); color: #A5B4FC; }
       &.gray { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.5); }
       &.red { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.1)); color: #FCA5A5; }
+      &.whatsapp { background: linear-gradient(135deg, rgba(37, 211, 102, 0.2), rgba(18, 140, 126, 0.1)); color: #25D366; }
+      &.emerald { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1)); color: #34D399; }
     }
 
     .item-text {
