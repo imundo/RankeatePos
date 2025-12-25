@@ -5,6 +5,9 @@
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /build
 
+# Cache bust - update this to force rebuild: v2
+ARG CACHEBUST=2
+
 # Copy standalone pom and sources from current context
 COPY ./pom-railway.xml ./pom.xml
 COPY ./src ./src
