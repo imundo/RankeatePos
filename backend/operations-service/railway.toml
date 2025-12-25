@@ -1,7 +1,8 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "operations-service/Dockerfile"
+dockerfilePath = "Dockerfile.railway"
 
 [deploy]
 healthcheckPath = "/actuator/health"
 restartPolicyType = "ON_FAILURE"
+
