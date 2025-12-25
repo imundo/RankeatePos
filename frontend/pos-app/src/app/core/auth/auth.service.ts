@@ -143,6 +143,12 @@ export class AuthService {
         return this.userSignal()?.id ?? null;
     }
 
+    getBranchId(): string | null {
+        // For now, return tenantId as branchId (single-branch tenants)
+        // In multi-branch scenarios, this would come from user selection
+        return this.getTenantId();
+    }
+
     hasRole(role: string): boolean {
         return this.userSignal()?.roles?.includes(role) ?? false;
     }
