@@ -111,6 +111,69 @@ interface DashboardStats {
         </div>
       </section>
 
+      <!-- Modules Navigation -->
+      <section class="modules-section">
+        <h3 class="section-title">🚀 Módulos</h3>
+        <div class="modules-grid">
+          <button class="module-card loyalty" routerLink="/loyalty">
+            <div class="module-icon">🎁</div>
+            <div class="module-info">
+              <span class="module-name">Lealtad</span>
+              <span class="module-desc">Puntos y recompensas</span>
+            </div>
+          </button>
+          <button class="module-card kds" routerLink="/kds">
+            <div class="module-icon">🍳</div>
+            <div class="module-info">
+              <span class="module-name">Cocina (KDS)</span>
+              <span class="module-desc">Gestión de pedidos</span>
+            </div>
+          </button>
+          <button class="module-card whatsapp" routerLink="/whatsapp">
+            <div class="module-icon">💬</div>
+            <div class="module-info">
+              <span class="module-name">WhatsApp</span>
+              <span class="module-desc">Notificaciones y pedidos</span>
+            </div>
+          </button>
+          <button class="module-card reservations" routerLink="/reservations">
+            <div class="module-icon">📅</div>
+            <div class="module-info">
+              <span class="module-name">Reservas</span>
+              <span class="module-desc">Mesas y citas</span>
+            </div>
+          </button>
+          <button class="module-card subscriptions" routerLink="/subscriptions">
+            <div class="module-icon">🔄</div>
+            <div class="module-info">
+              <span class="module-name">Suscripciones</span>
+              <span class="module-desc">Pedidos recurrentes</span>
+            </div>
+          </button>
+          <button class="module-card earnings" routerLink="/earnings">
+            <div class="module-icon">💰</div>
+            <div class="module-info">
+              <span class="module-name">Ganancias</span>
+              <span class="module-desc">Calendario de ventas</span>
+            </div>
+          </button>
+          <button class="module-card facturacion" routerLink="/facturacion">
+            <div class="module-icon">🧾</div>
+            <div class="module-info">
+              <span class="module-name">Facturación</span>
+              <span class="module-desc">DTE electrónico</span>
+            </div>
+          </button>
+          <button class="module-card menu" routerLink="/menu-generator">
+            <div class="module-icon">🖼️</div>
+            <div class="module-info">
+              <span class="module-name">Menú Digital</span>
+              <span class="module-desc">Generador de menús</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
       <!-- Pending Sales for Approval -->
       @if (pendingSales().length > 0) {
         <section class="pending-section">
@@ -387,6 +450,95 @@ interface DashboardStats {
 
     .action-icon {
       font-size: 1.5rem;
+    }
+
+    /* Modules Section */
+    .modules-section {
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .module-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .module-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, transparent);
+      transition: all 0.3s;
+      opacity: 0;
+    }
+
+    .module-card:hover::before {
+      opacity: 1;
+    }
+
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .module-card.loyalty::before { background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), transparent); }
+    .module-card.loyalty:hover { border-color: #EC4899; }
+    
+    .module-card.kds::before { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), transparent); }
+    .module-card.kds:hover { border-color: #F59E0B; }
+    
+    .module-card.whatsapp::before { background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), transparent); }
+    .module-card.whatsapp:hover { border-color: #25D366; }
+    
+    .module-card.reservations::before { background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), transparent); }
+    .module-card.reservations:hover { border-color: #6366F1; }
+    
+    .module-card.subscriptions::before { background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), transparent); }
+    .module-card.subscriptions:hover { border-color: #3B82F6; }
+    
+    .module-card.earnings::before { background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), transparent); }
+    .module-card.earnings:hover { border-color: #10B981; }
+    
+    .module-card.facturacion::before { background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), transparent); }
+    .module-card.facturacion:hover { border-color: #8B5CF6; }
+    
+    .module-card.menu::before { background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), transparent); }
+    .module-card.menu:hover { border-color: #0EA5E9; }
+
+    .module-icon {
+      font-size: 2rem;
+      z-index: 1;
+    }
+
+    .module-info {
+      display: flex;
+      flex-direction: column;
+      z-index: 1;
+    }
+
+    .module-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .module-desc {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .activity-section {
