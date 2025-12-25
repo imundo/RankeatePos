@@ -619,34 +619,71 @@ export class DashboardComponent implements OnInit {
   }
 
   async loadData() {
-    // Try to load real data, fallback to mock
-    try {
-      this.salesService.getDashboardStats().subscribe({
-        next: (data) => {
-          if (data) {
-            const mockData = this.industryMockService.getMockDashboardData();
-            this.stats.set({
-              ventasHoy: data.ventasHoy || mockData.ventasHoy,
-              transacciones: data.transacciones || mockData.transacciones,
-              topProducto: data.topProducto || mockData.topProducto,
-              stockBajo: data.stockBajo || 3
-            });
-          }
-        },
-        error: () => this.loadMockData()
-      });
-    } catch {
-      this.loadMockData();
-    }
+    // Load dashboard stats from API
+    this.salesService.getDashboardStats().subscribe({
+      next: (data) => {
+        if (data) {
+          this.stats.set({
+            ventasHoy: data.ventasHoy || 0,
+            transacciones: data.transacciones || 0,
+            topProducto: data.topProducto || '--',
+            stockBajo: data.stockBajo || 0
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error loading dashboard stats', err);
+        this.stats.set({
+          ventasHoy: 0,
+          transacciones: 0,
+          topProducto: '--',
+          stockBajo: 0
+        });
+      }
+    });
 
-    // Load pending sales (mock for demo)
-    this.pendingSales.set([
-      { id: 'v001', numero: '#0024', total: 8500, cliente: 'Cliente', estado: 'PENDIENTE', hora: '11:45' },
-      { id: 'v002', numero: '#0025', total: 12300, cliente: 'Cliente', estado: 'PENDIENTE', hora: '11:52' },
-    ]);
+    // Load pending sales from API
+    this.salesService.getPendingSales().subscribe({
+      next: (sales: any[]) => {
+        const formatted = sales.map(s => ({
+          id: s.id,
+          numero: `#${s.numero}`,
+          total: s.total,
+          cliente: s.clienteNombre || 'Cliente',
+          estado: s.estado,
+          hora: new Date(s.fechaVenta).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+        }));
+        this.pendingSales.set(formatted);
+      },
+      error: () => this.pendingSales.set([])
+    });
 
-    // Load top products from service (industry-specific mock)
-    this.topProducts.set(this.industryMockService.getMockTopProducts());
+    // Load daily stats for top products
+    this.salesService.getDailyStats().subscribe({
+      next: (stats: any) => {
+        if (stats?.topProductos?.length) {
+          this.topProducts.set(stats.topProductos.map((p: any) => ({
+            nombre: p.nombre,
+            cantidad: p.cantidad,
+            total: p.total
+          })));
+        } else {
+          this.topProducts.set([]);
+        }
+
+        // Set recent activity from actual sales data
+        if (stats?.ventasRecientes?.length) {
+          this.recentActivity.set(stats.ventasRecientes.map((s: any, i: number) => ({
+            id: i + 1,
+            icon: '🧾',
+            title: `Venta #${s.numero}`,
+            time: this.formatTimeAgo(s.fechaVenta),
+            amount: s.total
+          })));
+        }
+      },
+      error: () => this.topProducts.set([])
+    });
   }
 
   loadTenantLogo() {
@@ -700,6 +737,19 @@ export class DashboardComponent implements OnInit {
       currency: 'CLP',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  formatTimeAgo(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'Ahora';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+    return date.toLocaleDateString('es-CL');
   }
 
   openReports() {
