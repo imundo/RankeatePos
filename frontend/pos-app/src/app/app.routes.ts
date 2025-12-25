@@ -62,6 +62,16 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'kds',
+        loadComponent: () => import('./features/kds/kds.component').then(m => m.KdsComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'whatsapp',
+        loadComponent: () => import('./features/whatsapp/whatsapp.component').then(m => m.WhatsappComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'menu-generator',
         loadComponent: () => import('./features/menu-generator/menu-generator.component').then(m => m.MenuGeneratorComponent),
         canActivate: [authGuard]
