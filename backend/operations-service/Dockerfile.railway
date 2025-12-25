@@ -1,13 +1,13 @@
 # Railway-specific Dockerfile for operations-service
-# Build context: backend/operations-service (the root directory set in Railway)
+# Root Directory in Railway MUST be: backend/operations-service
 # This Dockerfile builds standalone without parent pom
 
 FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /build
 
-# Copy standalone pom and sources
-COPY pom-railway.xml ./pom.xml
-COPY src ./src
+# Copy standalone pom and sources from current context
+COPY ./pom-railway.xml ./pom.xml
+COPY ./src ./src
 
 # Build (skip tests for faster deployment)
 RUN mvn clean package -DskipTests -B -Dmaven.test.skip=true
