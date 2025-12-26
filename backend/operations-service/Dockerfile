@@ -34,10 +34,7 @@ COPY --from=build /build/operations-service/target/*.jar app.jar
 # Environment
 ENV SPRING_PROFILES_ACTIVE=docker
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
-    CMD wget -q --spider http://localhost:8086/actuator/health || exit 1
-
-EXPOSE 8086
+# Note: Railway manages healthcheck and PORT assignment dynamically
+# The app uses ${PORT} environment variable from application.yml
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
