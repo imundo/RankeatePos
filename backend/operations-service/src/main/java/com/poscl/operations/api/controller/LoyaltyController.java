@@ -92,9 +92,11 @@ public class LoyaltyController {
     public ResponseEntity<?> redeemPoints(
             @PathVariable UUID id,
             @Valid @RequestBody AddPointsRequest request) {
-        return loyaltyService.redeemPoints(id, request.getPuntos(), request.getDescripcion())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.badRequest().body("Puntos insuficientes"));
+        var result = loyaltyService.redeemPoints(id, request.getPuntos(), request.getDescripcion());
+        if (result.isPresent()) {
+            return ResponseEntity.ok(result.get());
+        }
+        return ResponseEntity.badRequest().body("Puntos insuficientes");
     }
 
     @GetMapping("/customers/{id}/transactions")
