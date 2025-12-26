@@ -10,6 +10,7 @@ COPY shared-lib ./shared-lib
 COPY operations-service ./operations-service
 
 # Install parent POM first (non-recursive), then shared-lib, then operations-service
+# Version 2 - force rebuild
 RUN mvn install -N -DskipTests -B && \
     mvn -f shared-lib/pom.xml clean install -DskipTests -B && \
     mvn -f operations-service/pom.xml clean package -DskipTests -B
