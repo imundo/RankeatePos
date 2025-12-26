@@ -21,8 +21,8 @@ public interface KitchenOrderRepository extends JpaRepository<KitchenOrder, UUID
     @Query("SELECT COUNT(o) FROM KitchenOrder o WHERE o.tenantId = :tenantId AND o.branchId = :branchId AND o.estado = :estado")
     Long countByTenantIdAndBranchIdAndEstado(UUID tenantId, UUID branchId, String estado);
 
-    @Query("SELECT AVG(EXTRACT(EPOCH FROM (o.tiempoCompletado - o.tiempoIngreso))/60) FROM KitchenOrder o " +
-           "WHERE o.tenantId = :tenantId AND o.branchId = :branchId AND o.tiempoCompletado IS NOT NULL " +
-           "AND o.tiempoIngreso > :since")
+    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (tiempo_completado - tiempo_ingreso))/60) FROM kitchen_orders " +
+           "WHERE tenant_id = :tenantId AND branch_id = :branchId AND tiempo_completado IS NOT NULL " +
+           "AND tiempo_ingreso > :since", nativeQuery = true)
     Double getAveragePreparationTimeMinutes(UUID tenantId, UUID branchId, LocalDateTime since);
 }
