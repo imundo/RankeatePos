@@ -30,8 +30,18 @@ services:
     url: ${SALES_SERVICE_URL:http://localhost:8083}
   billing:
     url: ${BILLING_SERVICE_URL:http://localhost:8084}
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8087}
   operations:
     url: ${OPERATIONS_SERVICE_URL:http://localhost:8086}
+  accounting:
+    url: ${ACCOUNTING_SERVICE_URL:http://localhost:8088}
+  payments:
+    url: ${PAYMENTS_SERVICE_URL:http://localhost:8089}
+  purchases:
+    url: ${PURCHASES_SERVICE_URL:http://localhost:8090}
+  payroll:
+    url: ${PAYROLL_SERVICE_URL:http://localhost:8091}
 
 # JWT Config (same as auth-service)
 jwt:
