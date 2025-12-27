@@ -2,6 +2,10 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Cache bust to force rebuild
+ARG CACHEBUST=3
+RUN echo "Cache bust: $CACHEBUST - API Integration Complete"
+
 # Copy package files
 COPY package.json package-lock.json ./
 
