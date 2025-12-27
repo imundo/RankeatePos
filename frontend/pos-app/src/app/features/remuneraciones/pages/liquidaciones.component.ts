@@ -1,12 +1,13 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-    selector: 'app-liquidaciones',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-liquidaciones',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule],
+  template: `
     <div class="page-container">
       <header class="page-header">
         <a routerLink="/remuneraciones" class="back-link">← Volver</a>
@@ -53,7 +54,7 @@ import { RouterModule } from '@angular/router';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .page-container { padding: 24px; min-height: 100vh; background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); }
     .page-header { margin-bottom: 24px; }
     .back-link { color: rgba(255,255,255,0.6); text-decoration: none; display: block; margin-bottom: 8px; }
@@ -79,19 +80,19 @@ import { RouterModule } from '@angular/router';
   `]
 })
 export class LiquidacionesComponent {
-    selectedPeriod = '2024-12';
+  selectedPeriod = '2024-12';
 
-    payslips = signal([
-        { id: '1', employeeName: 'Juan Pérez González', gross: 750000, deductions: 142500, net: 607500 },
-        { id: '2', employeeName: 'María López Soto', gross: 580000, deductions: 110200, net: 469800 },
-        { id: '3', employeeName: 'Carlos Muñoz Vera', gross: 520000, deductions: 98800, net: 421200 },
-        { id: '4', employeeName: 'Ana Torres Rivera', gross: 920000, deductions: 174800, net: 745200 }
-    ]);
+  payslips = signal([
+    { id: '1', employeeName: 'Juan Pérez González', gross: 750000, deductions: 142500, net: 607500 },
+    { id: '2', employeeName: 'María López Soto', gross: 580000, deductions: 110200, net: 469800 },
+    { id: '3', employeeName: 'Carlos Muñoz Vera', gross: 520000, deductions: 98800, net: 421200 },
+    { id: '4', employeeName: 'Ana Torres Rivera', gross: 920000, deductions: 174800, net: 745200 }
+  ]);
 
-    totalGross = signal(2770000);
-    totalDeductions = signal(526300);
-    totalNet = signal(2243700);
+  totalGross = signal(2770000);
+  totalDeductions = signal(526300);
+  totalNet = signal(2243700);
 
-    viewPayslip(slip: any): void { console.log('View:', slip.id); }
-    downloadPayslip(slip: any): void { console.log('Download:', slip.id); }
+  viewPayslip(slip: any): void { console.log('View:', slip.id); }
+  downloadPayslip(slip: any): void { console.log('Download:', slip.id); }
 }
