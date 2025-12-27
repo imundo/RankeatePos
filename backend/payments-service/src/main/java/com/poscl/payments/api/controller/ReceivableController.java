@@ -1,97 +1,138 @@
 package com.poscl.payments.api.controller;
 
+import com.poscl.payments.application.service.ReceivableService;
+import com.poscl.payments.domain.entity.PaymentReceipt;
+import com.poscl.payments.domain.entity.Receivable;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/receivables")
+@RequiredArgsConstructor
 public class ReceivableController {
+
+    private final ReceivableService receivableService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getReceivables(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestParam(required = false) String status) {
         
-        List<Map<String, Object>> receivables = new ArrayList<>();
-        
-        receivables.add(createReceivable("F-2045", "Empresa ABC Ltda.", 1500000, 0, "PENDING", LocalDate.now().plusDays(15)));
-        receivables.add(createReceivable("F-2044", "Comercial XYZ", 850000, 300000, "PARTIAL", LocalDate.now().plusDays(7)));
-        receivables.add(createReceivable("F-2043", "Distribuidora Norte", 2200000, 2200000, "PAID", LocalDate.now().minusDays(3)));
-        receivables.add(createReceivable("F-2042", "Local El Trigal", 450000, 0, "OVERDUE", LocalDate.now().minusDays(10)));
-        receivables.add(createReceivable("F-2041", "Servicios Integrales SpA", 3800000, 0, "PENDING", LocalDate.now().plusDays(30)));
-        receivables.add(createReceivable("F-2040", "Restaurant La Esquina", 680000, 0, "OVERDUE", LocalDate.now().minusDays(5)));
+        UUID tid = parseTenantId(tenantId);
+        Page<Receivable> page;
         
         if (status != null && !status.isEmpty()) {
-            receivables = receivables.stream()
-                    .filter(r -> status.equalsIgnoreCase((String) r.get("status")))
-                    .toList();
+            try {
+                Receivable.ReceivableStatus s = Receivable.ReceivableStatus.valueOf(status.toUpperCase());
+                page = receivableService.getReceivablesByStatus(tid, s, PageRequest.of(0, 100));
+            } catch (IllegalArgumentException e) {
+                page = receivableService.getReceivables(tid, PageRequest.of(0, 100));
+            }
+        } else {
+            page = receivableService.getReceivables(tid, PageRequest.of(0, 100));
         }
         
-        return ResponseEntity.ok(receivables);
+        List<Map<String, Object>> result = page.getContent().stream()
+                .map(this::mapReceivable)
+                .toList();
+        
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getSummary(
             @RequestHeader("X-Tenant-Id") String tenantId) {
         
+        UUID tid = parseTenantId(tenantId);
+        
+        BigDecimal totalPending = receivableService.getTotalPendingBalance(tid);
+        BigDecimal totalOverdue = receivableService.getTotalOverdueBalance(tid);
+        Long overdueCount = receivableService.countOverdue(tid);
+        
         Map<String, Object> summary = new HashMap<>();
-        summary.put("totalReceivables", 9480000);
-        summary.put("pendingAmount", 5300000);
-        summary.put("overdueAmount", 1130000);
-        summary.put("collectedThisMonth", 8500000);
-        summary.put("overdueCount", 2);
-        summary.put("pendingCount", 4);
-        summary.put("avgDaysOverdue", 7.5);
+        summary.put("totalReceivables", totalPending);
+        summary.put("pendingAmount", totalPending);
+        summary.put("overdueAmount", totalOverdue);
+        summary.put("collectedThisMonth", BigDecimal.ZERO); // TODO: implement
+        summary.put("overdueCount", overdueCount);
+        summary.put("pendingCount", 0); // TODO: count from service
+        summary.put("avgDaysOverdue", 0.0);
         
         // Aging analysis
         Map<String, Object> aging = new HashMap<>();
-        aging.put("current", 5300000);
-        aging.put("days1to30", 680000);
-        aging.put("days31to60", 450000);
-        aging.put("days61to90", 0);
-        aging.put("over90", 0);
+        aging.put("current", totalPending.subtract(totalOverdue));
+        aging.put("days1to30", BigDecimal.ZERO);
+        aging.put("days31to60", BigDecimal.ZERO);
+        aging.put("days61to90", BigDecimal.ZERO);
+        aging.put("over90", BigDecimal.ZERO);
         summary.put("aging", aging);
         
         return ResponseEntity.ok(summary);
     }
 
+    @PostMapping
+    public ResponseEntity<?> createReceivable(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestBody Receivable receivable) {
+        
+        UUID tid = parseTenantId(tenantId);
+        Receivable created = receivableService.createReceivable(tid, receivable);
+        return ResponseEntity.ok(mapReceivable(created));
+    }
+
     @PostMapping("/{id}/collect")
     public ResponseEntity<Map<String, Object>> collectPayment(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestBody Map<String, Object> request) {
         
+        UUID tid = parseTenantId(tenantId);
+        BigDecimal amount = new BigDecimal(request.get("amount").toString());
+        String methodStr = (String) request.getOrDefault("paymentMethod", "TRANSFER");
+        PaymentReceipt.PaymentMethod method = PaymentReceipt.PaymentMethod.valueOf(methodStr);
+        String reference = (String) request.get("referenceNumber");
+        String notes = (String) request.get("notes");
+        
+        PaymentReceipt receipt = receivableService.collectPayment(tid, id, amount, method, reference, notes, null);
+        
         Map<String, Object> result = new HashMap<>();
-        result.put("id", UUID.randomUUID().toString());
+        result.put("id", receipt.getId());
         result.put("receivableId", id);
-        result.put("amount", request.get("amount"));
-        result.put("paymentMethod", request.getOrDefault("paymentMethod", "TRANSFER"));
-        result.put("paymentDate", LocalDate.now().toString());
-        result.put("receiptNumber", "REC-" + (new Random().nextInt(9000) + 1000));
+        result.put("amount", amount);
+        result.put("paymentMethod", method);
+        result.put("paymentDate", receipt.getPaymentDate());
+        result.put("receiptNumber", receipt.getReceiptNumber());
         result.put("status", "COMPLETED");
         
         return ResponseEntity.ok(result);
     }
 
-    private Map<String, Object> createReceivable(String docNumber, String customer, int amount, 
-            int paidAmount, String status, LocalDate dueDate) {
-        Map<String, Object> receivable = new HashMap<>();
-        receivable.put("id", UUID.randomUUID().toString());
-        receivable.put("documentNumber", docNumber);
-        receivable.put("customerName", customer);
-        receivable.put("amount", amount);
-        receivable.put("paidAmount", paidAmount);
-        receivable.put("balance", amount - paidAmount);
-        receivable.put("dueDate", dueDate.toString());
-        receivable.put("status", status);
-        
-        if ("OVERDUE".equals(status)) {
-            receivable.put("daysOverdue", (int) (LocalDate.now().toEpochDay() - dueDate.toEpochDay()));
+    private UUID parseTenantId(String tenantId) {
+        try {
+            return UUID.fromString(tenantId);
+        } catch (Exception e) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000001");
         }
-        
-        return receivable;
+    }
+
+    private Map<String, Object> mapReceivable(Receivable r) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", r.getId());
+        map.put("documentNumber", r.getDocumentNumber());
+        map.put("customerName", r.getCustomerName());
+        map.put("amount", r.getOriginalAmount());
+        map.put("paidAmount", r.getPaidAmount());
+        map.put("balance", r.getBalance());
+        map.put("dueDate", r.getDueDate() != null ? r.getDueDate().toString() : null);
+        map.put("status", r.getStatus());
+        map.put("daysOverdue", r.getDaysOverdue());
+        return map;
     }
 }

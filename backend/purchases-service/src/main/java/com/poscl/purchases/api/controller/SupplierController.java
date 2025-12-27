@@ -1,65 +1,98 @@
 package com.poscl.purchases.api.controller;
 
+import com.poscl.purchases.application.service.SupplierService;
+import com.poscl.purchases.domain.entity.Supplier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/suppliers")
+@RequiredArgsConstructor
 public class SupplierController {
+
+    private final SupplierService supplierService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getSuppliers(
-            @RequestHeader("X-Tenant-Id") String tenantId) {
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestParam(required = false) Boolean active) {
         
-        List<Map<String, Object>> suppliers = new ArrayList<>();
+        UUID tid = parseTenantId(tenantId);
+        List<Supplier> suppliers = active != null && active 
+            ? supplierService.findActive(tid) 
+            : supplierService.findAll(tid);
         
-        suppliers.add(createSupplier("76.100.200-3", "Distribuidora Nacional SpA", "DINASA", "contacto@dinasa.cl", 30));
-        suppliers.add(createSupplier("76.200.300-4", "Importadora del Pacífico Ltda", "IMPAC", "ventas@impac.cl", 45));
-        suppliers.add(createSupplier("76.300.400-5", "Comercial Norte Grande", "CNG", "pedidos@cng.cl", 30));
-        suppliers.add(createSupplier("76.400.500-6", "Alimentos Premium Chile", "APC", "comercial@apc.cl", 60));
-        suppliers.add(createSupplier("76.500.600-7", "Tecnología y Servicios TI", "TST", "info@tst.cl", 30));
+        List<Map<String, Object>> result = suppliers.stream()
+                .map(this::mapSupplier)
+                .toList();
         
-        return ResponseEntity.ok(suppliers);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getSupplier(
+    public ResponseEntity<?> getSupplier(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         
-        return ResponseEntity.ok(createSupplier("76.100.200-3", "Distribuidora Nacional SpA", "DINASA", "contacto@dinasa.cl", 30));
+        UUID tid = parseTenantId(tenantId);
+        return supplierService.findById(tid, id)
+                .map(s -> ResponseEntity.ok(mapSupplier(s)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createSupplier(
+    public ResponseEntity<?> createSupplier(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @RequestBody Map<String, Object> request) {
+            @RequestBody Supplier supplier) {
         
-        Map<String, Object> supplier = new HashMap<>(request);
-        supplier.put("id", UUID.randomUUID().toString());
-        supplier.put("isActive", true);
-        supplier.put("createdAt", LocalDate.now().toString());
-        
-        return ResponseEntity.ok(supplier);
+        UUID tid = parseTenantId(tenantId);
+        Supplier created = supplierService.create(tid, supplier);
+        return ResponseEntity.ok(mapSupplier(created));
     }
 
-    private Map<String, Object> createSupplier(String rut, String businessName, String fantasyName, 
-            String email, int paymentTerms) {
-        Map<String, Object> supplier = new HashMap<>();
-        supplier.put("id", UUID.randomUUID().toString());
-        supplier.put("rut", rut);
-        supplier.put("businessName", businessName);
-        supplier.put("fantasyName", fantasyName);
-        supplier.put("email", email);
-        supplier.put("phone", "+56 2 2222 3333");
-        supplier.put("address", "Av. Principal 1234, Santiago");
-        supplier.put("paymentTerms", paymentTerms);
-        supplier.put("isActive", true);
-        supplier.put("totalOrders", new Random().nextInt(50) + 5);
-        supplier.put("totalPurchased", new Random().nextInt(50000000) + 5000000);
-        return supplier;
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSupplier(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id,
+            @RequestBody Supplier supplier) {
+        
+        UUID tid = parseTenantId(tenantId);
+        Supplier updated = supplierService.update(tid, id, supplier);
+        return ResponseEntity.ok(mapSupplier(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deactivateSupplier(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        supplierService.deactivate(tid, id);
+        return ResponseEntity.ok().build();
+    }
+
+    private UUID parseTenantId(String tenantId) {
+        try {
+            return UUID.fromString(tenantId);
+        } catch (Exception e) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        }
+    }
+
+    private Map<String, Object> mapSupplier(Supplier s) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", s.getId());
+        map.put("rut", s.getRut());
+        map.put("businessName", s.getBusinessName());
+        map.put("name", s.getName());
+        map.put("email", s.getEmail());
+        map.put("phone", s.getPhone());
+        map.put("address", s.getAddress());
+        map.put("paymentTerms", s.getPaymentTermDays());
+        map.put("isActive", s.getIsActive());
+        return map;
     }
 }

@@ -1,7 +1,13 @@
 package com.poscl.payroll.api.controller;
 
+import com.poscl.payroll.application.service.EmployeeService;
+import com.poscl.payroll.application.service.PayrollPeriodService;
 import com.poscl.payroll.application.service.PreviredExportService;
 import com.poscl.payroll.application.service.PayslipPdfService;
+import com.poscl.payroll.domain.entity.Employee;
+import com.poscl.payroll.domain.entity.PayrollPeriod;
+import com.poscl.payroll.domain.entity.Payslip;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,27 +18,144 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/payroll")
+@RequiredArgsConstructor
 public class PayrollController {
 
     private final PreviredExportService previredExportService;
     private final PayslipPdfService payslipPdfService;
+    private final EmployeeService employeeService;
+    private final PayrollPeriodService periodService;
 
-    public PayrollController(PreviredExportService previredExportService, PayslipPdfService payslipPdfService) {
-        this.previredExportService = previredExportService;
-        this.payslipPdfService = payslipPdfService;
+    // ==================== EMPLOYEES ====================
+
+    @GetMapping("/employees")
+    public ResponseEntity<List<Map<String, Object>>> getEmployees(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestParam(required = false) Boolean active) {
+        
+        UUID tid = parseTenantId(tenantId);
+        List<Employee> employees = active != null && active 
+            ? employeeService.findActive(tid) 
+            : employeeService.findAll(tid);
+        
+        List<Map<String, Object>> result = employees.stream()
+                .map(this::mapEmployee)
+                .toList();
+        
+        return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/employees/{id}")
+    public ResponseEntity<?> getEmployee(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        return employeeService.findById(tid, id)
+                .map(emp -> ResponseEntity.ok(mapEmployee(emp)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/employees")
+    public ResponseEntity<?> createEmployee(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestBody Employee employee) {
+        
+        UUID tid = parseTenantId(tenantId);
+        Employee created = employeeService.create(tid, employee);
+        return ResponseEntity.ok(mapEmployee(created));
+    }
+
+    // ==================== PERIODS ====================
+
+    @GetMapping("/periods")
+    public ResponseEntity<List<Map<String, Object>>> getPayrollPeriods(
+            @RequestHeader("X-Tenant-Id") String tenantId) {
+        
+        UUID tid = parseTenantId(tenantId);
+        List<PayrollPeriod> periods = periodService.findAll(tid);
+        
+        List<Map<String, Object>> result = periods.stream()
+                .map(this::mapPeriod)
+                .toList();
+        
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/periods")
+    public ResponseEntity<?> createPeriod(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestBody Map<String, Integer> request) {
+        
+        UUID tid = parseTenantId(tenantId);
+        int year = request.getOrDefault("year", LocalDate.now().getYear());
+        int month = request.getOrDefault("month", LocalDate.now().getMonthValue());
+        
+        PayrollPeriod period = periodService.create(tid, year, month);
+        return ResponseEntity.ok(mapPeriod(period));
+    }
+
+    @PostMapping("/periods/{periodId}/process")
+    public ResponseEntity<?> processPeriod(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID periodId) {
+        
+        UUID tid = parseTenantId(tenantId);
+        PayrollPeriod processed = periodService.process(tid, periodId);
+        return ResponseEntity.ok(mapPeriod(processed));
+    }
+
+    // ==================== PAYSLIPS ====================
+
+    @GetMapping("/periods/{periodId}/payslips")
+    public ResponseEntity<List<Map<String, Object>>> getPayslips(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID periodId) {
+        
+        UUID tid = parseTenantId(tenantId);
+        List<Payslip> payslips = periodService.getPayslips(periodId);
+        
+        // Enrich with employee names
+        List<Map<String, Object>> result = payslips.stream()
+                .map(p -> {
+                    Map<String, Object> map = mapPayslip(p);
+                    employeeService.findById(tid, p.getEmployeeId())
+                            .ifPresent(emp -> {
+                                map.put("employeeName", emp.getFullName());
+                                map.put("employeeRut", emp.getRut());
+                            });
+                    return map;
+                })
+                .toList();
+        
+        return ResponseEntity.ok(result);
+    }
+
+    // ==================== PREVIRED EXPORT ====================
 
     @GetMapping("/previred/{periodId}")
     public ResponseEntity<byte[]> exportPrevired(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String periodId) {
+            @PathVariable UUID periodId) {
         
-        // TODO: Get actual payslips from database
-        // For demo, using mock data
-        List<Map<String, Object>> payslips = getMockPayslips();
+        UUID tid = parseTenantId(tenantId);
+        List<Payslip> payslips = periodService.getPayslips(periodId);
+        
+        // Convert to maps for export service
+        List<Map<String, Object>> payslipMaps = payslips.stream()
+                .map(p -> {
+                    Map<String, Object> map = mapPayslip(p);
+                    employeeService.findById(tid, p.getEmployeeId())
+                            .ifPresent(emp -> {
+                                map.put("employeeName", emp.getFullName());
+                                map.put("employeeRut", emp.getRut());
+                            });
+                    return map;
+                })
+                .toList();
+        
         LocalDate periodDate = LocalDate.now().withDayOfMonth(1);
-        
-        String content = previredExportService.generatePreviredFile(payslips, periodDate);
+        String content = previredExportService.generatePreviredFile(payslipMaps, periodDate);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -44,66 +167,7 @@ public class PayrollController {
                 .body(content.getBytes());
     }
 
-    @GetMapping("/periods")
-    public ResponseEntity<List<Map<String, Object>>> getPayrollPeriods(
-            @RequestHeader("X-Tenant-Id") String tenantId) {
-        // Demo data
-        List<Map<String, Object>> periods = new ArrayList<>();
-        
-        Map<String, Object> current = new HashMap<>();
-        current.put("id", UUID.randomUUID().toString());
-        current.put("periodYear", 2025);
-        current.put("periodMonth", 12);
-        current.put("periodName", "Diciembre 2025");
-        current.put("status", "PROCESSING");
-        current.put("totalGross", 45000000);
-        current.put("totalDeductions", 12500000);
-        current.put("totalNet", 32500000);
-        periods.add(current);
-        
-        Map<String, Object> previous = new HashMap<>();
-        previous.put("id", UUID.randomUUID().toString());
-        previous.put("periodYear", 2025);
-        previous.put("periodMonth", 11);
-        previous.put("periodName", "Noviembre 2025");
-        previous.put("status", "PAID");
-        previous.put("totalGross", 44500000);
-        previous.put("totalDeductions", 12350000);
-        previous.put("totalNet", 32150000);
-        periods.add(previous);
-        
-        return ResponseEntity.ok(periods);
-    }
-
-    @GetMapping("/employees")
-    public ResponseEntity<List<Map<String, Object>>> getEmployees(
-            @RequestHeader("X-Tenant-Id") String tenantId,
-            @RequestParam(required = false) Boolean active) {
-        
-        List<Map<String, Object>> employees = new ArrayList<>();
-        
-        employees.add(createEmployee("12.345.678-9", "María", "González", "Gerente", 2800000, true));
-        employees.add(createEmployee("11.222.333-4", "Juan", "Pérez", "Desarrollador", 2200000, true));
-        employees.add(createEmployee("10.111.222-3", "Ana", "López", "Contadora", 2000000, true));
-        employees.add(createEmployee("9.888.777-6", "Pedro", "Martínez", "Vendedor", 1200000, true));
-        employees.add(createEmployee("8.777.666-5", "Carmen", "Torres", "Administrativa", 950000, true));
-        
-        if (active != null) {
-            employees = employees.stream()
-                    .filter(e -> active.equals(e.get("isActive")))
-                    .toList();
-        }
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    @GetMapping("/periods/{periodId}/payslips")
-    public ResponseEntity<List<Map<String, Object>>> getPayslips(
-            @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String periodId) {
-        
-        return ResponseEntity.ok(getMockPayslips());
-    }
+    // ==================== PAYSLIP PDF ====================
 
     @GetMapping("/payslips/{payslipId}/pdf")
     public ResponseEntity<byte[]> getPayslipPdf(
@@ -112,11 +176,22 @@ public class PayrollController {
             @RequestParam(defaultValue = "2025") int year,
             @RequestParam(defaultValue = "12") int month) {
         
-        // Get payslip data (for demo, using first mock payslip)
-        List<Map<String, Object>> payslips = getMockPayslips();
-        Map<String, Object> payslip = payslips.isEmpty() ? new HashMap<>() : payslips.get(0);
+        // For now, use demo data - would fetch from DB in full implementation
+        Map<String, Object> payslipData = Map.of(
+            "employeeName", "Demo Employee",
+            "employeeRut", "12.345.678-9",
+            "baseSalary", 2000000,
+            "grossSalary", 2000000,
+            "afpAmount", 205000,
+            "healthAmount", 140000,
+            "unemploymentAmount", 12000,
+            "taxAmount", 0,
+            "totalDeductions", 357000,
+            "netSalary", 1643000,
+            "daysWorked", 30
+        );
         
-        byte[] content = payslipPdfService.generatePayslip(payslip, year, month);
+        byte[] content = payslipPdfService.generatePayslip(payslipData, year, month);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
@@ -125,73 +200,66 @@ public class PayrollController {
         return ResponseEntity.ok().headers(headers).body(content);
     }
 
-    private Map<String, Object> createEmployee(String rut, String firstName, String lastName, 
-            String position, int baseSalary, boolean active) {
-        Map<String, Object> emp = new HashMap<>();
-        emp.put("id", UUID.randomUUID().toString());
-        emp.put("rut", rut);
-        emp.put("firstName", firstName);
-        emp.put("lastName", lastName);
-        emp.put("fullName", firstName + " " + lastName);
-        emp.put("position", position);
-        emp.put("baseSalary", baseSalary);
-        emp.put("contractType", "INDEFINIDO");
-        emp.put("afpCode", "033"); // Habitat
-        emp.put("healthCode", "FNS"); // FONASA
-        emp.put("isActive", active);
-        emp.put("hireDate", "2023-03-15");
-        return emp;
+    // ==================== HELPER METHODS ====================
+
+    private UUID parseTenantId(String tenantId) {
+        try {
+            return UUID.fromString(tenantId);
+        } catch (Exception e) {
+            // Default demo tenant
+            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        }
     }
 
-    private List<Map<String, Object>> getMockPayslips() {
-        List<Map<String, Object>> payslips = new ArrayList<>();
-        
-        payslips.add(createPayslip("María González", "12.345.678-9", 2800000));
-        payslips.add(createPayslip("Juan Pérez", "11.222.333-4", 2200000));
-        payslips.add(createPayslip("Ana López", "10.111.222-3", 2000000));
-        payslips.add(createPayslip("Pedro Martínez", "9.888.777-6", 1200000));
-        payslips.add(createPayslip("Carmen Torres", "8.777.666-5", 950000));
-        
-        return payslips;
+    private Map<String, Object> mapEmployee(Employee emp) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", emp.getId());
+        map.put("rut", emp.getRut());
+        map.put("firstName", emp.getFirstName());
+        map.put("lastName", emp.getLastName());
+        map.put("fullName", emp.getFullName());
+        map.put("email", emp.getEmail());
+        map.put("position", emp.getPosition());
+        map.put("department", emp.getDepartment());
+        map.put("baseSalary", emp.getBaseSalary());
+        map.put("contractType", emp.getContractType());
+        map.put("afpCode", emp.getAfpCode());
+        map.put("healthCode", emp.getHealthInsuranceCode());
+        map.put("isActive", emp.getIsActive());
+        map.put("hireDate", emp.getHireDate());
+        return map;
     }
 
-    private Map<String, Object> createPayslip(String name, String rut, int baseSalary) {
-        Map<String, Object> payslip = new HashMap<>();
-        payslip.put("id", UUID.randomUUID().toString());
-        payslip.put("employeeName", name);
-        payslip.put("employeeRut", rut);
-        payslip.put("baseSalary", baseSalary);
-        payslip.put("daysWorked", 30);
-        payslip.put("overtimeAmount", 0);
-        payslip.put("bonusAmount", 0);
-        payslip.put("grossSalary", baseSalary);
-        
-        // Chilean deductions
-        int afpAmount = (int) (baseSalary * 0.1025); // 10.25% AFP
-        int healthAmount = (int) (baseSalary * 0.07); // 7% Salud
-        int unemploymentAmount = (int) (baseSalary * 0.006); // 0.6% Seguro Cesantía
-        int taxAmount = calculateTax(baseSalary - afpAmount - healthAmount);
-        int totalDeductions = afpAmount + healthAmount + unemploymentAmount + taxAmount;
-        
-        payslip.put("afpAmount", afpAmount);
-        payslip.put("afpCode", "033");
-        payslip.put("healthAmount", healthAmount);
-        payslip.put("healthCode", "FNS");
-        payslip.put("unemploymentAmount", unemploymentAmount);
-        payslip.put("taxAmount", taxAmount);
-        payslip.put("totalDeductions", totalDeductions);
-        payslip.put("netSalary", baseSalary - totalDeductions);
-        
-        return payslip;
+    private Map<String, Object> mapPeriod(PayrollPeriod p) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", p.getId());
+        map.put("periodYear", p.getYear());
+        map.put("periodMonth", p.getMonth());
+        map.put("periodName", getMonthName(p.getMonth()) + " " + p.getYear());
+        map.put("status", p.getStatus());
+        map.put("totalGross", p.getTotalGrossSalary());
+        map.put("totalNet", p.getTotalNetSalary());
+        return map;
     }
 
-    private int calculateTax(int taxableIncome) {
-        // Simplified Chilean tax calculation
-        // Real calculation uses UTM brackets
-        if (taxableIncome <= 800000) return 0;
-        if (taxableIncome <= 1600000) return (int) ((taxableIncome - 800000) * 0.04);
-        if (taxableIncome <= 2400000) return (int) (32000 + (taxableIncome - 1600000) * 0.08);
-        if (taxableIncome <= 3200000) return (int) (96000 + (taxableIncome - 2400000) * 0.135);
-        return (int) (204000 + (taxableIncome - 3200000) * 0.23);
+    private Map<String, Object> mapPayslip(Payslip p) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", p.getId());
+        map.put("baseSalary", p.getBaseSalary());
+        map.put("grossSalary", p.getGrossSalary());
+        map.put("afpAmount", p.getAfpAmount());
+        map.put("healthAmount", p.getHealthAmount());
+        map.put("unemploymentAmount", p.getUnemploymentAmount());
+        map.put("taxAmount", p.getTaxAmount());
+        map.put("totalDeductions", p.getTotalDeductions());
+        map.put("netSalary", p.getNetSalary());
+        map.put("daysWorked", p.getDaysWorked());
+        return map;
+    }
+
+    private String getMonthName(int month) {
+        String[] names = {"", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return names[month];
     }
 }

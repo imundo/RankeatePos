@@ -1,116 +1,124 @@
 package com.poscl.purchases.api.controller;
 
+import com.poscl.purchases.application.service.PurchaseOrderService;
+import com.poscl.purchases.domain.entity.PurchaseOrder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/purchase-orders")
+@RequiredArgsConstructor
 public class PurchaseOrderController {
+
+    private final PurchaseOrderService orderService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getPurchaseOrders(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestParam(required = false) String status) {
         
-        List<Map<String, Object>> orders = new ArrayList<>();
-        
-        orders.add(createOrder(2045, "Distribuidora Nacional SpA", 3500000, "APPROVED", LocalDate.now()));
-        orders.add(createOrder(2044, "Importadora del Pacífico Ltda", 1800000, "SENT", LocalDate.now().minusDays(2)));
-        orders.add(createOrder(2043, "Comercial Norte Grande", 2200000, "RECEIVED", LocalDate.now().minusDays(5)));
-        orders.add(createOrder(2042, "Alimentos Premium Chile", 950000, "DRAFT", LocalDate.now()));
-        orders.add(createOrder(2041, "Tecnología y Servicios TI", 4500000, "PARTIAL", LocalDate.now().minusDays(10)));
+        UUID tid = parseTenantId(tenantId);
+        List<PurchaseOrder> orders;
         
         if (status != null && !status.isEmpty()) {
-            orders = orders.stream()
-                    .filter(o -> status.equalsIgnoreCase((String) o.get("status")))
-                    .toList();
+            try {
+                PurchaseOrder.OrderStatus s = PurchaseOrder.OrderStatus.valueOf(status.toUpperCase());
+                orders = orderService.findByStatus(tid, s);
+            } catch (IllegalArgumentException e) {
+                orders = orderService.findAll(tid);
+            }
+        } else {
+            orders = orderService.findAll(tid);
         }
         
-        return ResponseEntity.ok(orders);
+        List<Map<String, Object>> result = orders.stream()
+                .map(this::mapOrder)
+                .toList();
+        
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getPurchaseOrder(
+    public ResponseEntity<?> getPurchaseOrder(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         
-        Map<String, Object> order = createOrder(2045, "Distribuidora Nacional SpA", 3500000, "APPROVED", LocalDate.now());
-        order.put("items", createOrderItems());
-        return ResponseEntity.ok(order);
+        UUID tid = parseTenantId(tenantId);
+        return orderService.findById(tid, id)
+                .map(o -> ResponseEntity.ok(mapOrder(o)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createPurchaseOrder(
+    public ResponseEntity<?> createPurchaseOrder(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @RequestBody Map<String, Object> request) {
+            @RequestBody PurchaseOrder order) {
         
-        Map<String, Object> order = new HashMap<>(request);
-        order.put("id", UUID.randomUUID().toString());
-        order.put("orderNumber", new Random().nextInt(9000) + 1000);
-        order.put("status", "DRAFT");
-        order.put("createdAt", LocalDate.now().toString());
-        
-        return ResponseEntity.ok(order);
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder created = orderService.create(tid, order);
+        return ResponseEntity.ok(mapOrder(created));
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Map<String, Object>> approveOrder(
+    public ResponseEntity<?> approveOrder(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         
-        Map<String, Object> order = createOrder(2045, "Distribuidora Nacional SpA", 3500000, "APPROVED", LocalDate.now());
-        order.put("approvedAt", LocalDate.now().toString());
-        return ResponseEntity.ok(order);
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder approved = orderService.approve(tid, id);
+        return ResponseEntity.ok(mapOrder(approved));
+    }
+
+    @PostMapping("/{id}/send")
+    public ResponseEntity<?> sendOrder(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder sent = orderService.send(tid, id);
+        return ResponseEntity.ok(mapOrder(sent));
+    }
+
+    @PostMapping("/{id}/receive")
+    public ResponseEntity<?> receiveOrder(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder received = orderService.receive(tid, id);
+        return ResponseEntity.ok(mapOrder(received));
     }
 
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getSummary(
             @RequestHeader("X-Tenant-Id") String tenantId) {
         
-        Map<String, Object> summary = new HashMap<>();
-        summary.put("totalOrders", 45);
-        summary.put("pendingOrders", 8);
-        summary.put("totalAmount", 125000000);
-        summary.put("pendingAmount", 15500000);
-        summary.put("receivedThisMonth", 12);
-        summary.put("avgDeliveryDays", 5.2);
-        
+        UUID tid = parseTenantId(tenantId);
+        Map<String, Object> summary = orderService.getSummary(tid);
         return ResponseEntity.ok(summary);
     }
 
-    private Map<String, Object> createOrder(int number, String supplier, int total, String status, LocalDate date) {
-        Map<String, Object> order = new HashMap<>();
-        order.put("id", UUID.randomUUID().toString());
-        order.put("orderNumber", number);
-        order.put("supplierName", supplier);
-        order.put("orderDate", date.toString());
-        order.put("expectedDeliveryDate", date.plusDays(7).toString());
-        order.put("subtotal", (int)(total / 1.19));
-        order.put("taxAmount", (int)(total - total / 1.19));
-        order.put("total", total);
-        order.put("status", status);
-        order.put("itemCount", new Random().nextInt(10) + 1);
-        return order;
+    private UUID parseTenantId(String tenantId) {
+        try {
+            return UUID.fromString(tenantId);
+        } catch (Exception e) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        }
     }
 
-    private List<Map<String, Object>> createOrderItems() {
-        List<Map<String, Object>> items = new ArrayList<>();
-        items.add(createItem("SKU001", "Producto A", 50, 15000));
-        items.add(createItem("SKU002", "Producto B", 30, 25000));
-        items.add(createItem("SKU003", "Producto C", 100, 8000));
-        return items;
-    }
-
-    private Map<String, Object> createItem(String sku, String name, int qty, int price) {
-        Map<String, Object> item = new HashMap<>();
-        item.put("productSku", sku);
-        item.put("productName", name);
-        item.put("quantity", qty);
-        item.put("unitPrice", price);
-        item.put("subtotal", qty * price);
-        return item;
+    private Map<String, Object> mapOrder(PurchaseOrder o) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", o.getId());
+        map.put("orderNumber", o.getOrderNumber());
+        map.put("supplierName", o.getSupplierName());
+        map.put("orderDate", o.getOrderDate() != null ? o.getOrderDate().toString() : null);
+        map.put("subtotal", o.getSubtotal());
+        map.put("tax", o.getTax());
+        map.put("total", o.getTotal());
+        map.put("status", o.getStatus());
+        return map;
     }
 }

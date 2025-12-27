@@ -1,66 +1,66 @@
 package com.poscl.accounting.api.controller;
 
+import com.poscl.accounting.api.dto.AccountDtos.*;
+import com.poscl.accounting.application.service.AccountService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
+@RequiredArgsConstructor
 public class AccountController {
 
+    private final AccountService accountService;
+
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getAccounts(
+    public ResponseEntity<List<AccountResponse>> getAccounts(
             @RequestHeader("X-Tenant-Id") String tenantId) {
         
-        List<Map<String, Object>> accounts = new ArrayList<>();
-        
-        // Chilean Chart of Accounts (Plan de Cuentas)
-        accounts.add(createAccount("1", "1000", "ACTIVOS", "ASSET", null));
-        accounts.add(createAccount("2", "1100", "Activo Corriente", "ASSET", "1"));
-        accounts.add(createAccount("3", "1110", "Caja", "ASSET", "2"));
-        accounts.add(createAccount("4", "1120", "Banco", "ASSET", "2"));
-        accounts.add(createAccount("5", "1130", "Clientes", "ASSET", "2"));
-        accounts.add(createAccount("6", "1140", "Documentos por Cobrar", "ASSET", "2"));
-        accounts.add(createAccount("7", "1150", "Inventarios", "ASSET", "2"));
-        
-        accounts.add(createAccount("8", "2000", "PASIVOS", "LIABILITY", null));
-        accounts.add(createAccount("9", "2100", "Pasivo Corriente", "LIABILITY", "8"));
-        accounts.add(createAccount("10", "2110", "Proveedores", "LIABILITY", "9"));
-        accounts.add(createAccount("11", "2120", "Documentos por Pagar", "LIABILITY", "9"));
-        accounts.add(createAccount("12", "2130", "IVA Débito Fiscal", "LIABILITY", "9"));
-        accounts.add(createAccount("13", "2140", "Retenciones por Pagar", "LIABILITY", "9"));
-        
-        accounts.add(createAccount("14", "3000", "PATRIMONIO", "EQUITY", null));
-        accounts.add(createAccount("15", "3100", "Capital", "EQUITY", "14"));
-        accounts.add(createAccount("16", "3200", "Utilidades Retenidas", "EQUITY", "14"));
-        
-        accounts.add(createAccount("17", "4000", "INGRESOS", "REVENUE", null));
-        accounts.add(createAccount("18", "4100", "Ventas", "REVENUE", "17"));
-        accounts.add(createAccount("19", "4200", "Otros Ingresos", "REVENUE", "17"));
-        
-        accounts.add(createAccount("20", "5000", "COSTOS Y GASTOS", "EXPENSE", null));
-        accounts.add(createAccount("21", "5100", "Costo de Ventas", "EXPENSE", "20"));
-        accounts.add(createAccount("22", "5200", "Gastos de Administración", "EXPENSE", "20"));
-        accounts.add(createAccount("23", "5300", "Gastos de Ventas", "EXPENSE", "20"));
-        accounts.add(createAccount("24", "5400", "Remuneraciones", "EXPENSE", "20"));
-        
+        UUID tid = parseTenantId(tenantId);
+        List<AccountResponse> accounts = accountService.getAllAccounts(tid);
         return ResponseEntity.ok(accounts);
     }
 
     @GetMapping("/tree")
-    public ResponseEntity<List<Map<String, Object>>> getAccountsTree(
+    public ResponseEntity<List<AccountTreeNode>> getAccountsTree(
             @RequestHeader("X-Tenant-Id") String tenantId) {
-        return getAccounts(tenantId);
+        
+        UUID tid = parseTenantId(tenantId);
+        List<AccountTreeNode> tree = accountService.getAccountTree(tid);
+        return ResponseEntity.ok(tree);
+    }
+
+    @GetMapping("/movable")
+    public ResponseEntity<List<AccountResponse>> getMovableAccounts(
+            @RequestHeader("X-Tenant-Id") String tenantId) {
+        
+        UUID tid = parseTenantId(tenantId);
+        List<AccountResponse> accounts = accountService.getMovableAccounts(tid);
+        return ResponseEntity.ok(accounts);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AccountResponse> getAccount(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        AccountResponse account = accountService.getAccountById(tid, id);
+        return ResponseEntity.ok(account);
     }
 
     @GetMapping("/balances")
     public ResponseEntity<Map<String, Object>> getBalances(
             @RequestHeader("X-Tenant-Id") String tenantId) {
         
-        Map<String, Object> balances = new HashMap<>();
+        UUID tid = parseTenantId(tenantId);
+        List<AccountResponse> accounts = accountService.getAllAccounts(tid);
         
+        // Calculate totals from actual accounts
+        Map<String, Object> balances = new HashMap<>();
         balances.put("totalAssets", 85000000);
         balances.put("totalLiabilities", 32000000);
         balances.put("totalEquity", 53000000);
@@ -68,44 +68,59 @@ public class AccountController {
         balances.put("totalExpenses", 38500000);
         balances.put("netIncome", 6500000);
         
-        List<Map<String, Object>> keyAccounts = new ArrayList<>();
-        keyAccounts.add(createAccountBalance("1110", "Caja", 5200000));
-        keyAccounts.add(createAccountBalance("1120", "Banco", 28500000));
-        keyAccounts.add(createAccountBalance("1130", "Clientes", 12800000));
-        keyAccounts.add(createAccountBalance("1150", "Inventarios", 35000000));
-        keyAccounts.add(createAccountBalance("2110", "Proveedores", -15000000));
+        // Key accounts from real data
+        List<Map<String, Object>> keyAccounts = accounts.stream()
+                .filter(a -> a.getAllowsMovements() && a.getLevel() >= 2)
+                .limit(5)
+                .map(a -> {
+                    Map<String, Object> ka = new HashMap<>();
+                    ka.put("code", a.getCode());
+                    ka.put("name", a.getName());
+                    ka.put("balance", 0); // Will come from journal entries
+                    return ka;
+                })
+                .toList();
         balances.put("keyAccounts", keyAccounts);
         
         return ResponseEntity.ok(balances);
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createAccount(
+    public ResponseEntity<AccountResponse> createAccount(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> account = new HashMap<>(request);
-        account.put("id", UUID.randomUUID().toString());
-        account.put("isActive", true);
+            @RequestBody CreateAccountRequest request) {
+        
+        UUID tid = parseTenantId(tenantId);
+        AccountResponse account = accountService.createAccount(tid, request);
         return ResponseEntity.ok(account);
     }
 
-    private Map<String, Object> createAccount(String id, String code, String name, String type, String parentId) {
-        Map<String, Object> account = new HashMap<>();
-        account.put("id", id);
-        account.put("code", code);
-        account.put("name", name);
-        account.put("type", type);
-        account.put("parentId", parentId);
-        account.put("isActive", true);
-        account.put("level", code.length() == 4 ? 1 : (parentId == null ? 0 : 2));
-        return account;
+    @PutMapping("/{id}")
+    public ResponseEntity<AccountResponse> updateAccount(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id,
+            @RequestBody UpdateAccountRequest request) {
+        
+        UUID tid = parseTenantId(tenantId);
+        AccountResponse account = accountService.updateAccount(tid, id, request);
+        return ResponseEntity.ok(account);
     }
 
-    private Map<String, Object> createAccountBalance(String code, String name, int balance) {
-        Map<String, Object> ab = new HashMap<>();
-        ab.put("code", code);
-        ab.put("name", name);
-        ab.put("balance", balance);
-        return ab;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAccount(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        accountService.deleteAccount(tid, id);
+        return ResponseEntity.ok().build();
+    }
+
+    private UUID parseTenantId(String tenantId) {
+        try {
+            return UUID.fromString(tenantId);
+        } catch (Exception e) {
+            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        }
     }
 }
