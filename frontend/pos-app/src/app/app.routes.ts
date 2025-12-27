@@ -96,6 +96,42 @@ export const routes: Routes = [
         loadChildren: () => import('./features/facturacion/facturacion.routes').then(m => m.FACTURACION_ROUTES),
         canActivate: [authGuard]
     },
+    // ERP Modules
+    {
+        path: 'contabilidad',
+        loadChildren: () => import('./features/contabilidad/contabilidad.module').then(m => m.ContabilidadModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'cobros-pagos',
+        loadChildren: () => import('./features/cobros-pagos/cobros-pagos.module').then(m => m.CobrosPagosModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'compras',
+        loadChildren: () => import('./features/compras/compras.module').then(m => m.ComprasModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'presupuesto',
+        loadChildren: () => import('./features/presupuesto/presupuesto.module').then(m => m.PresupuestoModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'flujo-caja',
+        loadChildren: () => import('./features/flujo-caja/flujo-caja.module').then(m => m.FlujoCajaModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'remuneraciones',
+        loadChildren: () => import('./features/remuneraciones/remuneraciones.module').then(m => m.RemuneracionesModule),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'cotizaciones',
+        loadChildren: () => import('./features/cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule),
+        canActivate: [authGuard]
+    },
     {
         path: '**',
         redirectTo: 'pos'

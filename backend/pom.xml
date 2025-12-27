@@ -29,6 +29,9 @@
         <module>billing-service</module>
         <module>operations-service</module>
         <module>accounting-service</module>
+        <module>payments-service</module>
+        <module>purchases-service</module>
+        <module>payroll-service</module>
     </modules>
 
     <properties>
