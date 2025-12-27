@@ -50,7 +50,7 @@ public class PaymentsDataInitializer implements CommandLineRunner {
                 .balance(BigDecimal.valueOf(amount))
                 .paidAmount(BigDecimal.ZERO)
                 .dueDate(dueDate)
-                .issueDate(LocalDate.now().minusDays(30))
+                .documentDate(LocalDate.now().minusDays(30))
                 .status(dueDate.isBefore(LocalDate.now()) 
                     ? Receivable.ReceivableStatus.OVERDUE 
                     : Receivable.ReceivableStatus.PENDING)
@@ -75,7 +75,7 @@ public class PaymentsDataInitializer implements CommandLineRunner {
                 .balance(BigDecimal.valueOf(amount))
                 .paidAmount(BigDecimal.ZERO)
                 .dueDate(dueDate)
-                .issueDate(LocalDate.now().minusDays(30))
+                .documentDate(LocalDate.now().minusDays(30))
                 .status(dueDate.isBefore(LocalDate.now()) 
                     ? Payable.PayableStatus.OVERDUE 
                     : Payable.PayableStatus.PENDING)
