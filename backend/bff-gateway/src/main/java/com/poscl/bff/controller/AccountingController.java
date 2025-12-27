@@ -87,6 +87,49 @@ public class AccountingController {
                 Object.class);
     }
 
+    // ==================== REPORTS ====================
+
+    @GetMapping("/reports/balance-sheet")
+    public ResponseEntity<?> getBalanceSheet(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String asOfDate) {
+        String url = accountingServiceUrl + "/api/v1/reports/balance-sheet"
+                + (asOfDate != null ? "?asOfDate=" + asOfDate : "");
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                byte[].class);
+    }
+
+    @GetMapping("/reports/income-statement")
+    public ResponseEntity<?> getIncomeStatement(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        StringBuilder urlBuilder = new StringBuilder(accountingServiceUrl + "/api/v1/reports/income-statement");
+        if (fromDate != null || toDate != null) {
+            urlBuilder.append("?");
+            if (fromDate != null)
+                urlBuilder.append("fromDate=").append(fromDate);
+            if (fromDate != null && toDate != null)
+                urlBuilder.append("&");
+            if (toDate != null)
+                urlBuilder.append("toDate=").append(toDate);
+        }
+        return restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
+                new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                byte[].class);
+    }
+
+    @GetMapping("/accounts/balances")
+    public ResponseEntity<?> getAccountBalances(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+        String url = accountingServiceUrl + "/api/v1/accounts/balances";
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                Object.class);
+    }
+
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

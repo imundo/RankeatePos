@@ -111,6 +111,19 @@ public class PayrollController {
                 byte[].class);
     }
 
+    @GetMapping("/payslips/{payslipId}/pdf")
+    public ResponseEntity<?> getPayslipPdf(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String payslipId,
+            @RequestParam(defaultValue = "2025") int year,
+            @RequestParam(defaultValue = "12") int month) {
+        String url = payrollServiceUrl + "/api/v1/payroll/payslips/" + payslipId + "/pdf?year=" + year + "&month="
+                + month;
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                byte[].class);
+    }
+
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

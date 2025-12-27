@@ -1,6 +1,7 @@
 package com.poscl.payroll.api.controller;
 
 import com.poscl.payroll.application.service.PreviredExportService;
+import com.poscl.payroll.application.service.PayslipPdfService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import java.util.*;
 public class PayrollController {
 
     private final PreviredExportService previredExportService;
+    private final PayslipPdfService payslipPdfService;
 
-    public PayrollController(PreviredExportService previredExportService) {
+    public PayrollController(PreviredExportService previredExportService, PayslipPdfService payslipPdfService) {
         this.previredExportService = previredExportService;
+        this.payslipPdfService = payslipPdfService;
     }
 
     @GetMapping("/previred/{periodId}")
@@ -100,6 +103,26 @@ public class PayrollController {
             @PathVariable String periodId) {
         
         return ResponseEntity.ok(getMockPayslips());
+    }
+
+    @GetMapping("/payslips/{payslipId}/pdf")
+    public ResponseEntity<byte[]> getPayslipPdf(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable String payslipId,
+            @RequestParam(defaultValue = "2025") int year,
+            @RequestParam(defaultValue = "12") int month) {
+        
+        // Get payslip data (for demo, using first mock payslip)
+        List<Map<String, Object>> payslips = getMockPayslips();
+        Map<String, Object> payslip = payslips.isEmpty() ? new HashMap<>() : payslips.get(0);
+        
+        byte[] content = payslipPdfService.generatePayslip(payslip, year, month);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_HTML);
+        headers.set("Content-Disposition", "inline; filename=liquidacion_" + month + "_" + year + ".html");
+        
+        return ResponseEntity.ok().headers(headers).body(content);
     }
 
     private Map<String, Object> createEmployee(String rut, String firstName, String lastName, 
