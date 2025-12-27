@@ -132,6 +132,32 @@ export const routes: Routes = [
         loadChildren: () => import('./features/cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule),
         canActivate: [authGuard]
     },
+    // Marketing Modules
+    {
+        path: 'marketing/crm',
+        loadComponent: () => import('./features/marketing/crm.component').then(m => m.CrmComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'marketing/email',
+        loadComponent: () => import('./features/marketing/email.component').then(m => m.EmailMarketingComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'marketing/promotions',
+        loadComponent: () => import('./features/marketing/promotions.component').then(m => m.PromotionsComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'marketing/reviews',
+        loadComponent: () => import('./features/marketing/reviews.component').then(m => m.ReviewsComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'marketing/referrals',
+        loadComponent: () => import('./features/marketing/referrals.component').then(m => m.ReferralsComponent),
+        canActivate: [authGuard]
+    },
     {
         path: '**',
         redirectTo: 'pos'
