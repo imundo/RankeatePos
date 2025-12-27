@@ -99,6 +99,18 @@ public class PayrollController {
                 Object.class);
     }
 
+    // ==================== PREVIRED EXPORT ====================
+
+    @GetMapping("/previred/{periodId}")
+    public ResponseEntity<?> exportPrevired(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String periodId) {
+        String url = payrollServiceUrl + "/api/v1/payroll/previred/" + periodId;
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                byte[].class);
+    }
+
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
