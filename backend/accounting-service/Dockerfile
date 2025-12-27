@@ -5,8 +5,8 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /build
 
 # ARG to bust cache if needed
-ARG CACHEBUST=1
-RUN echo "Cache bust: $CACHEBUST - $(date)"
+ARG CACHEBUST=2
+RUN echo "Cache bust: $CACHEBUST - $(date) - Flyway disabled"
 
 # Copy everything needed
 COPY pom.xml ./pom.xml
