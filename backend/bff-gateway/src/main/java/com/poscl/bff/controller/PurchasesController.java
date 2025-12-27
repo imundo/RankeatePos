@@ -97,6 +97,15 @@ public class PurchasesController {
                 Object.class);
     }
 
+    @GetMapping("/orders/summary")
+    public ResponseEntity<?> getOrdersSummary(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/summary";
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                Object.class);
+    }
+
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
