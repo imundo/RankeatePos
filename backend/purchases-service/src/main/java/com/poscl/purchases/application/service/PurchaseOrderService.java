@@ -1,6 +1,7 @@
 package com.poscl.purchases.application.service;
 
 import com.poscl.purchases.domain.entity.PurchaseOrder;
+import com.poscl.purchases.domain.entity.PurchaseOrder.PurchaseOrderStatus;
 import com.poscl.purchases.domain.repository.PurchaseOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -24,7 +26,7 @@ public class PurchaseOrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<PurchaseOrder> findByStatus(UUID tenantId, PurchaseOrder.OrderStatus status) {
+    public List<PurchaseOrder> findByStatus(UUID tenantId, PurchaseOrderStatus status) {
         return orderRepository.findByTenantIdAndStatus(tenantId, status);
     }
 
@@ -37,7 +39,7 @@ public class PurchaseOrderService {
     @Transactional
     public PurchaseOrder create(UUID tenantId, PurchaseOrder order) {
         order.setTenantId(tenantId);
-        order.setStatus(PurchaseOrder.OrderStatus.DRAFT);
+        order.setStatus(PurchaseOrderStatus.DRAFT);
         order.setOrderNumber(generateOrderNumber(tenantId));
         order.setOrderDate(LocalDate.now());
         
@@ -50,12 +52,12 @@ public class PurchaseOrderService {
         PurchaseOrder order = findById(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Orden no encontrada"));
         
-        if (order.getStatus() != PurchaseOrder.OrderStatus.DRAFT) {
-            throw new IllegalStateException("Solo se pueden aprobar órdenes en estado DRAFT");
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT && order.getStatus() != PurchaseOrderStatus.PENDING_APPROVAL) {
+            throw new IllegalStateException("Solo se pueden aprobar órdenes en estado DRAFT o PENDING_APPROVAL");
         }
         
-        order.setStatus(PurchaseOrder.OrderStatus.APPROVED);
-        order.setApprovedAt(LocalDate.now());
+        order.setStatus(PurchaseOrderStatus.APPROVED);
+        order.setApprovedAt(LocalDateTime.now());
         log.info("Approved purchase order: {}", order.getOrderNumber());
         return orderRepository.save(order);
     }
@@ -65,12 +67,11 @@ public class PurchaseOrderService {
         PurchaseOrder order = findById(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Orden no encontrada"));
         
-        if (order.getStatus() != PurchaseOrder.OrderStatus.APPROVED) {
+        if (order.getStatus() != PurchaseOrderStatus.APPROVED) {
             throw new IllegalStateException("Solo se pueden enviar órdenes aprobadas");
         }
         
-        order.setStatus(PurchaseOrder.OrderStatus.SENT);
-        order.setSentAt(LocalDate.now());
+        order.setStatus(PurchaseOrderStatus.SENT);
         return orderRepository.save(order);
     }
 
@@ -79,8 +80,7 @@ public class PurchaseOrderService {
         PurchaseOrder order = findById(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Orden no encontrada"));
         
-        order.setStatus(PurchaseOrder.OrderStatus.RECEIVED);
-        order.setReceivedAt(LocalDate.now());
+        order.setStatus(PurchaseOrderStatus.RECEIVED);
         return orderRepository.save(order);
     }
 
@@ -89,9 +89,9 @@ public class PurchaseOrderService {
         List<PurchaseOrder> all = findAll(tenantId);
         
         long pending = all.stream()
-                .filter(o -> o.getStatus() == PurchaseOrder.OrderStatus.DRAFT 
-                        || o.getStatus() == PurchaseOrder.OrderStatus.APPROVED
-                        || o.getStatus() == PurchaseOrder.OrderStatus.SENT)
+                .filter(o -> o.getStatus() == PurchaseOrderStatus.DRAFT 
+                        || o.getStatus() == PurchaseOrderStatus.APPROVED
+                        || o.getStatus() == PurchaseOrderStatus.SENT)
                 .count();
         
         BigDecimal totalAmount = all.stream()
@@ -103,13 +103,13 @@ public class PurchaseOrderService {
             "totalOrders", all.size(),
             "pendingOrders", pending,
             "totalAmount", totalAmount,
-            "draftCount", all.stream().filter(o -> o.getStatus() == PurchaseOrder.OrderStatus.DRAFT).count(),
-            "approvedCount", all.stream().filter(o -> o.getStatus() == PurchaseOrder.OrderStatus.APPROVED).count()
+            "draftCount", all.stream().filter(o -> o.getStatus() == PurchaseOrderStatus.DRAFT).count(),
+            "approvedCount", all.stream().filter(o -> o.getStatus() == PurchaseOrderStatus.APPROVED).count()
         );
     }
 
-    private int generateOrderNumber(UUID tenantId) {
-        Integer maxNumber = orderRepository.findMaxOrderNumber(tenantId);
-        return (maxNumber != null ? maxNumber : 2000) + 1;
+    private Long generateOrderNumber(UUID tenantId) {
+        Long maxNumber = orderRepository.findMaxOrderNumber(tenantId);
+        return (maxNumber != null ? maxNumber : 2000L) + 1;
     }
 }

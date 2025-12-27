@@ -2,6 +2,7 @@ package com.poscl.purchases.api.controller;
 
 import com.poscl.purchases.application.service.PurchaseOrderService;
 import com.poscl.purchases.domain.entity.PurchaseOrder;
+import com.poscl.purchases.domain.entity.PurchaseOrder.PurchaseOrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class PurchaseOrderController {
         
         if (status != null && !status.isEmpty()) {
             try {
-                PurchaseOrder.OrderStatus s = PurchaseOrder.OrderStatus.valueOf(status.toUpperCase());
+                PurchaseOrderStatus s = PurchaseOrderStatus.valueOf(status.toUpperCase());
                 orders = orderService.findByStatus(tid, s);
             } catch (IllegalArgumentException e) {
                 orders = orderService.findAll(tid);
@@ -113,12 +114,15 @@ public class PurchaseOrderController {
         Map<String, Object> map = new HashMap<>();
         map.put("id", o.getId());
         map.put("orderNumber", o.getOrderNumber());
-        map.put("supplierName", o.getSupplierName());
         map.put("orderDate", o.getOrderDate() != null ? o.getOrderDate().toString() : null);
         map.put("subtotal", o.getSubtotal());
-        map.put("tax", o.getTax());
+        map.put("taxAmount", o.getTaxAmount());
         map.put("total", o.getTotal());
         map.put("status", o.getStatus());
+        if (o.getSupplier() != null) {
+            map.put("supplierName", o.getSupplier().getBusinessName());
+            map.put("supplierId", o.getSupplier().getId());
+        }
         return map;
     }
 }
