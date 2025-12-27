@@ -78,12 +78,12 @@ import { environment } from '../../../../environments/environment';
       <section class="employees-section">
         <h3>Empleados Recientes</h3>
         <div class="employees-list">
-          @for (emp of employees(); track emp.rut) {
+          @for (emp of employees(); track emp.rut || emp.id) {
             <div class="employee-item">
-              <div class="employee-avatar">{{ getInitials(emp.fullName) }}</div>
+              <div class="employee-avatar">{{ getInitials(emp) }}</div>
               <div class="employee-info">
-                <span class="employee-name">{{ emp.fullName }}</span>
-                <span class="employee-position">{{ emp.position }}</span>
+                <span class="employee-name">{{ emp.firstName }} {{ emp.lastName }}</span>
+                <span class="employee-position">{{ emp.position || 'Sin cargo' }}</span>
               </div>
               <span class="employee-salary">{{ emp.baseSalary | currency:'CLP':'symbol-narrow':'1.0-0' }}</span>
             </div>
@@ -229,8 +229,12 @@ export class RemuneracionesDashboardComponent implements OnInit {
     });
   }
 
-  getInitials(name: string): string {
-    return name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '??';
+  getInitials(emp: any): string {
+    if (emp.firstName && emp.lastName) {
+      return (emp.firstName[0] + emp.lastName[0]).toUpperCase();
+    }
+    const name = emp.fullName || '';
+    return name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || '??';
   }
 
   exportPrevired(): void {
