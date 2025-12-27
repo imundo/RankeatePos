@@ -798,6 +798,79 @@ interface CartItem {
                 <span class="item-badge new">Premium</span>
               </button>
             </div>
+
+            <!-- ERP -->
+            <div class="menu-section">
+              <span class="section-title">ERP</span>
+              <button class="menu-item" routerLink="/contabilidad" (click)="showMenu = false">
+                <div class="item-icon emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                  </svg>
+                </div>
+                <span class="item-text">Contabilidad</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
+                <div class="item-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                  </svg>
+                </div>
+                <span class="item-text">Cobros y Pagos</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/compras" (click)="showMenu = false">
+                <div class="item-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                  </svg>
+                </div>
+                <span class="item-text">Compras</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/presupuesto" (click)="showMenu = false">
+                <div class="item-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                </div>
+                <span class="item-text">Presupuesto</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/flujo-caja" (click)="showMenu = false">
+                <div class="item-icon teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                  </svg>
+                </div>
+                <span class="item-text">Flujo de Caja</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/remuneraciones" (click)="showMenu = false">
+                <div class="item-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <span class="item-text">Remuneraciones</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+              <button class="menu-item" routerLink="/cotizaciones" (click)="showMenu = false">
+                <div class="item-icon pink">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                </div>
+                <span class="item-text">Cotizaciones</span>
+                <span class="item-badge new">ERP</span>
+              </button>
+            </div>
           </nav>
 
           <div class="menu-footer">
