@@ -28,6 +28,7 @@
         <module>sales-service</module>
         <module>billing-service</module>
         <module>operations-service</module>
+        <module>accounting-service</module>
     </modules>
 
     <properties>
