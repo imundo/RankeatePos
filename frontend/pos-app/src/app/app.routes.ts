@@ -140,7 +140,7 @@ export const routes: Routes = [
     },
     {
         path: 'marketing/email',
-        loadComponent: () => import('./features/marketing/email.component').then(m => m.EmailMarketingComponent),
+        loadComponent: () => import('./features/marketing/email.component').then(m => m.EmailComponent),
         canActivate: [authGuard]
     },
     {

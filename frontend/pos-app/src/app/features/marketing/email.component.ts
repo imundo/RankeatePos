@@ -379,7 +379,7 @@ interface EmailCampaign {
               <div class="form-group">
                 <label>Contenido HTML</label>
                 <textarea [(ngModel)]="newTemplate.bodyHtml" name="bodyHtml" rows="8" placeholder="<html>...</html>"></textarea>
-                <span class="hint">Usa &#123;&#123;name&#125;&#125;, &#123;&#123;email&#125;&#125;, &#123;&#123;points&#125;&#125; para personalizar</span>
+                <span class="hint">Usa variables: name, email, points para personalizar</span>
               </div>
               
               <div class="modal-actions">
