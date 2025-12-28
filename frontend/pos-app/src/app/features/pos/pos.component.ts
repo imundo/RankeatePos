@@ -616,6 +616,16 @@ interface CartItem {
             <!-- VENTAS -->
             <div class="menu-section">
               <span class="section-title">Ventas</span>
+              <button class="menu-item" routerLink="/smart-pos" (click)="showMenu = false">
+                <div class="item-icon lime">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                  </svg>
+                </div>
+                <span class="item-text">POS Inteligente</span>
+                <span class="item-badge new">Nuevo</span>
+              </button>
               <button class="menu-item" routerLink="/catalog" (click)="showMenu = false">
                 <div class="item-icon orange">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
