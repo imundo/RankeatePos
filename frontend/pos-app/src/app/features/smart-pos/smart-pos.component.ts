@@ -3,39 +3,41 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
+import { environment } from '@env/environment';
 
 interface Product {
-    id: string;
-    sku: string;
-    nombre: string;
-    categoria: string;
-    precioVenta: number;
-    stock: number;
-    imagen?: string;
-    codigoBarras?: string;
+  id: string;
+  sku: string;
+  nombre: string;
+  categoria: string;
+  precioVenta: number;
+  stock: number;
+  imagen?: string;
+  codigoBarras?: string;
 }
 
 interface CartItem {
-    product: Product;
-    cantidad: number;
-    descuento: number;
-    subtotal: number;
+  product: Product;
+  cantidad: number;
+  descuento: number;
+  subtotal: number;
 }
 
 interface PendingSale {
-    id: string;
-    fecha: string;
-    cliente: string;
-    total: number;
-    items: number;
-    estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+  id: string;
+  fecha: string;
+  cliente: string;
+  total: number;
+  items: number;
+  estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
 }
 
 @Component({
-    selector: 'app-smart-pos',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-smart-pos',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="smart-pos-container">
       <!-- Header -->
       <header class="pos-header">
@@ -352,7 +354,7 @@ interface PendingSale {
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .smart-pos-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
@@ -634,241 +636,276 @@ interface PendingSale {
   `]
 })
 export class SmartPosComponent implements OnInit, OnDestroy {
-    @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
 
-    private http = inject(HttpClient);
+  private http = inject(HttpClient);
+  private offlineService = inject(OfflineService);
 
-    activeTab: 'pos' | 'pending' = 'pos';
-    searchQuery = '';
-    scannerActive = false;
-    globalDiscount = 0;
-    paymentMethod: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' = 'EFECTIVO';
+  activeTab: 'pos' | 'pending' = 'pos';
+  searchQuery = '';
+  scannerActive = false;
+  globalDiscount = 0;
+  paymentMethod: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' = 'EFECTIVO';
 
-    showInventoryModal = false;
-    showNewProductModal = false;
-    showToast = false;
-    toastMessage = '';
-    toastType: 'success' | 'error' = 'success';
+  showInventoryModal = false;
+  showNewProductModal = false;
+  showToast = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
 
-    products = signal<Product[]>([]);
-    cart = signal<CartItem[]>([]);
-    pendingSales = signal<PendingSale[]>([]);
+  products = signal<Product[]>([]);
+  cart = signal<CartItem[]>([]);
+  pendingSales = signal<PendingSale[]>([]);
 
-    inventoryForm = { productId: '', cantidad: 1, codigoBarras: '', notas: '' };
-    newProductForm = { sku: '', codigoBarras: '', nombre: '', precioVenta: 0, stock: 0, categoria: '' };
+  inventoryForm = { productId: '', cantidad: 1, codigoBarras: '', notas: '' };
+  newProductForm = { sku: '', codigoBarras: '', nombre: '', precioVenta: 0, stock: 0, categoria: '' };
 
-    private mediaStream: MediaStream | null = null;
+  private mediaStream: MediaStream | null = null;
 
-    filteredProducts = computed(() => {
-        const query = this.searchQuery.toLowerCase();
-        if (!query) return this.products();
-        return this.products().filter(p =>
-            p.nombre.toLowerCase().includes(query) ||
-            p.sku.toLowerCase().includes(query) ||
-            p.codigoBarras?.includes(query)
-        );
-    });
+  filteredProducts = computed(() => {
+    const query = this.searchQuery.toLowerCase();
+    if (!query) return this.products();
+    return this.products().filter(p =>
+      p.nombre.toLowerCase().includes(query) ||
+      p.sku.toLowerCase().includes(query) ||
+      p.codigoBarras?.includes(query)
+    );
+  });
 
-    cartSubtotal = computed(() => this.cart().reduce((sum, item) => sum + item.subtotal, 0));
-    cartTax = computed(() => {
-        const subtotal = this.cartSubtotal();
-        const discountAmount = subtotal * (this.globalDiscount / 100);
-        return (subtotal - discountAmount) * 0.19;
-    });
-    cartTotal = computed(() => {
-        const subtotal = this.cartSubtotal();
-        const discountAmount = subtotal * (this.globalDiscount / 100);
-        return (subtotal - discountAmount) + this.cartTax();
-    });
+  cartSubtotal = computed(() => this.cart().reduce((sum, item) => sum + item.subtotal, 0));
+  cartTax = computed(() => {
+    const subtotal = this.cartSubtotal();
+    const discountAmount = subtotal * (this.globalDiscount / 100);
+    return (subtotal - discountAmount) * 0.19;
+  });
+  cartTotal = computed(() => {
+    const subtotal = this.cartSubtotal();
+    const discountAmount = subtotal * (this.globalDiscount / 100);
+    return (subtotal - discountAmount) + this.cartTax();
+  });
 
-    ngOnInit() {
-        this.loadProducts();
-        this.loadPendingSales();
+  ngOnInit() {
+    this.loadProducts();
+    this.loadPendingSales();
+  }
+
+  ngOnDestroy() {
+    this.stopScanner();
+  }
+
+  async loadProducts() {
+    try {
+      // Load from cache (shared with main POS)
+      const cachedProducts = await this.offlineService.getCachedProducts();
+
+      if (cachedProducts.length > 0) {
+        const mapped = cachedProducts.map(p => this.mapCachedProduct(p));
+        this.products.set(mapped);
+        console.log('Smart POS: Loaded', mapped.length, 'products from shared cache');
+      } else {
+        // Fallback to API if no cache
+        this.http.get<any[]>(`${environment.apiUrl}/catalog/products`).subscribe({
+          next: (data) => {
+            const mapped = data.map(p => ({
+              id: p.id,
+              sku: p.sku,
+              nombre: p.nombre,
+              categoria: p.categoryName || 'General',
+              precioVenta: p.variants?.[0]?.precioNeto || 0,
+              stock: p.stock || 0,
+              imagen: p.imagenUrl,
+              codigoBarras: p.variants?.[0]?.barcode
+            }));
+            this.products.set(mapped);
+          },
+          error: () => this.showNotification('Error cargando productos', 'error')
+        });
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
     }
+  }
 
-    ngOnDestroy() {
-        this.stopScanner();
-    }
+  private mapCachedProduct(p: CachedProduct): Product {
+    const variant = p.variants?.[0];
+    return {
+      id: p.id,
+      sku: p.sku,
+      nombre: p.nombre,
+      categoria: p.categoryName || 'General',
+      precioVenta: variant?.precioNeto || 0,
+      stock: 0,
+      imagen: p.imagenUrl,
+      codigoBarras: variant?.barcode
+    };
+  }
 
-    loadProducts() {
-        // Mock data - Replace with actual API call
-        this.products.set([
-            { id: '1', sku: 'PROD001', nombre: 'Coca-Cola 500ml', categoria: 'Bebidas', precioVenta: 1500, stock: 50, codigoBarras: '7801234567890' },
-            { id: '2', sku: 'PROD002', nombre: 'Papas Fritas', categoria: 'Snacks', precioVenta: 2000, stock: 30, codigoBarras: '7801234567891' },
-            { id: '3', sku: 'PROD003', nombre: 'Sandwich Triple', categoria: 'Comida', precioVenta: 3500, stock: 15, codigoBarras: '7801234567892' },
-            { id: '4', sku: 'PROD004', nombre: 'Agua Mineral 1L', categoria: 'Bebidas', precioVenta: 1200, stock: 40, codigoBarras: '7801234567893' },
-            { id: '5', sku: 'PROD005', nombre: 'Chocolate Brownie', categoria: 'Postres', precioVenta: 2500, stock: 3, codigoBarras: '7801234567894' },
-            { id: '6', sku: 'PROD006', nombre: 'Café Americano', categoria: 'Bebidas', precioVenta: 1800, stock: 100, codigoBarras: '7801234567895' }
-        ]);
+  loadPendingSales() {
+    const stored = localStorage.getItem('smart_pos_pending_sales');
+    if (stored) {
+      this.pendingSales.set(JSON.parse(stored));
     }
+  }
 
-    loadPendingSales() {
-        // Mock data
-        this.pendingSales.set([
-            { id: '001', fecha: '28/12/2024 15:30', cliente: 'Cliente General', total: 15500, items: 3, estado: 'PENDIENTE' },
-            { id: '002', fecha: '28/12/2024 14:15', cliente: 'Juan Pérez', total: 28000, items: 5, estado: 'PENDIENTE' }
-        ]);
+  async toggleScanner() {
+    if (this.scannerActive) {
+      this.stopScanner();
+    } else {
+      await this.startScanner();
     }
+  }
 
-    async toggleScanner() {
-        if (this.scannerActive) {
-            this.stopScanner();
-        } else {
-            await this.startScanner();
-        }
+  async startScanner() {
+    try {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      if (this.videoElement?.nativeElement) {
+        this.videoElement.nativeElement.srcObject = this.mediaStream;
+      }
+      this.scannerActive = true;
+      // Note: Real barcode scanning would use a library like QuaggaJS or ZXing
+      this.showNotification('Scanner activado. En producción usaría una librería de escaneo.', 'success');
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      this.showNotification('No se pudo acceder a la cámara', 'error');
     }
+  }
 
-    async startScanner() {
-        try {
-            this.mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
-            if (this.videoElement?.nativeElement) {
-                this.videoElement.nativeElement.srcObject = this.mediaStream;
-            }
-            this.scannerActive = true;
-            // Note: Real barcode scanning would use a library like QuaggaJS or ZXing
-            this.showNotification('Scanner activado. En producción usaría una librería de escaneo.', 'success');
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            this.showNotification('No se pudo acceder a la cámara', 'error');
-        }
+  stopScanner() {
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream = null;
     }
+    this.scannerActive = false;
+  }
 
-    stopScanner() {
-        if (this.mediaStream) {
-            this.mediaStream.getTracks().forEach(track => track.stop());
-            this.mediaStream = null;
-        }
-        this.scannerActive = false;
+  searchProduct() {
+    if (!this.searchQuery) return;
+    const product = this.products().find(p =>
+      p.sku.toLowerCase() === this.searchQuery.toLowerCase() ||
+      p.codigoBarras === this.searchQuery
+    );
+    if (product) {
+      this.addToCart(product);
+      this.searchQuery = '';
+    } else {
+      this.showNotification('Producto no encontrado', 'error');
     }
+  }
 
-    searchProduct() {
-        if (!this.searchQuery) return;
-        const product = this.products().find(p =>
-            p.sku.toLowerCase() === this.searchQuery.toLowerCase() ||
-            p.codigoBarras === this.searchQuery
-        );
-        if (product) {
-            this.addToCart(product);
-            this.searchQuery = '';
-        } else {
-            this.showNotification('Producto no encontrado', 'error');
-        }
+  addToCart(product: Product) {
+    const existing = this.cart().find(item => item.product.id === product.id);
+    if (existing) {
+      existing.cantidad++;
+      existing.subtotal = existing.cantidad * existing.product.precioVenta;
+      this.cart.set([...this.cart()]);
+    } else {
+      this.cart.update(items => [...items, {
+        product,
+        cantidad: 1,
+        descuento: 0,
+        subtotal: product.precioVenta
+      }]);
     }
+    this.showNotification(`${product.nombre} agregado`, 'success');
+  }
 
-    addToCart(product: Product) {
-        const existing = this.cart().find(item => item.product.id === product.id);
-        if (existing) {
-            existing.cantidad++;
-            existing.subtotal = existing.cantidad * existing.product.precioVenta;
-            this.cart.set([...this.cart()]);
-        } else {
-            this.cart.update(items => [...items, {
-                product,
-                cantidad: 1,
-                descuento: 0,
-                subtotal: product.precioVenta
-            }]);
-        }
-        this.showNotification(`${product.nombre} agregado`, 'success');
-    }
+  updateQuantity(item: CartItem, delta: number) {
+    item.cantidad = Math.max(1, item.cantidad + delta);
+    this.recalculateItem(item);
+  }
 
-    updateQuantity(item: CartItem, delta: number) {
-        item.cantidad = Math.max(1, item.cantidad + delta);
-        this.recalculateItem(item);
-    }
+  recalculateItem(item: CartItem) {
+    item.subtotal = item.cantidad * item.product.precioVenta * (1 - item.descuento / 100);
+    this.cart.set([...this.cart()]);
+  }
 
-    recalculateItem(item: CartItem) {
-        item.subtotal = item.cantidad * item.product.precioVenta * (1 - item.descuento / 100);
-        this.cart.set([...this.cart()]);
-    }
+  recalculateCart() {
+    // Trigger computed signals update
+    this.cart.set([...this.cart()]);
+  }
 
-    recalculateCart() {
-        // Trigger computed signals update
-        this.cart.set([...this.cart()]);
-    }
+  removeFromCart(item: CartItem) {
+    this.cart.update(items => items.filter(i => i.product.id !== item.product.id));
+  }
 
-    removeFromCart(item: CartItem) {
-        this.cart.update(items => items.filter(i => i.product.id !== item.product.id));
-    }
+  clearCart() {
+    this.cart.set([]);
+    this.globalDiscount = 0;
+  }
 
-    clearCart() {
-        this.cart.set([]);
-        this.globalDiscount = 0;
-    }
+  savePending() {
+    if (this.cart().length === 0) return;
+    const newSale: PendingSale = {
+      id: String(Date.now()).slice(-6),
+      fecha: new Date().toLocaleString('es-CL'),
+      cliente: 'Cliente General',
+      total: this.cartTotal(),
+      items: this.cart().length,
+      estado: 'PENDIENTE'
+    };
+    this.pendingSales.update(sales => [newSale, ...sales]);
+    this.clearCart();
+    this.showNotification('Venta guardada como pendiente', 'success');
+  }
 
-    savePending() {
-        if (this.cart().length === 0) return;
-        const newSale: PendingSale = {
-            id: String(Date.now()).slice(-6),
-            fecha: new Date().toLocaleString('es-CL'),
-            cliente: 'Cliente General',
-            total: this.cartTotal(),
-            items: this.cart().length,
-            estado: 'PENDIENTE'
-        };
-        this.pendingSales.update(sales => [newSale, ...sales]);
-        this.clearCart();
-        this.showNotification('Venta guardada como pendiente', 'success');
-    }
+  processSale() {
+    if (this.cart().length === 0) return;
+    // Here you would call the actual API
+    this.showNotification(`Venta procesada: ${this.formatPrice(this.cartTotal())}`, 'success');
+    this.clearCart();
+  }
 
-    processSale() {
-        if (this.cart().length === 0) return;
-        // Here you would call the actual API
-        this.showNotification(`Venta procesada: ${this.formatPrice(this.cartTotal())}`, 'success');
-        this.clearCart();
-    }
+  approveSale(sale: PendingSale) {
+    sale.estado = 'APROBADA';
+    this.pendingSales.set([...this.pendingSales()]);
+    this.showNotification(`Venta #${sale.id} aprobada`, 'success');
+  }
 
-    approveSale(sale: PendingSale) {
-        sale.estado = 'APROBADA';
-        this.pendingSales.set([...this.pendingSales()]);
-        this.showNotification(`Venta #${sale.id} aprobada`, 'success');
-    }
+  rejectSale(sale: PendingSale) {
+    sale.estado = 'RECHAZADA';
+    this.pendingSales.set([...this.pendingSales()]);
+    this.showNotification(`Venta #${sale.id} rechazada`, 'error');
+  }
 
-    rejectSale(sale: PendingSale) {
-        sale.estado = 'RECHAZADA';
-        this.pendingSales.set([...this.pendingSales()]);
-        this.showNotification(`Venta #${sale.id} rechazada`, 'error');
+  addInventory() {
+    if (!this.inventoryForm.productId || this.inventoryForm.cantidad < 1) return;
+    const product = this.products().find(p => p.id === this.inventoryForm.productId);
+    if (product) {
+      product.stock += this.inventoryForm.cantidad;
+      this.products.set([...this.products()]);
+      this.showNotification(`Stock actualizado: +${this.inventoryForm.cantidad}`, 'success');
     }
+    this.showInventoryModal = false;
+    this.inventoryForm = { productId: '', cantidad: 1, codigoBarras: '', notas: '' };
+  }
 
-    addInventory() {
-        if (!this.inventoryForm.productId || this.inventoryForm.cantidad < 1) return;
-        const product = this.products().find(p => p.id === this.inventoryForm.productId);
-        if (product) {
-            product.stock += this.inventoryForm.cantidad;
-            this.products.set([...this.products()]);
-            this.showNotification(`Stock actualizado: +${this.inventoryForm.cantidad}`, 'success');
-        }
-        this.showInventoryModal = false;
-        this.inventoryForm = { productId: '', cantidad: 1, codigoBarras: '', notas: '' };
-    }
+  createProduct() {
+    if (!this.newProductForm.sku || !this.newProductForm.nombre) return;
+    const newProduct: Product = {
+      id: String(Date.now()),
+      sku: this.newProductForm.sku,
+      nombre: this.newProductForm.nombre,
+      categoria: this.newProductForm.categoria || 'General',
+      precioVenta: this.newProductForm.precioVenta,
+      stock: this.newProductForm.stock,
+      codigoBarras: this.newProductForm.codigoBarras
+    };
+    this.products.update(products => [newProduct, ...products]);
+    this.showNotification(`Producto "${newProduct.nombre}" creado`, 'success');
+    this.showNewProductModal = false;
+    this.newProductForm = { sku: '', codigoBarras: '', nombre: '', precioVenta: 0, stock: 0, categoria: '' };
+  }
 
-    createProduct() {
-        if (!this.newProductForm.sku || !this.newProductForm.nombre) return;
-        const newProduct: Product = {
-            id: String(Date.now()),
-            sku: this.newProductForm.sku,
-            nombre: this.newProductForm.nombre,
-            categoria: this.newProductForm.categoria || 'General',
-            precioVenta: this.newProductForm.precioVenta,
-            stock: this.newProductForm.stock,
-            codigoBarras: this.newProductForm.codigoBarras
-        };
-        this.products.update(products => [newProduct, ...products]);
-        this.showNotification(`Producto "${newProduct.nombre}" creado`, 'success');
-        this.showNewProductModal = false;
-        this.newProductForm = { sku: '', codigoBarras: '', nombre: '', precioVenta: 0, stock: 0, categoria: '' };
-    }
+  showNotification(message: string, type: 'success' | 'error') {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
+    setTimeout(() => this.showToast = false, 3000);
+  }
 
-    showNotification(message: string, type: 'success' | 'error') {
-        this.toastMessage = message;
-        this.toastType = type;
-        this.showToast = true;
-        setTimeout(() => this.showToast = false, 3000);
-    }
-
-    formatPrice(value: number): string {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
-    }
+  formatPrice(value: number): string {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+  }
 }
