@@ -32,6 +32,7 @@
         <module>payments-service</module>
         <module>purchases-service</module>
         <module>payroll-service</module>
+        <module>marketing-service</module>
     </modules>
 
     <properties>
