@@ -42,6 +42,8 @@ services:
     url: ${PURCHASES_SERVICE_URL:http://localhost:8090}
   payroll:
     url: ${PAYROLL_SERVICE_URL:http://localhost:8091}
+  marketing:
+    url: ${MARKETING_SERVICE_URL:http://localhost:8092}
 
 # JWT Config (same as auth-service)
 jwt:
