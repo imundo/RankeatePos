@@ -346,6 +346,26 @@ interface PendingSale {
         </div>
       }
 
+      <!-- Out of Stock Alert Modal -->
+      @if (showOutOfStockModal) {
+        <div class="modal-overlay" (click)="showOutOfStockModal = false">
+          <div class="modal-content stock-alert" (click)="$event.stopPropagation()">
+            <div class="alert-icon">⚠️</div>
+            <h2>Sin Stock Disponible</h2>
+            <p class="alert-product">{{ outOfStockProduct?.nombre }}</p>
+            <p class="alert-message">Este producto no tiene stock disponible para vender.</p>
+            <div class="stock-info">
+              <span class="label">Stock actual:</span>
+              <span class="value zero">0 unidades</span>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" (click)="showOutOfStockModal = false">Cerrar</button>
+              <button type="button" class="save-btn" (click)="goToReplenish()">📦 Reponer Inventario</button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Success Toast -->
       @if (showToast) {
         <div class="toast" [class]="toastType">
@@ -620,6 +640,23 @@ interface PendingSale {
     .cancel-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: white; }
     .save-btn { background: linear-gradient(135deg, #10B981, #059669); border: none; color: white; }
 
+    /* Stock Alert Modal */
+    .stock-alert { text-align: center; }
+    .stock-alert .alert-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .stock-alert h2 { color: #EF4444; margin-bottom: 0.5rem; }
+    .stock-alert .alert-product { 
+      font-size: 1.25rem; font-weight: 600; 
+      color: #FBBF24; margin-bottom: 1rem;
+    }
+    .stock-alert .alert-message { color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem; }
+    .stock-alert .stock-info {
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .stock-alert .stock-info .label { color: rgba(255, 255, 255, 0.7); }
+    .stock-alert .stock-info .value.zero { color: #EF4444; font-weight: 700; font-size: 1.1rem; }
+
     /* Toast */
     .toast {
       position: fixed; bottom: 2rem; right: 2rem;
@@ -649,6 +686,8 @@ export class SmartPosComponent implements OnInit, OnDestroy {
 
   showInventoryModal = false;
   showNewProductModal = false;
+  showOutOfStockModal = false;
+  outOfStockProduct: Product | null = null;
   showToast = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
@@ -795,6 +834,23 @@ export class SmartPosComponent implements OnInit, OnDestroy {
   }
 
   addToCart(product: Product) {
+    // Check stock before adding
+    const cartQty = this.cart().find(i => i.product.id === product.id)?.cantidad || 0;
+    const requestedQty = cartQty + 1;
+
+    if (product.stock <= 0) {
+      // No stock at all - show alert
+      this.outOfStockProduct = product;
+      this.showOutOfStockModal = true;
+      return;
+    }
+
+    if (requestedQty > product.stock) {
+      // Insufficient stock
+      this.showNotification(`Stock insuficiente. Solo hay ${product.stock} unidades.`, 'error');
+      return;
+    }
+
     const existing = this.cart().find(item => item.product.id === product.id);
     if (existing) {
       existing.cantidad++;
@@ -809,6 +865,14 @@ export class SmartPosComponent implements OnInit, OnDestroy {
       }]);
     }
     this.showNotification(`${product.nombre} agregado`, 'success');
+  }
+
+  goToReplenish() {
+    this.showOutOfStockModal = false;
+    if (this.outOfStockProduct) {
+      this.inventoryForm.productId = this.outOfStockProduct.id;
+    }
+    this.showInventoryModal = true;
   }
 
   updateQuantity(item: CartItem, delta: number) {
