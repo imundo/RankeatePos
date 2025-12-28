@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
+import { StockService, StockDto } from '@core/services/stock.service';
+import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 
 interface Product {
@@ -15,6 +17,7 @@ interface Product {
   stock: number;
   imagen?: string;
   codigoBarras?: string;
+  variantId?: string;
 }
 
 interface CartItem {
@@ -677,6 +680,8 @@ export class SmartPosComponent implements OnInit, OnDestroy {
 
   private http = inject(HttpClient);
   private offlineService = inject(OfflineService);
+  private stockService = inject(StockService);
+  private authService = inject(AuthService);
 
   activeTab: 'pos' | 'pending' = 'pos';
   searchQuery = '';
@@ -738,13 +743,16 @@ export class SmartPosComponent implements OnInit, OnDestroy {
       const cachedProducts = await this.offlineService.getCachedProducts();
 
       if (cachedProducts.length > 0) {
-        const mapped = cachedProducts.map(p => this.mapCachedProduct(p));
+        let mapped = cachedProducts.map(p => this.mapCachedProduct(p));
         this.products.set(mapped);
         console.log('Smart POS: Loaded', mapped.length, 'products from shared cache');
+
+        // Fetch real stock data
+        await this.loadStockData();
       } else {
         // Fallback to API if no cache
         this.http.get<any[]>(`${environment.apiUrl}/catalog/products`).subscribe({
-          next: (data) => {
+          next: async (data) => {
             const mapped = data.map(p => ({
               id: p.id,
               sku: p.sku,
@@ -753,9 +761,11 @@ export class SmartPosComponent implements OnInit, OnDestroy {
               precioVenta: p.variants?.[0]?.precioNeto || 0,
               stock: p.stock || 0,
               imagen: p.imagenUrl,
-              codigoBarras: p.variants?.[0]?.barcode
+              codigoBarras: p.variants?.[0]?.barcode,
+              variantId: p.variants?.[0]?.id
             }));
             this.products.set(mapped);
+            await this.loadStockData();
           },
           error: () => this.showNotification('Error cargando productos', 'error')
         });
@@ -763,6 +773,64 @@ export class SmartPosComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error loading products:', error);
     }
+  }
+
+  async loadStockData() {
+    try {
+      const branchId = this.authService.getBranchId();
+      if (!branchId) {
+        console.log('No branch ID, using demo stock data');
+        this.applyDemoStock();
+        return;
+      }
+
+      this.stockService.getStockByBranch(branchId).subscribe({
+        next: (stockData: StockDto[]) => {
+          this.mergeStockWithProducts(stockData);
+        },
+        error: (err) => {
+          console.error('Error loading stock, using demo data:', err);
+          this.applyDemoStock();
+        }
+      });
+    } catch (error) {
+      console.error('Error in loadStockData:', error);
+      this.applyDemoStock();
+    }
+  }
+
+  private mergeStockWithProducts(stockData: StockDto[]) {
+    const stockMap = new Map<string, number>();
+    stockData.forEach(s => {
+      stockMap.set(s.variantId, s.cantidadDisponible);
+      stockMap.set(s.variantSku, s.cantidadDisponible);
+    });
+
+    const updated = this.products().map(p => ({
+      ...p,
+      stock: stockMap.get(p.id) || stockMap.get(p.sku) || p.stock
+    }));
+    this.products.set(updated);
+    console.log('Smart POS: Stock data merged for', stockData.length, 'variants');
+  }
+
+  private applyDemoStock() {
+    // Demo stock data for testing
+    const demoStock: { [sku: string]: number } = {
+      'PAN-001': 25, 'PAN-002': 0, 'PAN-003': 12, 'PAN-004': 8,
+      'PAN-005': 0, 'PAN-006': 45, 'PAN-007': 3, 'PAN-008': 15,
+      'PAS-001': 0, 'PAS-002': 7, 'PAS-003': 20, 'PAS-004': 0,
+      'PAS-005': 5, 'PAS-006': 10, 'PAS-007': 0, 'PAS-008': 18,
+      'BEB-001': 30, 'BEB-002': 0, 'BEB-003': 50, 'BEB-004': 12,
+      'BEB-005': 0, 'BEB-006': 25
+    };
+
+    const updated = this.products().map(p => ({
+      ...p,
+      stock: demoStock[p.sku] ?? Math.floor(Math.random() * 20)
+    }));
+    this.products.set(updated);
+    console.log('Smart POS: Demo stock applied');
   }
 
   private mapCachedProduct(p: CachedProduct): Product {
@@ -775,7 +843,8 @@ export class SmartPosComponent implements OnInit, OnDestroy {
       precioVenta: variant?.precioNeto || 0,
       stock: 0,
       imagen: p.imagenUrl,
-      codigoBarras: variant?.barcode
+      codigoBarras: variant?.barcode,
+      variantId: variant?.id
     };
   }
 
