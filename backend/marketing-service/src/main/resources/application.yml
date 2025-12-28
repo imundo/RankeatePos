@@ -23,7 +23,6 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           batch_size: 10
     show-sql: false
@@ -37,7 +36,7 @@ management:
     web:
       exposure:
         include: health,info
-      base-path: /actuator
+      base-path: /
   endpoint:
     health:
       show-details: always
