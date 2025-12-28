@@ -648,7 +648,7 @@ export class EmailComponent implements OnInit {
   };
 
   newCampaign = { name: '', templateId: '', targetSegment: '', scheduledAt: '' };
-  newTemplate = { name: '', subject: '', type: 'MARKETING' as const, trigger: '', bodyHtml: '' };
+  newTemplate: { name: string; subject: string; type: 'TRANSACTIONAL' | 'MARKETING' | 'AUTOMATED'; trigger: string; bodyHtml: string } = { name: '', subject: '', type: 'MARKETING', trigger: '', bodyHtml: '' };
 
   private mockTemplates: EmailTemplate[] = [
     { id: '1', name: 'Bienvenida', subject: '¡Bienvenido/a a nuestra familia, {{name}}!', type: 'AUTOMATED', trigger: 'WELCOME', active: true, createdAt: '2024-12-01' },
