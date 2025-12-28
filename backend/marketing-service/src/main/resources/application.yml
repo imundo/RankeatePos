@@ -11,11 +11,12 @@ spring:
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 3
+      maximum-pool-size: 2
       minimum-idle: 1
       idle-timeout: 30000
-      connection-timeout: 20000
+      connection-timeout: 30000
       max-lifetime: 1800000
+      initialization-fail-timeout: 60000
   
   jpa:
     hibernate:
@@ -23,8 +24,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    show-sql: ${SHOW_SQL:false}
+        jdbc:
+          batch_size: 10
+    show-sql: false
+    open-in-view: false
   
   flyway:
     enabled: false
@@ -33,13 +36,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
       base-path: /actuator
   endpoint:
     health:
       show-details: always
       probes:
         enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: false
 
 springdoc:
   api-docs:
@@ -50,5 +58,6 @@ springdoc:
 
 logging:
   level:
-    com.poscl: DEBUG
+    com.poscl: INFO
     org.springframework.web: INFO
+    org.hibernate: WARN
