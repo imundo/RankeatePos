@@ -17,6 +17,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'service-pos',
+        loadComponent: () => import('./features/service-pos/service-pos.component').then(m => m.ServicePosComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'smart-pos',
         loadComponent: () => import('./features/smart-pos/smart-pos.component').then(m => m.SmartPosComponent),
         canActivate: [authGuard]
