@@ -2396,6 +2396,329 @@ interface CartItem {
       background: linear-gradient(135deg, #10B981, #059669);
       svg { stroke: white; }
     }
+
+    /* ===========================================
+       MOBILE RESPONSIVE DESIGN
+       Samsung S22: 360px | iPhone 13 Pro Max: 428px
+       =========================================== */
+
+    /* Tablet and below (768px) */
+    @media (max-width: 768px) {
+      .pos-main {
+        flex-direction: column;
+      }
+      
+      .products-section {
+        order: 1;
+      }
+      
+      .cart-section {
+        order: 2;
+        width: 100%;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .pos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+        gap: 0.5rem !important;
+      }
+      
+      .product-card {
+        .product-image {
+          height: 80px !important;
+        }
+        
+        .product-info {
+          padding: 0.5rem !important;
+        }
+        
+        .product-name {
+          font-size: 0.75rem !important;
+        }
+        
+        .product-price {
+          font-size: 0.8rem !important;
+        }
+      }
+      
+      .quick-actions-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .favorite-chip {
+        padding: 0.375rem 0.75rem;
+        
+        .fav-name { font-size: 0.75rem; }
+        .fav-price { font-size: 0.65rem; }
+      }
+    }
+
+    /* Mobile Large - iPhone 13 Pro Max (428px) */
+    @media (max-width: 428px) {
+      .pos-header {
+        padding: 0.75rem 1rem;
+      }
+      
+      .tenant-name {
+        display: none;
+      }
+      
+      .search-container {
+        margin: 0 0.5rem;
+      }
+      
+      .search-input {
+        font-size: 0.9rem !important;
+        padding: 0.75rem 2.5rem !important;
+      }
+      
+      .category-pills {
+        gap: 0.25rem;
+        padding: 0.5rem 0.5rem;
+      }
+      
+      .category-pill {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        
+        .pill-icon { font-size: 0.9rem; margin-right: 0.25rem; }
+        .pill-count { font-size: 0.65rem; margin-left: 0.25rem; }
+      }
+      
+      .quick-actions-bar {
+        gap: 0.375rem;
+        padding: 0.5rem;
+      }
+      
+      .quick-action {
+        min-width: 60px;
+        padding: 0.375rem 0.5rem;
+        
+        .action-icon { font-size: 1rem; }
+        span:last-child { font-size: 0.6rem; }
+      }
+      
+      /* Cart item layout fix - prevent overlap */
+      .cart-item {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem;
+      }
+      
+      .item-info {
+        flex: 1 1 100%;
+        order: 1;
+        
+        .item-name {
+          font-size: 0.85rem;
+        }
+        
+        .item-price {
+          font-size: 0.7rem;
+        }
+      }
+      
+      .item-actions {
+        order: 2;
+        flex: 0 0 auto;
+      }
+      
+      .item-subtotal-container {
+        order: 3;
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+      
+      .qty-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px;
+      }
+      
+      .qty-value {
+        min-width: 24px;
+        font-size: 0.9rem;
+      }
+      
+      .item-subtotal {
+        min-width: 60px;
+        font-size: 0.85rem;
+      }
+      
+      .btn-delete {
+        width: 28px;
+        height: 28px;
+        
+        svg { width: 12px; height: 12px; }
+      }
+      
+      .cart-summary {
+        padding: 0.75rem;
+        
+        .summary-row {
+          font-size: 0.85rem;
+        }
+        
+        .total {
+          font-size: 1rem;
+        }
+      }
+      
+      .btn-block {
+        padding: 0.875rem !important;
+        font-size: 0.9rem !important;
+      }
+    }
+
+    /* Mobile Small - Samsung S22 (360px) */
+    @media (max-width: 360px) {
+      .pos-header {
+        padding: 0.5rem 0.75rem;
+      }
+      
+      .logo-emoji, .tenant-logo {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1.25rem;
+      }
+      
+      .notification-badge {
+        width: 36px;
+        height: 36px;
+        
+        svg { width: 16px; height: 16px; }
+        
+        .badge-count {
+          min-width: 14px;
+          height: 14px;
+          font-size: 0.6rem;
+        }
+      }
+      
+      .pos-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.375rem !important;
+      }
+      
+      .product-card {
+        .product-image {
+          height: 70px !important;
+        }
+        
+        .product-name {
+          font-size: 0.7rem !important;
+        }
+        
+        .product-category {
+          display: none !important;
+        }
+        
+        .product-price {
+          font-size: 0.75rem !important;
+        }
+      }
+      
+      .category-pill {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.7rem;
+        
+        .pill-icon { display: none; }
+      }
+      
+      .quick-action {
+        min-width: 50px;
+        padding: 0.25rem 0.375rem;
+        
+        .action-icon { font-size: 0.9rem; }
+        span:last-child { font-size: 0.55rem; }
+      }
+      
+      .favorites-section {
+        display: none;
+      }
+      
+      /* Cart fixes for very small screens */
+      .cart-item {
+        padding: 0.5rem;
+        gap: 0.375rem;
+      }
+      
+      .item-info .item-name {
+        font-size: 0.8rem !important;
+      }
+      
+      .qty-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px;
+      }
+      
+      .item-subtotal {
+        min-width: 50px;
+        font-size: 0.8rem !important;
+      }
+      
+      .cart-header h2 {
+        font-size: 1rem;
+      }
+      
+      .empty-cart {
+        padding: 2rem;
+      }
+      
+      .empty-cart-icon {
+        font-size: 2.5rem;
+      }
+    }
+
+    /* Touch-friendly sizes */
+    @media (hover: none) and (pointer: coarse) {
+      .product-card {
+        min-height: 44px;
+      }
+      
+      .category-pill,
+      .quick-action,
+      .favorite-chip {
+        min-height: 44px;
+      }
+      
+      .qty-btn {
+        min-width: 44px;
+        min-height: 44px;
+      }
+      
+      .btn-delete {
+        min-width: 44px;
+        min-height: 44px;
+      }
+    }
+
+    /* Landscape mobile optimization */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .pos-main {
+        flex-direction: row;
+      }
+      
+      .cart-section {
+        max-height: 100vh;
+        width: 280px;
+      }
+      
+      .products-section {
+        height: 100vh;
+        overflow-y: auto;
+      }
+      
+      .quick-actions-bar,
+      .favorites-section {
+        display: none;
+      }
+    }
   `]
 })
 export class PosComponent implements OnInit {
