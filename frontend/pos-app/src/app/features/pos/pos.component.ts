@@ -165,6 +165,47 @@ interface CartItem {
             </div>
           </div>
 
+          <!-- Quick Actions Bar (Industry Adaptive) -->
+          <div class="quick-actions-bar">
+            <button class="quick-action" (click)="openWeightInput()">
+              <span class="action-icon">⚖️</span>
+              <span>Pesar</span>
+            </button>
+            <button class="quick-action" (click)="openSpecialOrder()">
+              <span class="action-icon">📦</span>
+              <span>Pedido</span>
+            </button>
+            <button class="quick-action" (click)="applyPromotion()">
+              <span class="action-icon">🎁</span>
+              <span>Promo</span>
+            </button>
+            <button class="quick-action" (click)="openClientSearch()">
+              <span class="action-icon">👤</span>
+              <span>Cliente</span>
+            </button>
+            <button class="quick-action" (click)="savePending()">
+              <span class="action-icon">💾</span>
+              <span>Guardar</span>
+            </button>
+          </div>
+
+          <!-- Favoritos / Popular Section -->
+          @if (popularProducts().length > 0 && !searchQuery) {
+            <div class="favorites-section">
+              <div class="section-header">
+                <span class="section-title-small">⭐ Más Vendidos</span>
+              </div>
+              <div class="favorites-scroll">
+                @for (product of popularProducts(); track product.id) {
+                  <div class="favorite-chip" (click)="addToCart(product)">
+                    <span class="fav-name">{{ product.nombre }}</span>
+                    <span class="fav-price">{{ formatPrice(product.variants[0]?.precioBruto || 0) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Products Grid with Cards -->
           <div class="pos-grid">
             @if (isLoading()) {
@@ -1246,9 +1287,103 @@ interface CartItem {
         .empty-icon {
           font-size: 3rem;
           display: block;
-          margin-bottom: 1rem;
         }
       }
+    }
+
+    /* Quick Actions Bar - Industry Adaptive */
+    .quick-actions-bar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      
+      &::-webkit-scrollbar { display: none; }
+    }
+    
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 0.75rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      min-width: 70px;
+      
+      .action-icon { font-size: 1.25rem; }
+      span:last-child { font-size: 0.7rem; color: rgba(255, 255, 255, 0.8); }
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+      
+      &:active { transform: scale(0.95); }
+    }
+
+    /* Favoritos / Popular Section */
+    .favorites-section {
+      padding: 0.5rem 0;
+      
+      .section-header {
+        margin-bottom: 0.5rem;
+      }
+      
+      .section-title-small {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+    
+    .favorites-scroll {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 0.5rem;
+      
+      &::-webkit-scrollbar { display: none; }
+    }
+    
+    .favorite-chip {
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      
+      .fav-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: white;
+      }
+      
+      .fav-price {
+        font-size: 0.7rem;
+        color: #10B981;
+        font-weight: 600;
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.2));
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+      
+      &:active { transform: scale(0.95); }
     }
 
     /* Document Expiry Modal */
@@ -2404,6 +2539,76 @@ export class PosComponent implements OnInit {
 
   selectCategory(categoryId: string | null): void {
     this.selectedCategory.set(categoryId);
+  }
+
+  // Popular/Favorite products - Top 6 for quick access
+  popularProducts = computed(() => {
+    return this.products().slice(0, 6);
+  });
+
+  // Quick action methods - Industry adaptive
+  openWeightInput(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Pesaje',
+      detail: 'Ingresa el peso del producto en la balanza'
+    });
+    // TODO: Open weight input modal
+  }
+
+  openSpecialOrder(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Pedido Especial',
+      detail: 'Crear orden de pedido especial'
+    });
+    // TODO: Open special order modal
+  }
+
+  applyPromotion(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Promociones',
+      detail: 'Aplicar descuento o promoción al carrito'
+    });
+    // TODO: Open promotions modal
+  }
+
+  openClientSearch(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Buscar Cliente',
+      detail: 'Asociar cliente a esta venta'
+    });
+    // TODO: Open client search modal
+  }
+
+  savePending(): void {
+    if (this.cartItems().length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Carrito vacío',
+        detail: 'Agrega productos antes de guardar'
+      });
+      return;
+    }
+    // Save to pending
+    const pending = {
+      id: crypto.randomUUID(),
+      items: this.cartItems(),
+      total: this.total(),
+      createdAt: new Date().toISOString()
+    };
+    const stored = localStorage.getItem('pending_sales') || '[]';
+    const pendingList = JSON.parse(stored);
+    pendingList.push(pending);
+    localStorage.setItem('pending_sales', JSON.stringify(pendingList));
+    this.clearCart();
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Guardado',
+      detail: 'Venta guardada como pendiente'
+    });
   }
 
   subtotal = computed(() =>
