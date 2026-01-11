@@ -1,9 +1,11 @@
-import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '@core/auth/auth.service';
 import { SalesService, DailyStats } from '@core/services/sales.service';
+import { SalesEventService } from '@core/services/sales-event.service';
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
 
 interface DayData {
@@ -829,10 +831,13 @@ interface DailySummary {
     }
   `]
 })
-export class DailyEarningsComponent implements OnInit {
+export class DailyEarningsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private salesService = inject(SalesService);
+  private salesEventService = inject(SalesEventService);
   private industryMockService = inject(IndustryMockDataService);
+
+  private subscriptions: Subscription[] = [];
 
   currentDate = signal(new Date());
   selectedDate = signal(new Date());
@@ -896,6 +901,18 @@ export class DailyEarningsComponent implements OnInit {
     }, 0);
 
     this.loadSalesData();
+
+    // Subscribe to real-time sales updates
+    this.subscriptions.push(
+      this.salesEventService.salesUpdated$.subscribe(() => {
+        // Reload data when a new sale is made
+        this.loadSalesData();
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   loadSalesData() {

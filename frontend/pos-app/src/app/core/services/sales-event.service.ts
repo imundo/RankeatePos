@@ -7,7 +7,7 @@ export interface SaleEvent {
     total: number;
     items: SaleItemEvent[];
     timestamp: Date;
-    type: 'VENTA' | 'ANULACION' | 'DEVOLUCION';
+    type: 'VENTA' | 'VENTA_OFFLINE' | 'ANULACION' | 'DEVOLUCION';
 }
 
 export interface SaleItemEvent {

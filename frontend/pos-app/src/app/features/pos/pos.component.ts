@@ -3253,6 +3253,22 @@ export class PosComponent implements OnInit {
         life: 3000
       });
 
+      // Still notify local components about the pending sale
+      this.salesEventService.notifySale({
+        id: commandId,
+        numero: commandId.slice(0, 8),
+        total: totalVenta,
+        items: this.cartItems().map(item => ({
+          variantId: item.variantId,
+          sku: item.productSku,
+          nombre: item.productNombre,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario
+        })),
+        timestamp: new Date(),
+        type: 'VENTA_OFFLINE'
+      });
+
       this.clearCart();
       this.showPaymentDialog = false;
     }
