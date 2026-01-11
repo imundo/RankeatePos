@@ -534,9 +534,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   async loadData() {
+    // Debug: Check if we have valid authentication
+    const tenantId = this.authService.getTenantId();
+    console.log('Dashboard loadData - TenantId:', tenantId);
+
+    if (!tenantId) {
+      console.warn('Dashboard: No tenant ID available, skipping data load');
+      return;
+    }
+
     // Load dashboard stats
     this.salesService.getDashboardStats().subscribe({
       next: (data) => {
+        console.log('Dashboard stats received:', data);
         if (data) {
           this.stats.set({
             ventasHoy: data.ventasHoy || 0,
