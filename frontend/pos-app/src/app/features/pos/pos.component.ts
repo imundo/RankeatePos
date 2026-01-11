@@ -18,6 +18,7 @@ import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offl
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
 import { DemoDataService } from '@core/services/demo-data.service';
 import { FacturacionService } from '../facturacion/services/facturacion.service';
+import { SalesEventService } from '@core/services/sales-event.service';
 import { environment } from '@env/environment';
 
 interface CartItem {
@@ -2729,6 +2730,7 @@ export class PosComponent implements OnInit {
   private industryService = inject(IndustryMockDataService);
   private facturacionService = inject(FacturacionService);
   private demoDataService = inject(DemoDataService);
+  private salesEventService = inject(SalesEventService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -3207,6 +3209,24 @@ export class PosComponent implements OnInit {
 
       // Guardar total para mostrar en modal
       this.lastSaleTotal = totalVenta;
+
+      // Notificar al dashboard y otros componentes
+      if (saleResult) {
+        this.salesEventService.notifySale({
+          id: saleResult.id || commandId,
+          numero: saleResult.numero || commandId.slice(0, 8),
+          total: totalVenta,
+          items: this.cartItems().map(item => ({
+            variantId: item.variantId,
+            sku: item.productSku,
+            nombre: item.productNombre,
+            cantidad: item.cantidad,
+            precioUnitario: item.precioUnitario
+          })),
+          timestamp: new Date(),
+          type: 'VENTA'
+        });
+      }
 
       // Limpiar carrito y cerrar modal de pago
       this.clearCart();
