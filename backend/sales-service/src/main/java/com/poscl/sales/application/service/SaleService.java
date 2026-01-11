@@ -282,6 +282,33 @@ public class SaleService {
                 ? totalVentas.divide(BigDecimal.valueOf(totalTransacciones), 0, java.math.RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
+        // Calculate top products
+        java.util.Map<String, DailyStatsDto.TopProduct> productMap = new java.util.HashMap<>();
+        for (Sale sale : sales) {
+            if (sale.getEstado() == Sale.Estado.COMPLETADA) {
+                for (SaleItem item : sale.getItems()) {
+                    String key = item.getProductNombre();
+                    DailyStatsDto.TopProduct existing = productMap.get(key);
+                    if (existing == null) {
+                        productMap.put(key, DailyStatsDto.TopProduct.builder()
+                                .nombre(item.getProductNombre())
+                                .sku(item.getProductSku())
+                                .cantidad(item.getCantidad())
+                                .total(BigDecimal.valueOf(item.getTotal()))
+                                .build());
+                    } else {
+                        existing.setCantidad(existing.getCantidad() + item.getCantidad());
+                        existing.setTotal(existing.getTotal().add(BigDecimal.valueOf(item.getTotal())));
+                    }
+                }
+            }
+        }
+
+        List<DailyStatsDto.TopProduct> topProductos = productMap.values().stream()
+                .sorted((a, b) -> b.getCantidad().compareTo(a.getCantidad()))
+                .limit(10)
+                .collect(Collectors.toList());
+
         return DailyStatsDto.builder()
                 .fecha(date)
                 .totalVentas(totalVentas)
@@ -293,6 +320,7 @@ public class SaleService {
                 .ventasAnuladas(anuladas)
                 .montoAprobado(montoAprobado)
                 .montoPendiente(montoPendiente)
+                .topProductos(topProductos)
                 .build();
     }
 
