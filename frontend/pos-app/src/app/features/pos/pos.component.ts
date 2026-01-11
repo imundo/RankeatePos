@@ -2768,11 +2768,8 @@ export class PosComponent implements OnInit {
     return sessionId;
   })();
 
-  // Pending sales (demo data)
-  pendingSales = signal<any[]>([
-    { id: 'sale-001', numero: '00123', fecha: new Date(), total: 15500, items: [{}, {}] },
-    { id: 'sale-002', numero: '00124', fecha: new Date(Date.now() - 3600000), total: 8750, items: [{}] },
-  ]);
+  // Pending sales (loaded from API)
+  pendingSales = signal<any[]>([]);
 
   // Document expiry alerts (demo data)
   expiringDocs = signal<any[]>([
@@ -2948,12 +2945,39 @@ export class PosComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCachedProducts();
+    this.loadPendingSales();
 
     // Load notification counts from DemoDataService
     const counts = this.demoDataService.getNotificationCounts();
     this.whatsappNotifications.set(counts.whatsapp);
     this.reservationsToday.set(counts.reservations);
     this.kdsOrders.set(counts.kds);
+  }
+
+  loadPendingSales(): void {
+    const tenantId = this.authService.tenant()?.id;
+    if (!tenantId) return;
+
+    this.http.get<any[]>(`${environment.salesUrl}/sales/pending`, {
+      headers: {
+        'X-Tenant-Id': tenantId,
+        'X-User-Id': this.authService.user()?.id || ''
+      }
+    }).subscribe({
+      next: (sales) => {
+        this.pendingSales.set(sales.map(s => ({
+          id: s.id,
+          numero: s.numero,
+          fecha: new Date(s.createdAt),
+          total: s.total,
+          items: s.items || []
+        })));
+      },
+      error: (err) => {
+        console.error('Error loading pending sales:', err);
+        this.pendingSales.set([]);
+      }
+    });
   }
 
   async loadCachedProducts(): Promise<void> {
@@ -3447,30 +3471,82 @@ export class PosComponent implements OnInit {
 
   // Pending sales methods
   approveSale(saleId: string): void {
-    const sales = this.pendingSales().filter(s => s.id !== saleId);
-    this.pendingSales.set(sales);
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Venta aprobada',
-      detail: 'La venta fue aprobada exitosamente',
-      life: 2000
+    const tenantId = this.authService.tenant()?.id;
+    const userId = this.authService.user()?.id;
+
+    this.http.post<any>(`${environment.salesUrl}/sales/${saleId}/approve`, {}, {
+      headers: {
+        'X-Tenant-Id': tenantId || '',
+        'X-User-Id': userId || ''
+      }
+    }).subscribe({
+      next: (approvedSale) => {
+        const sales = this.pendingSales().filter(s => s.id !== saleId);
+        this.pendingSales.set(sales);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Venta aprobada',
+          detail: `Venta #${approvedSale.numero} aprobada - $${this.formatPrice(approvedSale.total)}`,
+          life: 3000
+        });
+
+        // Notify dashboard to refresh
+        this.salesEventService.triggerDashboardRefresh();
+
+        if (sales.length === 0) {
+          this.showPendingModal = false;
+        }
+      },
+      error: (err) => {
+        console.error('Error approving sale:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo aprobar la venta',
+          life: 3000
+        });
+      }
     });
-    if (sales.length === 0) {
-      this.showPendingModal = false;
-    }
   }
 
   rejectSale(saleId: string): void {
-    const sales = this.pendingSales().filter(s => s.id !== saleId);
-    this.pendingSales.set(sales);
-    this.messageService.add({
-      severity: 'warn',
-      summary: 'Venta rechazada',
-      detail: 'La venta fue rechazada',
-      life: 2000
+    const tenantId = this.authService.tenant()?.id;
+    const userId = this.authService.user()?.id;
+
+    this.http.post<any>(`${environment.salesUrl}/sales/${saleId}/reject`, { motivo: 'Rechazada por supervisor' }, {
+      headers: {
+        'X-Tenant-Id': tenantId || '',
+        'X-User-Id': userId || ''
+      }
+    }).subscribe({
+      next: () => {
+        const sales = this.pendingSales().filter(s => s.id !== saleId);
+        this.pendingSales.set(sales);
+
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Venta rechazada',
+          detail: 'La venta fue rechazada',
+          life: 2000
+        });
+
+        // Notify dashboard to refresh
+        this.salesEventService.triggerDashboardRefresh();
+
+        if (sales.length === 0) {
+          this.showPendingModal = false;
+        }
+      },
+      error: (err) => {
+        console.error('Error rejecting sale:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo rechazar la venta',
+          life: 3000
+        });
+      }
     });
-    if (sales.length === 0) {
-      this.showPendingModal = false;
-    }
   }
 }
