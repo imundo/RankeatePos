@@ -39,15 +39,20 @@ public class DashboardController {
             UUID tenantId = tenantIdStr != null ? UUID.fromString(tenantIdStr) : null;
 
             if (tenantId != null) {
-                // Get today's stats from the service
-                DailyStatsDto dailyStats = saleService.getDailyStats(tenantId, LocalDate.now());
+                // Use Chile timezone for date (server runs in UTC but business is in Chile)
+                LocalDate today = LocalDate.now(java.time.ZoneId.of("America/Santiago"));
+                log.info("Fetching stats for tenant {} on date {} (Chile timezone)", tenantId, today);
+
+                DailyStatsDto dailyStats = saleService.getDailyStats(tenantId, today);
+                log.info("Stats result - Ventas: {}, Transacciones: {}",
+                        dailyStats.getTotalVentas(), dailyStats.getTotalTransacciones());
 
                 stats.put("ventasHoy", dailyStats.getTotalVentas());
                 stats.put("transacciones", dailyStats.getTotalTransacciones());
                 stats.put("topProducto", getTopProductName(dailyStats));
                 stats.put("stockBajo", 0); // TODO: integrate with catalog-service
             } else {
-                // Return demo data if no tenant
+                log.warn("No tenantId provided, returning empty stats");
                 stats.put("ventasHoy", 0);
                 stats.put("transacciones", 0);
                 stats.put("topProducto", "--");

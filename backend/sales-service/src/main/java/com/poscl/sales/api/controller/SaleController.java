@@ -121,9 +121,10 @@ public class SaleController {
             @RequestParam(required = false) String date) {
 
         log.info("GET /api/sales/stats/daily - TenantId: {}, date: {}", tenantId, date);
+        // Use Chile timezone for default date (server runs in UTC)
         java.time.LocalDate targetDate = date != null
                 ? java.time.LocalDate.parse(date)
-                : java.time.LocalDate.now();
+                : java.time.LocalDate.now(java.time.ZoneId.of("America/Santiago"));
         return ResponseEntity.ok(saleService.getDailyStats(tenantId, targetDate));
     }
 

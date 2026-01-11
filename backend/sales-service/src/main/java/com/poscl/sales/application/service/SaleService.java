@@ -247,10 +247,15 @@ public class SaleService {
     public DailyStatsDto getDailyStats(UUID tenantId, LocalDate date) {
         log.info("Obteniendo estadísticas del día {} para tenant {}", date, tenantId);
 
-        java.time.Instant startOfDay = date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
-        java.time.Instant endOfDay = date.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
+        // Use Chile timezone for date calculations (the business operates in Chile)
+        java.time.ZoneId chileZone = java.time.ZoneId.of("America/Santiago");
+        java.time.Instant startOfDay = date.atStartOfDay(chileZone).toInstant();
+        java.time.Instant endOfDay = date.plusDays(1).atStartOfDay(chileZone).toInstant();
+
+        log.info("Buscando ventas entre {} y {} (Chile timezone)", startOfDay, endOfDay);
 
         List<Sale> sales = saleRepository.findByTenantIdAndCreatedAtBetween(tenantId, startOfDay, endOfDay);
+        log.info("Encontradas {} ventas para tenant {} en fecha {}", sales.size(), tenantId, date);
 
         // Calcular estadísticas
         int totalTransacciones = sales.size();

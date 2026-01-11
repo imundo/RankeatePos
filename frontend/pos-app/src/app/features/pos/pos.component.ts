@@ -2817,7 +2817,8 @@ export class PosComponent implements OnInit {
     return '';
   });
   industryConfig = computed(() => this.industryService.getIndustryConfig());
-  pendingCount = this.offlineService.pendingCount;
+  // Pending sales count - uses actual pending sales from API
+  pendingCount = computed(() => this.pendingSales().length);
 
   // Innovation module notifications (initialized in ngOnInit from DemoDataService)
   whatsappNotifications = signal(3);
