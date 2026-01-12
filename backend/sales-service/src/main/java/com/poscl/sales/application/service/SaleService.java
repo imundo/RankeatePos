@@ -47,13 +47,8 @@ public class SaleService {
             return toDto(existing);
         }
 
-        // Validar sesión abierta
-        CashSession session = sessionRepository.findByIdAndTenantId(request.getSessionId(), tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sesión de caja", request.getSessionId()));
-
-        if (!session.isOpen()) {
-            throw new BusinessConflictException("SESSION_CLOSED", "La sesión de caja está cerrada");
-        }
+        // Get or create cash session
+        CashSession session = getOrCreateSession(tenantId, userId, request.getSessionId());
 
         // Generar número de venta
         String numero = generateSaleNumber(tenantId);
@@ -168,6 +163,57 @@ public class SaleService {
         Integer maxNum = saleRepository.findMaxNumeroByPrefix(tenantId, prefix);
         int nextNum = (maxNum != null ? maxNum : 0) + 1;
         return prefix + String.format("%05d", nextNum);
+    }
+
+    /**
+     * Obtiene o crea una sesión de caja para la venta.
+     * Si el sessionId proporcionado es válido, lo usa.
+     * Si no, busca una sesión abierta existente o crea una nueva automática.
+     */
+    private CashSession getOrCreateSession(UUID tenantId, UUID userId, UUID requestedSessionId) {
+        // Try to find the requested session if provided
+        if (requestedSessionId != null) {
+            java.util.Optional<CashSession> existingSession = sessionRepository.findByIdAndTenantId(requestedSessionId,
+                    tenantId);
+            if (existingSession.isPresent() && existingSession.get().isOpen()) {
+                return existingSession.get();
+            }
+        }
+
+        // Find any open session for this tenant
+        java.util.Optional<CashSession> openSession = sessionRepository
+                .findFirstByTenantIdAndClosedAtIsNullOrderByOpenedAtDesc(tenantId);
+        if (openSession.isPresent()) {
+            log.info("Using existing open session: {}", openSession.get().getId());
+            return openSession.get();
+        }
+
+        // Create a default "POS Auto" session
+        log.info("Creating auto cash session for tenant: {}", tenantId);
+
+        // Get or create default cash register
+        CashRegister register = registerRepository.findFirstByTenantIdOrderByNameAsc(tenantId)
+                .orElseGet(() -> {
+                    CashRegister newRegister = CashRegister.builder()
+                            .tenantId(tenantId)
+                            .name("POS Principal")
+                            .location("Principal")
+                            .active(true)
+                            .build();
+                    return registerRepository.save(newRegister);
+                });
+
+        CashSession newSession = CashSession.builder()
+                .tenantId(tenantId)
+                .register(register)
+                .openedBy(userId)
+                .initialAmount(0)
+                .build();
+
+        newSession = sessionRepository.save(newSession);
+        log.info("Auto cash session created: {}", newSession.getId());
+
+        return newSession;
     }
 
     // ====== MÉTODOS PARA APROBACIÓN DE VENTAS ======

@@ -11,13 +11,16 @@ import java.util.UUID;
 
 @Repository
 public interface CashRegisterRepository extends JpaRepository<CashRegister, UUID> {
-    
+
     @Query("SELECT cr FROM CashRegister cr WHERE cr.tenantId = :tenantId AND cr.branchId = :branchId AND cr.activa = true")
     List<CashRegister> findActiveByBranchId(UUID tenantId, UUID branchId);
-    
+
     @Query("SELECT cr FROM CashRegister cr WHERE cr.id = :id AND cr.tenantId = :tenantId")
     Optional<CashRegister> findByIdAndTenantId(UUID id, UUID tenantId);
-    
+
     @Query("SELECT cr FROM CashRegister cr WHERE cr.tenantId = :tenantId AND cr.activa = true")
     List<CashRegister> findActiveByTenantId(UUID tenantId);
+
+    // Find first register for auto-session creation
+    Optional<CashRegister> findFirstByTenantIdOrderByNameAsc(UUID tenantId);
 }

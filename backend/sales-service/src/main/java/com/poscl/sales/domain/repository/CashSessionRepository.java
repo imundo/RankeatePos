@@ -24,4 +24,7 @@ public interface CashSessionRepository extends JpaRepository<CashSession, UUID> 
     Optional<CashSession> findByIdAndTenantId(UUID id, UUID tenantId);
 
     List<CashSession> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+
+    // Find any open session for the tenant (closedAt is null means open)
+    Optional<CashSession> findFirstByTenantIdAndClosedAtIsNullOrderByOpenedAtDesc(UUID tenantId);
 }
