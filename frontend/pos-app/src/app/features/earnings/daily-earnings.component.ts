@@ -902,17 +902,35 @@ export class DailyEarningsComponent implements OnInit, OnDestroy {
 
     this.loadSalesData();
 
-    // Subscribe to real-time sales updates
+    // Subscribe to real-time sales updates (same tab)
     this.subscriptions.push(
       this.salesEventService.salesUpdated$.subscribe(() => {
         // Reload data when a new sale is made
         this.loadSalesData();
       })
     );
+
+    // Listen for cross-tab sync events
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'pos_sale_completed' && event.newValue) {
+        console.log('Daily Earnings: Sale detected from another tab, refreshing...');
+        this.loadSalesData();
+      }
+    });
+
+    // Auto-refresh every 20 seconds
+    this.refreshInterval = setInterval(() => {
+      this.loadSalesData();
+    }, 20000);
   }
+
+  private refreshInterval: any;
 
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   loadSalesData() {

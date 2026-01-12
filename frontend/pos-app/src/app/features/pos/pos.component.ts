@@ -3261,6 +3261,9 @@ export class PosComponent implements OnInit {
       // Mostrar modal de éxito
       this.showSuccessModal = true;
 
+      // Trigger cross-tab sync via localStorage
+      localStorage.setItem('pos_sale_completed', Date.now().toString());
+
       // Reset datos de cliente
       this.resetClienteData();
 

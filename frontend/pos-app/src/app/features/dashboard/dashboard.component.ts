@@ -518,12 +518,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private startAutoRefresh() {
-    // Refresh every 30 seconds
+    // Refresh every 15 seconds for more responsive updates
     this.refreshInterval = setInterval(() => {
       if (this.isOnline()) {
         this.loadData();
       }
-    }, 30000);
+    }, 15000);
+
+    // Listen for cross-tab sync events (when POS makes a sale in another tab)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'pos_sale_completed' && event.newValue) {
+        console.log('Dashboard: Sale detected from another tab, refreshing...');
+        this.loadData();
+      }
+    });
   }
 
   private updateLastUpdateTime() {
