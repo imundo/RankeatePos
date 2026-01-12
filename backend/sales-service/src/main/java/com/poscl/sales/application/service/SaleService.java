@@ -167,10 +167,20 @@ public class SaleService {
 
     /**
      * Obtiene o crea una sesión de caja para la venta.
-     * Si el sessionId proporcionado es válido, lo usa.
+     * Si el sessionId proporcionado es un UUID válido, intenta usarlo.
      * Si no, busca una sesión abierta existente o crea una nueva automática.
      */
-    private CashSession getOrCreateSession(UUID tenantId, UUID userId, UUID requestedSessionId) {
+    private CashSession getOrCreateSession(UUID tenantId, UUID userId, String sessionIdStr) {
+        // Try to parse sessionId as UUID
+        UUID requestedSessionId = null;
+        if (sessionIdStr != null && !sessionIdStr.isEmpty()) {
+            try {
+                requestedSessionId = UUID.fromString(sessionIdStr);
+            } catch (IllegalArgumentException e) {
+                log.debug("sessionId '{}' is not a valid UUID, will auto-create session", sessionIdStr);
+            }
+        }
+
         // Try to find the requested session if provided
         if (requestedSessionId != null) {
             java.util.Optional<CashSession> existingSession = sessionRepository.findByIdAndTenantId(requestedSessionId,
