@@ -22,5 +22,5 @@ public interface CashRegisterRepository extends JpaRepository<CashRegister, UUID
     List<CashRegister> findActiveByTenantId(UUID tenantId);
 
     // Find first register for auto-session creation
-    Optional<CashRegister> findFirstByTenantIdOrderByNameAsc(UUID tenantId);
+    Optional<CashRegister> findFirstByTenantIdOrderByNombreAsc(UUID tenantId);
 }

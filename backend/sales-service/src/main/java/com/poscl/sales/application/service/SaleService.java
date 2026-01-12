@@ -182,7 +182,7 @@ public class SaleService {
 
         // Find any open session for this tenant
         java.util.Optional<CashSession> openSession = sessionRepository
-                .findFirstByTenantIdAndClosedAtIsNullOrderByOpenedAtDesc(tenantId);
+                .findFirstByTenantIdAndCierreAtIsNullOrderByAperturaAtDesc(tenantId);
         if (openSession.isPresent()) {
             log.info("Using existing open session: {}", openSession.get().getId());
             return openSession.get();
@@ -192,13 +192,13 @@ public class SaleService {
         log.info("Creating auto cash session for tenant: {}", tenantId);
 
         // Get or create default cash register
-        CashRegister register = registerRepository.findFirstByTenantIdOrderByNameAsc(tenantId)
+        CashRegister register = registerRepository.findFirstByTenantIdOrderByNombreAsc(tenantId)
                 .orElseGet(() -> {
                     CashRegister newRegister = CashRegister.builder()
                             .tenantId(tenantId)
-                            .name("POS Principal")
-                            .location("Principal")
-                            .active(true)
+                            .branchId(tenantId) // Use tenantId as default branchId
+                            .nombre("POS Principal")
+                            .activa(true)
                             .build();
                     return registerRepository.save(newRegister);
                 });
@@ -206,8 +206,8 @@ public class SaleService {
         CashSession newSession = CashSession.builder()
                 .tenantId(tenantId)
                 .register(register)
-                .openedBy(userId)
-                .initialAmount(0)
+                .userId(userId)
+                .montoInicial(0)
                 .build();
 
         newSession = sessionRepository.save(newSession);
