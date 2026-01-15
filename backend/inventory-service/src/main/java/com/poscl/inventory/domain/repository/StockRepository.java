@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-@Repository
 public interface StockRepository extends JpaRepository<Stock, UUID> {
 
     @Query("SELECT s FROM Stock s WHERE s.tenantId = :tenantId AND s.variant.id = :variantId AND s.branchId = :branchId")
