@@ -22,6 +22,7 @@ export interface CachedVariant {
     precioBruto: number;
     precioNeto: number;
     taxPercentage: number;
+    stock?: number;
 }
 
 export interface PendingCommand {
