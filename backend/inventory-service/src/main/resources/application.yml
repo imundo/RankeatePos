@@ -44,6 +44,7 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: false
     repair: true
+    table: flyway_schema_history_inventory
 
 springdoc:
   api-docs:
