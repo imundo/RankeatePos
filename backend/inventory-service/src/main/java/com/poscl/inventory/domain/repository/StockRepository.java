@@ -16,9 +16,9 @@ public interface StockRepository extends JpaRepository<Stock, UUID> {
 
     List<Stock> findByTenantIdAndBranchId(UUID tenantId, UUID branchId);
 
-    @Query("SELECT s FROM Stock s WHERE s.tenantId = :tenantId AND s.branchId = :branchId AND s.cantidadActual <= s.stockMinimo")
+    @Query("SELECT s FROM Stock s WHERE s.tenantId = :tenantId AND s.branchId = :branchId AND s.cantidadActual <= s.variant.stockMinimo")
     List<Stock> findLowStock(UUID tenantId, UUID branchId);
 
-    @Query("SELECT COUNT(s) FROM Stock s WHERE s.tenantId = :tenantId AND s.cantidadActual <= s.stockMinimo")
+    @Query("SELECT COUNT(s) FROM Stock s WHERE s.tenantId = :tenantId AND s.cantidadActual <= s.variant.stockMinimo")
     long countLowStock(UUID tenantId);
 }
