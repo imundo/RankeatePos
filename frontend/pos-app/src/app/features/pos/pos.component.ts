@@ -224,6 +224,7 @@ interface CartItem {
               @for (product of filteredProducts(); track product.id) {
                 <div 
                   class="product-card fade-in-up"
+                  [class.out-of-stock]="(product.variants[0]?.stock ?? 0) <= 0"
                   (click)="addToCart(product)"
                   [style.animation-delay]="$index * 0.05 + 's'"
                 >
@@ -232,6 +233,12 @@ interface CartItem {
                       <img [src]="product.imagenUrl" [alt]="product.nombre" loading="lazy" />
                     } @else {
                       <span>{{ getCategoryIcon(product.categoryName || 'Otro') }}</span>
+                    }
+                    <!-- Stock Badge -->
+                    @if ((product.variants[0]?.stock ?? 0) > 0) {
+                      <span class="stock-badge">{{ product.variants[0]?.stock }}</span>
+                    } @else {
+                      <span class="stock-badge out">0</span>
                     }
                   </div>
                   <div class="product-info">
@@ -1642,6 +1649,57 @@ interface CartItem {
       -webkit-text-fill-color: transparent;
     }
 
+    /* Stock Badge - Circle with available stock */
+    .stock-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(234, 179, 8, 0.4);
+      z-index: 10;
+      
+      &.out {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+      }
+    }
+
+    /* Out of Stock Product Card */
+    .product-card.out-of-stock {
+      opacity: 0.5;
+      pointer-events: none;
+      
+      .product-image::after {
+        content: 'Agotado';
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+
+    /* Product image needs position relative for badge positioning */
+    .product-image {
+      position: relative;
+    }
+
     .empty-state {
       grid-column: 1 / -1;
       display: flex;
@@ -2942,7 +3000,7 @@ export class PosComponent implements OnInit {
     Math.round(this.subtotal() * 0.19) // IVA 19% Chile
   );
 
-  total = computed(() => this.subtotal());
+  total = computed(() => this.subtotal() + this.taxTotal());
 
   ngOnInit(): void {
     this.loadCachedProducts();
