@@ -114,6 +114,13 @@ interface CartItem {
               {{ pendingCount() }} pendientes
             </button>
           }
+          
+          <!-- Sync Button -->
+          <button class="btn btn-primary" (click)="syncProducts()" title="Sincronizar catálogo">
+            <i class="pi pi-refresh"></i>
+            <span class="btn-text">Sincronizar</span>
+          </button>
+          
           <button class="btn btn-outline" (click)="showMenu = true">
             <i class="pi pi-bars"></i>
           </button>
@@ -142,53 +149,58 @@ interface CartItem {
               }
             </div>
 
-            <!-- Category Pills -->
-            <div class="category-pills">
-              <button 
-                class="category-pill"
-                [class.active]="!selectedCategory()"
-                (click)="selectCategory(null)"
-              >
-                <span class="pill-icon">📦</span>
-                Todo
-                <span class="pill-count">{{ products().length }}</span>
-              </button>
-              @for (category of categories(); track category.id) {
-                <button 
-                  class="category-pill"
-                  [class.active]="selectedCategory() === category.id"
-                  (click)="selectCategory(category.id)"
-                >
-                  <span class="pill-icon">{{ getCategoryIcon(category.nombre) }}</span>
-                  {{ category.nombre }}
-                  <span class="pill-count">{{ getCategoryCount(category.id) }}</span>
-                </button>
-              }
-            </div>
-          </div>
+            <!-- Filters and Actions Row -->
+            <div class="filters-actions-row">
+              <!-- Category Pills -->
+              <div class="category-pills-wrapper">
+                <div class="category-pills">
+                  <button 
+                    class="category-pill"
+                    [class.active]="!selectedCategory()"
+                    (click)="selectCategory(null)"
+                  >
+                    <span class="pill-icon">📦</span>
+                    Todo
+                    <span class="pill-count">{{ products().length }}</span>
+                  </button>
+                  @for (category of categories(); track category.id) {
+                    <button 
+                      class="category-pill"
+                      [class.active]="selectedCategory() === category.id"
+                      (click)="selectCategory(category.id)"
+                    >
+                      <span class="pill-icon">{{ getCategoryIcon(category.nombre) }}</span>
+                      {{ category.nombre }}
+                      <span class="pill-count">{{ getCategoryCount(category.id) }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
 
-          <!-- Quick Actions Bar (Industry Adaptive) -->
-          <div class="quick-actions-bar">
-            <button class="quick-action" (click)="openWeightInput()">
-              <span class="action-icon">⚖️</span>
-              <span>Pesar</span>
-            </button>
-            <button class="quick-action" (click)="openSpecialOrder()">
-              <span class="action-icon">📦</span>
-              <span>Pedido</span>
-            </button>
-            <button class="quick-action" (click)="applyPromotion()">
-              <span class="action-icon">🎁</span>
-              <span>Promo</span>
-            </button>
-            <button class="quick-action" (click)="openClientSearch()">
-              <span class="action-icon">👤</span>
-              <span>Cliente</span>
-            </button>
-            <button class="quick-action" (click)="savePending()">
-              <span class="action-icon">💾</span>
-              <span>Guardar</span>
-            </button>
+              <!-- Quick Actions Bar (Industry Adaptive) -->
+              <div class="quick-actions-bar">
+                <button class="quick-action" (click)="openWeightInput()">
+                  <span class="action-icon">⚖️</span>
+                  <span>Pesar</span>
+                </button>
+                <button class="quick-action" (click)="openSpecialOrder()">
+                  <span class="action-icon">📦</span>
+                  <span>Pedido</span>
+                </button>
+                <button class="quick-action" (click)="applyPromotion()">
+                  <span class="action-icon">🎁</span>
+                  <span>Promo</span>
+                </button>
+                <button class="quick-action" (click)="openClientSearch()">
+                  <span class="action-icon">👤</span>
+                  <span>Cliente</span>
+                </button>
+                <button class="quick-action" (click)="savePending()">
+                  <span class="action-icon">💾</span>
+                  <span>Guardar</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Favoritos / Popular Section -->
@@ -1304,7 +1316,7 @@ interface CartItem {
     .quick-actions-bar {
       display: flex;
       gap: 0.5rem;
-      padding: 0.75rem 0;
+      flex-shrink: 0;
       overflow-x: auto;
       scrollbar-width: none;
       
@@ -1553,13 +1565,28 @@ interface CartItem {
       }
     }
 
+    /* Filters and Actions Row - Prevents Overlap */
+    .filters-actions-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.5rem 0;
+    }
+
+    .category-pills-wrapper {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
     .category-pills {
       display: flex;
       flex-wrap: nowrap;
       gap: 0.75rem;
       overflow-x: auto;
-      padding: 0.75rem 0;
-      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
       scrollbar-width: none;
       
       &::-webkit-scrollbar {
