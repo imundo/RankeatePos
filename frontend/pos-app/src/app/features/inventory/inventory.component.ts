@@ -10,7 +10,6 @@ import { CatalogService } from '@core/services/catalog.service';
   selector: 'app-inventory',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './inventory.component.html', // We will write this next or inline it if short. Let's inline for control
   template: `
     <div class="inventory-container">
       <!-- Header -->
