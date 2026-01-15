@@ -14,5 +14,6 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, UU
 
     Page<StockMovement> findByTenantIdAndBranchIdOrderByCreatedAtDesc(UUID tenantId, UUID branchId, Pageable pageable);
 
+    @Query("SELECT sm FROM StockMovement sm WHERE sm.variant.id = :variantId ORDER BY sm.createdAt DESC")
     List<StockMovement> findByVariantIdOrderByCreatedAtDesc(UUID variantId);
 }
