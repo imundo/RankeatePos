@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductDto {
-    
+
     private UUID id;
     private String sku;
     private String nombre;
@@ -26,9 +26,9 @@ public class ProductDto {
     private Boolean requiereVariantes;
     private Boolean permiteVentaFraccionada;
     private String imagenUrl;
-    
+
     private List<VariantDto> variants;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -44,6 +44,7 @@ public class ProductDto {
         private UUID taxId;
         private Integer taxPercentage;
         private Integer stockMinimo;
+        private Integer stock; // Current stock from inventory-service
         private Boolean activo;
         private Boolean esDefault;
         private Double marginPercentage;
