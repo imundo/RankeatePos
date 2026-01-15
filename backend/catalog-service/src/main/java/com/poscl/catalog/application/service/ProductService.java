@@ -225,31 +225,72 @@ public class ProductService {
     }
 
     /**
-     * Fetch stock from inventory-service for all variants
+     * Fetch stock from inventory-service for all variants across all branches
+     * Aggregates stock from multiple branches
      */
     private Map<UUID, Integer> fetchStockFromInventory(UUID tenantId) {
         try {
-            List<Map<String, Object>> stockList = inventoryWebClient
-                    .get()
-                    .uri("/api/stock")
-                    .header("X-Tenant-Id", tenantId.toString())
-                    .retrieve()
-                    .bodyToFlux(Map.class)
-                    .collectList()
-                    .block();
+            log.info("Fetching stock from inventory-service for tenant: {}", tenantId);
+
+            // List of known branch IDs (could be fetched from a branches table in the
+            // future)
+            String[] branchIds = {
+                    "b1000000-0000-0000-0000-000000000001",
+                    "b1000000-0000-0000-0000-000000000002",
+                    "b2000000-0000-0000-0000-000000000001",
+                    "b2000000-0000-0000-0000-000000000002",
+                    "b3000000-0000-0000-0000-000000000001"
+            };
 
             Map<UUID, Integer> stockMap = new HashMap<>();
-            if (stockList != null) {
-                for (Map<String, Object> stockItem : stockList) {
-                    UUID variantId = UUID.fromString((String) stockItem.get("variantId"));
-                    Integer stock = (Integer) stockItem.get("cantidadActual");
-                    stockMap.put(variantId, stock != null ? stock : 0);
+
+            // Fetch stock for each branch and aggregate
+            for (String branchId : branchIds) {
+                try {
+                    log.debug("Fetching stock for branch: {}", branchId);
+
+                    List<Map<String, Object>> stockList = inventoryWebClient
+                            .get()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/api/stock")
+                                    .queryParam("branchId", branchId)
+                                    .build())
+                            .header("X-Tenant-Id", tenantId.toString())
+                            .retrieve()
+                            .bodyToFlux(Map.class)
+                            .collectList()
+                            .block();
+
+                    if (stockList != null && !stockList.isEmpty()) {
+                        log.debug("Received {} stock items from branch {}", stockList.size(), branchId);
+
+                        for (Map<String, Object> stockItem : stockList) {
+                            try {
+                                String variantIdStr = (String) stockItem.get("variantId");
+                                if (variantIdStr != null) {
+                                    UUID variantId = UUID.fromString(variantIdStr);
+                                    Object stockObj = stockItem.get("cantidadActual");
+                                    Integer stock = stockObj != null ? ((Number) stockObj).intValue() : 0;
+
+                                    // Aggregate stock: sum across branches
+                                    stockMap.merge(variantId, stock, Integer::sum);
+                                }
+                            } catch (Exception e) {
+                                log.debug("Error parsing stock item: {}", e.getMessage());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to fetch stock for branch {}: {}", branchId, e.getMessage());
+                    // Continue with other branches
                 }
             }
 
+            log.info("Aggregated stock for {} variants from inventory-service", stockMap.size());
             return stockMap;
+
         } catch (Exception e) {
-            log.warn("Failed to fetch stock from inventory-service: {}", e.getMessage());
+            log.error("Failed to fetch stock from inventory-service", e);
             return new HashMap<>();
         }
     }
