@@ -354,11 +354,11 @@ public class SaleService {
                         productMap.put(key, DailyStatsDto.TopProduct.builder()
                                 .nombre(item.getProductNombre())
                                 .sku(item.getProductSku())
-                                .cantidad(item.getCantidad())
+                                .cantidad(item.getCantidad().intValue())
                                 .total(BigDecimal.valueOf(item.getTotal()))
                                 .build());
                     } else {
-                        existing.setCantidad(existing.getCantidad() + item.getCantidad());
+                        existing.setCantidad(existing.getCantidad() + item.getCantidad().intValue());
                         existing.setTotal(existing.getTotal().add(BigDecimal.valueOf(item.getTotal())));
                     }
                 }
