@@ -176,30 +176,6 @@ interface CartItem {
                   }
                 </div>
               </div>
-
-              <!-- Quick Actions Bar (Industry Adaptive) -->
-              <div class="quick-actions-bar">
-                <button class="quick-action" (click)="openWeightInput()">
-                  <span class="action-icon">⚖️</span>
-                  <span>Pesar</span>
-                </button>
-                <button class="quick-action" (click)="openSpecialOrder()">
-                  <span class="action-icon">📦</span>
-                  <span>Pedido</span>
-                </button>
-                <button class="quick-action" (click)="applyPromotion()">
-                  <span class="action-icon">🎁</span>
-                  <span>Promo</span>
-                </button>
-                <button class="quick-action" (click)="openClientSearch()">
-                  <span class="action-icon">👤</span>
-                  <span>Cliente</span>
-                </button>
-                <button class="quick-action" (click)="savePending()">
-                  <span class="action-icon">💾</span>
-                  <span>Guardar</span>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -273,6 +249,44 @@ interface CartItem {
                 </button>
               </div>
             }
+          </div>
+
+          <!-- Floating Action Button (FAB) with Quick Actions -->
+          <div class="fab-container" [class.fab-open]="fabOpen">
+            <!-- Sub Actions (expand from main FAB) -->
+            @if (fabOpen) {
+              <div class="fab-submenu">
+                <button class="fab-action" (click)=\"openWeightInput(); fabOpen = false\" title="Pesar">
+                  <span class="fab-icon">⚖️</span>
+                  <span class="fab-label">Pesar</span>
+                </button>
+                <button class="fab-action" (click)=\"openSpecialOrder(); fabOpen = false\" title="Pedido">
+                  <span class="fab-icon">📦</span>
+                  <span class="fab-label">Pedido</span>
+                </button>
+                <button class="fab-action" (click)=\"applyPromotion(); fabOpen = false\" title="Promoción">
+                  <span class="fab-icon">🎁</span>
+                  <span class="fab-label">Promo</span>
+                </button>
+                <button class="fab-action" (click)=\"openClientSearch(); fabOpen = false\" title="Cliente">
+                  <span class="fab-icon">👤</span>
+                  <span class="fab-label">Cliente</span>
+                </button>
+                <button class="fab-action" (click)=\"savePending(); fabOpen = false\" title="Guardar">
+                  <span class="fab-icon">💾</span>
+                  <span class="fab-label">Guardar</span>
+                </button>
+              </div>
+            }
+            
+            <!-- Main FAB Button -->
+            <button class="fab-main" (click)="fabOpen = !fabOpen" [class.active]="fabOpen">
+              @if (fabOpen) {
+                <span class="fab-main-icon">✕</span>
+              } @else {
+                <span class="fab-main-icon">⚡</span>
+              }
+            </button>
           </div>
         </section>
 
@@ -1743,6 +1757,101 @@ interface CartItem {
       }
     }
 
+    /* Floating Action Button (FAB) */
+    .fab-container {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 100;
+      
+      @media (max-width: 768px) {
+        bottom: 1rem;
+        right: 1rem;
+      }
+    }
+
+    .fab-main {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border: none;
+      box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 32px -4px rgba(99, 102, 241, 0.6);
+      }
+      
+      &.active {
+        transform: rotate(45deg);
+      }
+      
+      .fab-main-icon {
+        font-size: 1.5rem;
+        transition: transform 0.3s;
+      }
+    }
+
+    .fab-submenu {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      animation: fabSlideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes fabSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fab-action {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 30px;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
+        border-color: rgba(99, 102, 241, 0.6);
+        transform: translateX(-4px);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      }
+      
+      .fab-icon {
+        font-size: 1.25rem;
+      }
+      
+      .fab-label {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+
     .cart-section {
       width: 100%;
       max-width: 380px;
@@ -2828,6 +2937,7 @@ export class PosComponent implements OnInit {
   searchQuery = '';
   showPaymentDialog = false;
   showMenu = false;
+  fabOpen = false;  // Floating Action Button state
   showPendingModal = false;
   showDocsModal = false;
   selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' = 'EFECTIVO';
