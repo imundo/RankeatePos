@@ -8,6 +8,7 @@ import com.poscl.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -257,7 +258,8 @@ public class ProductService {
                                     .build())
                             .header("X-Tenant-Id", tenantId.toString())
                             .retrieve()
-                            .bodyToFlux(Map.class)
+                            .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                            })
                             .collectList()
                             .block();
 
