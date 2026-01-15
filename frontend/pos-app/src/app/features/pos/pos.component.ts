@@ -19,6 +19,7 @@ import { IndustryMockDataService } from '@core/services/industry-mock.service';
 import { DemoDataService } from '@core/services/demo-data.service';
 import { FacturacionService } from '../facturacion/services/facturacion.service';
 import { SalesEventService } from '@core/services/sales-event.service';
+import { StockService } from '@core/services/stock.service'; // Import StockService
 import { environment } from '@env/environment';
 
 interface CartItem {
@@ -2784,6 +2785,7 @@ export class PosComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private offlineService = inject(OfflineService);
+  private stockService = inject(StockService); // Injected for Restock Modal
   private messageService = inject(MessageService);
   private industryService = inject(IndustryMockDataService);
   private facturacionService = inject(FacturacionService);
@@ -2828,6 +2830,14 @@ export class PosComponent implements OnInit {
 
   // Pending sales (loaded from API)
   pendingSales = signal<any[]>([]);
+
+  // Restock Modal State
+  showRestockModal = false;
+  restockItem: CachedProduct | null = null;
+  restockAmount = 10;
+  restockLoading = false;
+
+
 
   // Document expiry alerts (demo data)
   expiringDocs = signal<any[]>([
@@ -3627,5 +3637,43 @@ export class PosComponent implements OnInit {
         });
       }
     });
+  }
+
+  async confirmRestock() {
+    if (!this.restockItem || this.restockAmount <= 0) return;
+
+    this.restockLoading = true;
+    try {
+      const variantId = this.restockItem.variants[0].id;
+      const branchId = this.authService.tenant()?.id || '';
+
+      await this.stockService.adjustStock({
+        variantId,
+        branchId,
+        tipo: 'ENTRADA', // Shortcut for purchase/entry
+        cantidad: this.restockAmount,
+        motivo: 'Reposición rápida desde POS'
+      }).toPromise();
+
+      this.messageService.add({ severity: 'success', summary: 'Stock Actualizado', detail: `+${this.restockAmount} unidades agregadas` });
+
+      // Update local cache stock to reflect change immediately without full reload
+      const updatedProducts = this.products().map(p => {
+        if (p.id === this.restockItem!.id) {
+          const v = { ...p.variants[0], stock: (p.variants[0].stock || 0) + this.restockAmount };
+          return { ...p, variants: [v] };
+        }
+        return p;
+      });
+      this.products.set(updatedProducts);
+
+      this.showRestockModal = false;
+      this.restockItem = null;
+    } catch (e) {
+      console.error(e);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el stock' });
+    } finally {
+      this.restockLoading = false;
+    }
   }
 }
