@@ -39,7 +39,7 @@ spring:
     show-sql: ${SHOW_SQL:false}
   
   flyway:
-    enabled: true
+    enabled: false  # Disabled because we share pos-db with other services
     baseline-on-migrate: true
     baseline-version: 0
     locations: classpath:db/migration
