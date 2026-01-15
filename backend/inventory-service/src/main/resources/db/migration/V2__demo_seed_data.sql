@@ -9,7 +9,7 @@
 -- =====================================================
 
 -- === PROVIDENCIA (Sucursal Principal) ===
-INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_reservada, updated_at) VALUES
+INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad_actual, cantidad_reservada, updated_at) VALUES
 -- Panes tradicionales
 ('stk10001-0000-0000-0000-000000000001', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'v1000000-0000-0000-0000-000000000001', 150, 0, NOW()), -- Marraqueta unidad
 ('stk10001-0000-0000-0000-000000000002', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'v1000000-0000-0000-0000-000000000002', 45, 0, NOW()),  -- Marraqueta kilo
@@ -39,7 +39,7 @@ INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_rese
 ('stk10001-0000-0000-0000-000000000042', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'v1000000-0000-0000-0000-000000000042', 25, 0, NOW()); -- Empanada napolitana
 
 -- === LAS CONDES ===
-INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_reservada, updated_at) VALUES
+INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad_actual, cantidad_reservada, updated_at) VALUES
 -- Panes (menor cantidad que matriz)
 ('stk10002-0000-0000-0000-000000000001', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000002', 'v1000000-0000-0000-0000-000000000001', 80, 0, NOW()),
 ('stk10002-0000-0000-0000-000000000002', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000002', 'v1000000-0000-0000-0000-000000000002', 25, 0, NOW()),
@@ -55,7 +55,7 @@ INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_rese
 ('stk10002-0000-0000-0000-000000000041', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000002', 'v1000000-0000-0000-0000-000000000041', 20, 0, NOW());
 
 -- === ÑUÑOA ===
-INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_reservada, updated_at) VALUES
+INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad_actual, cantidad_reservada, updated_at) VALUES
 -- Stock más variado pero menor cantidad
 ('stk10003-0000-0000-0000-000000000001', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000003', 'v1000000-0000-0000-0000-000000000001', 60, 0, NOW()),
 ('stk10003-0000-0000-0000-000000000002', 't1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000003', 'v1000000-0000-0000-0000-000000000002', 20, 0, NOW()),
@@ -66,7 +66,7 @@ INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_rese
 -- =====================================================
 -- TENANT 2: Don Pedro - Stock
 -- =====================================================
-INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad, cantidad_reservada, updated_at) VALUES
+INSERT INTO stock (id, tenant_id, branch_id, variant_id, cantidad_actual, cantidad_reservada, updated_at) VALUES
 -- Bebidas
 ('stk20001-0000-0000-0000-000000000001', 't2000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001', 'v2000000-0000-0000-0000-000000000001', 48, 0, NOW()), -- Coca 350ml
 ('stk20001-0000-0000-0000-000000000002', 't2000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001', 'v2000000-0000-0000-0000-000000000002', 24, 0, NOW()), -- Coca 1.5L
