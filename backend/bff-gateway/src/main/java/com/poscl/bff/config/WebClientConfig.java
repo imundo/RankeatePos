@@ -33,6 +33,9 @@ public class WebClientConfig {
     @Value("${services.sales.url}")
     private String salesServiceUrl;
 
+    @Value("${services.inventory.url}")
+    private String inventoryServiceUrl;
+
     // Longer timeout for Render free tier cold starts (up to 60 seconds)
     private static final int CONNECTION_TIMEOUT_MS = 60000;
     private static final int READ_TIMEOUT_SECONDS = 60;
@@ -88,6 +91,17 @@ public class WebClientConfig {
         log.info("Creating salesWebClient with baseUrl: {}", salesServiceUrl);
         return WebClient.builder()
                 .baseUrl(salesServiceUrl)
+                .clientConnector(new ReactorClientHttpConnector(createHttpClient()))
+                .filter(logRequest())
+                .filter(logResponse())
+                .build();
+    }
+
+    @Bean
+    public WebClient inventoryWebClient() {
+        log.info("Creating inventoryWebClient with baseUrl: {}", inventoryServiceUrl);
+        return WebClient.builder()
+                .baseUrl(inventoryServiceUrl)
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient()))
                 .filter(logRequest())
                 .filter(logResponse())
