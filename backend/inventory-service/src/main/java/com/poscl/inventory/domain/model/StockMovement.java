@@ -36,14 +36,9 @@ public class StockMovement {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "variant_id", nullable = false)
-    private UUID variantId;
-
-    @Column(name = "variant_sku")
-    private String variantSku;
-
-    @Column(name = "product_name")
-    private String productName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id", nullable = false)
+    private ProductVariant variant;
 
     @Column(name = "branch_id", nullable = false)
     private UUID branchId;
@@ -76,4 +71,17 @@ public class StockMovement {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    // Helpers
+    public UUID getVariantId() {
+        return variant != null ? variant.getId() : null;
+    }
+
+    public String getVariantSku() {
+        return variant != null ? variant.getSku() : null;
+    }
+
+    public String getProductName() {
+        return variant != null ? variant.getFullName() : null;
+    }
 }

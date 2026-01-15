@@ -27,14 +27,9 @@ public class Stock {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "variant_id", nullable = false)
-    private UUID variantId;
-
-    @Column(name = "variant_sku")
-    private String variantSku;
-
-    @Column(name = "product_name")
-    private String productName;
+    @ManyToOne(fetch = FetchType.EAGER) // Eager fetch to get SKU/Name easily
+    @JoinColumn(name = "variant_id", nullable = false)
+    private ProductVariant variant;
 
     @Column(name = "branch_id", nullable = false)
     private UUID branchId;
@@ -47,9 +42,6 @@ public class Stock {
     @Builder.Default
     private Integer cantidadReservada = 0;
 
-    @Column(name = "stock_minimo")
-    private Integer stockMinimo;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -61,7 +53,26 @@ public class Stock {
         return cantidadActual - cantidadReservada;
     }
 
+    // Logic proxy to variant defaults
+    public Integer getStockMinimo() {
+        return variant != null ? variant.getStockMinimo() : 0;
+    }
+
     public boolean isStockBajo() {
-        return stockMinimo != null && cantidadActual <= stockMinimo;
+        Integer min = getStockMinimo();
+        return min != null && cantidadActual <= min;
+    }
+
+    // Helpers for DTO mapping
+    public UUID getVariantId() {
+        return variant != null ? variant.getId() : null;
+    }
+
+    public String getVariantSku() {
+        return variant != null ? variant.getSku() : null;
+    }
+
+    public String getProductName() {
+        return variant != null ? variant.getFullName() : null;
     }
 }

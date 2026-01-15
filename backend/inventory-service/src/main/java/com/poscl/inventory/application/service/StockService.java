@@ -3,11 +3,13 @@ package com.poscl.inventory.application.service;
 import com.poscl.inventory.api.dto.StockAdjustmentRequest;
 import com.poscl.inventory.api.dto.StockDto;
 import com.poscl.inventory.api.dto.StockMovementDto;
+import com.poscl.inventory.domain.model.ProductVariant;
 import com.poscl.inventory.domain.model.Stock;
 import com.poscl.inventory.domain.model.StockMovement;
 import com.poscl.inventory.domain.model.StockMovement.TipoMovimiento;
 import com.poscl.inventory.domain.repository.StockMovementRepository;
 import com.poscl.inventory.domain.repository.StockRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,7 @@ public class StockService {
 
     private final StockRepository stockRepository;
     private final StockMovementRepository movementRepository;
+    private final EntityManager entityManager;
 
     public List<StockDto> getStockByBranch(UUID tenantId, UUID branchId) {
         return stockRepository.findByTenantIdAndBranchId(tenantId, branchId).stream()
@@ -60,19 +63,21 @@ public class StockService {
     public StockDto adjustStock(UUID tenantId, UUID userId, StockAdjustmentRequest request) {
         Stock stock = stockRepository
                 .findByTenantIdAndVariantIdAndBranchId(tenantId, request.getVariantId(), request.getBranchId())
-                .orElseGet(() -> Stock.builder()
-                        .tenantId(tenantId)
-                        .variantId(request.getVariantId())
-                        .branchId(request.getBranchId())
-                        .stockMinimo(5) // Default
-                        .build());
+                .orElseGet(() -> {
+                    // Create new stock record if not exists
+                    ProductVariant variantRef = entityManager.getReference(ProductVariant.class,
+                            request.getVariantId());
+                    return Stock.builder()
+                            .tenantId(tenantId)
+                            .variant(variantRef)
+                            .branchId(request.getBranchId())
+                            .build();
+                });
 
         // Update logic
         int cantidad = request.getCantidad();
         int stockAnterior = stock.getCantidadActual();
         int nuevaCantidad = stockAnterior;
-
-        boolean isAdditive = false;
 
         switch (request.getTipo()) {
             case ENTRADA:
@@ -80,20 +85,17 @@ public class StockService {
             case TRANSFERENCIA_ENTRADA:
             case DEVOLUCION:
                 nuevaCantidad += cantidad;
-                isAdditive = true;
                 break;
             case SALIDA:
             case AJUSTE_NEGATIVO:
             case TRANSFERENCIA_SALIDA:
             case MERMA:
                 nuevaCantidad -= cantidad;
-                isAdditive = false;
                 break;
         }
 
         if (nuevaCantidad < 0) {
             log.warn("Stock resultante negativo para variantId={}: {}", request.getVariantId(), nuevaCantidad);
-            // Allow negative stock? Usually POS allows it but warns.
         }
 
         stock.setCantidadActual(nuevaCantidad);
@@ -102,7 +104,7 @@ public class StockService {
         // Record Movement
         StockMovement movement = StockMovement.builder()
                 .tenantId(tenantId)
-                .variantId(request.getVariantId())
+                .variant(stock.getVariant())
                 .branchId(request.getBranchId())
                 .tipo(request.getTipo())
                 .cantidad(request.getCantidad())
