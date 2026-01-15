@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { StockService, StockDto, StockMovementDto, TipoMovimiento, StockAdjustmentRequest } from '@core/services/stock.service';
+import { OfflineService, CachedProduct } from '@core/offline/offline.service';
 import { CatalogService } from '@core/services/catalog.service';
 
 @Component({
@@ -235,6 +236,7 @@ import { CatalogService } from '@core/services/catalog.service';
 export class InventoryComponent implements OnInit {
   private authService = inject(AuthService);
   private stockService = inject(StockService);
+  private offlineService = inject(OfflineService);
 
   // Signals
   stock = signal<StockDto[]>([]);
@@ -341,30 +343,41 @@ export class InventoryComponent implements OnInit {
   async loadData() {
     this.loading.set(true);
     const branchId = this.authService.tenant()?.id || '';
-    // Fallback: if backend doesn't support tenantId as branchId, this might fail unless backend logic is aligned.
-    // Assuming tenantId == branchId for single-branch setups as per previous logic.
 
     try {
-      const [stockData, lowCount] = await Promise.all([
-        this.stockService.getStockByBranch(branchId).toPromise().catch(e => {
-          console.warn('Failed to load stock', e);
-          return [];
-        }),
-        this.stockService.countLowStock().toPromise().catch(e => {
-          console.warn('Failed to count low stock', e);
-          return 0; // Fallback to 0 to avoid breaking UI
-        })
-      ]);
+      // 1. Try Cache First (Matches POS)
+      const cached = await this.offlineService.getCachedProducts();
+
+      if (cached && cached.length > 0) {
+        const mapped: StockDto[] = cached.flatMap(p => p.variants.map(v => ({
+          id: v.id,
+          variantId: v.id,
+          variantSku: v.sku, // Required by StockDto
+          productName: `${p.nombre} ${v.nombre || ''}`.trim(),
+          branchId: branchId,
+          cantidadActual: v.stock ?? 0,
+          cantidadReservada: 0,
+          cantidadDisponible: v.stock ?? 0,
+          stockMinimo: v.stockMinimo ?? 5,
+          stockBajo: (v.stock ?? 0) <= (v.stockMinimo ?? 5),
+          updatedAt: p.syncedAt?.toISOString() || new Date().toISOString()
+        })));
+
+        this.stock.set(mapped);
+        this.lowStockCount.set(mapped.filter(x => x.stockBajo).length);
+        console.log('Loaded inventory from cache:', mapped.length);
+        return;
+      }
+
+      // 2. Fallback to API (Only get Stock, don't count low stock to avoid 404)
+      const stockData = await this.stockService.getStockByBranch(branchId).toPromise().catch(e => {
+        console.warn('Failed to load stock from API', e);
+        return [];
+      });
 
       this.stock.set(stockData || []);
-
-      // Calculate low stock manually if API failed but we have stock data
-      if (lowCount === 0 && (stockData || []).length > 0) {
-        const manualCount = (stockData || []).filter(i => i.stockBajo).length;
-        this.lowStockCount.set(manualCount);
-      } else {
-        this.lowStockCount.set(lowCount || 0);
-      }
+      const manualCount = (stockData || []).filter(i => i.stockBajo).length;
+      this.lowStockCount.set(manualCount);
 
     } catch (e) {
       console.error('Critical error loading inventory', e);

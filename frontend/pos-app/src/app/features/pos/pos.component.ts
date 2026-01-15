@@ -3105,7 +3105,9 @@ export class PosComponent implements OnInit {
             barcode: v.barcode,
             precioBruto: v.precioBruto,
             precioNeto: v.precioNeto,
-            taxPercentage: v.taxPercentage || 19
+            taxPercentage: v.taxPercentage || 19,
+            stock: v.stock,
+            stockMinimo: v.stockMinimo || 0 // Map stockMinimo for inventory
           })) || [],
           syncedAt: new Date()
         }));
