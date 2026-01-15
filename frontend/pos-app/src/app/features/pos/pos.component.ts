@@ -1676,8 +1676,8 @@ interface CartItem {
 
     /* Out of Stock Product Card */
     .product-card.out-of-stock {
-      opacity: 0.5;
-      pointer-events: none;
+      opacity: 0.8; /* Increased opacity slightly for visibility */
+      /* pointer-events: none; REMOVED to allow clicking for management */
       
       .product-image::after {
         content: 'Agotado';
@@ -3143,10 +3143,27 @@ export class PosComponent implements OnInit {
     const variant = product.variants[0]; // Por ahora usamos la primera variante
     if (!variant) return;
 
+    // Check stock if available (mock stock or real)
+    const stock = variant.stock ?? 0;
+    if (stock <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Producto Agotado',
+        detail: 'Este producto no tiene stock disponible.',
+        life: 3000
+      });
+      // Can add logic to open inventory modal here if needed
+      return;
+    }
+
     const items = [...this.cartItems()];
     const existingIndex = items.findIndex(i => i.variantId === variant.id);
 
     if (existingIndex >= 0) {
+      if (items[existingIndex].cantidad >= stock) {
+        this.messageService.add({ severity: 'error', summary: 'Stock Insuficiente', detail: 'No hay más unidades' });
+        return;
+      }
       items[existingIndex].cantidad++;
       items[existingIndex].subtotal = items[existingIndex].cantidad * items[existingIndex].precioUnitario;
     } else {
