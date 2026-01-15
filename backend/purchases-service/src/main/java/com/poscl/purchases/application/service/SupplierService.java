@@ -46,7 +46,7 @@ public class SupplierService {
         }
         supplier.setTenantId(tenantId);
         supplier.setIsActive(true);
-        log.info("Creating supplier: {} for tenant: {}", supplier.getName(), tenantId);
+        log.info("Creating supplier: {} for tenant: {}", supplier.getBusinessName(), tenantId);
         return supplierRepository.save(supplier);
     }
 
@@ -54,15 +54,15 @@ public class SupplierService {
     public Supplier update(UUID tenantId, UUID id, Supplier updated) {
         Supplier existing = findById(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
-        
-        existing.setName(updated.getName());
+
+        existing.setFantasyName(updated.getFantasyName());
         existing.setContactName(updated.getContactName());
         existing.setEmail(updated.getEmail());
         existing.setPhone(updated.getPhone());
         existing.setAddress(updated.getAddress());
         existing.setCity(updated.getCity());
-        existing.setPaymentTermDays(updated.getPaymentTermDays());
-        
+        existing.setPaymentTerms(updated.getPaymentTerms());
+
         return supplierRepository.save(existing);
     }
 

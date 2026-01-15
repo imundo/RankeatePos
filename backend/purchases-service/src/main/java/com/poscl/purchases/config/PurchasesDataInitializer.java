@@ -15,7 +15,7 @@ import java.util.UUID;
 public class PurchasesDataInitializer implements CommandLineRunner {
 
     private final SupplierRepository supplierRepository;
-    
+
     private static final UUID DEMO_TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @Override
@@ -42,7 +42,7 @@ public class PurchasesDataInitializer implements CommandLineRunner {
                 .businessName(name)
                 .email(email)
                 .phone("+56 9 1234 5678")
-                .paymentTermDays(paymentDays)
+                .paymentTerms(paymentDays)
                 .isActive(true)
                 .build();
         supplierRepository.save(s);
