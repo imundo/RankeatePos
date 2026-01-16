@@ -62,7 +62,6 @@ public class ChileBillingProvider implements BillingProvider {
                 TipoDocumento.GUIA_DESPACHO);
     }
 
-    @Override
     @Transactional
     public DteResponse emitirDocumento(UUID tenantId, UUID branchId, EmitirDteRequest request,
             String emisorRut, String emisorRazonSocial, String emisorGiro,

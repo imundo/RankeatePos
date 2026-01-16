@@ -42,7 +42,7 @@ public class CafManager {
 
         // Incrementar folio
         long siguienteFolio = caf.getFolioActual() + 1;
-        caf.setFolioActual(siguienteFolio);
+        caf.setFolioActual((int) siguienteFolio);
 
         // Calcular folios restantes
         long foliosRestantes = caf.getFolioHasta() - siguienteFolio;
@@ -85,6 +85,6 @@ public class CafManager {
     public long getFoliosRestantes(UUID tenantId, TipoDte tipoDte) {
         return cafRepository.findActiveCafByTenantAndTipo(tenantId, tipoDte)
                 .map(caf -> caf.getFolioHasta() - caf.getFolioActual())
-                .orElse(0L);
+                .orElse(0).longValue();
     }
 }

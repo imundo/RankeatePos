@@ -36,10 +36,10 @@ public class DteService {
 
     private final DteRepository dteRepository;
     private final CafRepository cafRepository;
-    // private final XmlBuilderService xmlBuilderService;  // TODO: Implementar
-    // private final SignerService signerService;           // TODO: Implementar
-    // private final SiiService siiService;                 // TODO: Implementar
-    // private final PdfService pdfService;                 // TODO: Implementar
+    // private final XmlBuilderService xmlBuilderService; // TODO: Implementar
+    // private final SignerService signerService; // TODO: Implementar
+    // private final SiiService siiService; // TODO: Implementar
+    // private final PdfService pdfService; // TODO: Implementar
 
     private static final int IVA_TASA = 19;
 
@@ -47,9 +47,9 @@ public class DteService {
      * Emitir un nuevo DTE (boleta, factura, nota de crédito, etc.)
      */
     @Transactional
-    public DteResponse emitirDte(UUID tenantId, UUID branchId, EmitirDteRequest request, 
-                                  String emisorRut, String emisorRazonSocial, String emisorGiro,
-                                  String emisorDireccion, String emisorComuna, UUID userId) {
+    public DteResponse emitirDte(UUID tenantId, UUID branchId, EmitirDteRequest request,
+            String emisorRut, String emisorRazonSocial, String emisorGiro,
+            String emisorDireccion, String emisorComuna, UUID userId) {
         log.info("Emitiendo DTE tipo {} para tenant {}", request.getTipoDte(), tenantId);
 
         // 1. Obtener folio del CAF
@@ -99,10 +99,11 @@ public class DteService {
         // 4. Agregar detalles
         AtomicInteger lineaNum = new AtomicInteger(1);
         request.getItems().forEach(item -> {
-            BigDecimal montoItem = item.getCantidad()
+            BigDecimal cantidad = item.getCantidad() != null ? BigDecimal.valueOf(item.getCantidad()) : BigDecimal.ONE;
+            BigDecimal montoItem = cantidad
                     .multiply(item.getPrecioUnitario())
                     .setScale(0, RoundingMode.HALF_UP);
-            
+
             if (item.getDescuentoMonto() != null) {
                 montoItem = montoItem.subtract(item.getDescuentoMonto());
             } else if (item.getDescuentoPorcentaje() != null) {
@@ -116,7 +117,7 @@ public class DteService {
                     .codigo(item.getCodigo())
                     .nombreItem(item.getNombreItem())
                     .descripcionItem(item.getDescripcionItem())
-                    .cantidad(item.getCantidad())
+                    .cantidad(cantidad)
                     .unidadMedida(item.getUnidadMedida())
                     .precioUnitario(item.getPrecioUnitario())
                     .descuentoPorcentaje(item.getDescuentoPorcentaje())
@@ -147,7 +148,7 @@ public class DteService {
 
         // TODO: 9. Enviar al SII si está configurado
         // if (Boolean.TRUE.equals(request.getEnviarSii())) {
-        //     siiService.enviar(saved);
+        // siiService.enviar(saved);
         // }
 
         return toResponse(saved);
@@ -169,7 +170,7 @@ public class DteService {
     @Transactional(readOnly = true)
     public Page<DteResponse> listarDtes(UUID tenantId, TipoDte tipoDte, EstadoDte estado, Pageable pageable) {
         Page<Dte> dtes;
-        
+
         if (tipoDte != null && estado != null) {
             dtes = dteRepository.findByTenantIdAndTipoDte(tenantId, tipoDte, pageable);
         } else if (tipoDte != null) {
@@ -199,8 +200,8 @@ public class DteService {
     private Integer obtenerSiguienteFolio(UUID tenantId, TipoDte tipoDte) {
         Caf caf = cafRepository.findCafDisponible(tenantId, tipoDte)
                 .orElseThrow(() -> new BusinessConflictException("SIN_FOLIOS",
-                        "No hay folios disponibles para " + tipoDte.getDescripcion() + 
-                        ". Por favor, suba un nuevo CAF."));
+                        "No hay folios disponibles para " + tipoDte.getDescripcion() +
+                                ". Por favor, suba un nuevo CAF."));
 
         if (caf.isVencido()) {
             throw new BusinessConflictException("CAF_VENCIDO",
@@ -209,10 +210,10 @@ public class DteService {
 
         Integer folio = caf.siguienteFolio();
         cafRepository.save(caf);
-        
-        log.debug("Folio {} asignado para {} (CAF: {}-{})", 
+
+        log.debug("Folio {} asignado para {} (CAF: {}-{})",
                 folio, tipoDte, caf.getFolioDesde(), caf.getFolioHasta());
-        
+
         return folio;
     }
 
@@ -221,10 +222,11 @@ public class DteService {
         BigDecimal exento = BigDecimal.ZERO;
 
         for (EmitirDteRequest.ItemDto item : items) {
-            BigDecimal montoItem = item.getCantidad()
+            BigDecimal cantidad = item.getCantidad() != null ? BigDecimal.valueOf(item.getCantidad()) : BigDecimal.ONE;
+            BigDecimal montoItem = cantidad
                     .multiply(item.getPrecioUnitario())
                     .setScale(0, RoundingMode.HALF_UP);
-            
+
             if (item.getDescuentoMonto() != null) {
                 montoItem = montoItem.subtract(item.getDescuentoMonto());
             } else if (item.getDescuentoPorcentaje() != null) {
@@ -262,7 +264,8 @@ public class DteService {
         return new MontosDte(neto, exento, iva, total);
     }
 
-    private record MontosDte(BigDecimal neto, BigDecimal exento, BigDecimal iva, BigDecimal total) {}
+    private record MontosDte(BigDecimal neto, BigDecimal exento, BigDecimal iva, BigDecimal total) {
+    }
 
     private DteResponse toResponse(Dte dte) {
         return DteResponse.builder()
