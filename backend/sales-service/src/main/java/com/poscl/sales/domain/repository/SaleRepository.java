@@ -32,8 +32,8 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     @Query("SELECT s FROM Sale s WHERE s.tenantId = :tenantId AND s.createdAt BETWEEN :start AND :end ORDER BY s.createdAt DESC")
     Page<Sale> findByTenantIdAndDateRange(UUID tenantId, Instant start, Instant end, Pageable pageable);
 
-    @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(s.numero, 2) AS long)), 0) FROM Sale s WHERE s.tenantId = :tenantId AND s.numero LIKE :prefix%")
-    Long findMaxNumeroByPrefix(UUID tenantId, String prefix);
+    @Query("SELECT s.numero FROM Sale s WHERE s.tenantId = :tenantId AND s.numero LIKE :prefix% ORDER BY s.numero DESC LIMIT 1")
+    String findMaxNumeroByPrefix(UUID tenantId, String prefix);
 
     // ====== Métodos para aprobación de ventas ======
 
