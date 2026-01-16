@@ -11,6 +11,9 @@ import com.poscl.billing.domain.enums.TipoDocumento;
 import com.poscl.billing.domain.repository.DteRepository;
 import com.poscl.billing.infrastructure.providers.BillingProvider;
 import com.poscl.billing.infrastructure.providers.chile.caf.CafManager;
+import com.poscl.billing.infrastructure.providers.chile.pdf.ChileDtePdfGenerator;
+import com.poscl.billing.infrastructure.providers.chile.signature.ChileDigitalSignerMock;
+import com.poscl.billing.infrastructure.providers.chile.sii.ChileSiiClientMock;
 import com.poscl.billing.infrastructure.providers.chile.validators.ChileDteValidator;
 import com.poscl.billing.infrastructure.providers.chile.validators.RutValidator;
 import com.poscl.billing.infrastructure.providers.chile.xml.ChileDteXmlGenerator;
@@ -40,6 +43,9 @@ public class ChileBillingProvider implements BillingProvider {
     private final ChileDteXmlGenerator xmlGenerator;
     private final TedGenerator tedGenerator;
     private final DteRepository dteRepository;
+    private final ChileDigitalSignerMock digitalSigner;
+    private final ChileSiiClientMock siiClient;
+    private final ChileDtePdfGenerator pdfGenerator;
 
     @Override
     public Pais getPais() {
@@ -156,30 +162,33 @@ public class ChileBillingProvider implements BillingProvider {
 
     @Override
     public String signXml(String xml, UUID tenantId) {
-        // TODO: Implementar firma digital XMLDSig
-        log.warn("signXml no implementado - retornando XML sin firmar");
-        return xml;
+        return digitalSigner.sign(xml, tenantId);
     }
 
     @Override
     public byte[] generateTimbre(Dte dte) {
-        // TODO: Generar código de barras PDF417
-        log.warn("generateTimbre no implementado completamente");
-        return new byte[0];
+        try {
+            String tedData = String.format("%s|%s|%d|%s|%s",
+                    dte.getEmisorRut(),
+                    dte.getTipoDte().getCodigo(),
+                    dte.getFolio(),
+                    dte.getFechaEmision(),
+                    dte.getTotal());
+            return pdfGenerator.generateBarcode(tedData);
+        } catch (Exception e) {
+            log.error("Error generating barcode: {}", e.getMessage());
+            return new byte[0];
+        }
     }
 
     @Override
     public SendResult send(String signedXml, UUID tenantId) {
-        // TODO: Enviar a SII
-        log.warn("send() no implementado - simulando envío exitoso");
-        return SendResult.ok("MOCK-TRACK-" + System.currentTimeMillis());
+        return siiClient.send(signedXml, tenantId);
     }
 
     @Override
     public StatusResult checkStatus(String trackId, UUID tenantId) {
-        // TODO: Consultar estado en SII
-        log.warn("checkStatus() no implementado - retornando aceptado mock");
-        return StatusResult.accepted("Documento aceptado (MOCK)");
+        return siiClient.checkStatus(trackId, tenantId);
     }
 
     @Override
