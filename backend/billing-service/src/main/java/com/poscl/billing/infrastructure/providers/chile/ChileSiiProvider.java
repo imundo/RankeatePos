@@ -22,9 +22,11 @@ import java.util.UUID;
 /**
  * Proveedor de facturación electrónica para Chile (SII)
  * Implementa integración completa con el Servicio de Impuestos Internos
+ * 
+ * DESHABILITADO: Se usa ChileBillingProvider en su lugar
  */
 @Slf4j
-@Component
+// @Component // DESHABILITADO: Conflicto con ChileBillingProvider
 @RequiredArgsConstructor
 public class ChileSiiProvider implements BillingProvider {
 
@@ -49,31 +51,31 @@ public class ChileSiiProvider implements BillingProvider {
 
     @Override
     public String buildXml(Dte dte) {
-        log.debug("Construyendo XML DTE para Chile - Tipo: {}, Folio: {}", 
+        log.debug("Construyendo XML DTE para Chile - Tipo: {}, Folio: {}",
                 dte.getTipoDte(), dte.getFolio());
-        
+
         // Obtener CAF para incluir en el XML
         Caf caf = cafRepository.findCafDisponible(dte.getTenantId(), dte.getTipoDte())
                 .orElseThrow(() -> new BusinessConflictException("SIN_CAF",
                         "No hay CAF disponible para " + dte.getTipoDte().getDescripcion()));
-        
+
         return xmlBuilder.buildDteXml(dte, caf);
     }
 
     @Override
     public String signXml(String xml, UUID tenantId) {
         log.debug("Firmando XML para tenant {}", tenantId);
-        
+
         // Verificar si hay certificado configurado
         if (!certificadoRepository.existsByTenantIdAndActivoTrue(tenantId)) {
             log.warn("No hay certificado digital configurado para tenant {}", tenantId);
             return xml; // Retornar sin firmar
         }
-        
+
         try {
             PrivateKey privateKey = certificateManager.getPrivateKey(tenantId);
             X509Certificate certificate = certificateManager.getCertificate(tenantId);
-            
+
             return signer.signXml(xml, privateKey, certificate);
         } catch (Exception e) {
             log.error("Error firmando XML para tenant {}: {}", tenantId, e.getMessage());
@@ -85,7 +87,7 @@ public class ChileSiiProvider implements BillingProvider {
     @Override
     public byte[] generateTimbre(Dte dte) {
         log.debug("Generando timbre PDF417 para DTE {}", dte.getId());
-        
+
         // El TED se extrae del XML del documento
         String tedXml = extractTedFromXml(dte.getXmlContent());
         return timbreGenerator.generatePdf417(dte, tedXml);
@@ -112,13 +114,13 @@ public class ChileSiiProvider implements BillingProvider {
     @Override
     public SendResult send(String signedXml, UUID tenantId) {
         log.info("Enviando DTE al SII para tenant {}", tenantId);
-        
+
         if (currentDte == null) {
             log.warn("No hay DTE configurado para envío, simulando...");
             String trackId = "TRACK-" + System.currentTimeMillis();
             return SendResult.ok(trackId);
         }
-        
+
         // Envío real al SII
         return siiClient.enviarDte(signedXml, currentDte, tenantId);
     }
@@ -126,11 +128,11 @@ public class ChileSiiProvider implements BillingProvider {
     @Override
     public StatusResult checkStatus(String trackId, UUID tenantId) {
         log.debug("Consultando estado de {} para tenant {}", trackId, tenantId);
-        
+
         if (currentDte != null) {
             return siiClient.consultarEstadoEnvio(trackId, currentDte.getEmisorRut(), tenantId);
         }
-        
+
         return StatusResult.pending();
     }
 
@@ -146,36 +148,36 @@ public class ChileSiiProvider implements BillingProvider {
         // Verificar que el tenant tiene:
         // 1. CAFs cargados
         boolean hasCAFs = !cafRepository.findByTenantIdAndActivoTrue(tenantId).isEmpty();
-        
+
         // 2. Certificado digital (opcional pero recomendado)
         boolean hasCertificate = certificadoRepository.existsByTenantIdAndActivoTrue(tenantId);
-        
+
         if (!hasCAFs) {
             log.warn("Tenant {} no tiene CAFs cargados", tenantId);
         }
         if (!hasCertificate) {
             log.warn("Tenant {} no tiene certificado digital", tenantId);
         }
-        
+
         return hasCAFs; // Mínimo requiere CAFs
     }
 
     @Override
     public String getNextFolio(UUID tenantId, TipoDocumento tipoDoc) {
         TipoDte tipoDte = TipoDte.fromCodigo(tipoDoc.getCodigoSii());
-        
+
         Caf caf = cafRepository.findCafDisponible(tenantId, tipoDte)
                 .orElseThrow(() -> new BusinessConflictException("SIN_FOLIOS",
                         "No hay folios disponibles para " + tipoDoc.getDescripcion()));
-        
+
         if (caf.isVencido()) {
             throw new BusinessConflictException("CAF_VENCIDO",
                     "El CAF está vencido para " + tipoDoc.getDescripcion());
         }
-        
+
         Integer folio = caf.siguienteFolio();
         cafRepository.save(caf);
-        
+
         log.debug("Folio {} asignado para {}", folio, tipoDoc);
         return String.valueOf(folio);
     }
@@ -184,15 +186,16 @@ public class ChileSiiProvider implements BillingProvider {
      * Extraer el TED del XML del documento
      */
     private String extractTedFromXml(String xml) {
-        if (xml == null) return null;
-        
+        if (xml == null)
+            return null;
+
         int tedStart = xml.indexOf("<TED");
         int tedEnd = xml.indexOf("</TED>") + 6;
-        
+
         if (tedStart >= 0 && tedEnd > tedStart) {
             return xml.substring(tedStart, tedEnd);
         }
-        
+
         return null;
     }
 }
