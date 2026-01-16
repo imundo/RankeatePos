@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EstadoDte {
     BORRADOR("Borrador", "Documento no enviado"),
+    GENERADO("Generado", "XML generado, listo para firmar"),
     PENDIENTE("Pendiente", "Pendiente de envío al SII"),
     ENVIADO("Enviado", "Enviado al SII, esperando respuesta"),
     ACEPTADO("Aceptado", "Aceptado por el SII"),
