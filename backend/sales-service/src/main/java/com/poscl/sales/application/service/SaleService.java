@@ -156,12 +156,24 @@ public class SaleService {
     }
 
     /**
-     * Genera número de venta único: V-YYYYMMDD-XXXXX
+     * Genera número de venta único: V-YYYYMMDD-00001
+     * El contador se reinicia diariamente
      */
     private String generateSaleNumber(UUID tenantId) {
-        String prefix = "V" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        Long maxNum = saleRepository.findMaxNumeroByPrefix(tenantId, prefix);
-        long nextNum = (maxNum != null ? maxNum : 0L) + 1;
+        String prefix = "V-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
+        String maxNumero = saleRepository.findMaxNumeroByPrefix(tenantId, prefix);
+
+        int nextNum = 1;
+        if (maxNumero != null && maxNumero.length() > prefix.length()) {
+            try {
+                String lastNumStr = maxNumero.substring(prefix.length());
+                nextNum = Integer.parseInt(lastNumStr) + 1;
+            } catch (NumberFormatException e) {
+                log.warn("Could not parse sale number: {}, using 1", maxNumero);
+                nextNum = 1;
+            }
+        }
+
         return prefix + String.format("%05d", nextNum);
     }
 
