@@ -1754,9 +1754,11 @@ $bp-xl: 1280px;
       font-size: 1.1rem;
       transition: var(--transition);
 
+      &.active {
+        color: #F59E0B;
+      }
     }
   }
-}
 }
 
 // ============================================
@@ -1862,6 +1864,7 @@ $bp-xl: 1280px;
         .total-amount-gradient {
           font-size: 1.5rem;
           background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+          background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
