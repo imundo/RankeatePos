@@ -391,11 +391,7 @@ interface CartItem {
               @for (item of cartItems(); track item.variantId) {
                 <div class="cart-item-mini">
                   <div class="item-thumbnail">
-                    @if (item.productImagen) {
-                      <img [src]="item.productImagen" [alt]="item.productNombre">
-                    } @else {
-                      <span class="default-icon">🛒</span>
-                    }
+                    <span class="default-icon">🛒</span>
                   </div>
                   <div class="item-details">
                     <span class="item-name">{{ item.productNombre }}</span>
