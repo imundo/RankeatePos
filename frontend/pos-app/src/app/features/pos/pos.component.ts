@@ -373,165 +373,309 @@ interface CartItem {
         </section>
       </div>
 
-      <!-- Payment Dialog -->
+      <!-- Premium Payment Dialog -->
       <p-dialog 
         [(visible)]="showPaymentDialog" 
-        header="Cobrar venta"
+        header="Cobrar Venta"
         [modal]="true"
-        [style]="{width: '95vw', maxWidth: '480px'}"
+        [style]="{width: '95vw', maxWidth: '1400px', height: '90vh'}"
         [closable]="true"
+        styleClass="premium-checkout-dialog"
       >
-        <div class="payment-dialog">
-          <div class="total-display">
-            <span class="total-label">Total a cobrar</span>
-            <span class="total-amount">{{ formatPrice(total()) }}</span>
-          </div>
-
-          <!-- Document Type Selection -->
-          <div class="document-type-section">
-            <label class="section-label">Tipo de Documento</label>
-            <div class="doc-type-buttons">
-              <button 
-                class="doc-type-btn"
-                [class.selected]="tipoDocumento === 'BOLETA'"
-                (click)="tipoDocumento = 'BOLETA'"
-              >
-                <span class="doc-icon">🧾</span>
-                <span class="doc-name">Boleta</span>
-                <span class="doc-desc">Consumidor final</span>
-              </button>
-              <button 
-                class="doc-type-btn"
-                [class.selected]="tipoDocumento === 'FACTURA'"
-                (click)="tipoDocumento = 'FACTURA'"
-              >
-                <span class="doc-icon">📄</span>
-                <span class="doc-name">Factura</span>
-                <span class="doc-desc">Con RUT cliente</span>
-              </button>
-              <button 
-                class="doc-type-btn"
-                [class.selected]="tipoDocumento === 'SIN_DOCUMENTO'"
-                (click)="tipoDocumento = 'SIN_DOCUMENTO'"
-              >
-                <span class="doc-icon">📋</span>
-                <span class="doc-name">Sin Doc.</span>
-                <span class="doc-desc">Solo venta</span>
-              </button>
+        <div class="premium-checkout-container">
+          <!-- LEFT: Order Summary (30%) -->
+          <section class="order-summary-section">
+            <h3 class="section-title">Resumen del Pedido</h3>
+            
+            <div class="cart-items-preview">
+              @for (item of cartItems(); track item.id) {
+                <div class="cart-item-mini">
+                  <div class="item-thumbnail">
+                    @if (item.imagen) {
+                      <img [src]="item.imagen" [alt]="item.nombre">
+                    } @else {
+                      <span class="default-icon">🛒</span>
+                    }
+                  </div>
+                  <div class="item-details">
+                    <span class="item-name">{{ item.nombre }}</span>
+                    <span class="item-qty">x{{ item.cantidad }}</span>
+                  </div>
+                  <span class="item-price">{{ formatPrice(item.precio * item.cantidad) }}</span>
+                </div>
+              }
             </div>
-          </div>
 
-          <!-- Client Data (only for Factura) -->
-          @if (tipoDocumento === 'FACTURA') {
-            <div class="client-data-section">
-              <label class="section-label">Datos del Cliente</label>
-              <div class="client-form">
-                <div class="form-row">
+            <div class="order-totals">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>{{ formatPrice(subtotal()) }}</span>
+              </div>
+              <div class="total-row">
+                <span>IVA (19%):</span>
+                <span>{{ formatPrice(tax()) }}</span>
+              </div>
+              <div class="total-row final-total">
+                <span>TOTAL:</span>
+                <span class="total-amount-gradient">{{ formatPrice(total()) }}</span>
+              </div>
+            </div>
+
+            <div class="customer-input-section">
+              <label class="input-label">
+                <i class="pi pi-user"></i>
+                Cliente (opcional)
+              </label>
+              <input 
+                type="text" 
+                [(ngModel)]="customerName"
+                placeholder="Nombre del cliente"
+                class="premium-input">
+            </div>
+          </section>
+
+          <!-- CENTER: Payment Flow (40%) -->
+          <section class="payment-flow-section">
+            <!-- Document Type Selection -->
+            <div class="document-type-selector">
+              <h3 class="section-title">Tipo de Documento</h3>
+              <div class="doc-type-pills">
+                <button 
+                  class="doc-pill"
+                  [class.active]="tipoDocumento === 'BOLETA'"
+                  (click)="tipoDocumento = 'BOLETA'">
+                  <span class="pill-icon">🧾</span>
+                  <span class="pill-text">Boleta</span>
+                </button>
+                <button 
+                  class="doc-pill"
+                  [class.active]="tipoDocumento === 'FACTURA'"
+                  (click)="tipoDocumento = 'FACTURA'">
+                  <span class="pill-icon">📄</span>
+                  <span class="pill-text">Factura</span>
+                </button>
+                <button 
+                  class="doc-pill"
+                  [class.active]="tipoDocumento === 'SIN_DOCUMENTO'"
+                  (click)="tipoDocumento = 'SIN_DOCUMENTO'">
+                  <span class="pill-icon">📋</span>
+                  <span class="pill-text">Sin Doc.</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Client Data (only for Factura) -->
+            @if (tipoDocumento === 'FACTURA') {
+              <div class="client-data-form fade-in-up">
+                <h4 class="form-subtitle">Datos del Cliente</h4>
+                <div class="form-grid">
                   <input 
                     type="text" 
                     [(ngModel)]="clienteRut"
                     placeholder="RUT (ej: 12.345.678-9)"
-                    class="form-input"
+                    class="premium-input"
                     (blur)="formatClienteRut()">
-                </div>
-                <div class="form-row">
                   <input 
                     type="text" 
                     [(ngModel)]="clienteRazonSocial"
                     placeholder="Razón Social"
-                    class="form-input">
-                </div>
-                <div class="form-row">
+                    class="premium-input">
                   <input 
                     type="text" 
                     [(ngModel)]="clienteGiro"
                     placeholder="Giro comercial"
-                    class="form-input">
-                </div>
-                <div class="form-row">
+                    class="premium-input">
                   <input 
                     type="email" 
                     [(ngModel)]="clienteEmail"
                     placeholder="Email (opcional)"
-                    class="form-input">
+                    class="premium-input">
+                </div>
+              </div>
+            }
+
+            <!-- Payment Methods -->
+            <div class="payment-methods-selector">
+              <h3 class="section-title">Método de Pago</h3>
+              <div class="payment-cards-grid">
+                <button 
+                  class="payment-card efectivo"
+                  [class.selected]="selectedPaymentMethod === 'EFECTIVO'"
+                  (click)="selectedPaymentMethod = 'EFECTIVO'">
+                  <div class="card-icon">💵</div>
+                  <div class="card-label">Efectivo</div>
+                  @if (selectedPaymentMethod === 'EFECTIVO') {
+                    <div class="check-mark">✓</div>
+                  }
+                </button>
+                
+                <button 
+                  class="payment-card debito"
+                  [class.selected]="selectedPaymentMethod === 'DEBITO'"
+                  (click)="selectedPaymentMethod = 'DEBITO'">
+                  <div class="card-icon">💳</div>
+                  <div class="card-label">Tarjeta Débito</div>
+                  @if (selectedPaymentMethod === 'DEBITO') {
+                    <div class="check-mark">✓</div>
+                  }
+                </button>
+                
+                <button 
+                  class="payment-card credito"
+                  [class.selected]="selectedPaymentMethod === 'CREDITO'"
+                  (click)="selectedPaymentMethod = 'CREDITO'">
+                  <div class="card-icon">💳</div>
+                  <div class="card-label">Tarjeta Crédito</div>
+                  @if (selectedPaymentMethod === 'CREDITO') {
+                    <div class="check-mark">✓</div>
+                  }
+                </button>
+                
+                <button 
+                  class="payment-card transferencia"
+                  [class.selected]="selectedPaymentMethod === 'TRANSFERENCIA'"
+                  (click)="selectedPaymentMethod = 'TRANSFERENCIA'">
+                  <div class="card-icon">🏦</div>
+                  <div class="card-label">Transferencia</div>
+                  @if (selectedPaymentMethod === 'TRANSFERENCIA') {
+                    <div class="check-mark">✓</div>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <!-- Cash Input & Quick Amounts -->
+            @if (selectedPaymentMethod === 'EFECTIVO') {
+              <div class="cash-section fade-in-up">
+                <label class="section-title">Monto Recibido</label>
+                <div class="amount-input-wrapper">
+                  <span class="currency-symbol">$</span>
+                  <input 
+                    type="number" 
+                    [(ngModel)]="cashReceived"
+                    [min]="0"
+                    class="amount-input"
+                    placeholder="0">
+                </div>
+
+                <div class="quick-amounts">
+                  <button class="quick-btn" (click)="cashReceived = 1000">$1.000</button>
+                  <button class="quick-btn" (click)="cashReceived = 2000">$2.000</button>
+                  <button class="quick-btn" (click)="cashReceived = 5000">$5.000</button>
+                  <button class="quick-btn" (click)="cashReceived = 10000">$10.000</button>
+                  <button class="quick-btn" (click)="cashReceived = 20000">$20.000</button>
+                  <button class="quick-btn exact" (click)="cashReceived = total()">Exacto</button>
+                </div>
+
+                @if (cashReceived > total()) {
+                  <div class="change-display">
+                    <span class="change-label">Cambio:</span>
+                    <span class="change-amount">{{ formatPrice(cashReceived - total()) }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- RIGHT: Receipt Preview (30%) -->
+          <section class="receipt-preview-section">
+            <div class="preview-header">
+              <h3 class="section-title">Vista Previa</h3>
+            </div>
+
+            <div class="thermal-receipt-container">
+              <div class="thermal-receipt">
+                <div class="receipt-header">
+                  <div class="receipt-logo">☕</div>
+                  <div class="receipt-title">{{ tipoDocumento === 'BOLETA' ? 'BOLETA ELECTRÓNICA' : tipoDocumento === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA' }}</div>
+                  <div class="receipt-folio">N° 000{{ Math.floor(Math.random() * 1000) + 1 }}</div>
+                  <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-company">
+                  <div>CAFÉ MODERNO</div>
+                  <div>RUT: 76.XXX.XXX-X</div>
+                  <div>Dirección: Av. Providencia 1234</div>
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-items">
+                  @for (item of cartItems().slice(0, 5); track item.id) {
+                    <div class="receipt-item-row">
+                      <span class="item-qty">{{ item.cantidad }}x</span>
+                      <span class="item-name">{{ item.nombre }}</span>
+                      <span class="item-price">{{ formatPrice(item.precio * item.cantidad) }}</span>
+                    </div>
+                  }
+                  @if (cartItems().length > 5) {
+                    <div class="receipt-item-row">
+                      <span>... y {{ cartItems().length - 5 }} más</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-totals">
+                  <div class="total-row">
+                    <span>Neto:</span>
+                    <span>{{ formatPrice(subtotal()) }}</span>
+                  </div>
+                  <div class="total-row">
+                    <span>IVA (19%):</span>
+                    <span>{{ formatPrice(tax()) }}</span>
+                  </div>
+                  <div class="total-row bold">
+                    <span>TOTAL:</span>
+                    <span>{{ formatPrice(total()) }}</span>
+                  </div>
+                </div>
+
+                <div class="receipt-barcode">
+                  <div class="barcode-placeholder">|||||| |||| |||||| |||| ||||||</div>
+                  <div class="barcode-label">Timbre Electrónico SII</div>
                 </div>
               </div>
             </div>
-          }
 
-          <!-- Payment Methods -->
-          <div class="payment-methods-section">
-            <label class="section-label">Método de Pago</label>
-            <div class="payment-methods">
-              <button 
-                class="payment-btn"
-                [class.selected]="selectedPaymentMethod === 'EFECTIVO'"
-                (click)="selectedPaymentMethod = 'EFECTIVO'"
-              >
-                <i class="pi pi-wallet"></i>
-                Efectivo
+            <div class="preview-actions">
+              <button class="preview-action-btn print">
+                <i class="pi pi-print"></i>
+                <span>Impimir</span>
               </button>
-              <button 
-                class="payment-btn"
-                [class.selected]="selectedPaymentMethod === 'DEBITO'"
-                (click)="selectedPaymentMethod = 'DEBITO'"
-              >
-                <i class="pi pi-credit-card"></i>
-                Débito
-              </button>
-              <button 
-                class="payment-btn"
-                [class.selected]="selectedPaymentMethod === 'CREDITO'"
-                (click)="selectedPaymentMethod = 'CREDITO'"
-              >
-                <i class="pi pi-credit-card"></i>
-                Crédito
-              </button>
-              <button 
-                class="payment-btn"
-                [class.selected]="selectedPaymentMethod === 'TRANSFERENCIA'"
-                (click)="selectedPaymentMethod = 'TRANSFERENCIA'"
-              >
-                <i class="pi pi-send"></i>
-                Transfer.
+              <button class="preview-action-btn email">
+                <i class="pi pi-envelope"></i>
+                <span>Enviar</span>
               </button>
             </div>
-          </div>
+          </section>
+        </div>
 
-          @if (selectedPaymentMethod === 'EFECTIVO') {
-            <div class="cash-input">
-              <label>Monto recibido</label>
-              <p-inputNumber 
-                [(ngModel)]="cashReceived"
-                [min]="0"
-                mode="currency"
-                currency="CLP"
-                locale="es-CL"
-                [showButtons]="false"
-              ></p-inputNumber>
-              
-              @if (cashReceived > total()) {
-                <div class="change-display">
-                  Vuelto: {{ formatPrice(cashReceived - total()) }}
-                </div>
-              }
-            </div>
-          }
-
+        <!-- Footer Actions -->
+        <div class="checkout-footer">
           <button 
-            class="btn btn-success btn-lg btn-block mt-3"
+            class="btn-cancel"
+            (click)="showPaymentDialog = false">
+            Cancelar
+          </button>
+          <button 
+            class="btn-confirm"
             [disabled]="!canCompleteSale() || processingPayment()"
-            (click)="completeSale()"
-          >
+            (click)="completeSale()">
             @if (processingPayment()) {
               <span class="spinner-btn"></span> Procesando...
             } @else {
               <i class="pi pi-check-circle"></i>
-              Confirmar venta
+              Cobrar e Imprimir
+              <span class="confirm-amount">{{ formatPrice(total()) }}</span>
             }
           </button>
         </div>
       </p-dialog>
+
 
       <!-- Sale Success Modal -->
       <p-dialog 

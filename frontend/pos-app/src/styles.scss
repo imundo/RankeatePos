@@ -1754,9 +1754,494 @@ $bp-xl: 1280px;
       font-size: 1.1rem;
       transition: var(--transition);
 
-      &.active {
-        color: #F59E0B;
+    }
+  }
+}
+}
+
+// ============================================
+// PREMIUM CHECKOUT MODAL STYLES
+// ============================================
+
+.premium-checkout-dialog {
+  .p-dialog-content {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+}
+
+.premium-checkout-container {
+  display: grid;
+  grid-template-columns: 30% 40% 30%;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: 70vh;
+  max-height: 80vh;
+  overflow: hidden;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+// Order Summary Section
+.order-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .cart-items-preview {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 40vh;
+  }
+
+  .cart-item-mini {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--glass-border);
+
+    .item-thumbnail {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--border-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-section);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
+    }
+
+    .item-details {
+      flex: 1;
+
+      .item-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .item-qty {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+    }
+
+    .item-price {
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+  }
+
+  .order-totals {
+    padding: 1rem;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius);
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+
+      &.final-total {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--surface-border);
+        font-weight: 700;
+
+        .total-amount-gradient {
+          font-size: 1.5rem;
+          background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+    }
+  }
+
+  .premium-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--surface-ground);
+    border: 2px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    transition: var(--transition);
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+  }
+}
+
+// Payment Flow Section
+.payment-flow-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+
+  .doc-type-pills {
+    display: flex;
+    gap: 0.75rem;
+
+    .doc-pill {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--border-radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+
+      &:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+      }
+
+      &.active {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        color: white;
+        box-shadow: var(--shadow-glow);
+      }
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .payment-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    .payment-card {
+      position: relative;
+      padding: 2rem 1rem;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--surface-border);
+      background: var(--surface-card);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+
+      .card-icon {
+        font-size: 2.5rem;
+      }
+
+      .check-mark {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: white;
+        color: var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      &.efectivo.selected {
+        background: linear-gradient(135deg, var(--accent-color), #059669);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+      }
+
+      &.debito.selected {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border-color: transparent;
+        color: white;
+      }
+
+      &.credito.selected {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        border-color: transparent;
+        color: white;
+      }
+
+      &.transferencia.selected {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-color: transparent;
+        color: white;
+      }
+    }
+  }
+
+  .cash-section {
+    .amount-input-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+
+      .currency-symbol {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .amount-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--surface-ground);
+        border: 2px solid var(--surface-border);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        transition: var(--transition);
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-color);
+        }
+      }
+    }
+
+    .quick-amounts {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+
+      .quick-btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.75rem 1rem;
+        background: var(--surface-card);
+        border: 2px solid var(--surface-border);
+        border-radius: var(--border-radius-full);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+
+        &:hover {
+          border-color: var(--primary-color);
+          transform: translateY(-2px);
+        }
+
+        &.exact {
+          background: var(--primary-gradient);
+          border-color: transparent;
+          color: white;
+        }
+      }
+    }
+
+    .change-display {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--glass-bg);
+      border-radius: var(--border-radius);
+      border: 2px solid var(--accent-color);
+
+      .change-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+      }
+    }
+  }
+}
+
+// Receipt Preview Section
+.receipt-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .thermal-receipt-container {
+    flex: 1;
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .thermal-receipt {
+    width: 100%;
+    max-width: 280px;
+    background: white;
+    color: #000;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 1rem;
+
+      .receipt-logo {
+        font-size: 2rem;
+      }
+
+      .receipt-title {
+        font-weight: 700;
+        font-size: 0.875rem;
+      }
+    }
+
+    .receipt-divider {
+      border-bottom: 1px dashed #999;
+      margin: 0.75rem 0;
+    }
+
+    .receipt-company {
+      text-align: center;
+      font-size: 0.7rem;
+    }
+
+    .receipt-item-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .item-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .receipt-totals .total-row.bold {
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+
+    .receipt-barcode {
+      margin-top: 1rem;
+      text-align: center;
+
+      .barcode-placeholder {
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+      }
+
+      .barcode-label {
+        font-size: 0.65rem;
+        color: #666;
+      }
+    }
+  }
+
+  .preview-actions {
+    display: flex;
+    gap: 0.75rem;
+
+    .preview-action-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--surface-border);
+      background: var(--surface-card);
+      cursor: pointer;
+      transition: var(--transition);
+
+      &:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// Footer Actions
+.checkout-footer {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: var(--surface-section);
+  border-top: 1px solid var(--surface-border);
+
+  .btn-cancel {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: 2px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+
+    &:hover {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+  }
+
+  .btn-confirm {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem 2rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: 700;
+    font-size: 1.125rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+
+    .confirm-amount {
+      margin-left: auto;
+      font-size: 1.5rem;
+    }
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }
