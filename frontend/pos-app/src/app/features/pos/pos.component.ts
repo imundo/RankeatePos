@@ -388,20 +388,20 @@ interface CartItem {
             <h3 class="section-title">Resumen del Pedido</h3>
             
             <div class="cart-items-preview">
-              @for (item of cartItems(); track item.id) {
+              @for (item of cartItems(); track item.variantId) {
                 <div class="cart-item-mini">
                   <div class="item-thumbnail">
-                    @if (item.imagen) {
-                      <img [src]="item.imagen" [alt]="item.nombre">
+                    @if (item.productImagen) {
+                      <img [src]="item.productImagen" [alt]="item.productNombre">
                     } @else {
                       <span class="default-icon">🛒</span>
                     }
                   </div>
                   <div class="item-details">
-                    <span class="item-name">{{ item.nombre }}</span>
+                    <span class="item-name">{{ item.productNombre }}</span>
                     <span class="item-qty">x{{ item.cantidad }}</span>
                   </div>
-                  <span class="item-price">{{ formatPrice(item.precio * item.cantidad) }}</span>
+                  <span class="item-price">{{ formatPrice(item.precioUnitario * item.cantidad) }}</span>
                 </div>
               }
             </div>
@@ -603,11 +603,11 @@ interface CartItem {
                 <div class="receipt-divider"></div>
 
                 <div class="receipt-items">
-                  @for (item of cartItems().slice(0, 5); track item.id) {
+                  @for (item of cartItems().slice(0, 5); track item.variantId) {
                     <div class="receipt-item-row">
                       <span class="item-qty">{{ item.cantidad }}x</span>
-                      <span class="item-name">{{ item.nombre }}</span>
-                      <span class="item-price">{{ formatPrice(item.precio * item.cantidad) }}</span>
+                      <span class="item-name">{{ item.productNombre }}</span>
+                      <span class="item-price">{{ formatPrice(item.precioUnitario * item.cantidad) }}</span>
                     </div>
                   }
                   @if (cartItems().length > 5) {
