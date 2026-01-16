@@ -24,6 +24,15 @@ public class EmitirDteRequest {
     @NotNull(message = "El tipo de DTE es requerido")
     private TipoDte tipoDte;
 
+    // --- Fecha emisión ---
+    private java.time.LocalDate fechaEmision;
+
+    // --- Montos ---
+    private BigDecimal neto;
+    private BigDecimal iva;
+    private BigDecimal exento;
+    private BigDecimal total;
+
     // --- Receptor (opcional para boletas) ---
     @Size(max = 12, message = "RUT del receptor no puede exceder 12 caracteres")
     private String receptorRut;
@@ -53,6 +62,7 @@ public class EmitirDteRequest {
     private List<ItemDto> items;
 
     // --- Referencia (para notas de crédito/débito) ---
+    private UUID documentoReferencia;
     private UUID dteReferenciaId;
 
     @Size(max = 30)
@@ -84,12 +94,18 @@ public class EmitirDteRequest {
         @Size(max = 80, message = "Nombre del item no puede exceder 80 caracteres (Res. SII N°36)")
         private String nombreItem;
 
+        private String nombre; // Alias for nombreItem
+
         @Size(max = 1000)
         private String descripcionItem;
 
+        private String descripcion; // Alias for descripcionItem
+
         @NotNull(message = "La cantidad es requerida")
         @Positive(message = "La cantidad debe ser positiva")
-        private BigDecimal cantidad;
+        private Integer cantidad;
+
+        private BigDecimal montoTotal;
 
         @Size(max = 4)
         private String unidadMedida;
@@ -98,7 +114,8 @@ public class EmitirDteRequest {
         @PositiveOrZero(message = "El precio unitario no puede ser negativo")
         private BigDecimal precioUnitario;
 
-        @Min(0) @Max(100)
+        @Min(0)
+        @Max(100)
         private BigDecimal descuentoPorcentaje;
 
         private BigDecimal descuentoMonto;
