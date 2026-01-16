@@ -220,12 +220,15 @@ public class BillingController {
         if (branchId != null) {
             headers.set("X-Branch-Id", branchId);
         }
-        // Set default emisor headers (would come from tenant config in production)
+        // Set default emisor headers (would come from tenant/branch config in
+        // production)
+        // TODO: Fetch from Branch entity
         headers.set("X-Emisor-Rut", "76.XXX.XXX-X");
-        headers.set("X-Emisor-RazonSocial", "Empresa Demo");
-        headers.set("X-Emisor-Giro", "Comercio");
-        headers.set("X-Emisor-Direccion", "Dirección Demo");
-        headers.set("X-Emisor-Comuna", "Santiago");
+        headers.set("X-Emisor-RazonSocial", "CAFÉ MODERNO"); // TODO get from branch
+        headers.set("X-Emisor-Giro", "Cafetería y Restaurante");
+        headers.set("X-Emisor-Direccion", "Av. Providencia 1234");
+        headers.set("X-Emisor-Comuna", "Providencia");
+        headers.set("X-Emisor-Logo-Url", "https://via.placeholder.com/150"); // TODO: get from branch logoUrl
         return headers;
     }
 }
