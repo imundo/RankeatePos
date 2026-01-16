@@ -8,14 +8,10 @@ import com.google.zxing.pdf417.PDF417Writer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
@@ -33,58 +29,41 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Generador profesional de PDF para DTEs chilenos usando iText7
- * Cumple con formato oficial SII con logo y código PDF417
+ * Generador profesional de PDF para DTEs chilenos using iText7
+ * Diseño estilo recibo térmico con logo, QR y PDF417
  */
 @Slf4j
 @Component
 public class ChileDtePdfGenerator {
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DeviceRgb PRIMARY_COLOR = new DeviceRgb(33, 102, 241); // Indigo
-    private static final DeviceRgb SUCCESS_COLOR = new DeviceRgb(16, 185, 129); // Emerald
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     /**
-     * Genera PDF profesional del DTE
-     * 
-     * @param dte     DTE a convertir
-     * @param tedData Datos del TED para código de barras
-     * @return Bytes del PDF
+     * Genera PDF profesional del DTE estilo recibo térmico
      */
     public byte[] generate(Dte dte, String tedData) {
-        log.info("📄 Generando PDF profesional para DTE: Tipo={}, Folio={}", dte.getTipoDte(), dte.getFolio());
+        log.info("📄 Generando PDF estilo recibo para DTE: Tipo={}, Folio={}", dte.getTipoDte(), dte.getFolio());
 
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf, PageSize.LETTER);
+            Document document = new Document(pdf, PageSize.A4);
             document.setMargins(40, 40, 40, 40);
 
-            // 1. Header con logo y tipo de documento
-            addHeader(document, dte);
+            // 1. Header estilo recibo con logo y empresa
+            addReceiptHeader(document, dte);
 
-            // 2. Datos Emisor
-            addEmisorSection(document, dte);
-
-            // 3. Datos Receptor (si existe)
-            if (dte.getReceptorRut() != null) {
-                addReceptorSection(document, dte);
-            }
-
-            // 4. Detalles (items)
+            // 2. Items table
             addItemsTable(document, dte);
 
-            // 5. Totales
+            // 3. Totales
             addTotalsSection(document, dte);
 
-            // 6. Código de barras PDF417
+            // 4. Códigos de barras (PDF417 + QR)
             if (tedData != null && !tedData.isEmpty()) {
-                addBarcode(document, tedData);
+                addBarcodes(document, tedData);
             }
-
-            // 7. Footer
-            addFooter(document, dte);
 
             document.close();
 
@@ -97,130 +76,115 @@ public class ChileDtePdfGenerator {
         }
     }
 
-    private void addHeader(Document doc, Dte dte) {
-        Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 60, 40 }));
-        headerTable.setWidth(UnitValue.createPercentValue(100));
+    private void addReceiptHeader(Document doc, Dte dte) {
+        // Logo placeholder centrado (ícono café como en la referencia)
+        Paragraph logoPlaceholder = new Paragraph("☕")
+                .setFontSize(40)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(5);
+        doc.add(logoPlaceholder);
 
-        // Left: Company Info (placeholder for logo)
-        Cell companyCell = new Cell();
-        companyCell.setBorder(Border.NO_BORDER);
-        companyCell.add(new Paragraph("LOGO EMPRESA")
-                .setFontSize(10)
-                .setFontColor(ColorConstants.GRAY));
-        companyCell.add(new Paragraph(dte.getEmisorRazonSocial())
-                .setFontSize(14)
-                .setBold());
-        companyCell.add(new Paragraph("RUT: " + dte.getEmisorRut())
-                .setFontSize(10));
-
-        // Right: Document Type Info
-        Cell docInfoCell = new Cell();
-        docInfoCell.setBorder(new SolidBorder(PRIMARY_COLOR, 2));
-        docInfoCell.setBackgroundColor(new DeviceRgb(240, 245, 255));
-        docInfoCell.setPadding(10);
-        docInfoCell.setTextAlignment(TextAlignment.CENTER);
-
-        String docTypeName = dte.getTipoDte().name().replace("_", " ");
-        docInfoCell.add(new Paragraph(docTypeName + " ELECTRÓNICA")
-                .setFontSize(16)
+        // Nombre de empresa - GRANDE y BOLD centrado
+        Paragraph companyName = new Paragraph(dte.getEmisorRazonSocial())
+                .setFontSize(18)
                 .setBold()
-                .setFontColor(PRIMARY_COLOR));
-        docInfoCell.add(new Paragraph("N° " + dte.getFolio())
-                .setFontSize(14)
-                .setBold());
-        docInfoCell.add(new Paragraph("Fecha: " + dte.getFechaEmision().format(DATE_FORMAT))
-                .setFontSize(10)
-                .setMarginTop(5));
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(2);
+        doc.add(companyName);
 
-        headerTable.addCell(companyCell);
-        headerTable.addCell(docInfoCell);
-
-        doc.add(headerTable);
-        doc.add(new Paragraph("\n").setFontSize(8));
-    }
-
-    private void addEmisorSection(Document doc, Dte dte) {
-        Table emisorTable = new Table(1);
-        emisorTable.setWidth(UnitValue.createPercentValue(100));
-
-        Cell emisorCell = new Cell();
-        emisorCell.setBackgroundColor(new DeviceRgb(248, 250, 252));
-        emisorCell.setPadding(10);
-
-        emisorCell.add(new Paragraph("DATOS DEL EMISOR")
-                .setFontSize(11)
-                .setBold()
-                .setMarginBottom(5));
-
+        // Giro
         if (dte.getEmisorGiro() != null) {
-            emisorCell.add(new Paragraph("Giro: " + dte.getEmisorGiro())
-                    .setFontSize(9));
+            Paragraph giro = new Paragraph(dte.getEmisorGiro())
+                    .setFontSize(9)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(1);
+            doc.add(giro);
         }
+
+        // RUT
+        Paragraph rut = new Paragraph("RUT: " + dte.getEmisorRut())
+                .setFontSize(9)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(1);
+        doc.add(rut);
+
+        // Dirección
         if (dte.getEmisorDireccion() != null) {
-            String direccion = dte.getEmisorDireccion();
+            String direccionCompleta = dte.getEmisorDireccion();
             if (dte.getEmisorComuna() != null) {
-                direccion += ", " + dte.getEmisorComuna();
+                direccionCompleta += ", " + dte.getEmisorComuna();
             }
-            emisorCell.add(new Paragraph("Dirección: " + direccion)
-                    .setFontSize(9));
+            Paragraph direccion = new Paragraph(direccionCompleta)
+                    .setFontSize(9)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(5);
+            doc.add(direccion);
         }
 
-        emisorTable.addCell(emisorCell);
-        doc.add(emisorTable);
-        doc.add(new Paragraph("\n").setFontSize(6));
-    }
-
-    private void addReceptorSection(Document doc, Dte dte) {
-        Table receptorTable = new Table(1);
-        receptorTable.setWidth(UnitValue.createPercentValue(100));
-
-        Cell receptorCell = new Cell();
-        receptorCell.setBackgroundColor(new DeviceRgb(248, 250, 252));
-        receptorCell.setPadding(10);
-
-        receptorCell.add(new Paragraph("DATOS DEL RECEPTOR")
-                .setFontSize(11)
-                .setBold()
+        // Línea separadora
+        doc.add(new Paragraph("- - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5)
                 .setMarginBottom(5));
-        receptorCell.add(new Paragraph("Razón Social: " + dte.getReceptorRazonSocial())
-                .setFontSize(9));
-        receptorCell.add(new Paragraph("RUT: " + dte.getReceptorRut())
-                .setFontSize(9));
 
-        if (dte.getReceptorGiro() != null) {
-            receptorCell.add(new Paragraph("Giro: " + dte.getReceptorGiro())
-                    .setFontSize(9));
-        }
+        // Tipo de documento y folio
+        String docTypeName = dte.getTipoDte().name().replace("_", " ");
+        Paragraph docType = new Paragraph(docTypeName + " ELECTRÓNICA")
+                .setFontSize(12)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(2);
+        doc.add(docType);
 
-        receptorTable.addCell(receptorCell);
-        doc.add(receptorTable);
-        doc.add(new Paragraph("\n").setFontSize(6));
+        Paragraph folio = new Paragraph("N° " + String.format("%06d", dte.getFolio()))
+                .setFontSize(11)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(2);
+        doc.add(folio);
+
+        Paragraph fecha = new Paragraph(dte.getFechaEmision().format(DATE_FORMAT))
+                .setFontSize(9)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(5);
+        doc.add(fecha);
+
+        // Otra línea separadora
+        doc.add(new Paragraph("- - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5)
+                .setMarginBottom(10));
     }
 
     private void addItemsTable(Document doc, Dte dte) {
-        Table itemsTable = new Table(UnitValue.createPercentArray(new float[] { 8, 50, 12, 15, 15 }));
+        // Tabla simple estilo recibo
+        Table itemsTable = new Table(UnitValue.createPercentArray(new float[] { 10, 50, 20, 20 }));
         itemsTable.setWidth(UnitValue.createPercentValue(100));
 
-        // Header
-        String[] headers = { "Cant.", "Descripción", "P. Unit.", "Desc.", "Total" };
-        for (String header : headers) {
-            Cell cell = new Cell();
-            cell.add(new Paragraph(header).setBold().setFontSize(10));
-            cell.setBackgroundColor(PRIMARY_COLOR);
-            cell.setFontColor(ColorConstants.WHITE);
-            cell.setPadding(5);
-            cell.setTextAlignment(TextAlignment.CENTER);
-            itemsTable.addHeaderCell(cell);
-        }
-
-        // Items
+        // Items sin header, directo
         if (dte.getDetalles() != null && !dte.getDetalles().isEmpty()) {
             dte.getDetalles().forEach(detalle -> {
-                itemsTable.addCell(createCell(formatNumber(detalle.getCantidad()), TextAlignment.CENTER));
-                itemsTable.addCell(createCell(detalle.getNombre(), TextAlignment.LEFT));
-                itemsTable.addCell(createCell(formatMoney(detalle.getPrecioUnitario()), TextAlignment.RIGHT));
-                itemsTable.addCell(createCell("$0", TextAlignment.RIGHT)); // Desc placeholder
-                itemsTable.addCell(createCell(formatMoney(detalle.getMontoTotal()), TextAlignment.RIGHT));
+                // Cantidad
+                itemsTable.addCell(new Paragraph(formatNumber(detalle.getCantidad()) + "x")
+                        .setFontSize(9)
+                        .setTextAlignment(TextAlignment.LEFT));
+
+                // Nombre
+                itemsTable.addCell(new Paragraph(detalle.getNombre())
+                        .setFontSize(9)
+                        .setTextAlignment(TextAlignment.LEFT));
+
+                // Precio unitario
+                itemsTable.addCell(new Paragraph(formatMoney(detalle.getPrecioUnitario()))
+                        .setFontSize(9)
+                        .setTextAlignment(TextAlignment.RIGHT));
+
+                // Total
+                itemsTable.addCell(new Paragraph(formatMoney(detalle.getMontoTotal()))
+                        .setFontSize(9)
+                        .setBold()
+                        .setTextAlignment(TextAlignment.RIGHT));
             });
         }
 
@@ -229,104 +193,130 @@ public class ChileDtePdfGenerator {
     }
 
     private void addTotalsSection(Document doc, Dte dte) {
-        Table totalsTable = new Table(UnitValue.createPercentArray(new float[] { 70, 30 }));
+        // Línea separadora
+        doc.add(new Paragraph("- - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+                .setFontSize(8)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(5)
+                .setMarginBottom(10));
+
+        // Tabla de totales alineada a la derecha
+        Table totalsTable = new Table(UnitValue.createPercentArray(new float[] { 50, 50 }));
         totalsTable.setWidth(UnitValue.createPercentValue(100));
 
-        // Left cell (empty or observations)
-        Cell leftCell = new Cell();
-        leftCell.setBorder(Border.NO_BORDER);
-        totalsTable.addCell(leftCell);
-
-        // Right cell (totals)
-        Cell rightCell = new Cell();
-        rightCell.setBorder(new SolidBorder(ColorConstants.LIGHT_GRAY, 1));
-        rightCell.setPadding(10);
-
+        // Subtotal
         if (dte.getNeto() != null && dte.getNeto().compareTo(BigDecimal.ZERO) > 0) {
-            rightCell.add(createTotalRow("Neto:", dte.getNeto()));
+            totalsTable.addCell(new Paragraph("Subtotal:")
+                    .setFontSize(10)
+                    .setTextAlignment(TextAlignment.RIGHT));
+            totalsTable.addCell(new Paragraph(formatMoney(dte.getNeto()))
+                    .setFontSize(10)
+                    .setTextAlignment(TextAlignment.RIGHT));
         }
+
+        // IVA
         if (dte.getIva() != null && dte.getIva().compareTo(BigDecimal.ZERO) > 0) {
-            rightCell.add(createTotalRow("IVA (19%):", dte.getIva()));
+            totalsTable.addCell(new Paragraph("IVA (19%):")
+                    .setFontSize(10)
+                    .setTextAlignment(TextAlignment.RIGHT));
+            totalsTable.addCell(new Paragraph(formatMoney(dte.getIva()))
+                    .setFontSize(10)
+                    .setTextAlignment(TextAlignment.RIGHT));
         }
 
-        rightCell.add(createTotalRow("TOTAL:", dte.getTotal())
-                .setBold()
+        // TOTAL grande y bold
+        totalsTable.addCell(new Paragraph("Total:")
                 .setFontSize(12)
-                .setFontColor(SUCCESS_COLOR)
-                .setMarginTop(5));
+                .setBold()
+                .setTextAlignment(TextAlignment.RIGHT));
+        totalsTable.addCell(new Paragraph(formatMoney(dte.getTotal()))
+                .setFontSize(12)
+                .setBold()
+                .setTextAlignment(TextAlignment.RIGHT));
 
-        totalsTable.addCell(rightCell);
         doc.add(totalsTable);
-        doc.add(new Paragraph("\n").setFontSize(8));
+        doc.add(new Paragraph("\n").setFontSize(10));
     }
 
-    private void addBarcode(Document doc, String tedData) throws WriterException, IOException {
-        byte[] barcodeBytes = generateBarcode(tedData);
-        Image barcodeImg = new Image(ImageDataFactory.create(barcodeBytes));
-        barcodeImg.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER);
-        barcodeImg.setWidth(UnitValue.createPercentValue(80));
+    private void addBarcodes(Document doc, String tedData) throws WriterException, IOException {
+        // PDF417 Barcode
+        byte[] pdf417Bytes = generatePDF417Barcode(tedData);
+        Image pdf417Img = new Image(ImageDataFactory.create(pdf417Bytes));
+        pdf417Img.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER);
+        pdf417Img.setWidth(UnitValue.createPercentValue(90));
 
-        doc.add(barcodeImg);
+        doc.add(pdf417Img);
+        doc.add(new Paragraph("High-density PDF-417")
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontSize(7)
+                .setFontColor(ColorConstants.GRAY)
+                .setMarginTop(3)
+                .setMarginBottom(10));
+
+        // QR Code
+        byte[] qrBytes = generateQRCode(tedData);
+        Image qrImg = new Image(ImageDataFactory.create(qrBytes));
+        qrImg.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER);
+        qrImg.setWidth(120);
+        qrImg.setHeight(120);
+
+        doc.add(qrImg);
         doc.add(new Paragraph("Timbre Electrónico SII")
                 .setTextAlignment(TextAlignment.CENTER)
                 .setFontSize(8)
                 .setMarginTop(5));
     }
 
-    private void addFooter(Document doc, Dte dte) {
-        doc.add(new Paragraph("\n").setFontSize(8));
-
-        Paragraph footer = new Paragraph()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setFontSize(8)
-                .setFontColor(ColorConstants.GRAY);
-
-        footer.add("Documento Tributario Electrónico\n");
-        footer.add("Estado: " + dte.getEstado());
-
-        doc.add(footer);
-    }
-
     /**
-     * Genera código de barras PDF417 del TED
+     * Genera código de barras PDF417
      */
-    public byte[] generateBarcode(String tedData) throws WriterException, IOException {
+    public byte[] generatePDF417Barcode(String tedData) throws WriterException, IOException {
         log.info("📊 Generando código de barras PDF417");
 
         PDF417Writer writer = new PDF417Writer();
         BitMatrix bitMatrix = writer.encode(
                 tedData,
                 BarcodeFormat.PDF_417,
-                500, // ancho
-                150 // alto
-        );
+                500,
+                150);
 
         BufferedImage image = MatrixToImageWriter.toBufferedImage(bitMatrix);
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "PNG", baos);
 
-        log.info("✅ Código de barras generado");
+        log.info("✅ PDF417 generado");
         return baos.toByteArray();
     }
 
+    /**
+     * Genera código QR
+     */
+    public byte[] generateQRCode(String tedData) throws WriterException, IOException {
+        log.info("📊 Generando código QR");
+
+        QRCodeWriter writer = new QRCodeWriter();
+        BitMatrix bitMatrix = writer.encode(
+                tedData,
+                BarcodeFormat.QR_CODE,
+                200,
+                200);
+
+        BufferedImage image = MatrixToImageWriter.toBufferedImage(bitMatrix);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", baos);
+
+        log.info("✅ QR generado");
+        return baos.toByteArray();
+    }
+
+    /**
+     * Método de compatibilidad
+     */
+    public byte[] generateBarcode(String tedData) throws WriterException, IOException {
+        return generatePDF417Barcode(tedData);
+    }
+
     // Helper methods
-    private Cell createCell(String content, TextAlignment alignment) {
-        Cell cell = new Cell();
-        cell.add(new Paragraph(content).setFontSize(9));
-        cell.setTextAlignment(alignment);
-        cell.setPadding(5);
-        return cell;
-    }
-
-    private Paragraph createTotalRow(String label, BigDecimal amount) {
-        return new Paragraph()
-                .add(label + " ")
-                .add(formatMoney(amount))
-                .setFontSize(10)
-                .setTextAlignment(TextAlignment.RIGHT);
-    }
-
     private String formatNumber(BigDecimal number) {
         return number == null ? "0" : String.format("%.0f", number);
     }
