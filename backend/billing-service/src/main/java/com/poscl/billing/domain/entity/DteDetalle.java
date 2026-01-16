@@ -31,13 +31,13 @@ public class DteDetalle {
 
     // --- Identificación del item ---
     @Column(name = "tipo_codigo", length = 10)
-    private String tipoCodigo;  // INT1, EAN13, PLU
+    private String tipoCodigo; // INT1, EAN13, PLU
 
     @Column(name = "codigo", length = 35)
     private String codigo;
 
     @Column(name = "indicador_exento")
-    private Integer indicadorExento;  // 1 = exento, null = afecto
+    private Integer indicadorExento; // 1 = exento, null = afecto
 
     // --- Descripción del item ---
     @Column(name = "nombre_item", nullable = false, length = 80)
@@ -83,5 +83,30 @@ public class DteDetalle {
 
     public boolean isExento() {
         return indicadorExento != null && indicadorExento == 1;
+    }
+
+    // --- Alias methods for compatibility ---
+    public String getNombre() {
+        return nombreItem;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombreItem = nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcionItem;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcionItem = descripcion;
+    }
+
+    public BigDecimal getMontoTotal() {
+        return montoItem;
+    }
+
+    public void setMontoTotal(BigDecimal montoTotal) {
+        this.montoItem = montoTotal;
     }
 }

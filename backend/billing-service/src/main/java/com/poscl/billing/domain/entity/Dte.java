@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "dte", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"tenant_id", "tipo_dte", "folio"})
+        @UniqueConstraint(columnNames = { "tenant_id", "tipo_dte", "folio" })
 })
 @Getter
 @Setter
@@ -115,6 +115,15 @@ public class Dte {
     @Builder.Default
     private EstadoDte estado = EstadoDte.BORRADOR;
 
+    @Column(name = "anu lacion_motivo", length = 200)
+    private String anulacionMotivo;
+
+    @Column(name = "anulada_at")
+    private Instant anuladaAt;
+
+    @Column(name = "anulada_por")
+    private UUID anuladaPor;
+
     @Column(name = "track_id", length = 20)
     private String trackId;
 
@@ -192,5 +201,38 @@ public class Dte {
 
     public boolean isAceptado() {
         return estado == EstadoDte.ACEPTADO || estado == EstadoDte.ACEPTADO_CON_REPAROS;
+    }
+
+    // --- Alias methods for consistency ---
+    public BigDecimal getNeto() {
+        return montoNeto;
+    }
+
+    public void setNeto(BigDecimal neto) {
+        this.montoNeto = neto;
+    }
+
+    public BigDecimal getExento() {
+        return montoExento;
+    }
+
+    public void setExento(BigDecimal exento) {
+        this.montoExento = exento;
+    }
+
+    public BigDecimal getIva() {
+        return montoIva;
+    }
+
+    public void setIva(BigDecimal iva) {
+        this.montoIva = iva;
+    }
+
+    public BigDecimal getTotal() {
+        return montoTotal;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.montoTotal = total;
     }
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "caf", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"tenant_id", "tipo_dte", "folio_desde"})
+        @UniqueConstraint(columnNames = { "tenant_id", "tipo_dte", "folio_desde" })
 })
 @Getter
 @Setter
@@ -66,6 +66,9 @@ public class Caf {
     @Column(name = "rsa_exponent", columnDefinition = "TEXT")
     private String rsaExponent;
 
+    @Column(name = "signature", columnDefinition = "TEXT")
+    private String signature;
+
     // --- Estado ---
     @Column(nullable = false)
     @Builder.Default
@@ -89,7 +92,8 @@ public class Caf {
     }
 
     public int foliosDisponibles() {
-        if (!tieneFoliosDisponibles()) return 0;
+        if (!tieneFoliosDisponibles())
+            return 0;
         return folioHasta - folioActual + 1;
     }
 
