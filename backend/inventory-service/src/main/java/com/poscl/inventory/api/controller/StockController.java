@@ -30,7 +30,10 @@ public class StockController {
     public ResponseEntity<List<StockDto>> getStockByBranch(
             @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestParam UUID branchId) {
-        return ResponseEntity.ok(stockService.getStockByBranch(tenantId, branchId));
+        log.info("GET /api/stock - tenantId: {}, branchId: {}", tenantId, branchId);
+        List<StockDto> stock = stockService.getStockByBranch(tenantId, branchId);
+        log.info("Returning {} stock items", stock.size());
+        return ResponseEntity.ok(stock);
     }
 
     @GetMapping("/low")
