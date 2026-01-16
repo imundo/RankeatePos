@@ -71,6 +71,9 @@ public class Dte {
     @Column(name = "emisor_ciudad", length = 20)
     private String emisorCiudad;
 
+    @Column(name = "emisor_logo_url", length = 500)
+    private String emisorLogoUrl; // URL o path del logo de la empresa
+
     // --- Receptor ---
     @Column(name = "receptor_rut", length = 12)
     private String receptorRut;
