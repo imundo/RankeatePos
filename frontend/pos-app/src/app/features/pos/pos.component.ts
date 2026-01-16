@@ -409,11 +409,11 @@ interface CartItem {
             <div class="order-totals">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>{{ formatPrice(subtotal()) }}</span>
+                <span>{{ formatPrice(subtotalCheckout()) }}</span>
               </div>
               <div class="total-row">
                 <span>IVA (19%):</span>
-                <span>{{ formatPrice(tax()) }}</span>
+                <span>{{ formatPrice(taxCheckout()) }}</span>
               </div>
               <div class="total-row final-total">
                 <span>TOTAL:</span>
@@ -622,11 +622,11 @@ interface CartItem {
                 <div class="receipt-totals">
                   <div class="total-row">
                     <span>Neto:</span>
-                    <span>{{ formatPrice(subtotal()) }}</span>
+                    <span>{{ formatPrice(subtotalCheckout()) }}</span>
                   </div>
                   <div class="total-row">
                     <span>IVA (19%):</span>
-                    <span>{{ formatPrice(tax()) }}</span>
+                    <span>{{ formatPrice(taxCheckout()) }}</span>
                   </div>
                   <div class="total-row bold">
                     <span>TOTAL:</span>
