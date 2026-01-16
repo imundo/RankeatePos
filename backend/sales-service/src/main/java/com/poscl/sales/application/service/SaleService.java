@@ -160,8 +160,8 @@ public class SaleService {
      */
     private String generateSaleNumber(UUID tenantId) {
         String prefix = "V" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        Integer maxNum = saleRepository.findMaxNumeroByPrefix(tenantId, prefix);
-        int nextNum = (maxNum != null ? maxNum : 0) + 1;
+        Long maxNum = saleRepository.findMaxNumeroByPrefix(tenantId, prefix);
+        long nextNum = (maxNum != null ? maxNum : 0L) + 1;
         return prefix + String.format("%05d", nextNum);
     }
 
