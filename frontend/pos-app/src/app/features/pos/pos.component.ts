@@ -3087,6 +3087,11 @@ export class PosComponent implements OnInit {
   selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' = 'EFECTIVO';
   cashReceived = 0;
 
+  // Premium checkout modal properties
+  customerName = '';
+  today = new Date();
+  Math = Math; // Expose Math to template
+
   // Billing Integration
   tipoDocumento: 'BOLETA' | 'FACTURA' | 'SIN_DOCUMENTO' = 'BOLETA';
   clienteRut = '';
@@ -3292,6 +3297,16 @@ export class PosComponent implements OnInit {
   );
 
   total = computed(() => this.subtotal() + this.taxTotal());
+
+  // For checkout modal
+  subtotalCheckout = computed(() => {
+    const totalAmount = this.total();
+    return Math.round(totalAmount / 1.19); // Remove IVA
+  });
+
+  taxCheckout = computed(() => {
+    return this.total() - this.subtotalCheckout(); // IVA 19%
+  });
 
   ngOnInit(): void {
     this.loadCachedProducts();
