@@ -65,9 +65,9 @@ public class ChileBillingProvider implements BillingProvider {
     @Override
     @Transactional
     public DteResponse emitirDocumento(UUID tenantId, UUID branchId, EmitirDteRequest request,
-                                        String emisorRut, String emisorRazonSocial, String emisorGiro,
-                                        String emisorDireccion, String emisorComuna, UUID userId) {
-        
+            String emisorRut, String emisorRazonSocial, String emisorGiro,
+            String emisorDireccion, String emisorComuna, UUID userId) {
+
         log.info("Emitiendo {} para tenant {}", request.getTipoDte(), tenantId);
 
         try {
@@ -88,13 +88,14 @@ public class ChileBillingProvider implements BillingProvider {
             dte.setBranchId(branchId);
             dte.setTipoDte(request.getTipoDte());
             dte.setFolio((int) folio);
-            dte.setFechaEmision(request.getFechaEmision() != null ? request.getFechaEmision() : java.time.LocalDate.now());
+            dte.setFechaEmision(
+                    request.getFechaEmision() != null ? request.getFechaEmision() : java.time.LocalDate.now());
             dte.setEstado(EstadoDte.GENERADO);
 
             dte.setEmisorRut(rutValidator.clean(emisorRut));
             dte.setEmisorRazonSocial(emisorRazonSocial);
             dte.setEmisorGiro(emisorGiro);
-            dte.setEmisorDir eccion(emisorDireccion);
+            dte.setEmisorDireccion(emisorDireccion);
             dte.setEmisorComuna(emisorComuna);
 
             if (request.getReceptorRut() != null && !request.getReceptorRut().trim().isEmpty()) {
@@ -115,10 +116,12 @@ public class ChileBillingProvider implements BillingProvider {
                         detalle.setId(UUID.randomUUID());
                         detalle.setDte(dte);
                         detalle.setNombre(item.getNombreItem() != null ? item.getNombreItem() : item.getNombre());
-                        detalle.setDescripcion(item.getDescripcionItem() != null ? item.getDescripcionItem() : item.getDescripcion());
+                        detalle.setDescripcion(
+                                item.getDescripcionItem() != null ? item.getDescripcionItem() : item.getDescripcion());
                         detalle.setCantidad(BigDecimal.valueOf(item.getCantidad() != null ? item.getCantidad() : 1));
-                        detalle.setPrecioUnitario(item. getPrecioUnitario());
-                        detalle.setMontoTotal(item.getMontoTotal() != null ? item.getMontoTotal() : item.getPrecioUnitario());
+                        detalle.setPrecioUnitario(item.getPrecioUnitario());
+                        detalle.setMontoTotal(
+                                item.getMontoTotal() != null ? item.getMontoTotal() : item.getPrecioUnitario());
                         return detalle;
                     })
                     .collect(Collectors.toList());
