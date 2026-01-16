@@ -218,7 +218,7 @@ public class ChileDtePdfGenerator {
                 itemsTable.addCell(createCell(formatNumber(detalle.getCantidad()), TextAlignment.CENTER));
                 itemsTable.addCell(createCell(detalle.getNombre(), TextAlignment.LEFT));
                 itemsTable.addCell(createCell(formatMoney(detalle.getPrecioUnitario()), TextAlignment.RIGHT));
-                itemsTable.addCell(createCell(formatMoney(detalle.getDescuento()), TextAlignment.RIGHT));
+                itemsTable.addCell(createCell("$0", TextAlignment.RIGHT)); // Desc placeholder
                 itemsTable.addCell(createCell(formatMoney(detalle.getMontoTotal()), TextAlignment.RIGHT));
             });
         }
@@ -281,8 +281,7 @@ public class ChileDtePdfGenerator {
                 .setFontColor(ColorConstants.GRAY);
 
         footer.add("Documento Tributario Electrónico\n");
-        footer.add("Estado: " + dte.getEstado() + "\n");
-        footer.add("Track ID: " + (dte.getSiiTrackId() != null ? dte.getSiiTrackId() : "Pendiente"));
+        footer.add("Estado: " + dte.getEstado());
 
         doc.add(footer);
     }
