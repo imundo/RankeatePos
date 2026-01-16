@@ -36,7 +36,7 @@ spring:
     show-sql: false
 
   flyway:
-    enabled: true
+    enabled: false  # Disabled for shared database - migrations managed by primary service
     locations: classpath:db/migration
     baseline-on-migrate: true
 
