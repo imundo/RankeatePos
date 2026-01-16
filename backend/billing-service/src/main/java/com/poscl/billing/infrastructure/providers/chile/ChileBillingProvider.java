@@ -138,11 +138,11 @@ public class ChileBillingProvider implements BillingProvider {
             xml = xml.replace("</Documento>", ted + "\n</Documento>");
 
             dte.setXmlContent(xml);
-            dte = dteRepository.save(dte);
+            Dte finalDte = dteRepository.save(dte);
 
-            log.info("DTE generado: Tipo={}, Folio={}", dte.getTipoDte(), dte.getFolio());
+            log.info("DTE generado: Tipo={}, Folio={}", finalDte.getTipoDte(), finalDte.getFolio());
 
-            return toResponse(dte);
+            return toResponse(finalDte);
 
         } catch (Exception e) {
             log.error("Error al emitir DTE: {}", e.getMessage(), e);
