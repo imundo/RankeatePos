@@ -233,9 +233,9 @@ public class ProductService {
         try {
             log.info("Fetching stock from inventory-service for tenant: {}", tenantId);
 
-            // List of known branch IDs (could be fetched from a branches table in the
-            // future)
+            // List of known branch IDs (from actual database data)
             String[] branchIds = {
+                    "a2000000-0000-0000-0000-000000000001", // Branch where stock is actually stored
                     "b1000000-0000-0000-0000-000000000001",
                     "b1000000-0000-0000-0000-000000000002",
                     "b2000000-0000-0000-0000-000000000001",
