@@ -89,4 +89,5 @@ INSERT INTO roles (id, tenant_id, nombre, descripcion, permisos, es_sistema) VAL
         'saas:support:read', 'saas:audit:read'
     ],
     true
-);
+)
+ON CONFLICT (id) DO NOTHING;
