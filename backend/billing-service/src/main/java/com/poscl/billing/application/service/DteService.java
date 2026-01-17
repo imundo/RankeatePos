@@ -50,7 +50,7 @@ public class DteService {
     public DteResponse emitirDte(UUID tenantId, UUID branchId, EmitirDteRequest request,
             String emisorRut, String emisorRazonSocial, String emisorGiro,
             String emisorDireccion, String emisorComuna, String emisorLogoUrl, UUID userId) {
-        log.info(\"Emitiendo DTE tipo {} para tenant {}\", request.getTipoDte(), tenantId);
+        log.info("Emitiendo DTE tipo {} para tenant {}", request.getTipoDte(), tenantId);
 
         // 1. Obtener folio del CAF
         Integer folio = obtenerSiguienteFolio(tenantId, request.getTipoDte());
@@ -71,7 +71,7 @@ public class DteService {
                 .emisorGiro(emisorGiro)
                 .emisorDireccion(emisorDireccion)
                 .emisorComuna(emisorComuna)
-                .emisorLogoUrl(emisorLogoUrl)  // Logo URL dinámico
+                .emisorLogoUrl(emisorLogoUrl) // Logo URL dinámico
                 // Receptor
                 .receptorRut(request.getReceptorRut())
                 .receptorRazonSocial(request.getReceptorRazonSocial())
