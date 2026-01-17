@@ -634,9 +634,81 @@ interface CartItem {
                   </div>
                 </div>
 
-                <div class="receipt-barcode">
-                  <div class="barcode-placeholder">|||||| |||| |||||| |||| ||||||</div>
-                  <div class="barcode-label">Timbre Electrónico SII</div>
+                <div class="receipt-barcode-section">
+                  <!-- PDF417 Barcode (Timbre SII) -->
+                  <div class="pdf417-container">
+                    <svg viewBox="0 0 180 40" class="pdf417-svg">
+                      <rect x="2" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="7" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="11" y="2" width="5" height="36" fill="#000"/>
+                      <rect x="18" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="22" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="28" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="32" y="2" width="6" height="36" fill="#000"/>
+                      <rect x="40" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="45" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="51" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="55" y="2" width="5" height="36" fill="#000"/>
+                      <rect x="62" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="67" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="73" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="77" y="2" width="6" height="36" fill="#000"/>
+                      <rect x="85" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="89" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="95" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="100" y="2" width="5" height="36" fill="#000"/>
+                      <rect x="107" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="111" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="117" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="122" y="2" width="6" height="36" fill="#000"/>
+                      <rect x="130" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="134" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="140" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="145" y="2" width="5" height="36" fill="#000"/>
+                      <rect x="152" y="2" width="2" height="36" fill="#000"/>
+                      <rect x="156" y="2" width="4" height="36" fill="#000"/>
+                      <rect x="162" y="2" width="3" height="36" fill="#000"/>
+                      <rect x="167" y="2" width="5" height="36" fill="#000"/>
+                      <rect x="174" y="2" width="3" height="36" fill="#000"/>
+                    </svg>
+                    <div class="barcode-label">Timbre Electrónico SII</div>
+                  </div>
+                  <!-- QR Code -->
+                  <div class="qr-container">
+                    <svg viewBox="0 0 50 50" class="qr-svg">
+                      <rect x="2" y="2" width="12" height="12" fill="#000"/>
+                      <rect x="4" y="4" width="8" height="8" fill="#fff"/>
+                      <rect x="6" y="6" width="4" height="4" fill="#000"/>
+                      <rect x="36" y="2" width="12" height="12" fill="#000"/>
+                      <rect x="38" y="4" width="8" height="8" fill="#fff"/>
+                      <rect x="40" y="6" width="4" height="4" fill="#000"/>
+                      <rect x="2" y="36" width="12" height="12" fill="#000"/>
+                      <rect x="4" y="38" width="8" height="8" fill="#fff"/>
+                      <rect x="6" y="40" width="4" height="4" fill="#000"/>
+                      <rect x="16" y="6" width="2" height="2" fill="#000"/>
+                      <rect x="20" y="6" width="2" height="2" fill="#000"/>
+                      <rect x="24" y="6" width="2" height="2" fill="#000"/>
+                      <rect x="28" y="6" width="2" height="2" fill="#000"/>
+                      <rect x="32" y="6" width="2" height="2" fill="#000"/>
+                      <rect x="18" y="18" width="2" height="2" fill="#000"/>
+                      <rect x="22" y="18" width="4" height="2" fill="#000"/>
+                      <rect x="28" y="18" width="2" height="2" fill="#000"/>
+                      <rect x="34" y="18" width="4" height="2" fill="#000"/>
+                      <rect x="20" y="22" width="2" height="2" fill="#000"/>
+                      <rect x="26" y="22" width="4" height="2" fill="#000"/>
+                      <rect x="36" y="22" width="2" height="2" fill="#000"/>
+                      <rect x="18" y="26" width="4" height="2" fill="#000"/>
+                      <rect x="24" y="26" width="2" height="2" fill="#000"/>
+                      <rect x="30" y="26" width="4" height="2" fill="#000"/>
+                      <rect x="22" y="30" width="2" height="2" fill="#000"/>
+                      <rect x="28" y="30" width="6" height="2" fill="#000"/>
+                      <rect x="20" y="34" width="4" height="2" fill="#000"/>
+                      <rect x="26" y="34" width="2" height="2" fill="#000"/>
+                      <rect x="32" y="34" width="4" height="2" fill="#000"/>
+                      <rect x="36" y="36" width="6" height="6" fill="#000"/>
+                      <rect x="38" y="38" width="2" height="2" fill="#fff"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>

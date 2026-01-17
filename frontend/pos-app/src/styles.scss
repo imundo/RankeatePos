@@ -2146,11 +2146,58 @@ $bp-xl: 1280px;
       }
     }
 
-    .receipt-totals .total-row.bold {
-      font-weight: 700;
-      margin-top: 0.5rem;
+    .receipt-totals {
+      .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.15rem 0;
+
+        &.bold {
+          font-weight: 700;
+          margin-top: 0.5rem;
+          font-size: 0.85rem;
+          border-top: 1px solid #333;
+          padding-top: 0.5rem;
+        }
+      }
     }
 
+    .receipt-barcode-section {
+      margin-top: 1rem;
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px dashed #999;
+
+      .pdf417-container {
+        margin-bottom: 0.75rem;
+
+        .pdf417-svg {
+          width: 100%;
+          max-width: 200px;
+          height: 32px;
+          background: #fff;
+        }
+
+        .barcode-label {
+          font-size: 0.6rem;
+          color: #666;
+          margin-top: 0.25rem;
+        }
+      }
+
+      .qr-container {
+        display: flex;
+        justify-content: center;
+
+        .qr-svg {
+          width: 60px;
+          height: 60px;
+          background: #fff;
+        }
+      }
+    }
+
+    // Legacy fallback
     .receipt-barcode {
       margin-top: 1rem;
       text-align: center;
