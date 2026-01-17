@@ -32,10 +32,17 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
+            @RequestHeader(value = "X-Emisor-Rut", required = false) String emisorRut,
+            @RequestHeader(value = "X-Emisor-RazonSocial", required = false) String emisorRazonSocial,
+            @RequestHeader(value = "X-Emisor-Giro", required = false) String emisorGiro,
+            @RequestHeader(value = "X-Emisor-Direccion", required = false) String emisorDireccion,
+            @RequestHeader(value = "X-Emisor-Comuna", required = false) String emisorComuna,
+            @RequestHeader(value = "X-Emisor-Logo-Url", required = false) String emisorLogoUrl,
             @RequestBody Map<String, Object> request) {
 
-        String url = billingServiceUrl + "/api/dte/boleta";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId);
+        String url = billingServiceUrl + "/api/billing/dte/boleta";
+        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId,
+                emisorRut, emisorRazonSocial, emisorGiro, emisorDireccion, emisorComuna, emisorLogoUrl);
 
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
@@ -45,10 +52,17 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
+            @RequestHeader(value = "X-Emisor-Rut", required = false) String emisorRut,
+            @RequestHeader(value = "X-Emisor-RazonSocial", required = false) String emisorRazonSocial,
+            @RequestHeader(value = "X-Emisor-Giro", required = false) String emisorGiro,
+            @RequestHeader(value = "X-Emisor-Direccion", required = false) String emisorDireccion,
+            @RequestHeader(value = "X-Emisor-Comuna", required = false) String emisorComuna,
+            @RequestHeader(value = "X-Emisor-Logo-Url", required = false) String emisorLogoUrl,
             @RequestBody Map<String, Object> request) {
 
-        String url = billingServiceUrl + "/api/dte/factura";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId);
+        String url = billingServiceUrl + "/api/billing/dte/factura";
+        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId,
+                emisorRut, emisorRazonSocial, emisorGiro, emisorDireccion, emisorComuna, emisorLogoUrl);
 
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
@@ -58,10 +72,17 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
+            @RequestHeader(value = "X-Emisor-Rut", required = false) String emisorRut,
+            @RequestHeader(value = "X-Emisor-RazonSocial", required = false) String emisorRazonSocial,
+            @RequestHeader(value = "X-Emisor-Giro", required = false) String emisorGiro,
+            @RequestHeader(value = "X-Emisor-Direccion", required = false) String emisorDireccion,
+            @RequestHeader(value = "X-Emisor-Comuna", required = false) String emisorComuna,
+            @RequestHeader(value = "X-Emisor-Logo-Url", required = false) String emisorLogoUrl,
             @RequestBody Map<String, Object> request) {
 
-        String url = billingServiceUrl + "/api/dte/nota-credito";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId);
+        String url = billingServiceUrl + "/api/billing/dte/nota-credito";
+        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId,
+                emisorRut, emisorRazonSocial, emisorGiro, emisorDireccion, emisorComuna, emisorLogoUrl);
 
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
@@ -71,10 +92,17 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
+            @RequestHeader(value = "X-Emisor-Rut", required = false) String emisorRut,
+            @RequestHeader(value = "X-Emisor-RazonSocial", required = false) String emisorRazonSocial,
+            @RequestHeader(value = "X-Emisor-Giro", required = false) String emisorGiro,
+            @RequestHeader(value = "X-Emisor-Direccion", required = false) String emisorDireccion,
+            @RequestHeader(value = "X-Emisor-Comuna", required = false) String emisorComuna,
+            @RequestHeader(value = "X-Emisor-Logo-Url", required = false) String emisorLogoUrl,
             @RequestBody Map<String, Object> request) {
 
-        String url = billingServiceUrl + "/api/dte/nota-debito";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId);
+        String url = billingServiceUrl + "/api/billing/dte/nota-debito";
+        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId,
+                emisorRut, emisorRazonSocial, emisorGiro, emisorDireccion, emisorComuna, emisorLogoUrl);
 
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
@@ -90,13 +118,14 @@ public class BillingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        StringBuilder urlBuilder = new StringBuilder(billingServiceUrl + "/api/dte?page=" + page + "&size=" + size);
+        StringBuilder urlBuilder = new StringBuilder(
+                billingServiceUrl + "/api/billing/dte?page=" + page + "&size=" + size);
         if (tipoDte != null)
             urlBuilder.append("&tipoDte=").append(tipoDte);
         if (estado != null)
             urlBuilder.append("&estado=").append(estado);
 
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -107,8 +136,8 @@ public class BillingController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
 
-        String url = billingServiceUrl + "/api/dte/" + id;
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/dte/" + id;
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -119,8 +148,8 @@ public class BillingController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
 
-        String url = billingServiceUrl + "/api/dte/" + id + "/xml";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/dte/" + id + "/xml";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -131,8 +160,8 @@ public class BillingController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
 
-        String url = billingServiceUrl + "/api/dte/" + id + "/pdf";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/dte/" + id + "/pdf";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
     }
@@ -144,8 +173,8 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        String url = billingServiceUrl + "/api/caf";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/caf";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -155,8 +184,8 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        String url = billingServiceUrl + "/api/caf/disponibles";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/caf/disponibles";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -167,8 +196,8 @@ public class BillingController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> request) {
 
-        String url = billingServiceUrl + "/api/caf";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/caf";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
@@ -184,11 +213,11 @@ public class BillingController {
             @RequestParam(required = false) String tipoDte) {
 
         StringBuilder urlBuilder = new StringBuilder(
-                billingServiceUrl + "/api/dte/libro-ventas?desde=" + desde + "&hasta=" + hasta);
+                billingServiceUrl + "/api/billing/dte/libro-ventas?desde=" + desde + "&hasta=" + hasta);
         if (tipoDte != null)
             urlBuilder.append("&tipoDte=").append(tipoDte);
 
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
@@ -200,15 +229,22 @@ public class BillingController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        String url = billingServiceUrl + "/api/certificacion/status";
-        HttpHeaders headers = createBillingHeaders(authHeader, tenantId, null);
+        String url = billingServiceUrl + "/api/billing/certificacion/status";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
 
     // ==================== HELPER ====================
 
-    private HttpHeaders createBillingHeaders(String authHeader, String tenantId, String branchId) {
+    /**
+     * Creates headers with emisor information for DTE emission endpoints.
+     * Emisor headers are passed through from the frontend (which gets them from
+     * tenant data).
+     */
+    private HttpHeaders createBillingHeaders(String authHeader, String tenantId, String branchId,
+            String emisorRut, String emisorRazonSocial, String emisorGiro,
+            String emisorDireccion, String emisorComuna, String emisorLogoUrl) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         if (authHeader != null) {
@@ -220,15 +256,32 @@ public class BillingController {
         if (branchId != null) {
             headers.set("X-Branch-Id", branchId);
         }
-        // Set default emisor headers (would come from tenant/branch config in
-        // production)
-        // TODO: Fetch from Branch entity
-        headers.set("X-Emisor-Rut", "76.XXX.XXX-X");
-        headers.set("X-Emisor-RazonSocial", "CAFÉ MODERNO"); // TODO get from branch
-        headers.set("X-Emisor-Giro", "Cafetería y Restaurante");
-        headers.set("X-Emisor-Direccion", "Av. Providencia 1234");
-        headers.set("X-Emisor-Comuna", "Providencia");
-        headers.set("X-Emisor-Logo-Url", "https://via.placeholder.com/150"); // TODO: get from branch logoUrl
+        // Pass through emisor headers from frontend (defaults if not provided)
+        headers.set("X-Emisor-Rut", emisorRut != null ? emisorRut : "76.XXX.XXX-X");
+        headers.set("X-Emisor-RazonSocial", emisorRazonSocial != null ? emisorRazonSocial : "Mi Empresa");
+        if (emisorGiro != null)
+            headers.set("X-Emisor-Giro", emisorGiro);
+        if (emisorDireccion != null)
+            headers.set("X-Emisor-Direccion", emisorDireccion);
+        if (emisorComuna != null)
+            headers.set("X-Emisor-Comuna", emisorComuna);
+        if (emisorLogoUrl != null)
+            headers.set("X-Emisor-Logo-Url", emisorLogoUrl);
+        return headers;
+    }
+
+    /**
+     * Creates simple headers for GET requests that don't need emisor info.
+     */
+    private HttpHeaders createSimpleHeaders(String authHeader, String tenantId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (authHeader != null) {
+            headers.set("Authorization", authHeader);
+        }
+        if (tenantId != null) {
+            headers.set("X-Tenant-Id", tenantId);
+        }
         return headers;
     }
 }

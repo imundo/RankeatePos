@@ -106,29 +106,47 @@ export class BillingService {
         };
     }
 
+    /**
+     * Get headers including emisor (company) information for DTE emission
+     */
+    private getEmisorHeaders() {
+        const tenant = this.authService.tenant();
+        const baseHeaders = this.getHeaders();
+
+        return {
+            ...baseHeaders,
+            'X-Emisor-Rut': tenant?.rut || '',
+            'X-Emisor-RazonSocial': tenant?.razonSocial || tenant?.nombre || '',
+            'X-Emisor-Giro': tenant?.giro || '',
+            'X-Emisor-Direccion': tenant?.direccion || '',
+            'X-Emisor-Comuna': tenant?.comuna || '',
+            'X-Emisor-Logo-Url': tenant?.logoUrl || ''
+        };
+    }
+
     // ========== EMISION ==========
 
     emitirBoleta(request: EmitirDteRequest): Observable<Dte> {
         return this.http.post<Dte>(`${this.baseUrl}/billing/boleta`, request, {
-            headers: this.getHeaders()
+            headers: this.getEmisorHeaders()
         });
     }
 
     emitirFactura(request: EmitirDteRequest): Observable<Dte> {
         return this.http.post<Dte>(`${this.baseUrl}/billing/factura`, request, {
-            headers: this.getHeaders()
+            headers: this.getEmisorHeaders()
         });
     }
 
     emitirNotaCredito(request: EmitirDteRequest): Observable<Dte> {
         return this.http.post<Dte>(`${this.baseUrl}/billing/nota-credito`, request, {
-            headers: this.getHeaders()
+            headers: this.getEmisorHeaders()
         });
     }
 
     emitirNotaDebito(request: EmitirDteRequest): Observable<Dte> {
         return this.http.post<Dte>(`${this.baseUrl}/billing/nota-debito`, request, {
-            headers: this.getHeaders()
+            headers: this.getEmisorHeaders()
         });
     }
 
