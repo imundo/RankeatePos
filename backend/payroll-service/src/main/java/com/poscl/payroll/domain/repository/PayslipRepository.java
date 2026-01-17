@@ -12,18 +12,18 @@ import java.util.UUID;
 
 @Repository
 public interface PayslipRepository extends JpaRepository<Payslip, UUID> {
-    
-    List<Payslip> findByPeriodId(UUID periodId);
-    
+
+    List<Payslip> findByPayrollPeriodId(UUID periodId);
+
     List<Payslip> findByEmployeeId(UUID employeeId);
-    
-    Optional<Payslip> findByPeriodIdAndEmployeeId(UUID periodId, UUID employeeId);
-    
-    @Query("SELECT SUM(p.grossSalary) FROM Payslip p WHERE p.periodId = :periodId")
-    BigDecimal sumGrossSalaryByPeriodId(UUID periodId);
-    
-    @Query("SELECT SUM(p.netSalary) FROM Payslip p WHERE p.periodId = :periodId")
-    BigDecimal sumNetSalaryByPeriodId(UUID periodId);
-    
-    long countByPeriodId(UUID periodId);
+
+    Optional<Payslip> findByPayrollPeriodIdAndEmployeeId(UUID periodId, UUID employeeId);
+
+    @Query("SELECT SUM(p.grossSalary) FROM Payslip p WHERE p.payrollPeriod.id = :periodId")
+    BigDecimal sumGrossSalaryByPayrollPeriodId(UUID periodId);
+
+    @Query("SELECT SUM(p.netSalary) FROM Payslip p WHERE p.payrollPeriod.id = :periodId")
+    BigDecimal sumNetSalaryByPayrollPeriodId(UUID periodId);
+
+    long countByPayrollPeriodId(UUID periodId);
 }

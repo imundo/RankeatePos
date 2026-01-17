@@ -10,12 +10,12 @@ import java.util.UUID;
 
 @Repository
 public interface PayrollPeriodRepository extends JpaRepository<PayrollPeriod, UUID> {
-    
-    List<PayrollPeriod> findByTenantIdOrderByYearDescMonthDesc(UUID tenantId);
-    
-    Optional<PayrollPeriod> findByTenantIdAndYearAndMonth(UUID tenantId, int year, int month);
-    
+
+    List<PayrollPeriod> findByTenantIdOrderByPeriodYearDescPeriodMonthDesc(UUID tenantId);
+
+    Optional<PayrollPeriod> findByTenantIdAndPeriodYearAndPeriodMonth(UUID tenantId, int periodYear, int periodMonth);
+
     Optional<PayrollPeriod> findByIdAndTenantId(UUID id, UUID tenantId);
-    
-    Optional<PayrollPeriod> findFirstByTenantIdOrderByYearDescMonthDesc(UUID tenantId);
+
+    Optional<PayrollPeriod> findFirstByTenantIdOrderByPeriodYearDescPeriodMonthDesc(UUID tenantId);
 }

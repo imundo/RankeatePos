@@ -20,7 +20,7 @@ public class PayrollDataInitializer implements CommandLineRunner {
 
     private final EmployeeRepository employeeRepository;
     private final PayrollPeriodRepository periodRepository;
-    
+
     // Demo tenant ID
     private static final UUID DEMO_TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -42,8 +42,8 @@ public class PayrollDataInitializer implements CommandLineRunner {
         createEmployee("8.777.666-5", "Carmen", "Torres", "Administrativa", 950000, "029", "FNS");
     }
 
-    private void createEmployee(String rut, String firstName, String lastName, 
-                                 String position, int baseSalary, String afpCode, String healthCode) {
+    private void createEmployee(String rut, String firstName, String lastName,
+            String position, int baseSalary, String afpCode, String healthCode) {
         Employee emp = Employee.builder()
                 .tenantId(DEMO_TENANT_ID)
                 .rut(rut)
@@ -63,26 +63,26 @@ public class PayrollDataInitializer implements CommandLineRunner {
 
     private void initializePeriods() {
         LocalDate now = LocalDate.now();
-        
+
         // Current period
         PayrollPeriod currentPeriod = PayrollPeriod.builder()
                 .tenantId(DEMO_TENANT_ID)
-                .year(now.getYear())
-                .month(now.getMonthValue())
-                .status(PayrollPeriod.PeriodStatus.DRAFT)
-                .totalGrossSalary(BigDecimal.valueOf(9150000))
-                .totalNetSalary(BigDecimal.valueOf(7320000))
+                .periodYear(now.getYear())
+                .periodMonth(now.getMonthValue())
+                .status(PayrollPeriod.PayrollStatus.DRAFT)
+                .totalGross(BigDecimal.valueOf(9150000))
+                .totalNet(BigDecimal.valueOf(7320000))
                 .build();
         periodRepository.save(currentPeriod);
-        
+
         // Previous period (closed)
         PayrollPeriod previousPeriod = PayrollPeriod.builder()
                 .tenantId(DEMO_TENANT_ID)
-                .year(now.minusMonths(1).getYear())
-                .month(now.minusMonths(1).getMonthValue())
-                .status(PayrollPeriod.PeriodStatus.PAID)
-                .totalGrossSalary(BigDecimal.valueOf(9150000))
-                .totalNetSalary(BigDecimal.valueOf(7320000))
+                .periodYear(now.minusMonths(1).getYear())
+                .periodMonth(now.minusMonths(1).getMonthValue())
+                .status(PayrollPeriod.PayrollStatus.PAID)
+                .totalGross(BigDecimal.valueOf(9150000))
+                .totalNet(BigDecimal.valueOf(7320000))
                 .build();
         periodRepository.save(previousPeriod);
     }

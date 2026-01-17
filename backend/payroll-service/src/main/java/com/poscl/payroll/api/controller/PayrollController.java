@@ -32,16 +32,16 @@ public class PayrollController {
     public ResponseEntity<List<Map<String, Object>>> getEmployees(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestParam(required = false) Boolean active) {
-        
+
         UUID tid = parseTenantId(tenantId);
-        List<Employee> employees = active != null && active 
-            ? employeeService.findActive(tid) 
-            : employeeService.findAll(tid);
-        
+        List<Employee> employees = active != null && active
+                ? employeeService.findActive(tid)
+                : employeeService.findAll(tid);
+
         List<Map<String, Object>> result = employees.stream()
                 .map(this::mapEmployee)
                 .toList();
-        
+
         return ResponseEntity.ok(result);
     }
 
@@ -49,7 +49,7 @@ public class PayrollController {
     public ResponseEntity<?> getEmployee(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID id) {
-        
+
         UUID tid = parseTenantId(tenantId);
         return employeeService.findById(tid, id)
                 .map(emp -> ResponseEntity.ok(mapEmployee(emp)))
@@ -60,7 +60,7 @@ public class PayrollController {
     public ResponseEntity<?> createEmployee(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestBody Employee employee) {
-        
+
         UUID tid = parseTenantId(tenantId);
         Employee created = employeeService.create(tid, employee);
         return ResponseEntity.ok(mapEmployee(created));
@@ -71,14 +71,14 @@ public class PayrollController {
     @GetMapping("/periods")
     public ResponseEntity<List<Map<String, Object>>> getPayrollPeriods(
             @RequestHeader("X-Tenant-Id") String tenantId) {
-        
+
         UUID tid = parseTenantId(tenantId);
         List<PayrollPeriod> periods = periodService.findAll(tid);
-        
+
         List<Map<String, Object>> result = periods.stream()
                 .map(this::mapPeriod)
                 .toList();
-        
+
         return ResponseEntity.ok(result);
     }
 
@@ -86,11 +86,11 @@ public class PayrollController {
     public ResponseEntity<?> createPeriod(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestBody Map<String, Integer> request) {
-        
+
         UUID tid = parseTenantId(tenantId);
         int year = request.getOrDefault("year", LocalDate.now().getYear());
         int month = request.getOrDefault("month", LocalDate.now().getMonthValue());
-        
+
         PayrollPeriod period = periodService.create(tid, year, month);
         return ResponseEntity.ok(mapPeriod(period));
     }
@@ -99,7 +99,7 @@ public class PayrollController {
     public ResponseEntity<?> processPeriod(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID periodId) {
-        
+
         UUID tid = parseTenantId(tenantId);
         PayrollPeriod processed = periodService.process(tid, periodId);
         return ResponseEntity.ok(mapPeriod(processed));
@@ -111,23 +111,22 @@ public class PayrollController {
     public ResponseEntity<List<Map<String, Object>>> getPayslips(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID periodId) {
-        
+
         UUID tid = parseTenantId(tenantId);
         List<Payslip> payslips = periodService.getPayslips(periodId);
-        
+
         // Enrich with employee names
         List<Map<String, Object>> result = payslips.stream()
                 .map(p -> {
                     Map<String, Object> map = mapPayslip(p);
-                    employeeService.findById(tid, p.getEmployeeId())
-                            .ifPresent(emp -> {
-                                map.put("employeeName", emp.getFullName());
-                                map.put("employeeRut", emp.getRut());
-                            });
+                    if (p.getEmployee() != null) {
+                        map.put("employeeName", p.getEmployee().getFullName());
+                        map.put("employeeRut", p.getEmployee().getRut());
+                    }
                     return map;
                 })
                 .toList();
-        
+
         return ResponseEntity.ok(result);
     }
 
@@ -137,31 +136,30 @@ public class PayrollController {
     public ResponseEntity<byte[]> exportPrevired(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID periodId) {
-        
+
         UUID tid = parseTenantId(tenantId);
         List<Payslip> payslips = periodService.getPayslips(periodId);
-        
+
         // Convert to maps for export service
         List<Map<String, Object>> payslipMaps = payslips.stream()
                 .map(p -> {
                     Map<String, Object> map = mapPayslip(p);
-                    employeeService.findById(tid, p.getEmployeeId())
-                            .ifPresent(emp -> {
-                                map.put("employeeName", emp.getFullName());
-                                map.put("employeeRut", emp.getRut());
-                            });
+                    if (p.getEmployee() != null) {
+                        map.put("employeeName", p.getEmployee().getFullName());
+                        map.put("employeeRut", p.getEmployee().getRut());
+                    }
                     return map;
                 })
                 .toList();
-        
+
         LocalDate periodDate = LocalDate.now().withDayOfMonth(1);
         String content = previredExportService.generatePreviredFile(payslipMaps, periodDate);
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", 
-            String.format("previred_%s_%s.txt", periodDate.getMonthValue(), periodDate.getYear()));
-        
+        headers.setContentDispositionFormData("attachment",
+                String.format("previred_%s_%s.txt", periodDate.getMonthValue(), periodDate.getYear()));
+
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(content.getBytes());
@@ -175,28 +173,27 @@ public class PayrollController {
             @PathVariable String payslipId,
             @RequestParam(defaultValue = "2025") int year,
             @RequestParam(defaultValue = "12") int month) {
-        
+
         // For now, use demo data - would fetch from DB in full implementation
-        Map<String, Object> payslipData = Map.of(
-            "employeeName", "Demo Employee",
-            "employeeRut", "12.345.678-9",
-            "baseSalary", 2000000,
-            "grossSalary", 2000000,
-            "afpAmount", 205000,
-            "healthAmount", 140000,
-            "unemploymentAmount", 12000,
-            "taxAmount", 0,
-            "totalDeductions", 357000,
-            "netSalary", 1643000,
-            "daysWorked", 30
-        );
-        
+        Map<String, Object> payslipData = new HashMap<>();
+        payslipData.put("employeeName", "Demo Employee");
+        payslipData.put("employeeRut", "12.345.678-9");
+        payslipData.put("baseSalary", 2000000);
+        payslipData.put("grossSalary", 2000000);
+        payslipData.put("afpAmount", 205000);
+        payslipData.put("healthAmount", 140000);
+        payslipData.put("unemploymentAmount", 12000);
+        payslipData.put("taxAmount", 0);
+        payslipData.put("totalDeductions", 357000);
+        payslipData.put("netSalary", 1643000);
+        payslipData.put("daysWorked", 30);
+
         byte[] content = payslipPdfService.generatePayslip(payslipData, year, month);
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_HTML);
         headers.set("Content-Disposition", "inline; filename=liquidacion_" + month + "_" + year + ".html");
-        
+
         return ResponseEntity.ok().headers(headers).body(content);
     }
 
@@ -233,12 +230,12 @@ public class PayrollController {
     private Map<String, Object> mapPeriod(PayrollPeriod p) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", p.getId());
-        map.put("periodYear", p.getYear());
-        map.put("periodMonth", p.getMonth());
-        map.put("periodName", getMonthName(p.getMonth()) + " " + p.getYear());
+        map.put("periodYear", p.getPeriodYear());
+        map.put("periodMonth", p.getPeriodMonth());
+        map.put("periodName", getMonthName(p.getPeriodMonth()) + " " + p.getPeriodYear());
         map.put("status", p.getStatus());
-        map.put("totalGross", p.getTotalGrossSalary());
-        map.put("totalNet", p.getTotalNetSalary());
+        map.put("totalGross", p.getTotalGross());
+        map.put("totalNet", p.getTotalNet());
         return map;
     }
 
@@ -258,8 +255,8 @@ public class PayrollController {
     }
 
     private String getMonthName(int month) {
-        String[] names = {"", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        String[] names = { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
         return names[month];
     }
 }
