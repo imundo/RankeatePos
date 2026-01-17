@@ -140,24 +140,18 @@ public class DteController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // ==================== CONSULTA DE DTEs ====================
-
         @GetMapping
         @Operation(summary = "Listar DTEs")
         public ResponseEntity<Page<DteResponse>> listarDtes(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
                         @RequestParam(required = false) TipoDte tipoDte,
                         @RequestParam(required = false) EstadoDte estado,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
                         @PageableDefault(size = 20) Pageable pageable) {
 
-                log.info("GET /api/billing/dte - Tenant: {}", tenantId);
+                log.info("GET /api/billing/dte - Tenant: {}, Tipo: {}, Estado: {}", tenantId, tipoDte, estado);
 
-                Page<DteResponse> response = dteService.listarDtes(
-                                tenantId, tipoDte, estado, desde, hasta, pageable);
-
-                return ResponseEntity.ok(response);
+                Page<DteResponse> dtes = dteService.listarDtes(tenantId, tipoDte, estado, pageable);
+                return ResponseEntity.ok(dtes);
         }
 
         @GetMapping("/{id}")
@@ -168,37 +162,38 @@ public class DteController {
 
                 log.info("GET /api/billing/dte/{} - Tenant: {}", id, tenantId);
 
-                DteResponse response = dteService.getDteById(tenantId, id);
-
-                return ResponseEntity.ok(response);
+                DteResponse dte = dteService.getDte(tenantId, id);
+                return ResponseEntity.ok(dte);
         }
 
         @GetMapping("/{id}/xml")
-        @Operation(summary = "Obtener XML del DTE")
-        public ResponseEntity<String> getDteXml(
+        @Operation(summary = "Descargar XML del DTE")
+        public ResponseEntity<String> getXml(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
                         @PathVariable UUID id) {
 
-                log.info("GET /api/billing/dte/{}/xml - Tenant: {}", id, tenantId);
-
-                String xml = dteService.getDteXml(tenantId, id);
-
-                return ResponseEntity.ok(xml);
+                DteResponse dte = dteService.getDte(tenantId, id);
+                // TODO: Retornar XML real
+                return ResponseEntity.ok()
+                                .header("Content-Type", "application/xml")
+                                .header("Content-Disposition",
+                                                "attachment; filename=\"dte_" + dte.getTipoDte().getCodigo() + "_"
+                                                                + dte.getFolio() + ".xml\"")
+                                .body("<?xml version=\"1.0\"?><DTE><!-- TODO: XML content --></DTE>");
         }
 
-        @GetMapping("/{id}/pdf")
-        @Operation(summary = "Obtener PDF del DTE")
-        public ResponseEntity<byte[]> getDtePdf(
+        @GetMapping("/libro-ventas")
+        @Operation(summary = "Obtener Libro de Ventas")
+        public ResponseEntity<List<DteResponse>> getLibroVentas(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
-                        @PathVariable UUID id) {
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+                        @RequestParam(required = false) TipoDte tipoDte) {
 
-                log.info("GET /api/billing/dte/{}/pdf - Tenant: {}", id, tenantId);
+                log.info("GET /api/billing/dte/libro-ventas - Tenant: {}, Desde: {}, Hasta: {}", tenantId, desde,
+                                hasta);
 
-                byte[] pdf = dteService.getDtePdf(tenantId, id);
-
-                return ResponseEntity.ok()
-                                .header("Content-Type", "application/pdf")
-                                .header("Content-Disposition", "inline; filename=\"dte-\" + id + \".pdf\"")
-                                .body(pdf);
+                List<DteResponse> dtes = dteService.getLibroVentas(tenantId, desde, hasta, tipoDte);
+                return ResponseEntity.ok(dtes);
         }
 }
