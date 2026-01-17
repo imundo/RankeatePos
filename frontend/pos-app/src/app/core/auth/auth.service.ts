@@ -18,6 +18,14 @@ export interface AuthTenant {
     id: string;
     rut: string;
     nombre: string;
+    razonSocial?: string;
+    giro?: string;
+    direccion?: string;
+    comuna?: string;
+    ciudad?: string;
+    telefono?: string;
+    email?: string;
+    logoUrl?: string;
     businessType: string;
     plan: string;
 }

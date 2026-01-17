@@ -582,7 +582,11 @@ interface CartItem {
             <div class="thermal-receipt-container">
               <div class="thermal-receipt">
                 <div class="receipt-header">
-                  <div class="receipt-logo">☕</div>
+                  @if (tenantLogo()) {
+                    <img [src]="tenantLogo()" alt="Logo" class="receipt-logo-img" style="width:48px;height:48px;object-fit:contain;border-radius:50%;" />
+                  } @else {
+                    <div class="receipt-logo">{{ industryConfig().icon }}</div>
+                  }
                   <div class="receipt-title">{{ tipoDocumento === 'BOLETA' ? 'BOLETA ELECTRÓNICA' : tipoDocumento === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA' }}</div>
                   <div class="receipt-folio">N° 000{{ Math.floor(Math.random() * 1000) + 1 }}</div>
                   <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
@@ -591,9 +595,9 @@ interface CartItem {
                 <div class="receipt-divider"></div>
 
                 <div class="receipt-company">
-                  <div>CAFÉ MODERNO</div>
-                  <div>RUT: 76.XXX.XXX-X</div>
-                  <div>Dirección: Av. Providencia 1234</div>
+                  <div>{{ tenantName() }}</div>
+                  <div>RUT: {{ tenantRut() }}</div>
+                  <div>Dirección: {{ tenantDireccion() }}</div>
                 </div>
 
                 <div class="receipt-divider"></div>
@@ -3157,14 +3161,24 @@ export class PosComponent implements OnInit {
   };
 
   // Computed
-  tenantName = computed(() => this.authService.tenant()?.nombre || 'Mi Negocio');
+  tenantName = computed(() => this.authService.tenant()?.nombre || this.authService.tenant()?.razonSocial || 'Mi Negocio');
   tenantLogo = computed(() => {
+    // First try to use logoUrl from tenant (from database)
+    const logoUrl = this.authService.tenant()?.logoUrl;
+    if (logoUrl) return logoUrl;
+
+    // Fallback to local assets for demo
     const name = this.tenantName().toLowerCase();
     if (name.includes('trigal')) return '/assets/logos/eltrigal.png';
     if (name.includes('pedro')) return '/assets/logos/donpedro.png';
-    if (name.includes('academia') || name.includes('aprende')) return '';  // Uses emoji
-    if (name.includes('editorial') || name.includes('imprenta')) return '';  // Uses emoji
     return '';
+  });
+  tenantRut = computed(() => this.authService.tenant()?.rut || '76.XXX.XXX-X');
+  tenantDireccion = computed(() => {
+    const tenant = this.authService.tenant();
+    if (!tenant) return 'Av. Providencia 1234';
+    const parts = [tenant.direccion, tenant.comuna].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'Av. Providencia 1234';
   });
   industryConfig = computed(() => this.industryService.getIndustryConfig());
   // Pending sales count - uses actual pending sales from API

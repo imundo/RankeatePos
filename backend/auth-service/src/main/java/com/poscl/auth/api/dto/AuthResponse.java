@@ -16,15 +16,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
-    
+
     private String accessToken;
     private String refreshToken;
     private String tokenType;
     private Long expiresIn;
-    
+
     private UserInfo user;
     private TenantInfo tenant;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -37,7 +37,7 @@ public class AuthResponse {
         private Set<String> roles;
         private Set<String> permissions;
     }
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -45,7 +45,15 @@ public class AuthResponse {
     public static class TenantInfo {
         private UUID id;
         private String rut;
-        private String nombre;
+        private String nombre; // nombre_fantasia or razon_social
+        private String razonSocial;
+        private String giro;
+        private String direccion;
+        private String comuna;
+        private String ciudad;
+        private String telefono;
+        private String email;
+        private String logoUrl;
         private String businessType;
         private String plan;
     }
