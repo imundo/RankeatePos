@@ -108,7 +108,7 @@ public class DteController {
                 DteResponse response = dteService.emitirDte(
                                 tenantId, branchId, request,
                                 emisorRut, emisorRazonSocial, emisorGiro,
-                                emisorDireccion, emisorComuna, userId);
+                                emisorDireccion, emisorComuna, emisorLogoUrl, userId);
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
@@ -133,7 +133,7 @@ public class DteController {
                 DteResponse response = dteService.emitirDte(
                                 tenantId, branchId, request,
                                 emisorRut, emisorRazonSocial, emisorGiro,
-                                emisorDireccion, emisorComuna, userId);
+                                emisorDireccion, emisorComuna, emisorLogoUrl, userId);
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
