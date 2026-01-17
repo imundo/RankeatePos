@@ -38,7 +38,7 @@ public class DteController {
         @Operation(summary = "Emitir Boleta Electrónica")
         public ResponseEntity<DteResponse> emitirBoleta(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
-                        @RequestHeader("X-Branch-Id") UUID branchId,
+                        @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestHeader(value = "X-User-Id", required = false) UUID userId,
                         @RequestHeader("X-Emisor-Rut") String emisorRut,
                         @RequestHeader("X-Emisor-RazonSocial") String emisorRazonSocial,
@@ -65,7 +65,7 @@ public class DteController {
         @Operation(summary = "Emitir Factura Electrónica")
         public ResponseEntity<DteResponse> emitirFactura(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
-                        @RequestHeader("X-Branch-Id") UUID branchId,
+                        @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestHeader(value = "X-User-Id", required = false) UUID userId,
                         @RequestHeader("X-Emisor-Rut") String emisorRut,
                         @RequestHeader("X-Emisor-RazonSocial") String emisorRazonSocial,
@@ -92,7 +92,7 @@ public class DteController {
         @Operation(summary = "Emitir Nota de Crédito Electrónica")
         public ResponseEntity<DteResponse> emitirNotaCredito(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
-                        @RequestHeader("X-Branch-Id") UUID branchId,
+                        @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestHeader(value = "X-User-Id", required = false) UUID userId,
                         @RequestHeader("X-Emisor-Rut") String emisorRut,
                         @RequestHeader("X-Emisor-RazonSocial") String emisorRazonSocial,
@@ -118,7 +118,7 @@ public class DteController {
         @Operation(summary = "Emitir Nota de Débito Electrónica")
         public ResponseEntity<DteResponse> emitirNotaDebito(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
-                        @RequestHeader("X-Branch-Id") UUID branchId,
+                        @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestHeader(value = "X-User-Id", required = false) UUID userId,
                         @RequestHeader("X-Emisor-Rut") String emisorRut,
                         @RequestHeader("X-Emisor-RazonSocial") String emisorRazonSocial,
