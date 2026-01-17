@@ -8,7 +8,7 @@
 -- =====================================================
 -- TENANT (Empresa)
 -- =====================================================
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Datos empresa Chile
@@ -38,13 +38,13 @@ CREATE TABLE tenants (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_tenants_rut ON tenants(rut);
-CREATE INDEX idx_tenants_activo ON tenants(activo) WHERE activo = true;
+CREATE INDEX IF NOT EXISTS idx_tenants_rut ON tenants(rut);
+CREATE INDEX IF NOT EXISTS idx_tenants_activo ON tenants(activo) WHERE activo = true;
 
 -- =====================================================
 -- BRANCH (Sucursal)
 -- =====================================================
-CREATE TABLE branches (
+CREATE TABLE IF NOT EXISTS branches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id),
     
@@ -65,13 +65,13 @@ CREATE TABLE branches (
     UNIQUE(tenant_id, codigo)
 );
 
-CREATE INDEX idx_branches_tenant ON branches(tenant_id);
-CREATE INDEX idx_branches_activa ON branches(tenant_id, activa) WHERE activa = true;
+CREATE INDEX IF NOT EXISTS idx_branches_tenant ON branches(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_branches_activa ON branches(tenant_id, activa) WHERE activa = true;
 
 -- =====================================================
 -- ROLE (Rol del sistema)
 -- =====================================================
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id), -- NULL = rol global del sistema
     
@@ -89,12 +89,12 @@ CREATE TABLE roles (
     UNIQUE(tenant_id, nombre)
 );
 
-CREATE INDEX idx_roles_tenant ON roles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_roles_tenant ON roles(tenant_id);
 
 -- =====================================================
 -- USER (Usuario)
 -- =====================================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id),
     
@@ -119,40 +119,40 @@ CREATE TABLE users (
     UNIQUE(tenant_id, email)
 );
 
-CREATE INDEX idx_users_tenant ON users(tenant_id);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_activo ON users(tenant_id, activo) WHERE activo = true;
+CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_activo ON users(tenant_id, activo) WHERE activo = true;
 
 -- =====================================================
 -- USER_ROLES (Relación usuarios-roles)
 -- =====================================================
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     
     PRIMARY KEY (user_id, role_id)
 );
 
-CREATE INDEX idx_user_roles_user ON user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON user_roles(role_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role_id);
 
 -- =====================================================
 -- USER_BRANCHES (Usuarios asignados a sucursales)
 -- =====================================================
-CREATE TABLE user_branches (
+CREATE TABLE IF NOT EXISTS user_branches (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     branch_id UUID NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
     
     PRIMARY KEY (user_id, branch_id)
 );
 
-CREATE INDEX idx_user_branches_user ON user_branches(user_id);
-CREATE INDEX idx_user_branches_branch ON user_branches(branch_id);
+CREATE INDEX IF NOT EXISTS idx_user_branches_user ON user_branches(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_branches_branch ON user_branches(branch_id);
 
 -- =====================================================
 -- REFRESH_TOKEN
 -- =====================================================
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
@@ -164,6 +164,5 @@ CREATE TABLE refresh_tokens (
     revoked_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
-
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
