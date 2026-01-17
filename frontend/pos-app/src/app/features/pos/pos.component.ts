@@ -20,6 +20,7 @@ import { DemoDataService } from '@core/services/demo-data.service';
 import { FacturacionService } from '../facturacion/services/facturacion.service';
 import { SalesEventService } from '@core/services/sales-event.service';
 import { StockService } from '@core/services/stock.service'; // Import StockService
+import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
 
 interface CartItem {
@@ -364,7 +365,7 @@ interface CartItem {
             <!-- Checkout Button -->
             <button 
               class="btn btn-success btn-lg btn-block"
-              (click)="showPaymentDialog = true"
+              (click)="openCheckoutWithBarcodes()"
             >
               <i class="pi pi-check"></i>
               Cobrar {{ formatPrice(total()) }}
@@ -637,77 +638,20 @@ interface CartItem {
                 <div class="receipt-barcode-section">
                   <!-- PDF417 Barcode (Timbre SII) -->
                   <div class="pdf417-container">
-                    <svg viewBox="0 0 180 40" class="pdf417-svg">
-                      <rect x="2" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="7" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="11" y="2" width="5" height="36" fill="#000"/>
-                      <rect x="18" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="22" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="28" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="32" y="2" width="6" height="36" fill="#000"/>
-                      <rect x="40" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="45" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="51" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="55" y="2" width="5" height="36" fill="#000"/>
-                      <rect x="62" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="67" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="73" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="77" y="2" width="6" height="36" fill="#000"/>
-                      <rect x="85" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="89" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="95" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="100" y="2" width="5" height="36" fill="#000"/>
-                      <rect x="107" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="111" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="117" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="122" y="2" width="6" height="36" fill="#000"/>
-                      <rect x="130" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="134" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="140" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="145" y="2" width="5" height="36" fill="#000"/>
-                      <rect x="152" y="2" width="2" height="36" fill="#000"/>
-                      <rect x="156" y="2" width="4" height="36" fill="#000"/>
-                      <rect x="162" y="2" width="3" height="36" fill="#000"/>
-                      <rect x="167" y="2" width="5" height="36" fill="#000"/>
-                      <rect x="174" y="2" width="3" height="36" fill="#000"/>
-                    </svg>
+                    @if (previewPdf417()) {
+                      <img [src]="previewPdf417()" alt="PDF417 Timbre Electrónico" class="pdf417-img" />
+                    } @else {
+                      <div class="barcode-loading">Generando timbre...</div>
+                    }
                     <div class="barcode-label">Timbre Electrónico SII</div>
                   </div>
                   <!-- QR Code -->
                   <div class="qr-container">
-                    <svg viewBox="0 0 50 50" class="qr-svg">
-                      <rect x="2" y="2" width="12" height="12" fill="#000"/>
-                      <rect x="4" y="4" width="8" height="8" fill="#fff"/>
-                      <rect x="6" y="6" width="4" height="4" fill="#000"/>
-                      <rect x="36" y="2" width="12" height="12" fill="#000"/>
-                      <rect x="38" y="4" width="8" height="8" fill="#fff"/>
-                      <rect x="40" y="6" width="4" height="4" fill="#000"/>
-                      <rect x="2" y="36" width="12" height="12" fill="#000"/>
-                      <rect x="4" y="38" width="8" height="8" fill="#fff"/>
-                      <rect x="6" y="40" width="4" height="4" fill="#000"/>
-                      <rect x="16" y="6" width="2" height="2" fill="#000"/>
-                      <rect x="20" y="6" width="2" height="2" fill="#000"/>
-                      <rect x="24" y="6" width="2" height="2" fill="#000"/>
-                      <rect x="28" y="6" width="2" height="2" fill="#000"/>
-                      <rect x="32" y="6" width="2" height="2" fill="#000"/>
-                      <rect x="18" y="18" width="2" height="2" fill="#000"/>
-                      <rect x="22" y="18" width="4" height="2" fill="#000"/>
-                      <rect x="28" y="18" width="2" height="2" fill="#000"/>
-                      <rect x="34" y="18" width="4" height="2" fill="#000"/>
-                      <rect x="20" y="22" width="2" height="2" fill="#000"/>
-                      <rect x="26" y="22" width="4" height="2" fill="#000"/>
-                      <rect x="36" y="22" width="2" height="2" fill="#000"/>
-                      <rect x="18" y="26" width="4" height="2" fill="#000"/>
-                      <rect x="24" y="26" width="2" height="2" fill="#000"/>
-                      <rect x="30" y="26" width="4" height="2" fill="#000"/>
-                      <rect x="22" y="30" width="2" height="2" fill="#000"/>
-                      <rect x="28" y="30" width="6" height="2" fill="#000"/>
-                      <rect x="20" y="34" width="4" height="2" fill="#000"/>
-                      <rect x="26" y="34" width="2" height="2" fill="#000"/>
-                      <rect x="32" y="34" width="4" height="2" fill="#000"/>
-                      <rect x="36" y="36" width="6" height="6" fill="#000"/>
-                      <rect x="38" y="38" width="2" height="2" fill="#fff"/>
-                    </svg>
+                    @if (previewQrCode()) {
+                      <img [src]="previewQrCode()" alt="QR Code" class="qr-img" />
+                    } @else {
+                      <div class="barcode-loading">...</div>
+                    }
                   </div>
                 </div>
               </div>
@@ -3142,6 +3086,7 @@ export class PosComponent implements OnInit {
   private industryService = inject(IndustryMockDataService);
   private facturacionService = inject(FacturacionService);
   private demoDataService = inject(DemoDataService);
+  private barcodeService = inject(BarcodeService);
   private salesEventService = inject(SalesEventService);
 
   // State
@@ -3174,6 +3119,11 @@ export class PosComponent implements OnInit {
   showSuccessModal = false;
   lastSaleTotal = 0;
   lastSaleDocumento: { id?: string; tipo: string; tipoDte?: string; folio: number } | null = null;
+
+  // Barcode preview signals for DTE
+  previewFolio = signal<number>(Math.floor(Math.random() * 9000) + 1000);
+  previewPdf417 = signal<string>('');
+  previewQrCode = signal<string>('');
 
   // POS Session Management - Generate or retrieve persistent session ID for this terminal
   posSessionId: string = (() => {
@@ -3304,6 +3254,62 @@ export class PosComponent implements OnInit {
   popularProducts = computed(() => {
     return this.products().slice(0, 6);
   });
+
+  /**
+   * Generate preview barcodes (PDF417 and QR) for the receipt preview
+   * Called when opening checkout modal or changing document type
+   */
+  async generatePreviewBarcodes(): Promise<void> {
+    const tenant = this.authService.tenant();
+    const folio = this.previewFolio();
+    const total = this.total();
+    const fechaEmision = new Date().toISOString().split('T')[0];
+
+    const tipoDte = this.tipoDocumento === 'FACTURA' ? 'FACTURA_ELECTRONICA' : 'BOLETA_ELECTRONICA';
+
+    // Generate Timbre data
+    const timbreData = this.barcodeService.generateTimbreData({
+      tipoDte,
+      folio,
+      fechaEmision,
+      rutEmisor: tenant?.rut || '76.849.210-8',
+      razonSocialEmisor: tenant?.razonSocial || tenant?.nombre || 'Empresa Demo',
+      montoTotal: total
+    });
+
+    // Generate QR data (verification URL)
+    const qrData = this.barcodeService.generateQRData({
+      tipoDte,
+      folio,
+      fechaEmision,
+      rutEmisor: tenant?.rut || '76.849.210-8',
+      montoTotal: total
+    });
+
+    try {
+      // Generate PDF417 barcode
+      const pdf417 = await this.barcodeService.generatePDF417(timbreData);
+      this.previewPdf417.set(pdf417);
+
+      // Generate QR code
+      const qr = await this.barcodeService.generateQRCode(qrData);
+      this.previewQrCode.set(qr);
+    } catch (error) {
+      console.error('Error generating barcodes:', error);
+    }
+  }
+
+  /**
+   * Open checkout dialog and generate barcodes for preview
+   */
+  openCheckoutWithBarcodes(): void {
+    // Generate new folio for preview
+    this.previewFolio.set(Math.floor(Math.random() * 9000) + 1000);
+    // Show the dialog
+    this.showPaymentDialog = true;
+    // Generate barcodes asynchronously
+    this.generatePreviewBarcodes();
+  }
 
   // Quick action methods - Industry adaptive
   openWeightInput(): void {
