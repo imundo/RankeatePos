@@ -10,16 +10,25 @@ import { Injectable } from '@angular/core';
 export class BarcodeService {
     private bwipjs: any;
     private QRCode: any;
+    private librariesLoaded = false;
 
     constructor() {
         this.loadLibraries();
     }
 
     private async loadLibraries(): Promise<void> {
+        if (this.librariesLoaded) return;
+
         try {
             // Dynamic imports for browser compatibility
-            this.bwipjs = await import('bwip-js');
-            this.QRCode = await import('qrcode');
+            const bwipModule = await import('bwip-js');
+            this.bwipjs = bwipModule.default || bwipModule;
+
+            const qrModule = await import('qrcode');
+            this.QRCode = qrModule.default || qrModule;
+
+            this.librariesLoaded = true;
+            console.log('Barcode libraries loaded successfully');
         } catch (e) {
             console.error('Error loading barcode libraries:', e);
         }
@@ -40,7 +49,8 @@ export class BarcodeService {
                 // Create a canvas element
                 const canvas = document.createElement('canvas');
 
-                this.bwipjs.toCanvas(canvas, {
+                const bwip = this.bwipjs.default || this.bwipjs;
+                bwip.toCanvas(canvas, {
                     bcid: 'pdf417',
                     text: data,
                     scale: 2,
@@ -70,16 +80,23 @@ export class BarcodeService {
         }
 
         try {
-            return await this.QRCode.toDataURL(data, {
+            // Handle both ESM and CJS module formats
+            const qr = this.QRCode.default || this.QRCode;
+            const toDataURL = qr.toDataURL || qr;
+
+            const result = await toDataURL(data, {
                 errorCorrectionLevel: 'M',
                 type: 'image/png',
-                width: 120,
+                width: 150,
                 margin: 1,
                 color: {
                     dark: '#000000',
                     light: '#ffffff'
                 }
             });
+
+            console.log('QR Code generated successfully');
+            return result;
         } catch (e) {
             console.error('QR generation error:', e);
             throw e;
