@@ -45,4 +45,7 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
     Optional<java.math.BigDecimal> sumMontoTotalByTenantIdAndFecha(UUID tenantId, LocalDate fecha);
 
     Optional<Dte> findByVentaIdAndTenantId(UUID ventaId, UUID tenantId);
+
+    @Query("SELECT MAX(d.folio) FROM Dte d WHERE d.tenantId = :tenantId AND d.tipoDte = :tipoDte")
+    Integer findMaxFolioByTenantAndTipo(UUID tenantId, TipoDte tipoDte);
 }

@@ -199,23 +199,38 @@ public class DteService {
     // --- Métodos privados ---
 
     private Integer obtenerSiguienteFolio(UUID tenantId, TipoDte tipoDte) {
-        Caf caf = cafRepository.findCafDisponible(tenantId, tipoDte)
-                .orElseThrow(() -> new BusinessConflictException("SIN_FOLIOS",
-                        "No hay folios disponibles para " + tipoDte.getDescripcion() +
-                                ". Por favor, suba un nuevo CAF."));
+        // Try to get folio from CAF
+        var cafOpt = cafRepository.findCafDisponible(tenantId, tipoDte);
 
-        if (caf.isVencido()) {
-            throw new BusinessConflictException("CAF_VENCIDO",
-                    "El CAF para " + tipoDte.getDescripcion() + " está vencido.");
+        if (cafOpt.isPresent()) {
+            Caf caf = cafOpt.get();
+
+            if (caf.isVencido()) {
+                log.warn("CAF vencido para {} - usando modo demo", tipoDte);
+                return generarFolioDemo(tenantId, tipoDte);
+            }
+
+            Integer folio = caf.siguienteFolio();
+            cafRepository.save(caf);
+
+            log.debug("Folio {} asignado para {} (CAF: {}-{})",
+                    folio, tipoDte, caf.getFolioDesde(), caf.getFolioHasta());
+
+            return folio;
         }
 
-        Integer folio = caf.siguienteFolio();
-        cafRepository.save(caf);
+        // Demo mode: Generate sequential folio without CAF
+        log.info("Sin CAF configurado para {} - generando folio demo", tipoDte);
+        return generarFolioDemo(tenantId, tipoDte);
+    }
 
-        log.debug("Folio {} asignado para {} (CAF: {}-{})",
-                folio, tipoDte, caf.getFolioDesde(), caf.getFolioHasta());
-
-        return folio;
+    /**
+     * Genera folio para modo demo sin CAF
+     */
+    private Integer generarFolioDemo(UUID tenantId, TipoDte tipoDte) {
+        // Get max folio for this tenant and type
+        Integer maxFolio = dteRepository.findMaxFolioByTenantAndTipo(tenantId, tipoDte);
+        return (maxFolio != null ? maxFolio : 0) + 1;
     }
 
     private MontosDte calcularMontos(List<EmitirDteRequest.ItemDto> items, TipoDte tipoDte) {
