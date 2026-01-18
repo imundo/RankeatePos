@@ -3263,11 +3263,13 @@ export class PosComponent implements OnInit {
     const tenant = this.authService.tenant();
     const folio = this.previewFolio();
     const total = this.total();
-    const fechaEmision = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const fechaEmision = now.toISOString().split('T')[0];
+    const fechaHora = now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
     const tipoDte = this.tipoDocumento === 'FACTURA' ? 'FACTURA_ELECTRONICA' : 'BOLETA_ELECTRONICA';
 
-    // Generate Timbre data
+    // Generate Timbre data for PDF417
     const timbreData = this.barcodeService.generateTimbreData({
       tipoDte,
       folio,
@@ -3277,11 +3279,12 @@ export class PosComponent implements OnInit {
       montoTotal: total
     });
 
-    // Generate QR data (verification URL)
-    const qrData = this.barcodeService.generateQRData({
+    // Generate structured QR data with folio, date, and hash
+    const qrData = this.barcodeService.generateStructuredQRData({
       tipoDte,
       folio,
       fechaEmision,
+      fechaHora,
       rutEmisor: tenant?.rut || '76.849.210-8',
       montoTotal: total
     });
@@ -3291,7 +3294,7 @@ export class PosComponent implements OnInit {
       const pdf417 = await this.barcodeService.generatePDF417(timbreData);
       this.previewPdf417.set(pdf417);
 
-      // Generate QR code
+      // Generate QR code with structured data
       const qr = await this.barcodeService.generateQRCode(qrData);
       this.previewQrCode.set(qr);
     } catch (error) {
