@@ -3,27 +3,57 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { ReservationsService } from '@core/services/reservations.service';
+
+// Multi-industry service types
+interface ServiceType {
+  id: string;
+  codigo: string;
+  nombre: string;
+  icono: string;
+  duracionDefault: number;
+  color: string;
+  industria: 'restaurante' | 'salon' | 'clinica' | 'oficina' | 'general';
+}
+
+// Customer for database modal
+interface Customer {
+  id: string;
+  nombre: string;
+  telefono: string;
+  email?: string;
+  tier: 'vip' | 'gold' | 'silver' | 'bronze' | 'nuevo';
+  visitas: number;
+  gastoTotal: number;
+  ultimaVisita?: string;
+  notas?: string;
+}
 
 interface Reservation {
   id: string;
   cliente: string;
+  clienteId?: string;
   telefono: string;
   email?: string;
   fecha: string;
   hora: string;
   duracion: number;
   personas: number;
-  mesa?: string;
+  tipoServicio?: string;
+  recurso?: string; // mesa, silla, puesto, etc.
   estado: 'confirmada' | 'pendiente' | 'cancelada' | 'completada' | 'no_show';
   notas?: string;
+  precioEstimado?: number;
   createdAt: Date;
 }
 
-interface Table {
+interface Resource {
   id: string;
   numero: string;
+  nombre?: string;
   capacidad: number;
-  ubicacion: 'interior' | 'terraza' | 'privado';
+  tipo: string; // mesa, silla, puesto, consultorio
+  ubicacion: string;
   estado: 'disponible' | 'ocupada' | 'reservada' | 'mantenimiento';
 }
 
@@ -36,29 +66,57 @@ interface CalendarDay {
   reservations: Reservation[];
 }
 
+
 @Component({
   selector: 'app-reservations',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="reservations-container">
-      <!-- Header -->
-      <header class="res-header">
+      <!-- Premium Header -->
+      <header class="res-header premium-header">
         <div class="header-left">
           <a routerLink="/dashboard" class="back-btn">←</a>
           <div class="title-section">
-            <h1>📅 Reservas</h1>
-            <p class="subtitle">Gestiona reservas de mesas y citas</p>
+            <h1>📅 Reservas y Citas</h1>
+            <p class="subtitle">Gestión inteligente de reservas adaptable a tu negocio</p>
           </div>
         </div>
         <div class="header-actions">
+          <button class="action-btn customers-btn" (click)="showCustomerModal.set(true)">
+            <span class="btn-icon">👥</span>
+            <span>Clientes</span>
+            <span class="customer-badge">{{ customers().length }}</span>
+          </button>
           <button class="action-btn primary" (click)="openNewReservation()">
-            ➕ Nueva Reserva
+            ➕ Nueva {{ selectedServiceType()?.nombre || 'Reserva' }}
           </button>
         </div>
       </header>
 
-      <!-- Stats -->
+      <!-- Service Type Selector -->
+      <section class="service-type-section">
+        <div class="service-type-header">
+          <span class="section-label">🏪 Tipo de Servicio</span>
+          <span class="service-hint">Adapta las reservas a tu rubro</span>
+        </div>
+        <div class="service-type-grid">
+          @for (svc of serviceTypes; track svc.id) {
+            <button 
+              class="service-type-card" 
+              [class.active]="selectedServiceTypeId() === svc.id"
+              [style.--svc-color]="svc.color"
+              (click)="selectServiceType(svc)"
+            >
+              <span class="svc-icon">{{ svc.icono }}</span>
+              <span class="svc-name">{{ svc.nombre }}</span>
+              <span class="svc-industry">{{ svc.industria }}</span>
+            </button>
+          }
+        </div>
+      </section>
+
+      <!-- Stats with Revenue -->
       <div class="stats-grid">
         <div class="stat-card gradient-purple">
           <div class="stat-icon">📋</div>
@@ -82,10 +140,17 @@ interface CalendarDay {
           </div>
         </div>
         <div class="stat-card gradient-blue">
-          <div class="stat-icon">🪑</div>
+          <div class="stat-icon">{{ getResourceIcon() }}</div>
           <div class="stat-content">
-            <span class="stat-value">{{ availableTablesCount() }}/{{ tables().length }}</span>
-            <span class="stat-label">Mesas Libres</span>
+            <span class="stat-value">{{ availableResourcesCount() }}/{{ resources().length }}</span>
+            <span class="stat-label">{{ getResourceLabel() }} Libres</span>
+          </div>
+        </div>
+        <div class="stat-card gradient-emerald">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <span class="stat-value">{{ formatRevenue(estimatedRevenue()) }}</span>
+            <span class="stat-label">Ingresos Est. Hoy</span>
           </div>
         </div>
       </div>
@@ -374,6 +439,76 @@ interface CalendarDay {
           </div>
         </div>
       }
+
+      <!-- Customer Database Modal -->
+      @if (showCustomerModal()) {
+        <div class="modal-overlay" (click)="showCustomerModal.set(false)">
+          <div class="modal-content customer-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>👥 Base de Clientes</h2>
+              <button class="modal-close" (click)="showCustomerModal.set(false)">✕</button>
+            </div>
+            
+            <div class="customer-search-section">
+              <input 
+                type="text" 
+                class="customer-search-input"
+                placeholder="🔍 Buscar por nombre o teléfono..."
+                [ngModel]="customerSearchQuery()"
+                (ngModelChange)="customerSearchQuery.set($event)"
+              >
+              <div class="customer-filters">
+                <button 
+                  class="filter-btn" 
+                  [class.active]="customerFilter() === 'todos'"
+                  (click)="customerFilter.set('todos')"
+                >Todos</button>
+                <button 
+                  class="filter-btn" 
+                  [class.active]="customerFilter() === 'vip'"
+                  (click)="customerFilter.set('vip')"
+                >⭐ VIP</button>
+                <button 
+                  class="filter-btn" 
+                  [class.active]="customerFilter() === 'frecuentes'"
+                  (click)="customerFilter.set('frecuentes')"
+                >♦ Frecuentes</button>
+              </div>
+            </div>
+
+            <div class="customer-list">
+              @for (customer of filteredCustomers(); track customer.id) {
+                <div class="customer-card" (click)="selectCustomer(customer)">
+                  <div class="customer-avatar">{{ customer.nombre.charAt(0) }}</div>
+                  <div class="customer-info">
+                    <div class="customer-name-row">
+                      <span class="customer-name">{{ customer.nombre }}</span>
+                      <span class="customer-tier" [class]="customer.tier">
+                        {{ getTierIcon(customer.tier) }} {{ getTierLabel(customer.tier) }}
+                      </span>
+                    </div>
+                    <div class="customer-details">
+                      <span>📞 {{ customer.telefono }}</span>
+                      @if (customer.email) {
+                        <span>📧 {{ customer.email }}</span>
+                      }
+                    </div>
+                    <div class="customer-stats">
+                      <span>📅 {{ customer.visitas }} visitas</span>
+                      <span>💰 {{ formatRevenue(customer.gastoTotal) }} gastado</span>
+                    </div>
+                  </div>
+                  <button class="select-customer-btn">Seleccionar</button>
+                </div>
+              } @empty {
+                <div class="no-customers">
+                  <p>No se encontraron clientes</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -425,10 +560,11 @@ interface CalendarDay {
     /* Stats */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
 
@@ -441,11 +577,96 @@ interface CalendarDay {
     .gradient-green { background: linear-gradient(135deg, #10B981, #34D399); }
     .gradient-amber { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
     .gradient-blue { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+    .gradient-emerald { background: linear-gradient(135deg, #059669, #10B981); }
 
     .stat-icon { font-size: 2rem; }
     .stat-content { display: flex; flex-direction: column; }
     .stat-value { font-size: 1.5rem; font-weight: 800; }
     .stat-label { font-size: 0.8rem; opacity: 0.9; }
+
+    /* Premium Header enhancements */
+    .premium-header {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+    }
+
+    .customers-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #F9A8D4;
+    }
+    .customers-btn:hover {
+      background: rgba(236, 72, 153, 0.25);
+      transform: translateY(-2px);
+    }
+    .btn-icon { font-size: 1.1rem; }
+    .customer-badge {
+      background: #EC4899;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+    }
+
+    /* Service Type Selector */
+    .service-type-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-type-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .section-label { font-weight: 600; font-size: 0.95rem; }
+    .service-hint { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+
+    .service-type-grid {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .service-type-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      min-width: 90px;
+    }
+    .service-type-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    .service-type-card.active {
+      border-color: var(--svc-color, #6366F1);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    }
+
+    .svc-icon { font-size: 1.5rem; }
+    .svc-name { font-weight: 600; font-size: 0.85rem; }
+    .svc-industry { 
+      font-size: 0.65rem; 
+      color: rgba(255,255,255,0.4); 
+      text-transform: capitalize;
+    }
 
     /* Main Content */
     .main-content {
@@ -898,12 +1119,176 @@ interface CalendarDay {
       flex-wrap: wrap;
     }
     .view-res-actions .action-btn { flex: 1; min-width: 100px; text-align: center; }
+
+    /* Customer Modal Styles */
+    .customer-modal { max-width: 700px; }
+
+    .customer-search-section {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .customer-search-input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .customer-search-input:focus {
+      outline: none;
+      border-color: #EC4899;
+      background: rgba(236, 72, 153, 0.1);
+    }
+
+    .customer-filters {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.15); }
+    .filter-btn.active { 
+      background: linear-gradient(135deg, #EC4899, #DB2777);
+      color: white;
+    }
+
+    .customer-list {
+      padding: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .customer-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .customer-card:hover {
+      background: rgba(236, 72, 153, 0.1);
+      border-color: rgba(236, 72, 153, 0.3);
+      transform: translateX(5px);
+    }
+
+    .customer-avatar {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .customer-info { flex: 1; }
+
+    .customer-name-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .customer-name { font-weight: 600; font-size: 0.95rem; }
+    
+    .customer-tier {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+    }
+    .customer-tier.vip { background: rgba(234, 179, 8, 0.2); color: #FDE047; }
+    .customer-tier.gold { background: rgba(234, 179, 8, 0.15); color: #FBBF24; }
+    .customer-tier.silver { background: rgba(168, 162, 158, 0.2); color: #D6D3D1; }
+    .customer-tier.bronze { background: rgba(180, 83, 9, 0.2); color: #FB923C; }
+
+    .customer-details {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 0.25rem;
+    }
+
+    .customer-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .select-customer-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      background: rgba(99, 102, 241, 0.2);
+      color: #A5B4FC;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .select-customer-btn:hover {
+      background: #6366F1;
+      color: white;
+    }
+
+    .no-customers {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255,255,255,0.4);
+    }
   `]
 })
 export class ReservationsComponent implements OnInit {
   private authService = inject(AuthService);
+  private reservationsService = inject(ReservationsService);
 
-  // State
+  // Multi-industry service types configuration
+  serviceTypes: ServiceType[] = [
+    { id: '1', codigo: 'MESA', nombre: 'Mesa', icono: '🍽️', duracionDefault: 90, color: '#6366F1', industria: 'restaurante' },
+    { id: '2', codigo: 'SILLA', nombre: 'Silla', icono: '💇', duracionDefault: 45, color: '#EC4899', industria: 'salon' },
+    { id: '3', codigo: 'DOMICILIO', nombre: 'A Domicilio', icono: '🏠', duracionDefault: 60, color: '#10B981', industria: 'general' },
+    { id: '4', codigo: 'CONSULTORIO', nombre: 'Consultorio', icono: '🏥', duracionDefault: 30, color: '#3B82F6', industria: 'clinica' },
+    { id: '5', codigo: 'PUESTO', nombre: 'Puesto', icono: '💼', duracionDefault: 60, color: '#F59E0B', industria: 'oficina' },
+    { id: '6', codigo: 'SALA', nombre: 'Sala', icono: '🎬', duracionDefault: 120, color: '#8B5CF6', industria: 'general' },
+  ];
+
+  // Demo customers with loyalty tiers
+  customers = signal<Customer[]>([
+    { id: '1', nombre: 'María González', telefono: '+56912345678', email: 'maria@email.com', tier: 'vip', visitas: 24, gastoTotal: 450000, ultimaVisita: '2026-01-15' },
+    { id: '2', nombre: 'Juan Pérez', telefono: '+56987654321', email: 'juan@email.com', tier: 'gold', visitas: 15, gastoTotal: 280000, ultimaVisita: '2026-01-18' },
+    { id: '3', nombre: 'Ana Martínez', telefono: '+56911223344', tier: 'silver', visitas: 8, gastoTotal: 120000, ultimaVisita: '2026-01-10' },
+    { id: '4', nombre: 'Carlos López', telefono: '+56955667788', tier: 'bronze', visitas: 3, gastoTotal: 45000 },
+    { id: '5', nombre: 'Patricia Díaz', telefono: '+56944556677', email: 'paty@email.com', tier: 'gold', visitas: 12, gastoTotal: 220000 },
+  ]);
+
+  // State signals
+  selectedServiceTypeId = signal<string>('1');
+  showCustomerModal = signal(false);
+  customerSearchQuery = signal('');
+  selectedCustomer = signal<Customer | null>(null);
+  customerFilter = signal<'todos' | 'vip' | 'frecuentes'>('todos');
+
   currentMonth = signal(new Date());
   selectedDate = signal(new Date());
   showModal = signal(false);
@@ -916,34 +1301,61 @@ export class ReservationsComponent implements OnInit {
 
   // Demo reservations
   reservations = signal<Reservation[]>([
-    { id: '1', cliente: 'María González', telefono: '+56912345678', fecha: this.getTodayStr(), hora: '13:00', duracion: 90, personas: 4, mesa: '5', estado: 'confirmada', createdAt: new Date() },
-    { id: '2', cliente: 'Juan Pérez', telefono: '+56987654321', fecha: this.getTodayStr(), hora: '14:30', duracion: 60, personas: 2, mesa: '3', estado: 'confirmada', notas: 'Aniversario - traer postre especial', createdAt: new Date() },
-    { id: '3', cliente: 'Ana Martínez', telefono: '+56911223344', fecha: this.getTodayStr(), hora: '19:00', duracion: 120, personas: 8, mesa: '10', estado: 'pendiente', notas: 'Cumpleaños', createdAt: new Date() },
+    { id: '1', cliente: 'María González', telefono: '+56912345678', fecha: this.getTodayStr(), hora: '13:00', duracion: 90, personas: 4, recurso: '5', tipoServicio: 'mesa', estado: 'confirmada', createdAt: new Date() },
+    { id: '2', cliente: 'Juan Pérez', telefono: '+56987654321', fecha: this.getTodayStr(), hora: '14:30', duracion: 60, personas: 2, recurso: '3', tipoServicio: 'mesa', estado: 'confirmada', notas: 'Aniversario - traer postre especial', createdAt: new Date() },
+    { id: '3', cliente: 'Ana Martínez', telefono: '+56911223344', fecha: this.getTodayStr(), hora: '19:00', duracion: 120, personas: 8, recurso: '10', tipoServicio: 'mesa', estado: 'pendiente', notas: 'Cumpleaños', createdAt: new Date() },
     { id: '4', cliente: 'Carlos López', telefono: '+56955667788', fecha: this.getTodayStr(), hora: '20:00', duracion: 90, personas: 6, estado: 'pendiente', createdAt: new Date() },
-    { id: '5', cliente: 'Patricia Díaz', telefono: '+56944556677', fecha: this.getTodayStr(), hora: '21:00', duracion: 90, personas: 4, mesa: '7', estado: 'confirmada', createdAt: new Date() },
-    { id: '6', cliente: 'Roberto Silva', telefono: '+56933445566', fecha: this.getTomorrowStr(), hora: '20:00', duracion: 120, personas: 10, mesa: '10', estado: 'pendiente', notas: 'Reunión de trabajo', createdAt: new Date() },
+    { id: '5', cliente: 'Patricia Díaz', telefono: '+56944556677', fecha: this.getTodayStr(), hora: '21:00', duracion: 90, personas: 4, recurso: '7', tipoServicio: 'mesa', estado: 'confirmada', createdAt: new Date() },
+    { id: '6', cliente: 'Roberto Silva', telefono: '+56933445566', fecha: this.getTomorrowStr(), hora: '20:00', duracion: 120, personas: 10, recurso: '10', tipoServicio: 'mesa', estado: 'pendiente', notas: 'Reunión de trabajo', createdAt: new Date() },
   ]);
 
-  // Demo tables
-  tables = signal<Table[]>([
-    { id: '1', numero: '1', capacidad: 2, ubicacion: 'interior', estado: 'disponible' },
-    { id: '2', numero: '2', capacidad: 2, ubicacion: 'interior', estado: 'disponible' },
-    { id: '3', numero: '3', capacidad: 2, ubicacion: 'interior', estado: 'reservada' },
-    { id: '4', numero: '4', capacidad: 4, ubicacion: 'interior', estado: 'ocupada' },
-    { id: '5', numero: '5', capacidad: 4, ubicacion: 'interior', estado: 'reservada' },
-    { id: '6', numero: '6', capacidad: 4, ubicacion: 'terraza', estado: 'disponible' },
-    { id: '7', numero: '7', capacidad: 4, ubicacion: 'terraza', estado: 'reservada' },
-    { id: '8', numero: '8', capacidad: 6, ubicacion: 'terraza', estado: 'disponible' },
-    { id: '9', numero: '9', capacidad: 6, ubicacion: 'privado', estado: 'disponible' },
-    { id: '10', numero: '10', capacidad: 10, ubicacion: 'privado', estado: 'reservada' },
+  // Demo resources (tables, chairs, rooms, etc.)
+  resources = signal<Resource[]>([
+    { id: '1', numero: '1', capacidad: 2, tipo: 'mesa', ubicacion: 'interior', estado: 'disponible' },
+    { id: '2', numero: '2', capacidad: 2, tipo: 'mesa', ubicacion: 'interior', estado: 'disponible' },
+    { id: '3', numero: '3', capacidad: 2, tipo: 'mesa', ubicacion: 'interior', estado: 'reservada' },
+    { id: '4', numero: '4', capacidad: 4, tipo: 'mesa', ubicacion: 'interior', estado: 'ocupada' },
+    { id: '5', numero: '5', capacidad: 4, tipo: 'mesa', ubicacion: 'interior', estado: 'reservada' },
+    { id: '6', numero: '6', capacidad: 4, tipo: 'mesa', ubicacion: 'terraza', estado: 'disponible' },
+    { id: '7', numero: '7', capacidad: 4, tipo: 'mesa', ubicacion: 'terraza', estado: 'reservada' },
+    { id: '8', numero: '8', capacidad: 6, tipo: 'mesa', ubicacion: 'terraza', estado: 'disponible' },
+    { id: '9', numero: '9', capacidad: 6, tipo: 'mesa', ubicacion: 'privado', estado: 'disponible' },
+    { id: '10', numero: '10', capacidad: 10, tipo: 'mesa', ubicacion: 'privado', estado: 'reservada' },
   ]);
 
-  // Computed
+  // Alias for backward compatibility
+  tables = this.resources;
+
+  // Computed - Core
   todayReservations = computed(() => this.reservations().filter(r => r.fecha === this.getTodayStr()).length);
   confirmedCount = computed(() => this.reservations().filter(r => r.estado === 'confirmada').length);
   pendingCount = computed(() => this.reservations().filter(r => r.estado === 'pendiente').length);
   availableTablesCount = computed(() => this.tables().filter(t => t.estado === 'disponible').length);
   availableTables = computed(() => this.tables().filter(t => t.estado === 'disponible'));
+
+  // Computed - Premium features
+  selectedServiceType = computed(() => this.serviceTypes.find(s => s.id === this.selectedServiceTypeId()) || null);
+  availableResourcesCount = computed(() => this.resources().filter(r => r.estado === 'disponible').length);
+
+  estimatedRevenue = computed(() => {
+    const today = this.getTodayStr();
+    return this.reservations()
+      .filter(r => r.fecha === today && r.estado !== 'cancelada')
+      .reduce((sum, r) => sum + (r.precioEstimado || r.personas * 15000), 0);
+  });
+
+  filteredCustomers = computed(() => {
+    const query = this.customerSearchQuery().toLowerCase();
+    const filter = this.customerFilter();
+
+    return this.customers().filter(c => {
+      const matchesQuery = !query || c.nombre.toLowerCase().includes(query) || c.telefono.includes(query);
+      const matchesFilter = filter === 'todos' ||
+        (filter === 'vip' && c.tier === 'vip') ||
+        (filter === 'frecuentes' && c.visitas >= 5);
+      return matchesQuery && matchesFilter;
+    });
+  });
 
   selectedDayReservations = computed(() => {
     const dateStr = this.selectedDate().toISOString().split('T')[0];
@@ -1026,7 +1438,8 @@ export class ReservationsComponent implements OnInit {
       hora: '19:00',
       duracion: 90,
       personas: 2,
-      mesa: '',
+      tipoServicio: '',
+      recurso: '',
       notas: ''
     };
   }
@@ -1115,7 +1528,8 @@ export class ReservationsComponent implements OnInit {
       hora: res.hora,
       duracion: res.duracion,
       personas: res.personas,
-      mesa: res.mesa || '',
+      tipoServicio: res.tipoServicio || '',
+      recurso: res.recurso || '',
       notas: res.notas || ''
     };
     this.showModal.set(true);
@@ -1127,7 +1541,7 @@ export class ReservationsComponent implements OnInit {
     if (this.editingReservation()) {
       this.reservations.update(list => list.map(r =>
         r.id === this.editingReservation()!.id
-          ? { ...r, ...this.formData, mesa: this.formData.mesa || undefined, notas: this.formData.notas || undefined }
+          ? { ...r, ...this.formData, recurso: this.formData.recurso || undefined, notas: this.formData.notas || undefined }
           : r
       ));
     } else {
@@ -1140,7 +1554,7 @@ export class ReservationsComponent implements OnInit {
         hora: this.formData.hora,
         duracion: this.formData.duracion,
         personas: this.formData.personas,
-        mesa: this.formData.mesa || undefined,
+        recurso: this.formData.recurso || undefined,
         estado: 'pendiente',
         notas: this.formData.notas || undefined,
         createdAt: new Date()
@@ -1172,15 +1586,15 @@ export class ReservationsComponent implements OnInit {
     }
   }
 
-  toggleTableStatus(table: Table) {
-    const statusFlow: Record<string, Table['estado']> = {
+  toggleResourceStatus(resource: Resource) {
+    const statusFlow: Record<string, Resource['estado']> = {
       'disponible': 'reservada',
       'reservada': 'ocupada',
       'ocupada': 'disponible',
       'mantenimiento': 'disponible'
     };
-    this.tables.update(list => list.map(t =>
-      t.id === table.id ? { ...t, estado: statusFlow[t.estado] } : t
+    this.resources.update(list => list.map(r =>
+      r.id === resource.id ? { ...r, estado: statusFlow[r.estado] } : r
     ));
   }
 
@@ -1213,5 +1627,64 @@ export class ReservationsComponent implements OnInit {
       'privado': '🚪'
     };
     return emojis[ubicacion] || '';
+  }
+
+  // Premium helper methods
+  selectServiceType(svc: ServiceType): void {
+    this.selectedServiceTypeId.set(svc.id);
+    this.formData.tipoServicio = svc.codigo;
+    this.formData.duracion = svc.duracionDefault;
+  }
+
+  getResourceIcon(): string {
+    const svc = this.selectedServiceType();
+    return svc?.icono || '🪑';
+  }
+
+  getResourceLabel(): string {
+    const svc = this.selectedServiceType();
+    const labels: Record<string, string> = {
+      'MESA': 'Mesas',
+      'SILLA': 'Sillas',
+      'CONSULTORIO': 'Consultorios',
+      'PUESTO': 'Puestos',
+      'SALA': 'Salas',
+      'DOMICILIO': 'Cupos'
+    };
+    return labels[svc?.codigo || ''] || 'Recursos';
+  }
+
+  formatRevenue(amount: number): string {
+    return '$' + amount.toLocaleString('es-CL');
+  }
+
+  selectCustomer(customer: Customer): void {
+    this.selectedCustomer.set(customer);
+    this.formData.cliente = customer.nombre;
+    this.formData.telefono = customer.telefono;
+    this.formData.email = customer.email || '';
+    this.showCustomerModal.set(false);
+  }
+
+  getTierIcon(tier: Customer['tier']): string {
+    const icons: Record<string, string> = {
+      'vip': '⭐',
+      'gold': '🥇',
+      'silver': '🥈',
+      'bronze': '🥉',
+      'nuevo': '🆕'
+    };
+    return icons[tier] || '';
+  }
+
+  getTierLabel(tier: Customer['tier']): string {
+    const labels: Record<string, string> = {
+      'vip': 'VIP',
+      'gold': 'Gold',
+      'silver': 'Silver',
+      'bronze': 'Bronze',
+      'nuevo': 'Nuevo'
+    };
+    return labels[tier] || tier;
   }
 }
