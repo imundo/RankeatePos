@@ -140,29 +140,42 @@ interface AutomationConfig {
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="reservations-container">
-      <!-- Premium Header -->
+      <!-- Premium Header with Glassmorphism -->
       <header class="res-header premium-header">
-        <div class="header-left">
-          <a routerLink="/dashboard" class="back-btn">←</a>
-          <div class="title-section">
-            <h1>📅 Reservas y Citas</h1>
-            <p class="subtitle">Gestión inteligente de reservas adaptable a tu negocio</p>
+        <div class="header-glow"></div>
+        <div class="header-content">
+          <div class="header-left">
+            <a routerLink="/dashboard" class="back-btn-premium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m0 0l7-7m-7 7l7 7"/></svg>
+            </a>
+            <div class="title-section">
+              <div class="title-row">
+                <span class="title-icon">📅</span>
+                <h1>Reservas y Citas</h1>
+                <span class="status-pill live">
+                  <span class="pulse-dot"></span>
+                  En vivo
+                </span>
+              </div>
+              <p class="subtitle">Gestión inteligente adaptable a tu negocio</p>
+            </div>
           </div>
-        </div>
-        <div class="header-actions">
-          <button class="action-btn automation-btn" (click)="showAutomationModal.set(true)">
-            <span class="btn-icon">⚙️</span>
-            <span>Automatizaciones</span>
-            <span class="automation-badge">{{ activeAutomationsCount() }}</span>
-          </button>
-          <button class="action-btn customers-btn" (click)="showCustomerModal.set(true)">
-            <span class="btn-icon">👥</span>
-            <span>Clientes</span>
-            <span class="customer-badge">{{ customers().length }}</span>
-          </button>
-          <button class="action-btn primary" (click)="openNewReservation()">
-            ➕ Nueva {{ selectedServiceType()?.nombre || 'Reserva' }}
-          </button>
+          <div class="header-actions">
+            <div class="quick-actions">
+              <button class="icon-action-btn" (click)="showAutomationModal.set(true)" title="Automatizaciones">
+                ⚙️
+                <span class="action-count">{{ activeAutomationsCount() }}</span>
+              </button>
+              <button class="icon-action-btn" (click)="showCustomerModal.set(true)" title="Base de Clientes">
+                👥
+                <span class="action-count">{{ customers().length }}</span>
+              </button>
+            </div>
+            <button class="primary-action-btn" (click)="openNewReservation()">
+              <span class="btn-plus">+</span>
+              <span>Nueva {{ selectedServiceType()?.nombre || 'Reserva' }}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -937,32 +950,170 @@ interface AutomationConfig {
       background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
       color: white;
       padding: 1.5rem;
+      position: relative;
     }
 
-    /* Header */
+    /* Premium Header */
     .res-header {
+      position: relative;
+      margin-bottom: 1.5rem;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .premium-header {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.04));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+    }
+
+    .header-glow {
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 60%;
+      height: 200%;
+      background: radial-gradient(ellipse, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      animation: glowPulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { opacity: 0.5; transform: translateX(0); }
+      100% { opacity: 1; transform: translateX(10%); }
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      padding: 1.25rem 1.5rem;
       flex-wrap: wrap;
       gap: 1rem;
     }
 
     .header-left { display: flex; align-items: center; gap: 1rem; }
 
-    .back-btn {
+    .back-btn-premium {
       width: 44px; height: 44px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex; align-items: center; justify-content: center;
-      text-decoration: none; color: white; font-size: 1.25rem;
-      transition: all 0.2s;
+      text-decoration: none; color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .back-btn:hover { background: rgba(255, 255, 255, 0.15); }
+    .back-btn-premium svg { width: 20px; height: 20px; }
+    .back-btn-premium:hover { 
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateX(-3px);
+    }
 
-    .title-section h1 { margin: 0; font-size: 1.5rem; }
-    .subtitle { color: rgba(255, 255, 255, 0.6); margin: 0.25rem 0 0; font-size: 0.875rem; }
+    .title-section h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .subtitle { color: rgba(255, 255, 255, 0.5); margin: 0.35rem 0 0; font-size: 0.85rem; }
+
+    .title-row { display: flex; align-items: center; gap: 0.75rem; }
+    .title-icon { font-size: 1.75rem; }
+    
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-pill.live {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pulse-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+
+    .quick-actions { display: flex; gap: 0.5rem; }
+
+    .icon-action-btn {
+      position: relative;
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .icon-action-btn:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+    }
+    .action-count {
+      position: absolute;
+      top: -4px; right: -4px;
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #8B5CF6, #6366F1);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    }
+
+    .primary-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.5rem;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+    .primary-action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+    }
+    .primary-action-btn:active { transform: translateY(-1px); }
+    .btn-plus {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
 
     .action-btn {
       padding: 0.75rem 1.5rem; border-radius: 12px;
@@ -989,20 +1140,37 @@ interface AutomationConfig {
     @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
 
     .stat-card {
-      padding: 1.25rem; border-radius: 16px;
-      display: flex; align-items: center; gap: 1rem;
+      position: relative;
+      padding: 1.25rem;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
     }
 
-    .gradient-purple { background: linear-gradient(135deg, #6366F1, #8B5CF6); }
-    .gradient-green { background: linear-gradient(135deg, #10B981, #34D399); }
-    .gradient-amber { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
-    .gradient-blue { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
-    .gradient-emerald { background: linear-gradient(135deg, #059669, #10B981); }
+    .gradient-purple { background: linear-gradient(135deg, #6366F1, #8B5CF6); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25); }
+    .gradient-green { background: linear-gradient(135deg, #10B981, #34D399); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25); }
+    .gradient-amber { background: linear-gradient(135deg, #F59E0B, #FBBF24); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25); }
+    .gradient-blue { background: linear-gradient(135deg, #3B82F6, #60A5FA); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25); }
+    .gradient-emerald { background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25); }
 
-    .stat-icon { font-size: 2rem; }
-    .stat-content { display: flex; flex-direction: column; }
-    .stat-value { font-size: 1.5rem; font-weight: 800; }
-    .stat-label { font-size: 0.8rem; opacity: 0.9; }
+    .stat-icon { font-size: 2.25rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .stat-content { display: flex; flex-direction: column; position: relative; z-index: 1; }
+    .stat-value { font-size: 1.6rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    .stat-label { font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
 
     /* Marketing Hub Section */
     .marketing-hub-section {
