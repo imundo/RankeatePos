@@ -66,7 +66,74 @@ interface CalendarDay {
   reservations: Reservation[];
 }
 
+// Automation System Interfaces
+interface Automation {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'auto-respuesta' | 'recordatorio' | 'campaña';
+  trigger: 'nueva-reserva' | 'confirmacion' | 'cancelacion' | 'completada' |
+  '24h-antes' | '2h-antes' | 'cumpleaños' | 'inactividad' | 'manual';
+  canales: ('email' | 'whatsapp')[];
+  templateId: string;
+  activa: boolean;
+  condiciones?: {
+    soloVIP?: boolean;
+    diasInactividad?: number;
+  };
+}
 
+interface MessageTemplate {
+  id: string;
+  nombre: string;
+  tipo: 'email' | 'whatsapp' | 'ambos';
+  asunto?: string;
+  contenido: string;
+  variables: string[];
+}
+
+interface AutomationLog {
+  id: string;
+  automationId: string;
+  automationNombre: string;
+  clienteNombre: string;
+  canal: 'email' | 'whatsapp';
+  estado: 'enviado' | 'fallido' | 'pendiente';
+  fechaEnvio: string;
+  mensaje: string;
+}
+
+interface WhatsAppConfig {
+  provider: 'twilio' | 'meta' | 'messagebird' | 'none';
+  accountSid: string;
+  authToken: string;
+  phoneNumberId: string;
+  accessToken: string;
+  fromNumber: string;
+  enabled: boolean;
+  testMode: boolean;
+}
+
+interface EmailConfig {
+  provider: 'sendgrid' | 'smtp' | 'mailgun' | 'none';
+  apiKey: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  fromEmail: string;
+  fromName: string;
+  enabled: boolean;
+  testMode: boolean;
+}
+
+interface AutomationConfig {
+  whatsapp: WhatsAppConfig;
+  email: EmailConfig;
+  negocioNombre: string;
+  negocioDireccion: string;
+  negocioTelefono: string;
+}
 @Component({
   selector: 'app-reservations',
   standalone: true,
@@ -83,6 +150,11 @@ interface CalendarDay {
           </div>
         </div>
         <div class="header-actions">
+          <button class="action-btn automation-btn" (click)="showAutomationModal.set(true)">
+            <span class="btn-icon">⚙️</span>
+            <span>Automatizaciones</span>
+            <span class="automation-badge">{{ activeAutomationsCount() }}</span>
+          </button>
           <button class="action-btn customers-btn" (click)="showCustomerModal.set(true)">
             <span class="btn-icon">👥</span>
             <span>Clientes</span>
@@ -579,9 +651,263 @@ interface CalendarDay {
                   </div>
                   <button class="select-customer-btn" (click)="selectCustomer(customer)">Seleccionar</button>
                 </div>
-              } @empty {
-                <div class="no-customers">
-                  <p>No se encontraron clientes</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Automation System Modal -->
+      @if (showAutomationModal()) {
+        <div class="modal-overlay" (click)="showAutomationModal.set(false)">
+          <div class="modal-content automation-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header automation-header">
+              <div class="automation-title">
+                <h2>⚙️ Centro de Automatizaciones</h2>
+                <span class="plan-badge">{{ getCurrentPlan() }}</span>
+              </div>
+              <button class="modal-close" (click)="showAutomationModal.set(false)">✕</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="automation-tabs">
+              <button class="tab-btn" [class.active]="automationTab() === 'flujos'" (click)="automationTab.set('flujos')">
+                🤖 Flujos
+              </button>
+              <button class="tab-btn" [class.active]="automationTab() === 'templates'" (click)="automationTab.set('templates')">
+                📝 Templates
+              </button>
+              <button class="tab-btn" [class.active]="automationTab() === 'historial'" (click)="automationTab.set('historial')">
+                📊 Historial
+              </button>
+              <button class="tab-btn" [class.active]="automationTab() === 'config'" (click)="automationTab.set('config')">
+                🔧 Configuración
+              </button>
+            </div>
+
+            <div class="automation-content">
+              <!-- Flujos Tab -->
+              @if (automationTab() === 'flujos') {
+                <div class="flujos-section">
+                  <div class="section-intro">
+                    <p>Activa o desactiva automatizaciones según tus necesidades</p>
+                  </div>
+                  <div class="automations-list">
+                    @for (auto of automations(); track auto.id) {
+                      <div class="automation-item" [class.active]="auto.activa">
+                        <div class="auto-icon">{{ getAutoIcon(auto.trigger) }}</div>
+                        <div class="auto-info">
+                          <span class="auto-name">{{ auto.nombre }}</span>
+                          <span class="auto-desc">{{ auto.descripcion }}</span>
+                          <div class="auto-channels">
+                            @for (canal of auto.canales; track canal) {
+                              <span class="channel-tag" [class]="canal">{{ canal === 'email' ? '📧' : '💬' }} {{ canal }}</span>
+                            }
+                          </div>
+                        </div>
+                        <label class="toggle-switch">
+                          <input type="checkbox" [checked]="auto.activa" (change)="toggleAutomation(auto)">
+                          <span class="toggle-slider"></span>
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Templates Tab -->
+              @if (automationTab() === 'templates') {
+                <div class="templates-section">
+                  <div class="templates-header">
+                    <p>Personaliza los mensajes de tus automatizaciones</p>
+                    <div class="variables-hint">
+                      Variables: <code>{{ '{{cliente}}' }}</code> <code>{{ '{{fecha}}' }}</code> <code>{{ '{{hora}}' }}</code> <code>{{ '{{negocio}}' }}</code>
+                    </div>
+                  </div>
+                  <div class="templates-list">
+                    @for (template of messageTemplates(); track template.id) {
+                      <div class="template-card" (click)="editTemplate(template)">
+                        <div class="template-header-row">
+                          <span class="template-name">{{ template.nombre }}</span>
+                          <span class="template-type" [class]="template.tipo">{{ template.tipo }}</span>
+                        </div>
+                        @if (template.asunto) {
+                          <div class="template-subject">Asunto: {{ template.asunto }}</div>
+                        }
+                        <div class="template-preview">{{ template.contenido.substring(0, 100) }}...</div>
+                        <button class="edit-template-btn">✏️ Editar</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Historial Tab -->
+              @if (automationTab() === 'historial') {
+                <div class="historial-section">
+                  <div class="historial-stats">
+                    <div class="stat-box">
+                      <span class="stat-val">{{ automationLogs().length }}</span>
+                      <span class="stat-lbl">Total Enviados</span>
+                    </div>
+                    <div class="stat-box success">
+                      <span class="stat-val">{{ automationLogs().filter(l => l.estado === 'enviado').length }}</span>
+                      <span class="stat-lbl">Exitosos</span>
+                    </div>
+                    <div class="stat-box error">
+                      <span class="stat-val">{{ automationLogs().filter(l => l.estado === 'fallido').length }}</span>
+                      <span class="stat-lbl">Fallidos</span>
+                    </div>
+                  </div>
+                  <div class="logs-list">
+                    @for (log of automationLogs().slice(0, 20); track log.id) {
+                      <div class="log-item" [class]="log.estado">
+                        <span class="log-icon">{{ log.canal === 'email' ? '📧' : '💬' }}</span>
+                        <div class="log-info">
+                          <span class="log-auto">{{ log.automationNombre }}</span>
+                          <span class="log-client">→ {{ log.clienteNombre }}</span>
+                        </div>
+                        <span class="log-status">{{ log.estado === 'enviado' ? '✅' : log.estado === 'fallido' ? '❌' : '⏳' }}</span>
+                        <span class="log-date">{{ log.fechaEnvio }}</span>
+                      </div>
+                    } @empty {
+                      <div class="no-logs">No hay envíos registrados aún</div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Configuración Tab -->
+              @if (automationTab() === 'config') {
+                <div class="config-section">
+                  <!-- Negocio Info -->
+                  <div class="config-group">
+                    <h4>🏪 Información del Negocio</h4>
+                    <div class="config-form">
+                      <div class="form-row">
+                        <label>Nombre del Negocio</label>
+                        <input type="text" [(ngModel)]="automationConfig.negocioNombre" placeholder="Mi Negocio">
+                      </div>
+                      <div class="form-row">
+                        <label>Dirección</label>
+                        <input type="text" [(ngModel)]="automationConfig.negocioDireccion" placeholder="Av. Principal 123">
+                      </div>
+                      <div class="form-row">
+                        <label>Teléfono de Contacto</label>
+                        <input type="text" [(ngModel)]="automationConfig.negocioTelefono" placeholder="+56 9 1234 5678">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Email Config -->
+                  <div class="config-group">
+                    <div class="config-group-header">
+                      <h4>📧 Configuración Email</h4>
+                      <label class="toggle-switch small">
+                        <input type="checkbox" [(ngModel)]="automationConfig.email.enabled">
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                    @if (automationConfig.email.enabled) {
+                      <div class="config-form">
+                        <div class="form-row">
+                          <label>Proveedor</label>
+                          <select [(ngModel)]="automationConfig.email.provider">
+                            <option value="none">Seleccionar...</option>
+                            <option value="sendgrid">SendGrid</option>
+                            <option value="mailgun">Mailgun</option>
+                            <option value="smtp">SMTP Personalizado</option>
+                          </select>
+                        </div>
+                        @if (automationConfig.email.provider === 'sendgrid' || automationConfig.email.provider === 'mailgun') {
+                          <div class="form-row">
+                            <label>API Key</label>
+                            <input type="password" [(ngModel)]="automationConfig.email.apiKey" placeholder="SG.xxxx...">
+                          </div>
+                        }
+                        @if (automationConfig.email.provider === 'smtp') {
+                          <div class="form-row">
+                            <label>Host SMTP</label>
+                            <input type="text" [(ngModel)]="automationConfig.email.smtpHost" placeholder="smtp.gmail.com">
+                          </div>
+                          <div class="form-row half">
+                            <label>Puerto</label>
+                            <input type="number" [(ngModel)]="automationConfig.email.smtpPort" placeholder="587">
+                          </div>
+                          <div class="form-row">
+                            <label>Usuario</label>
+                            <input type="text" [(ngModel)]="automationConfig.email.smtpUser">
+                          </div>
+                          <div class="form-row">
+                            <label>Contraseña</label>
+                            <input type="password" [(ngModel)]="automationConfig.email.smtpPassword">
+                          </div>
+                        }
+                        <div class="form-row">
+                          <label>Email Remitente</label>
+                          <input type="email" [(ngModel)]="automationConfig.email.fromEmail" placeholder="noreply@minegocio.cl">
+                        </div>
+                        <div class="form-row">
+                          <label>Nombre Remitente</label>
+                          <input type="text" [(ngModel)]="automationConfig.email.fromName" placeholder="Mi Negocio">
+                        </div>
+                        <button class="test-btn" (click)="testEmailConnection()">🧪 Probar Conexión</button>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- WhatsApp Config -->
+                  <div class="config-group">
+                    <div class="config-group-header">
+                      <h4>💬 Configuración WhatsApp</h4>
+                      <label class="toggle-switch small">
+                        <input type="checkbox" [(ngModel)]="automationConfig.whatsapp.enabled">
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                    @if (automationConfig.whatsapp.enabled) {
+                      <div class="config-form">
+                        <div class="form-row">
+                          <label>Proveedor</label>
+                          <select [(ngModel)]="automationConfig.whatsapp.provider">
+                            <option value="none">Seleccionar...</option>
+                            <option value="twilio">Twilio</option>
+                            <option value="meta">Meta Business API</option>
+                            <option value="messagebird">MessageBird</option>
+                          </select>
+                        </div>
+                        @if (automationConfig.whatsapp.provider === 'twilio') {
+                          <div class="form-row">
+                            <label>Account SID</label>
+                            <input type="text" [(ngModel)]="automationConfig.whatsapp.accountSid" placeholder="ACxxxx...">
+                          </div>
+                          <div class="form-row">
+                            <label>Auth Token</label>
+                            <input type="password" [(ngModel)]="automationConfig.whatsapp.authToken">
+                          </div>
+                        }
+                        @if (automationConfig.whatsapp.provider === 'meta') {
+                          <div class="form-row">
+                            <label>Phone Number ID</label>
+                            <input type="text" [(ngModel)]="automationConfig.whatsapp.phoneNumberId">
+                          </div>
+                          <div class="form-row">
+                            <label>Access Token</label>
+                            <input type="password" [(ngModel)]="automationConfig.whatsapp.accessToken">
+                          </div>
+                        }
+                        <div class="form-row">
+                          <label>Número de Envío</label>
+                          <input type="text" [(ngModel)]="automationConfig.whatsapp.fromNumber" placeholder="+56912345678">
+                        </div>
+                        <button class="test-btn" (click)="testWhatsAppConnection()">🧪 Probar Conexión</button>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="config-actions">
+                    <button class="save-config-btn" (click)="saveAutomationConfig()">💾 Guardar Configuración</button>
+                  </div>
                 </div>
               }
             </div>
@@ -1515,6 +1841,263 @@ interface CalendarDay {
       padding: 2rem;
       color: rgba(255,255,255,0.4);
     }
+
+    /* Automation Button */
+    .automation-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: #C4B5FD;
+    }
+    .automation-btn:hover {
+      background: rgba(139, 92, 246, 0.25);
+      transform: translateY(-2px);
+    }
+    .automation-badge {
+      background: #8B5CF6;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+    }
+
+    /* Automation Modal */
+    .automation-modal { max-width: 900px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+    .automation-header { display: flex; justify-content: space-between; align-items: center; }
+    .automation-title { display: flex; align-items: center; gap: 1rem; }
+    .automation-title h2 { margin: 0; }
+    .plan-badge {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .automation-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: white; }
+    .tab-btn.active {
+      color: #8B5CF6;
+      border-bottom-color: #8B5CF6;
+    }
+
+    .automation-content {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Flujos Section */
+    .section-intro { margin-bottom: 1rem; color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+    .automations-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .automation-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.2s;
+    }
+    .automation-item:hover { border-color: rgba(139, 92, 246, 0.3); }
+    .automation-item.active { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
+    .auto-icon { font-size: 1.5rem; }
+    .auto-info { flex: 1; }
+    .auto-name { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    .auto-desc { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+    .auto-channels { display: flex; gap: 0.5rem; }
+    .channel-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+    }
+    .channel-tag.email { background: rgba(59, 130, 246, 0.2); color: #93C5FD; }
+    .channel-tag.whatsapp { background: rgba(34, 197, 94, 0.2); color: #86EFAC; }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+    }
+    .toggle-switch.small { width: 40px; height: 22px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 26px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle-switch.small .toggle-slider:before { height: 16px; width: 16px; }
+    .toggle-switch input:checked + .toggle-slider { background: #10B981; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+    .toggle-switch.small input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    /* Templates Section */
+    .templates-header { margin-bottom: 1rem; }
+    .templates-header p { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .variables-hint { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+    .variables-hint code {
+      background: rgba(139, 92, 246, 0.2);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin: 0 0.25rem;
+    }
+    .templates-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .template-card {
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .template-card:hover { border-color: rgba(139, 92, 246, 0.4); transform: translateY(-2px); }
+    .template-header-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+    .template-name { font-weight: 600; }
+    .template-type {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+    }
+    .template-type.email { background: rgba(59, 130, 246, 0.2); color: #93C5FD; }
+    .template-type.whatsapp { background: rgba(34, 197, 94, 0.2); color: #86EFAC; }
+    .template-type.ambos { background: rgba(139, 92, 246, 0.2); color: #C4B5FD; }
+    .template-subject { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+    .template-preview {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      white-space: pre-line;
+      max-height: 60px;
+      overflow: hidden;
+    }
+    .edit-template-btn {
+      margin-top: 0.75rem;
+      padding: 0.4rem 0.75rem;
+      border: none;
+      background: rgba(139, 92, 246, 0.2);
+      color: #C4B5FD;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    /* Historial Section */
+    .historial-stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-box {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      text-align: center;
+    }
+    .stat-box.success { border-left: 3px solid #10B981; }
+    .stat-box.error { border-left: 3px solid #EF4444; }
+    .stat-val { display: block; font-size: 1.5rem; font-weight: 800; color: #C4B5FD; }
+    .stat-lbl { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+    .logs-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      font-size: 0.85rem;
+    }
+    .log-item.enviado { border-left: 3px solid #10B981; }
+    .log-item.fallido { border-left: 3px solid #EF4444; }
+    .log-item.pendiente { border-left: 3px solid #F59E0B; }
+    .log-icon { font-size: 1rem; }
+    .log-info { flex: 1; }
+    .log-auto { font-weight: 500; }
+    .log-client { color: rgba(255,255,255,0.5); margin-left: 0.5rem; }
+    .log-status { font-size: 1rem; }
+    .log-date { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .no-logs { text-align: center; padding: 2rem; color: rgba(255,255,255,0.4); }
+
+    /* Config Section */
+    .config-section { display: flex; flex-direction: column; gap: 1.5rem; }
+    .config-group {
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .config-group h4 { margin: 0 0 1rem; font-size: 1rem; }
+    .config-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .config-group-header h4 { margin: 0; }
+    .config-form { display: flex; flex-direction: column; gap: 0.75rem; }
+    .form-row { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-row.half { width: 50%; }
+    .form-row label { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+    .form-row input, .form-row select {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      font-size: 0.9rem;
+    }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: #8B5CF6; }
+    .test-btn {
+      margin-top: 0.5rem;
+      padding: 0.6rem 1rem;
+      border: none;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93C5FD;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      align-self: flex-start;
+    }
+    .test-btn:hover { background: rgba(59, 130, 246, 0.35); }
+    .config-actions { display: flex; justify-content: center; }
+    .save-config-btn {
+      padding: 0.85rem 2rem;
+      border: none;
+      background: linear-gradient(135deg, #8B5CF6, #6366F1);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .save-config-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4); }
   `]
 })
 export class ReservationsComponent implements OnInit {
@@ -1552,6 +2135,69 @@ export class ReservationsComponent implements OnInit {
   emailsSentToday = signal(12);
   whatsappSentToday = signal(8);
   marketingOpenRate = signal(78);
+
+  // Automation System signals
+  showAutomationModal = signal(false);
+  automationTab = signal<'flujos' | 'templates' | 'historial' | 'config'>('flujos');
+
+  // Demo automations
+  automations = signal<Automation[]>([
+    { id: '1', nombre: 'Confirmación de Reserva', descripcion: 'Envía confirmación cuando se crea una reserva', tipo: 'auto-respuesta', trigger: 'nueva-reserva', canales: ['email', 'whatsapp'], templateId: '1', activa: true },
+    { id: '2', nombre: 'Recordatorio 24h', descripcion: 'Recuerda al cliente 24 horas antes de su cita', tipo: 'recordatorio', trigger: '24h-antes', canales: ['whatsapp'], templateId: '2', activa: true },
+    { id: '3', nombre: 'Recordatorio 2h', descripcion: 'Recordatorio el mismo día, 2 horas antes', tipo: 'recordatorio', trigger: '2h-antes', canales: ['whatsapp'], templateId: '3', activa: false },
+    { id: '4', nombre: 'Agradecimiento Post-Visita', descripcion: 'Mensaje de agradecimiento después de completar la reserva', tipo: 'auto-respuesta', trigger: 'completada', canales: ['email'], templateId: '4', activa: true },
+    { id: '5', nombre: 'Aviso de Cancelación', descripcion: 'Confirma la cancelación de una reserva', tipo: 'auto-respuesta', trigger: 'cancelacion', canales: ['email', 'whatsapp'], templateId: '5', activa: true },
+    { id: '6', nombre: 'Felicitación de Cumpleaños', descripcion: 'Envía un cupón de descuento en el cumpleaños del cliente', tipo: 'campaña', trigger: 'cumpleaños', canales: ['email', 'whatsapp'], templateId: '6', activa: false, condiciones: { soloVIP: false } },
+    { id: '7', nombre: 'Reactivación Clientes', descripcion: 'Contacta clientes que no visitan hace más de 30 días', tipo: 'campaña', trigger: 'inactividad', canales: ['email'], templateId: '7', activa: false, condiciones: { diasInactividad: 30 } },
+  ]);
+
+  // Message templates
+  messageTemplates = signal<MessageTemplate[]>([
+    { id: '1', nombre: 'Confirmación de Reserva', tipo: 'ambos', asunto: 'Tu reserva ha sido confirmada ✅', contenido: 'Hola {{cliente}}! 👋\n\nTu reserva ha sido registrada:\n\n📅 Fecha: {{fecha}}\n🕐 Hora: {{hora}}\n👥 Personas: {{personas}}\n\n¡Te esperamos en {{negocio}}!\n\nSaludos cordiales.', variables: ['cliente', 'fecha', 'hora', 'personas', 'negocio'] },
+    { id: '2', nombre: 'Recordatorio 24h', tipo: 'whatsapp', contenido: 'Hola {{cliente}}! 📅\n\nTe recordamos que mañana tienes una reserva con nosotros:\n\n🕐 {{fecha}} a las {{hora}}\n👥 {{personas}} personas\n\n¡Te esperamos! ✨\n\n{{negocio}}', variables: ['cliente', 'fecha', 'hora', 'personas', 'negocio'] },
+    { id: '3', nombre: 'Recordatorio 2h', tipo: 'whatsapp', contenido: 'Hola {{cliente}}! ⏰\n\n¡Tu reserva es en 2 horas!\n\n🕐 {{hora}}\n📍 {{direccion}}\n\n¡Te esperamos! 🙌', variables: ['cliente', 'hora', 'direccion'] },
+    { id: '4', nombre: 'Agradecimiento Post-Visita', tipo: 'email', asunto: 'Gracias por tu visita 🙏', contenido: 'Hola {{cliente}},\n\n¡Gracias por visitarnos hoy! Esperamos que hayas disfrutado tu experiencia.\n\nNos encantaría que nos dejaras una reseña:\n⭐ [Dejar reseña]\n\n¡Hasta pronto!\n{{negocio}}', variables: ['cliente', 'negocio'] },
+    { id: '5', nombre: 'Cancelación', tipo: 'ambos', asunto: 'Reserva cancelada', contenido: 'Hola {{cliente}},\n\nTu reserva del {{fecha}} a las {{hora}} ha sido cancelada.\n\nSi deseas reagendar, contáctanos.\n\nSaludos,\n{{negocio}}', variables: ['cliente', 'fecha', 'hora', 'negocio'] },
+    { id: '6', nombre: 'Felicitación Cumpleaños', tipo: 'ambos', asunto: '¡Feliz Cumpleaños! 🎂', contenido: 'Hola {{cliente}}! 🎉\n\n¡Feliz Cumpleaños de parte de todo el equipo de {{negocio}}!\n\nTenemos un regalo especial para ti:\n🎁 20% de descuento en tu próxima visita\n\nCódigo: CUMPLE20\n\n¡Te esperamos pronto!', variables: ['cliente', 'negocio'] },
+    { id: '7', nombre: 'Reactivación', tipo: 'email', asunto: 'Te extrañamos 💔', contenido: 'Hola {{cliente}},\n\nHace tiempo que no nos visitas y te echamos de menos.\n\nQueremos darte un 15% de descuento en tu próxima reserva:\n🎟️ Código: VUELVE15\n\n¿Te gustaría agendar una visita?\n\n{{negocio}}', variables: ['cliente', 'negocio'] },
+  ]);
+
+  // Automation logs
+  automationLogs = signal<AutomationLog[]>([
+    { id: '1', automationId: '1', automationNombre: 'Confirmación de Reserva', clienteNombre: 'María González', canal: 'email', estado: 'enviado', fechaEnvio: '2026-01-19 10:30', mensaje: 'Confirmación enviada' },
+    { id: '2', automationId: '1', automationNombre: 'Confirmación de Reserva', clienteNombre: 'María González', canal: 'whatsapp', estado: 'enviado', fechaEnvio: '2026-01-19 10:30', mensaje: 'WhatsApp enviado' },
+    { id: '3', automationId: '2', automationNombre: 'Recordatorio 24h', clienteNombre: 'Juan Pérez', canal: 'whatsapp', estado: 'enviado', fechaEnvio: '2026-01-18 20:00', mensaje: 'Recordatorio enviado' },
+    { id: '4', automationId: '4', automationNombre: 'Agradecimiento Post-Visita', clienteNombre: 'Ana Martínez', canal: 'email', estado: 'enviado', fechaEnvio: '2026-01-17 22:00', mensaje: 'Email de agradecimiento' },
+  ]);
+
+  // Automation Config - saved in localStorage in production
+  automationConfig: AutomationConfig = {
+    whatsapp: {
+      provider: 'none',
+      accountSid: '',
+      authToken: '',
+      phoneNumberId: '',
+      accessToken: '',
+      fromNumber: '',
+      enabled: false,
+      testMode: true
+    },
+    email: {
+      provider: 'none',
+      apiKey: '',
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUser: '',
+      smtpPassword: '',
+      fromEmail: '',
+      fromName: '',
+      enabled: false,
+      testMode: true
+    },
+    negocioNombre: 'Mi Negocio',
+    negocioDireccion: 'Av. Principal 123',
+    negocioTelefono: '+56 9 1234 5678'
+  };
 
   currentMonth = signal(new Date());
   selectedDate = signal(new Date());
@@ -2056,5 +2702,86 @@ export class ReservationsComponent implements OnInit {
     }).length;
     alert(`🔄 Se enviará campaña de reactivación a ${inactiveCount} clientes inactivos (+30 días).`);
     this.emailsSentToday.update(n => n + inactiveCount);
+  }
+
+  // Automation System Methods
+  activeAutomationsCount = computed(() => this.automations().filter(a => a.activa).length);
+
+  getCurrentPlan(): string {
+    // This would be fetched from subscription service in production
+    return 'Plan Pro';
+  }
+
+  getAutoIcon(trigger: Automation['trigger']): string {
+    const icons: Record<string, string> = {
+      'nueva-reserva': '📅',
+      'confirmacion': '✅',
+      'cancelacion': '❌',
+      'completada': '🏁',
+      '24h-antes': '⏰',
+      '2h-antes': '⏱️',
+      'cumpleaños': '🎂',
+      'inactividad': '💤',
+      'manual': '👆'
+    };
+    return icons[trigger] || '⚡';
+  }
+
+  toggleAutomation(auto: Automation): void {
+    this.automations.update(list =>
+      list.map(a => a.id === auto.id ? { ...a, activa: !a.activa } : a)
+    );
+    const newState = !auto.activa;
+    console.log(`Automation "${auto.nombre}" ${newState ? 'activada' : 'desactivada'}`);
+  }
+
+  editTemplate(template: MessageTemplate): void {
+    const newContent = prompt('Editar contenido del template:\n\nVariables disponibles: ' + template.variables.map(v => `{{${v}}}`).join(', '), template.contenido);
+    if (newContent !== null) {
+      this.messageTemplates.update(list =>
+        list.map(t => t.id === template.id ? { ...t, contenido: newContent } : t)
+      );
+      alert('✅ Template actualizado correctamente');
+    }
+  }
+
+  testEmailConnection(): void {
+    if (!this.automationConfig.email.provider || this.automationConfig.email.provider === 'none') {
+      alert('⚠️ Selecciona un proveedor de email primero');
+      return;
+    }
+    // Simulated test - in production would make actual API call
+    setTimeout(() => {
+      alert('✅ Conexión de Email exitosa!\n\nProveedor: ' + this.automationConfig.email.provider);
+    }, 1000);
+  }
+
+  testWhatsAppConnection(): void {
+    if (!this.automationConfig.whatsapp.provider || this.automationConfig.whatsapp.provider === 'none') {
+      alert('⚠️ Selecciona un proveedor de WhatsApp primero');
+      return;
+    }
+    // Simulated test - in production would make actual API call
+    setTimeout(() => {
+      alert('✅ Conexión de WhatsApp exitosa!\n\nProveedor: ' + this.automationConfig.whatsapp.provider);
+    }, 1000);
+  }
+
+  saveAutomationConfig(): void {
+    // In production, this would save to backend or localStorage
+    localStorage.setItem('automationConfig', JSON.stringify(this.automationConfig));
+    alert('💾 Configuración guardada correctamente');
+    console.log('Automation config saved:', this.automationConfig);
+  }
+
+  loadAutomationConfig(): void {
+    const saved = localStorage.getItem('automationConfig');
+    if (saved) {
+      try {
+        this.automationConfig = JSON.parse(saved);
+      } catch (e) {
+        console.error('Error loading automation config', e);
+      }
+    }
   }
 }
