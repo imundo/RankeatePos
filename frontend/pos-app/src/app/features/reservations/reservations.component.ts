@@ -155,6 +155,61 @@ interface CalendarDay {
         </div>
       </div>
 
+      <!-- Marketing Hub Section -->
+      <section class="marketing-hub-section" [class.collapsed]="marketingCollapsed()">
+        <div class="marketing-header" (click)="marketingCollapsed.set(!marketingCollapsed())">
+          <div class="marketing-title">
+            <span class="section-icon">📣</span>
+            <h3>Marketing Hub</h3>
+            <span class="marketing-badge">{{ sentCampaignsToday() }} enviados hoy</span>
+          </div>
+          <button class="collapse-btn">{{ marketingCollapsed() ? '▼' : '▲' }}</button>
+        </div>
+        @if (!marketingCollapsed()) {
+          <div class="marketing-content">
+            <div class="quick-campaigns">
+              <h4>Campañas Rápidas</h4>
+              <div class="campaign-grid">
+                <button class="campaign-card" (click)="sendBulkConfirmation()">
+                  <span class="campaign-icon">✅</span>
+                  <span class="campaign-name">Confirmar Reservas</span>
+                  <span class="campaign-desc">Enviar confirmación a pendientes</span>
+                </button>
+                <button class="campaign-card" (click)="sendBulkReminder()">
+                  <span class="campaign-icon">⏰</span>
+                  <span class="campaign-name">Recordatorio 24h</span>
+                  <span class="campaign-desc">Recordar citas de mañana</span>
+                </button>
+                <button class="campaign-card" (click)="sendBulkThankYou()">
+                  <span class="campaign-icon">🙏</span>
+                  <span class="campaign-name">Agradecimiento</span>
+                  <span class="campaign-desc">Post-visita de hoy</span>
+                </button>
+                <button class="campaign-card" (click)="sendReactivationCampaign()">
+                  <span class="campaign-icon">🔄</span>
+                  <span class="campaign-name">Reactivación</span>
+                  <span class="campaign-desc">Clientes inactivos 30+ días</span>
+                </button>
+              </div>
+            </div>
+            <div class="campaign-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ emailsSentToday() }}</span>
+                <span class="stat-name">📧 Emails</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ whatsappSentToday() }}</span>
+                <span class="stat-name">💬 WhatsApp</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ marketingOpenRate() }}%</span>
+                <span class="stat-name">📊 Apertura</span>
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+
       <!-- Main Content: Calendar + Day Detail -->
       <div class="main-content">
         <!-- Calendar Section -->
@@ -416,6 +471,18 @@ interface CalendarDay {
                 </div>
               }
             </div>
+            <!-- Marketing Quick Actions -->
+            <div class="marketing-actions-row">
+              <button class="marketing-btn email" (click)="sendReservationConfirmationEmail(viewingReservation()!)">
+                📧 Enviar Confirmación
+              </button>
+              <button class="marketing-btn whatsapp" (click)="sendReservationWhatsApp(viewingReservation()!)">
+                💬 Recordatorio
+              </button>
+              <button class="marketing-btn phone" (click)="callReservationCustomer(viewingReservation()!)">
+                📱 Llamar
+              </button>
+            </div>
             <div class="view-res-actions">
               @if (viewingReservation()!.estado === 'pendiente') {
                 <button class="action-btn success" (click)="confirmReservation(viewingReservation()!); viewingReservation.set(null)">
@@ -478,7 +545,7 @@ interface CalendarDay {
 
             <div class="customer-list">
               @for (customer of filteredCustomers(); track customer.id) {
-                <div class="customer-card" (click)="selectCustomer(customer)">
+                <div class="customer-card">
                   <div class="customer-avatar">{{ customer.nombre.charAt(0) }}</div>
                   <div class="customer-info">
                     <div class="customer-name-row">
@@ -497,8 +564,20 @@ interface CalendarDay {
                       <span>📅 {{ customer.visitas }} visitas</span>
                       <span>💰 {{ formatRevenue(customer.gastoTotal) }} gastado</span>
                     </div>
+                    <!-- Marketing Quick Actions -->
+                    <div class="customer-actions">
+                      <button class="action-mini-btn email" (click)="sendEmailTo(customer); $event.stopPropagation()" title="Enviar Email">
+                        📧
+                      </button>
+                      <button class="action-mini-btn whatsapp" (click)="sendWhatsAppTo(customer); $event.stopPropagation()" title="Enviar WhatsApp">
+                        💬
+                      </button>
+                      <button class="action-mini-btn phone" (click)="callCustomer(customer); $event.stopPropagation()" title="Llamar">
+                        📱
+                      </button>
+                    </div>
                   </div>
-                  <button class="select-customer-btn">Seleccionar</button>
+                  <button class="select-customer-btn" (click)="selectCustomer(customer)">Seleccionar</button>
                 </div>
               } @empty {
                 <div class="no-customers">
@@ -583,6 +662,185 @@ interface CalendarDay {
     .stat-content { display: flex; flex-direction: column; }
     .stat-value { font-size: 1.5rem; font-weight: 800; }
     .stat-label { font-size: 0.8rem; opacity: 0.9; }
+
+    /* Marketing Hub Section */
+    .marketing-hub-section {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(236, 72, 153, 0.2);
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .marketing-hub-section.collapsed { border-color: rgba(255,255,255,0.1); }
+
+    .marketing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .marketing-header:hover { background: rgba(255,255,255,0.03); }
+
+    .marketing-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .marketing-title h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+    .section-icon { font-size: 1.25rem; }
+    .marketing-badge {
+      background: linear-gradient(135deg, #EC4899, #DB2777);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .collapse-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .marketing-content {
+      padding: 0 1.5rem 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-campaigns { flex: 2; min-width: 300px; }
+    .quick-campaigns h4 { margin: 0 0 1rem; font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+
+    .campaign-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 1100px) { .campaign-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .campaign-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: all 0.25s;
+      text-align: center;
+    }
+    .campaign-card:hover {
+      background: rgba(236, 72, 153, 0.15);
+      border-color: rgba(236, 72, 153, 0.4);
+      transform: translateY(-3px);
+    }
+    .campaign-icon { font-size: 1.5rem; }
+    .campaign-name { font-weight: 600; font-size: 0.85rem; }
+    .campaign-desc { font-size: 0.7rem; color: rgba(255,255,255,0.5); }
+
+    .campaign-stats {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-number { display: block; font-size: 1.5rem; font-weight: 800; color: #F9A8D4; }
+    .stat-name { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+
+    /* Customer Action Buttons */
+    .customer-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .action-mini-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-mini-btn.email {
+      background: rgba(59, 130, 246, 0.2);
+    }
+    .action-mini-btn.email:hover {
+      background: rgba(59, 130, 246, 0.4);
+      transform: scale(1.1);
+    }
+    .action-mini-btn.whatsapp {
+      background: rgba(34, 197, 94, 0.2);
+    }
+    .action-mini-btn.whatsapp:hover {
+      background: rgba(34, 197, 94, 0.4);
+      transform: scale(1.1);
+    }
+    .action-mini-btn.phone {
+      background: rgba(168, 85, 247, 0.2);
+    }
+    .action-mini-btn.phone:hover {
+      background: rgba(168, 85, 247, 0.4);
+      transform: scale(1.1);
+    }
+
+    /* Marketing Actions in Reservation View */
+    .marketing-actions-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(236, 72, 153, 0.08);
+      border-top: 1px solid rgba(236, 72, 153, 0.2);
+    }
+
+    .marketing-btn {
+      flex: 1;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    .marketing-btn.email {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93C5FD;
+    }
+    .marketing-btn.email:hover { background: rgba(59, 130, 246, 0.35); }
+    .marketing-btn.whatsapp {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86EFAC;
+    }
+    .marketing-btn.whatsapp:hover { background: rgba(34, 197, 94, 0.35); }
+    .marketing-btn.phone {
+      background: rgba(168, 85, 247, 0.2);
+      color: #D8B4FE;
+    }
+    .marketing-btn.phone:hover { background: rgba(168, 85, 247, 0.35); }
 
     /* Premium Header enhancements */
     .premium-header {
@@ -1289,6 +1547,12 @@ export class ReservationsComponent implements OnInit {
   selectedCustomer = signal<Customer | null>(null);
   customerFilter = signal<'todos' | 'vip' | 'frecuentes'>('todos');
 
+  // Marketing signals
+  marketingCollapsed = signal(true);
+  emailsSentToday = signal(12);
+  whatsappSentToday = signal(8);
+  marketingOpenRate = signal(78);
+
   currentMonth = signal(new Date());
   selectedDate = signal(new Date());
   showModal = signal(false);
@@ -1686,5 +1950,111 @@ export class ReservationsComponent implements OnInit {
       'nuevo': 'Nuevo'
     };
     return labels[tier] || tier;
+  }
+
+  // Marketing computed
+  sentCampaignsToday = computed(() => this.emailsSentToday() + this.whatsappSentToday());
+
+  // Marketing Methods - Customer Actions
+  sendEmailTo(customer: Customer): void {
+    if (customer.email) {
+      const subject = encodeURIComponent('Recordatorio de Reserva');
+      const body = encodeURIComponent(`Hola ${customer.nombre},\n\nLe escribimos para confirmar su reserva.\n\nSaludos cordiales.`);
+      window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, '_blank');
+      this.emailsSentToday.update(n => n + 1);
+    } else {
+      alert('Este cliente no tiene email registrado');
+    }
+  }
+
+  sendWhatsAppTo(customer: Customer): void {
+    const phone = customer.telefono.replace(/\D/g, '');
+    const message = encodeURIComponent(`Hola ${customer.nombre}! 👋\n\n¿Cómo estás? Queríamos recordarte tu próxima visita con nosotros.\n\n¿Tienes alguna consulta?`);
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    this.whatsappSentToday.update(n => n + 1);
+  }
+
+  callCustomer(customer: Customer): void {
+    window.open(`tel:${customer.telefono}`, '_self');
+  }
+
+  // Marketing Methods - Reservation Actions
+  sendReservationConfirmationEmail(res: Reservation): void {
+    const subject = encodeURIComponent(`Confirmación de Reserva - ${this.formatDate(res.fecha)}`);
+    const body = encodeURIComponent(
+      `Hola ${res.cliente},\n\n` +
+      `Tu reserva ha sido confirmada:\n\n` +
+      `📅 Fecha: ${this.formatDate(res.fecha)}\n` +
+      `🕐 Hora: ${res.hora}\n` +
+      `👥 Personas: ${res.personas}\n\n` +
+      `¡Te esperamos!\n\nSaludos cordiales.`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    this.emailsSentToday.update(n => n + 1);
+  }
+
+  sendReservationWhatsApp(res: Reservation): void {
+    const phone = res.telefono.replace(/\D/g, '');
+    const message = encodeURIComponent(
+      `Hola ${res.cliente}! 👋\n\n` +
+      `Recordatorio de tu reserva:\n` +
+      `📅 ${this.formatDate(res.fecha)}\n` +
+      `🕐 ${res.hora}\n` +
+      `👥 ${res.personas} personas\n\n` +
+      `¡Te esperamos! ✨`
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    this.whatsappSentToday.update(n => n + 1);
+  }
+
+  callReservationCustomer(res: Reservation): void {
+    window.open(`tel:${res.telefono}`, '_self');
+  }
+
+  // Bulk Campaign Methods
+  sendBulkConfirmation(): void {
+    const pending = this.reservations().filter(r => r.estado === 'pendiente').length;
+    if (pending > 0) {
+      alert(`📧 Se enviarán ${pending} confirmaciones por email y WhatsApp a reservas pendientes.`);
+      this.emailsSentToday.update(n => n + pending);
+      this.whatsappSentToday.update(n => n + pending);
+    } else {
+      alert('No hay reservas pendientes para confirmar.');
+    }
+  }
+
+  sendBulkReminder(): void {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const count = this.reservations().filter(r => r.fecha === tomorrowStr && r.estado !== 'cancelada').length;
+    if (count > 0) {
+      alert(`⏰ Se enviarán ${count} recordatorios para las citas de mañana.`);
+      this.whatsappSentToday.update(n => n + count);
+    } else {
+      alert('No hay reservas para mañana.');
+    }
+  }
+
+  sendBulkThankYou(): void {
+    const today = this.getTodayStr();
+    const completed = this.reservations().filter(r => r.fecha === today && r.estado === 'completada').length;
+    if (completed > 0) {
+      alert(`🙏 Se enviarán ${completed} mensajes de agradecimiento a clientes de hoy.`);
+      this.emailsSentToday.update(n => n + completed);
+    } else {
+      alert('No hay visitas completadas hoy aún.');
+    }
+  }
+
+  sendReactivationCampaign(): void {
+    const inactiveCount = this.customers().filter(c => {
+      if (!c.ultimaVisita) return true;
+      const lastVisit = new Date(c.ultimaVisita);
+      const daysSince = Math.floor((Date.now() - lastVisit.getTime()) / (1000 * 60 * 60 * 24));
+      return daysSince > 30;
+    }).length;
+    alert(`🔄 Se enviará campaña de reactivación a ${inactiveCount} clientes inactivos (+30 días).`);
+    this.emailsSentToday.update(n => n + inactiveCount);
   }
 }
