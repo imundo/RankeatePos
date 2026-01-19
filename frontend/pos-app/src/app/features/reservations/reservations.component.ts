@@ -233,7 +233,7 @@ interface CalendarDay {
                     <div class="mini-res-card" [class]="res.estado" (click)="viewReservation(res); $event.stopPropagation()">
                       <div class="mini-res-info">
                         <span class="mini-res-name">{{ res.cliente }}</span>
-                        <span class="mini-res-details">👥 {{ res.personas }} @if(res.mesa) { · Mesa {{ res.mesa }} }</span>
+                        <span class="mini-res-details">👥 {{ res.personas }} @if(res.recurso) { · {{ getResourceLabel() }} {{ res.recurso }} }</span>
                       </div>
                       <div class="mini-res-actions">
                         @if (res.estado === 'pendiente') {
@@ -264,7 +264,7 @@ interface CalendarDay {
         </div>
         <div class="tables-quick-grid">
           @for (table of tables(); track table.id) {
-            <div class="table-quick-card" [class]="table.estado" (click)="toggleTableStatus(table)">
+            <div class="table-quick-card" [class]="table.estado" (click)="toggleResourceStatus(table)">
               <span class="table-num">{{ table.numero }}</span>
               <span class="table-cap">{{ table.capacidad }}p</span>
             </div>
@@ -339,14 +339,14 @@ interface CalendarDay {
               </div>
 
               <div class="form-section">
-                <h4>🪑 Mesa</h4>
+                <h4>{{ getResourceIcon() }} {{ getResourceLabel() }}</h4>
                 <div class="tables-selector">
-                  <button type="button" class="table-option" [class.active]="!formData.mesa" (click)="formData.mesa = ''">
+                  <button type="button" class="table-option" [class.active]="!formData.recurso" (click)="formData.recurso = ''">
                     <span class="table-opt-icon">🎲</span>
                     <span>Auto-asignar</span>
                   </button>
                   @for (table of availableTables(); track table.id) {
-                    <button type="button" class="table-option" [class.active]="formData.mesa === table.numero" (click)="formData.mesa = table.numero">
+                    <button type="button" class="table-option" [class.active]="formData.recurso === table.numero" (click)="formData.recurso = table.numero">
                       <span class="table-opt-num">{{ table.numero }}</span>
                       <span class="table-opt-cap">{{ table.capacidad }}p · {{ getLocationEmoji(table.ubicacion) }}</span>
                     </button>
@@ -402,10 +402,10 @@ interface CalendarDay {
                   <span class="info-icon">📞</span>
                   <span>{{ viewingReservation()!.telefono }}</span>
                 </div>
-                @if (viewingReservation()!.mesa) {
+                @if (viewingReservation()!.recurso) {
                   <div class="info-item">
-                    <span class="info-icon">🪑</span>
-                    <span>Mesa {{ viewingReservation()!.mesa }}</span>
+                    <span class="info-icon">{{ getResourceIcon() }}</span>
+                    <span>{{ getResourceLabel() }} {{ viewingReservation()!.recurso }}</span>
                   </div>
                 }
               </div>
