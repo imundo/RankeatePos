@@ -442,6 +442,21 @@ interface AutomationConfig {
                     </select>
                   </div>
                 </div>
+                <!-- Smart Slot Suggestions -->
+                <div class="smart-suggestions">
+                  <span class="suggestion-label">💡 Horarios con disponibilidad:</span>
+                  <div class="suggestion-chips">
+                    @for (slot of suggestedSlots(); track slot.hora) {
+                      <button type="button" 
+                              class="slot-chip" 
+                              [class]="slot.demanda"
+                              (click)="formData.hora = slot.hora">
+                        {{ slot.hora }}
+                        <span class="availability-badge">{{ slot.disponibles }} libres</span>
+                      </button>
+                    }
+                  </div>
+                </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Duración</label>
@@ -1606,6 +1621,48 @@ interface AutomationConfig {
       background: linear-gradient(135deg, #6366F1, #8B5CF6); 
     }
 
+    /* Smart Slot Suggestions */
+    .smart-suggestions {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 12px;
+    }
+    .suggestion-label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 0.5rem;
+    }
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .slot-chip {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+    .slot-chip:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.3); }
+    .slot-chip.baja { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.15); }
+    .slot-chip.media { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.15); }
+    .slot-chip.alta { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); }
+    .availability-badge {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.5);
+    }
+
     .tables-selector {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -2252,6 +2309,24 @@ export class ReservationsComponent implements OnInit {
     return this.reservations()
       .filter(r => r.fecha === today && r.estado !== 'cancelada')
       .reduce((sum, r) => sum + (r.precioEstimado || r.personas * 15000), 0);
+  });
+
+  // Smart Slot Suggestions
+  suggestedSlots = computed(() => {
+    const fecha = this.formData.fecha || this.getTodayStr();
+    const reservasDelDia = this.reservations().filter(r => r.fecha === fecha && r.estado !== 'cancelada');
+    const totalResources = this.resources().length;
+
+    return this.timeSlots
+      .map(hora => {
+        const reservasEnHora = reservasDelDia.filter(r => r.hora === hora).length;
+        const disponibles = totalResources - reservasEnHora;
+        const demanda = disponibles >= totalResources * 0.7 ? 'baja' :
+          disponibles >= totalResources * 0.4 ? 'media' : 'alta';
+        return { hora, disponibles, demanda };
+      })
+      .filter(slot => slot.disponibles > 0)
+      .slice(0, 6); // Show top 6 suggestions
   });
 
   filteredCustomers = computed(() => {
