@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { ReservationsService } from '@core/services/reservations.service';
+import { CountUpDirective } from '@core/directives/count-up.directive';
 
 // Multi-industry service types
 interface ServiceType {
@@ -137,7 +138,7 @@ interface AutomationConfig {
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CountUpDirective],
   template: `
     <div class="reservations-container">
       <!-- Premium Header with Glassmorphism -->
@@ -204,37 +205,39 @@ interface AutomationConfig {
       <!-- Stats with Revenue -->
       <div class="stats-grid">
         <div class="stat-card gradient-purple">
-          <div class="stat-icon">📋</div>
+          <div class="stat-icon">📅</div>
           <div class="stat-content">
-            <span class="stat-value">{{ todayReservations() }}</span>
+            <span class="stat-value" [countUp]="todayReservations()">0</span>
             <span class="stat-label">Hoy</span>
           </div>
         </div>
         <div class="stat-card gradient-green">
           <div class="stat-icon">✅</div>
           <div class="stat-content">
-            <span class="stat-value">{{ confirmedCount() }}</span>
+            <span class="stat-value" [countUp]="confirmedCount()">0</span>
             <span class="stat-label">Confirmadas</span>
           </div>
         </div>
         <div class="stat-card gradient-amber">
           <div class="stat-icon">⏳</div>
           <div class="stat-content">
-            <span class="stat-value">{{ pendingCount() }}</span>
+            <span class="stat-value" [countUp]="pendingCount()">0</span>
             <span class="stat-label">Pendientes</span>
           </div>
         </div>
         <div class="stat-card gradient-blue">
           <div class="stat-icon">{{ getResourceIcon() }}</div>
           <div class="stat-content">
-            <span class="stat-value">{{ availableResourcesCount() }}/{{ resources().length }}</span>
+            <span class="stat-value">
+              <span [countUp]="availableResourcesCount()">0</span>/{{ resources().length }}
+            </span>
             <span class="stat-label">{{ getResourceLabel() }} Libres</span>
           </div>
         </div>
         <div class="stat-card gradient-emerald">
           <div class="stat-icon">💰</div>
           <div class="stat-content">
-            <span class="stat-value">{{ formatRevenue(estimatedRevenue()) }}</span>
+            <span class="stat-value" [countUp]="estimatedRevenue()" prefix="$ ">0</span>
             <span class="stat-label">Ingresos Est. Hoy</span>
           </div>
         </div>
