@@ -751,11 +751,11 @@ interface AutomationConfig {
                       <span class="stat-lbl">Total Enviados</span>
                     </div>
                     <div class="stat-box success">
-                      <span class="stat-val">{{ automationLogs().filter(l => l.estado === 'enviado').length }}</span>
+                      <span class="stat-val">{{ successfulLogsCount() }}</span>
                       <span class="stat-lbl">Exitosos</span>
                     </div>
                     <div class="stat-box error">
-                      <span class="stat-val">{{ automationLogs().filter(l => l.estado === 'fallido').length }}</span>
+                      <span class="stat-val">{{ failedLogsCount() }}</span>
                       <span class="stat-lbl">Fallidos</span>
                     </div>
                   </div>
@@ -2706,6 +2706,8 @@ export class ReservationsComponent implements OnInit {
 
   // Automation System Methods
   activeAutomationsCount = computed(() => this.automations().filter(a => a.activa).length);
+  successfulLogsCount = computed(() => this.automationLogs().filter(l => l.estado === 'enviado').length);
+  failedLogsCount = computed(() => this.automationLogs().filter(l => l.estado === 'fallido').length);
 
   getCurrentPlan(): string {
     // This would be fetched from subscription service in production
