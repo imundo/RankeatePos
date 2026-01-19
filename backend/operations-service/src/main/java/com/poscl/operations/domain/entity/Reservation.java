@@ -61,6 +61,10 @@ public class Reservation {
     @Builder.Default
     private Boolean recordatorioEnviado = false;
 
+    @Column(name = "service_type", length = 30)
+    @Builder.Default
+    private String serviceType = "MESA"; // MESA, SILLA, DOMICILIO, CONSULTORIO, GENERAL
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

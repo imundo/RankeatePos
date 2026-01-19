@@ -44,6 +44,7 @@ export interface CreateReservationRequest {
     personas: number;
     tableId?: string;
     notas?: string;
+    serviceType?: string;
 }
 
 @Injectable({
@@ -133,6 +134,31 @@ export class ReservationsService {
         return this.http.get<ReservationStats>(`${this.baseUrl}/reservations/stats`, {
             headers: this.getHeaders(),
             params
+        });
+    }
+    // ========== AUTOMATIONS ==========
+
+    getAutomations(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/automations`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    saveAutomation(automation: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations`, automation, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getAutomationLogs(id: string): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/automations/${id}/logs`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    testConnection(config: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations/test`, config, {
+            headers: this.getHeaders()
         });
     }
 }

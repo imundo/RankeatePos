@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
-import { ReservationsService } from '@core/services/reservations.service';
+import { ReservationsService, CreateReservationRequest } from '@core/services/reservations.service';
 import { CountUpDirective } from '@core/directives/count-up.directive';
 
 // Multi-industry service types
@@ -2561,7 +2561,58 @@ export class ReservationsComponent implements OnInit {
     return days;
   });
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.goToToday();
+    this.loadAutomations();
+  }
+
+  loadAutomations() {
+    this.reservationsService.getAutomations().subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          const mapped = data.map(a => ({
+            id: a.id,
+            nombre: a.nombre,
+            descripcion: 'Automatización configurada', // Placeholder as backend doesn't have description yet
+            tipo: a.tipo.toLowerCase() as any, // 'auto-respuesta' | 'recordatorio' | 'campaña'
+            trigger: a.triggerEvent as any,
+            canales: JSON.parse(a.channels || '[]'),
+            templateId: 'temp_default', // Placeholder, backend stores content directly now
+            activa: a.active
+          }));
+          this.automations.set(mapped);
+        }
+      },
+      error: (e) => console.error('Error loading automations', e)
+    });
+  }
+
+  loadAutomationLogs() {
+    // For demo purposes, we fetch logs for the first active automation or just all if API supported it
+    // Here we'll iterate and fetch for active ones (simplified) or ideally backend has a global logs endpoint
+    // For now, let's just make it compilable and working for individual logs if needed
+    // Assuming backend has a specific endpoint for all logs or we mock it for the view if backend is strict
+    // Let's implement a filtered view based on what we have
+    const activeIds = this.automations().map(a => a.id);
+    if (activeIds.length > 0) {
+      this.reservationsService.getAutomationLogs(activeIds[0]).subscribe({
+        next: (logs) => {
+          const mappedLogs = logs.map(l => ({
+            id: l.id,
+            automationId: l.automationId,
+            automationNombre: this.automations().find(a => a.id === l.automationId)?.nombre || 'Auto',
+            clienteNombre: 'Cliente Demo', // Backend integration pending for customer name
+            canal: l.channel.toLowerCase() as any,
+            estado: l.status.toLowerCase() as any,
+            fechaEnvio: new Date(l.sentAt).toLocaleString(),
+            mensaje: l.errorMessage || 'Enviado correctamente'
+          }));
+          this.automationLogs.set(mappedLogs);
+        },
+        error: (e) => console.error('Error loading logs', e)
+      });
+    }
+  }
 
   private createCalendarDay(date: Date, isCurrentMonth: boolean, today: Date, selected: Date): CalendarDay {
     const dateStr = date.toISOString().split('T')[0];
@@ -2695,27 +2746,56 @@ export class ReservationsComponent implements OnInit {
     if (!this.formData.cliente || !this.formData.telefono) return;
 
     if (this.editingReservation()) {
+      // Mock update for now - backend endpoint for update coming next
       this.reservations.update(list => list.map(r =>
         r.id === this.editingReservation()!.id
           ? { ...r, ...this.formData, recurso: this.formData.recurso || undefined, notas: this.formData.notas || undefined }
           : r
       ));
+      this.closeModal();
     } else {
-      const res: Reservation = {
-        id: crypto.randomUUID(),
-        cliente: this.formData.cliente,
-        telefono: this.formData.telefono,
-        email: this.formData.email || undefined,
+      // Create new reservation via API
+      const request: CreateReservationRequest = {
+        clienteNombre: this.formData.cliente,
+        clienteTelefono: this.formData.telefono,
         fecha: this.formData.fecha,
         hora: this.formData.hora,
-        duracion: this.formData.duracion,
         personas: this.formData.personas,
-        recurso: this.formData.recurso || undefined,
-        estado: 'pendiente',
         notas: this.formData.notas || undefined,
-        createdAt: new Date()
+        serviceType: this.formData.tipoServicio
       };
-      this.reservations.update(list => [res, ...list]);
+
+      this.reservationsService.createReservation(request).subscribe({
+        next: (newRes) => {
+          // Map backend response to frontend model
+          const mappedRes: Reservation = {
+            id: newRes.id,
+            cliente: newRes.clienteNombre,
+            telefono: newRes.clienteTelefono || '',
+            email: newRes.clienteEmail,
+            fecha: newRes.fecha,
+            hora: newRes.hora,
+            duracion: 60, // Default
+            personas: newRes.personas,
+            estado: newRes.estado.toLowerCase() as any,
+            notas: newRes.notas,
+            createdAt: new Date(newRes.createdAt),
+            tipoServicio: (newRes as any).serviceType // Ensure backend returns this
+          };
+
+          this.reservations.update(list => [mappedRes, ...list]);
+          this.closeModal();
+
+          // Refresh automations log if open
+          if (this.showAutomationModal()) {
+            this.loadAutomationLogs();
+          }
+        },
+        error: (err) => {
+          console.error('Error creating reservation:', err);
+          alert('Error al crear la reserva. Intente nuevamente.');
+        }
+      });
     }
 
     this.closeModal();
@@ -2976,11 +3056,39 @@ export class ReservationsComponent implements OnInit {
   }
 
   toggleAutomation(auto: Automation): void {
-    this.automations.update(list =>
-      list.map(a => a.id === auto.id ? { ...a, activa: !a.activa } : a)
-    );
     const newState = !auto.activa;
-    console.log(`Automation "${auto.nombre}" ${newState ? 'activada' : 'desactivada'}`);
+
+    // Optimistic update
+    this.automations.update(list =>
+      list.map(a => a.id === auto.id ? { ...a, activa: newState } : a)
+    );
+
+    // Call backend to save
+    const backendModel = {
+      id: auto.id,
+      nombre: auto.nombre,
+      tipo: auto.tipo.toUpperCase(),
+      triggerEvent: auto.trigger,
+      active: newState,
+      channels: JSON.stringify(auto.canales),
+      templateContent: JSON.stringify({
+        content: this.messageTemplates().find(t => t.id === auto.templateId)?.contenido || 'Contenido por defecto'
+      })
+    };
+
+    this.reservationsService.saveAutomation(backendModel).subscribe({
+      next: (saved) => {
+        console.log(`Automation "${saved.nombre}" updated: ${saved.active}`);
+      },
+      error: (e) => {
+        console.error('Error saving automation', e);
+        // Revert on error
+        this.automations.update(list =>
+          list.map(a => a.id === auto.id ? { ...a, activa: !newState } : a)
+        );
+        alert('Error al actualizar automatización');
+      }
+    });
   }
 
   editTemplate(template: MessageTemplate): void {
@@ -2998,10 +3106,11 @@ export class ReservationsComponent implements OnInit {
       alert('⚠️ Selecciona un proveedor de email primero');
       return;
     }
-    // Simulated test - in production would make actual API call
-    setTimeout(() => {
-      alert('✅ Conexión de Email exitosa!\n\nProveedor: ' + this.automationConfig.email.provider);
-    }, 1000);
+
+    this.reservationsService.testConnection(this.automationConfig.email).subscribe({
+      next: (res) => alert('✅ ' + res.message),
+      error: (e) => alert('❌ Error de conexión: ' + e.message)
+    });
   }
 
   testWhatsAppConnection(): void {

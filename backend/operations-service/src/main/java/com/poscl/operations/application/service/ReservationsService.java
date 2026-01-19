@@ -23,6 +23,7 @@ public class ReservationsService {
 
     private final ReservationRepository reservationRepository;
     private final RestaurantTableRepository tableRepository;
+    private final AutomationService automationService;
 
     // ==================== RESERVATIONS ====================
 
@@ -39,10 +40,10 @@ public class ReservationsService {
     }
 
     @Transactional
-    public Reservation createReservation(UUID tenantId, UUID branchId, String clienteNombre, 
-                                         String clienteTelefono, LocalDate fecha, LocalTime hora, 
-                                         int personas, UUID tableId, String notas) {
-        
+    public Reservation createReservation(UUID tenantId, UUID branchId, String clienteNombre,
+            String clienteTelefono, LocalDate fecha, LocalTime hora,
+            int personas, UUID tableId, String notas, String serviceType) {
+
         Reservation reservation = Reservation.builder()
                 .tenantId(tenantId)
                 .branchId(branchId)
@@ -52,6 +53,7 @@ public class ReservationsService {
                 .hora(hora)
                 .personas(personas)
                 .notas(notas)
+                .serviceType(serviceType != null ? serviceType : "MESA")
                 .build();
 
         if (tableId != null) {
@@ -62,13 +64,20 @@ public class ReservationsService {
         }
 
         log.info("Creating reservation for {} on {} at {}", clienteNombre, fecha, hora);
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Trigger "Nueva Reserva" automation
+        automationService.triggerAutomations(tenantId, "nueva-reserva", saved);
+
+        return saved;
     }
 
     @Transactional
     public Reservation updateStatus(UUID reservationId, String newStatus) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
+
+        String oldStatus = reservation.getEstado();
 
         switch (newStatus.toUpperCase()) {
             case "CONFIRMADA" -> reservation.confirm();
@@ -80,14 +89,27 @@ public class ReservationsService {
         }
 
         log.info("Updated reservation {} status to {}", reservationId, newStatus);
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Trigger status-based automations
+        if (!oldStatus.equalsIgnoreCase(newStatus)) {
+            if ("CONFIRMADA".equalsIgnoreCase(newStatus)) {
+                automationService.triggerAutomations(reservation.getTenantId(), "confirmacion", saved);
+            } else if ("CANCELADA".equalsIgnoreCase(newStatus)) {
+                automationService.triggerAutomations(reservation.getTenantId(), "cancelacion", saved);
+            } else if ("COMPLETADA".equalsIgnoreCase(newStatus)) {
+                automationService.triggerAutomations(reservation.getTenantId(), "completada", saved);
+            }
+        }
+
+        return saved;
     }
 
     @Transactional
     public Reservation assignTable(UUID reservationId, UUID tableId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
-        
+
         RestaurantTable table = tableRepository.findById(tableId)
                 .orElseThrow(() -> new IllegalArgumentException("Table not found: " + tableId));
 
@@ -132,9 +154,9 @@ public class ReservationsService {
 
         return new ReservationStats(
                 total != null ? total : 0,
-                confirmadas != null ? confirmadas : 0
-        );
+                confirmadas != null ? confirmadas : 0);
     }
 
-    public record ReservationStats(long totalReservas, long confirmadas) {}
+    public record ReservationStats(long totalReservas, long confirmadas) {
+    }
 }

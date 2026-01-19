@@ -30,7 +30,7 @@ public class ReservationsController {
     public ResponseEntity<List<Reservation>> getReservations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam(required = false) LocalDate date) {
-        
+
         LocalDate targetDate = date != null ? date : LocalDate.now();
         return ResponseEntity.ok(reservationsService.getReservationsForDate(tenantId, targetDate));
     }
@@ -48,12 +48,12 @@ public class ReservationsController {
     public ResponseEntity<Reservation> createReservation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody Map<String, Object> request) {
-        
+
         // Use tenantId as branchId if not provided
-        UUID branchId = request.containsKey("branchId") 
-                ? UUID.fromString(request.get("branchId").toString()) 
+        UUID branchId = request.containsKey("branchId")
+                ? UUID.fromString(request.get("branchId").toString())
                 : tenantId;
-        
+
         String clienteNombre = (String) request.get("clienteNombre");
         String clienteTelefono = (String) request.get("clienteTelefono");
         LocalDate fecha = LocalDate.parse((String) request.get("fecha"));
@@ -63,10 +63,11 @@ public class ReservationsController {
                 ? UUID.fromString(request.get("tableId").toString())
                 : null;
         String notas = (String) request.getOrDefault("notas", "");
+        String serviceType = (String) request.getOrDefault("serviceType", "MESA");
 
         Reservation reservation = reservationsService.createReservation(
-                tenantId, branchId, clienteNombre, clienteTelefono, fecha, hora, personas, tableId, notas);
-        
+                tenantId, branchId, clienteNombre, clienteTelefono, fecha, hora, personas, tableId, notas, serviceType);
+
         return ResponseEntity.ok(reservation);
     }
 
@@ -75,12 +76,12 @@ public class ReservationsController {
     public ResponseEntity<Reservation> updateStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> request) {
-        
+
         String newStatus = request.get("estado");
         if (newStatus == null) {
             return ResponseEntity.badRequest().build();
         }
-        
+
         return ResponseEntity.ok(reservationsService.updateStatus(id, newStatus));
     }
 
@@ -89,7 +90,7 @@ public class ReservationsController {
     public ResponseEntity<Reservation> assignTable(
             @PathVariable UUID id,
             @RequestBody Map<String, String> request) {
-        
+
         UUID tableId = UUID.fromString(request.get("tableId"));
         return ResponseEntity.ok(reservationsService.assignTable(id, tableId));
     }
@@ -101,7 +102,7 @@ public class ReservationsController {
     public ResponseEntity<List<RestaurantTable>> getTables(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) UUID branchId) {
-        
+
         UUID effectiveBranchId = branchId != null ? branchId : tenantId;
         return ResponseEntity.ok(reservationsService.getTables(tenantId, effectiveBranchId));
     }
@@ -112,7 +113,7 @@ public class ReservationsController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) UUID branchId,
             @RequestParam(defaultValue = "1") int minCapacity) {
-        
+
         UUID effectiveBranchId = branchId != null ? branchId : tenantId;
         return ResponseEntity.ok(reservationsService.getAvailableTables(tenantId, effectiveBranchId, minCapacity));
     }
@@ -122,12 +123,12 @@ public class ReservationsController {
     public ResponseEntity<RestaurantTable> updateTableStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> request) {
-        
+
         String newStatus = request.get("estado");
         if (newStatus == null) {
             return ResponseEntity.badRequest().build();
         }
-        
+
         return ResponseEntity.ok(reservationsService.updateTableStatus(id, newStatus));
     }
 
@@ -138,7 +139,7 @@ public class ReservationsController {
     public ResponseEntity<ReservationsService.ReservationStats> getStats(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam(required = false) LocalDate date) {
-        
+
         LocalDate targetDate = date != null ? date : LocalDate.now();
         return ResponseEntity.ok(reservationsService.getStats(tenantId, targetDate));
     }

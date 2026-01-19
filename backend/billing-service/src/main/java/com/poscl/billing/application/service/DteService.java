@@ -9,7 +9,6 @@ import com.poscl.billing.domain.enums.EstadoDte;
 import com.poscl.billing.domain.enums.TipoDte;
 import com.poscl.billing.domain.repository.CafRepository;
 import com.poscl.billing.domain.repository.DteRepository;
-import com.poscl.shared.exception.BusinessConflictException;
 import com.poscl.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
