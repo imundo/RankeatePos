@@ -90,6 +90,7 @@ public class TenantService {
                 .telefono(request.getTelefono())
                 .businessType(request.getBusinessType())
                 .plan(request.getPlan() != null ? request.getPlan() : "FREE")
+                .modules(request.getModules())
                 .activo(true)
                 .build();
 
@@ -137,6 +138,8 @@ public class TenantService {
             tenant.setBusinessType(request.getBusinessType());
         if (request.getPlan() != null)
             tenant.setPlan(request.getPlan());
+        if (request.getModules() != null)
+            tenant.setModules(request.getModules());
 
         return tenantRepository.save(tenant);
     }

@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * AdminController - Endpoints para Super Admin (gestión de plataforma)
@@ -112,6 +114,7 @@ public class AdminController {
                 .region(request.getRegion())
                 .businessType(businessType)
                 .plan(request.getPlan())
+                .modules(getModulesForPlan(request.getPlan()))
                 .build());
 
         // Create admin user for this tenant
@@ -170,6 +173,25 @@ public class AdminController {
                 dtoPage.getTotalElements()));
     }
 
+    @PostMapping("/tenants/{tenantId}/users")
+    @Operation(summary = "Crear usuario para tenant", description = "Crea un usuario asociado a un tenant")
+    public ResponseEntity<UserDto> createTenantUser(
+            @PathVariable UUID tenantId,
+            @RequestBody @Valid CreateUserRequest request) {
+        log.info("POST /api/admin/tenants/{}/users - email: {}", tenantId, request.getEmail());
+        UUID creatorId = null; // System/Admin
+        UserDto user = userService.create(tenantId, creatorId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+
+    @PutMapping("/users/{id}")
+    @Operation(summary = "Actualizar usuario", description = "Actualiza datos y rol de un usuario")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request) {
+        log.info("PUT /api/admin/users/{}", id);
+        User user = userService.updateForAdmin(id, request);
+        return ResponseEntity.ok(toUserDto(user));
+    }
+
     // ==================== DTOs ====================
 
     private TenantDto toDto(Tenant tenant) {
@@ -185,6 +207,16 @@ public class AdminController {
                 .build();
     }
 
+    private String getModulesForPlan(String plan) {
+        if ("PRO".equalsIgnoreCase(plan)) {
+            return "[\"pos\", \"products\", \"marketing\", \"crm\", \"admin\"]";
+        } else if ("BUSINESS".equalsIgnoreCase(plan)) {
+            return "[\"pos\", \"products\", \"marketing\", \"crm\", \"admin\", \"reports\", \"users\", \"inventory\"]";
+        }
+        // FREE / STARTER
+        return "[\"pos\", \"products\"]";
+    }
+
     private UserDto toUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
@@ -193,6 +225,9 @@ public class AdminController {
                 .apellido(user.getApellido())
                 .activo(user.getActivo())
                 .createdAt(user.getCreatedAt())
+                .roles(user.getRoles() != null
+                        ? user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet())
+                        : Set.of())
                 .build();
     }
 }

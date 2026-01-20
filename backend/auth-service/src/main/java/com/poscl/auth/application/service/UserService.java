@@ -333,4 +333,35 @@ public class UserService {
 
                 return user;
         }
+
+        /**
+         * Actualiza un usuario (Super Admin)
+         */
+        public User updateForAdmin(UUID id, UpdateUserRequest request) {
+                User user = userRepository.findById(id)
+                                .orElseThrow(() -> new DomainException("USER_NOT_FOUND",
+                                                "Usuario no encontrado", HttpStatus.NOT_FOUND));
+
+                if (request.getNombre() != null)
+                        user.setNombre(request.getNombre());
+                if (request.getApellido() != null)
+                        user.setApellido(request.getApellido());
+                if (request.getTelefono() != null)
+                        user.setTelefono(request.getTelefono());
+                if (request.getActivo() != null)
+                        user.setActivo(request.getActivo());
+
+                if (request.getRoles() != null) {
+                        Set<Role> roles = request.getRoles().stream()
+                                        .map(roleName -> roleRepository.findByNombre(roleName)
+                                                        .orElseThrow(() -> new DomainException("ROLE_NOT_FOUND",
+                                                                        "Rol no encontrado: " + roleName,
+                                                                        HttpStatus.NOT_FOUND)))
+                                        .collect(Collectors.toSet());
+                        user.setRoles(roles);
+                }
+
+                user.setUpdatedAt(Instant.now());
+                return userRepository.save(user);
+        }
 }

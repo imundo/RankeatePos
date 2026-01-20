@@ -378,34 +378,51 @@ interface AutomationConfig {
 
           <!-- Time slots visualization -->
           <div class="time-grid">
-            @for (slot of timeSlots; track slot) {
-              <div class="time-row" 
-                   [class.has-reservation]="getReservationsForTime(slot).length > 0"
-                   (click)="openNewReservationAtTime(slot)">
-                <span class="time-label">{{ slot }}</span>
-                <div class="time-content">
-                  @for (res of getReservationsForTime(slot); track res.id) {
-                    <div class="mini-res-card" [class]="res.estado" (click)="viewReservation(res); $event.stopPropagation()">
-                      <div class="mini-res-info">
-                        <span class="mini-res-name">{{ res.cliente }}</span>
-                        <span class="mini-res-details">👥 {{ res.personas }} @if(res.recurso) { · {{ getResourceLabel() }} {{ res.recurso }} }</span>
-                      </div>
-                      <div class="mini-res-actions">
-                        @if (res.estado === 'pendiente') {
-                          <button class="mini-btn confirm" (click)="confirmReservation(res); $event.stopPropagation()" title="Confirmar">✓</button>
-                        }
-                        @if (res.estado === 'confirmada') {
-                          <button class="mini-btn complete" (click)="completeReservation(res); $event.stopPropagation()" title="Completar">🏁</button>
-                        }
-                        <button class="mini-btn edit" (click)="editReservation(res); $event.stopPropagation()" title="Editar">✏️</button>
+            @if (isLoadingReservations()) {
+              <div class="skeleton-loader-container" style="padding: 1rem;">
+                <div class="skeleton-line w-25"></div>
+                @for (i of [1,2,3,4,5]; track i) {
+                  <div class="skeleton-card">
+                    <div class="skeleton-row">
+                      <div class="skeleton-avatar"></div>
+                      <div style="flex: 1">
+                        <div class="skeleton-line w-50"></div>
+                        <div class="skeleton-line w-25"></div>
                       </div>
                     </div>
-                  }
-                  @if (getReservationsForTime(slot).length === 0) {
-                    <div class="empty-slot">+ Agregar reserva</div>
-                  }
-                </div>
+                  </div>
+                }
               </div>
+            } @else {
+              @for (slot of timeSlots; track slot) {
+                <div class="time-row" 
+                     [class.has-reservation]="getReservationsForTime(slot).length > 0"
+                     (click)="openNewReservationAtTime(slot)">
+                  <span class="time-label">{{ slot }}</span>
+                  <div class="time-content">
+                    @for (res of getReservationsForTime(slot); track res.id) {
+                      <div class="mini-res-card" [class]="res.estado" (click)="viewReservation(res); $event.stopPropagation()">
+                        <div class="mini-res-info">
+                          <span class="mini-res-name">{{ res.cliente }}</span>
+                          <span class="mini-res-details">👥 {{ res.personas }} @if(res.recurso) { · {{ getResourceLabel() }} {{ res.recurso }} }</span>
+                        </div>
+                        <div class="mini-res-actions">
+                          @if (res.estado === 'pendiente') {
+                            <button class="mini-btn confirm" (click)="confirmReservation(res); $event.stopPropagation()" title="Confirmar">✓</button>
+                          }
+                          @if (res.estado === 'confirmada') {
+                            <button class="mini-btn complete" (click)="completeReservation(res); $event.stopPropagation()" title="Completar">🏁</button>
+                          }
+                          <button class="mini-btn edit" (click)="editReservation(res); $event.stopPropagation()" title="Editar">✏️</button>
+                        </div>
+                      </div>
+                    }
+                    @if (getReservationsForTime(slot).length === 0) {
+                      <div class="empty-slot">+ Agregar reserva</div>
+                    }
+                  </div>
+                </div>
+              }
             }
           </div>
         </section>
@@ -506,6 +523,27 @@ interface AutomationConfig {
                     </div>
                   </div>
                 </div>
+                <!-- Smart Table Suggestions -->
+                @if (smartTableSuggestions().length > 0) {
+                  <div class="smart-suggestions">
+                    <div class="smart-suggestions-title">
+                      <span>🎯</span>
+                      <span>Mesas sugeridas para {{ formData.personas }} personas:</span>
+                    </div>
+                    <div class="suggestion-chips">
+                      @for (table of smartTableSuggestions(); track table.id) {
+                        <button type="button" 
+                                class="suggestion-chip" 
+                                [class.optimal]="table.isOptimal"
+                                (click)="formData.recurso = table.numero">
+                          <span>{{ getResourceIcon() }} {{ table.numero }}</span>
+                          <span class="chip-badge">{{ table.capacidad }}p</span>
+                          <span>{{ table.mensaje }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
 
               <div class="form-section">
@@ -2583,6 +2621,92 @@ interface AutomationConfig {
       transition: all 0.2s;
     }
     .save-config-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4); }
+
+    /* Skeleton Loader Styles */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    .skeleton-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .skeleton-line {
+      height: 14px;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+    .skeleton-line.w-75 { width: 75%; }
+    .skeleton-line.w-50 { width: 50%; }
+    .skeleton-line.w-25 { width: 25%; }
+    .skeleton-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .skeleton-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    /* Smart Table Suggestions */
+    .smart-suggestions {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 12px;
+    }
+    .smart-suggestions-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary-light);
+      margin-bottom: 0.5rem;
+    }
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .suggestion-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .suggestion-chip:hover {
+      background: rgba(99, 102, 241, 0.3);
+      border-color: var(--primary);
+    }
+    .suggestion-chip.optimal {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .suggestion-chip .chip-badge {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.35rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+    }
   `]
 })
 export class ReservationsComponent implements OnInit {
@@ -2592,6 +2716,7 @@ export class ReservationsComponent implements OnInit {
 
   // Loading states
   isSaving = signal(false);
+  isLoadingReservations = signal(true);
 
   // Multi-industry service types configuration
   serviceTypes: ServiceType[] = [
@@ -2768,6 +2893,43 @@ export class ReservationsComponent implements OnInit {
       .slice(0, 6); // Show top 6 suggestions
   });
 
+  // Smart Table Suggestions - recommends optimal tables based on party size
+  smartTableSuggestions = computed(() => {
+    const personas = this.formData.personas || 2;
+    const fecha = this.formData.fecha || this.getTodayStr();
+    const hora = this.formData.hora || '';
+
+    // Get tables already reserved for this date/time
+    const reservedTableIds = this.reservations()
+      .filter(r => r.fecha === fecha && r.hora === hora && r.estado !== 'cancelada')
+      .map(r => r.recurso)
+      .filter(Boolean);
+
+    // Get available tables that fit the party size
+    const available = this.resources()
+      .filter(r => r.estado === 'disponible' || !reservedTableIds.includes(r.id))
+      .filter(r => r.capacidad >= personas)
+      .sort((a, b) => {
+        // Prefer tables with capacity closest to party size (minimize waste)
+        const wasteA = a.capacidad - personas;
+        const wasteB = b.capacidad - personas;
+        return wasteA - wasteB;
+      });
+
+    return available.slice(0, 4).map(table => ({
+      id: table.id,
+      numero: table.numero,
+      capacidad: table.capacidad,
+      ubicacion: table.ubicacion,
+      isOptimal: table.capacidad - personas <= 2, // Optimal if capacity is close to party size
+      mensaje: table.capacidad === personas
+        ? '✨ Ajuste perfecto'
+        : table.capacidad - personas <= 2
+          ? '👍 Buena opción'
+          : '📍 Disponible'
+    }));
+  });
+
   filteredCustomers = computed(() => {
     const query = this.customerSearchQuery().toLowerCase();
     const filter = this.customerFilter();
@@ -2832,6 +2994,15 @@ export class ReservationsComponent implements OnInit {
   ngOnInit() {
     this.goToToday();
     this.loadAutomations();
+    this.simulateLoading();
+  }
+
+  simulateLoading() {
+    // Simulate API loading delay for skeleton loader demo
+    this.isLoadingReservations.set(true);
+    setTimeout(() => {
+      this.isLoadingReservations.set(false);
+    }, 1200);
   }
 
   loadAutomations() {

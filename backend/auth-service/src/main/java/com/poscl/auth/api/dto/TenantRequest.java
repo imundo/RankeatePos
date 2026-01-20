@@ -25,4 +25,5 @@ public class TenantRequest {
     private String telefono;
     private BusinessType businessType;
     private String plan;
+    private String modules;
 }

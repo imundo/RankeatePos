@@ -28,6 +28,7 @@ export interface AuthTenant {
     logoUrl?: string;
     businessType: string;
     plan: string;
+    modules: string[];
 }
 
 export interface AuthResponse {
@@ -163,6 +164,10 @@ export class AuthService {
 
     hasPermission(permission: string): boolean {
         return this.userSignal()?.permissions?.includes(permission) ?? false;
+    }
+
+    hasModule(module: string): boolean {
+        return this.tenantSignal()?.modules?.includes(module) ?? false;
     }
 
     private handleAuthResponse(response: AuthResponse): void {

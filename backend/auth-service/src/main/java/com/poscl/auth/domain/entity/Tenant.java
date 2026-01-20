@@ -94,6 +94,9 @@ public class Tenant {
     @Builder.Default
     private String plan = "FREE";
 
+    @Column(columnDefinition = "text")
+    private String modules; // JSON array of enabled modules: ["pos", "inventory", "reservations"]
+
     // Relaciones
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

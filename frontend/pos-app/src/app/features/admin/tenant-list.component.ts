@@ -1,27 +1,27 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 
 interface Tenant {
-    id: string;
-    rut: string;
-    razonSocial: string;
-    nombreFantasia: string;
-    businessType: string;
-    plan: string;
-    activo: boolean;
-    createdAt: string;
+  id: string;
+  rut: string;
+  razonSocial: string;
+  nombreFantasia: string;
+  businessType: string;
+  plan: string;
+  activo: boolean;
+  createdAt: string;
 }
 
 @Component({
-    selector: 'app-tenant-list',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-tenant-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="admin-page">
       <header class="page-header">
         <div class="header-content">
@@ -110,6 +110,7 @@ interface Tenant {
                         (click)="toggleStatus(tenant)">
                         {{ tenant.activo ? '🔒' : '🔓' }}
                       </button>
+                      <button class="btn-icon" title="Usuarios" (click)="manageUsers(tenant)">👥</button>
                     </div>
                   </td>
                 </tr>
@@ -120,7 +121,7 @@ interface Tenant {
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .admin-page {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
@@ -335,92 +336,96 @@ interface Tenant {
   `]
 })
 export class TenantListComponent implements OnInit {
-    private http = inject(HttpClient);
-    private authService = inject(AuthService);
-    private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-    tenants = signal<Tenant[]>([]);
-    loading = signal(true);
-    searchTerm = '';
-    statusFilter = '';
-    successMessage = signal<string | null>(null);
+  tenants = signal<Tenant[]>([]);
+  loading = signal(true);
+  searchTerm = '';
+  statusFilter = '';
+  successMessage = signal<string | null>(null);
 
-    ngOnInit() {
-        // Check for success message from wizard
-        const created = this.route.snapshot.queryParams['created'];
-        if (created) {
-            this.successMessage.set('Cliente creado exitosamente');
-            setTimeout(() => this.successMessage.set(null), 5000);
+  ngOnInit() {
+    // Check for success message from wizard
+    const created = this.route.snapshot.queryParams['created'];
+    if (created) {
+      this.successMessage.set('Cliente creado exitosamente');
+      setTimeout(() => this.successMessage.set(null), 5000);
+    }
+    this.loadTenants();
+  }
+
+  loadTenants() {
+    this.loading.set(true);
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.authService.getToken()}`
+    });
+
+    let url = `${environment.authUrl}/api/admin/tenants?size=50`;
+    if (this.searchTerm) url += `&search=${encodeURIComponent(this.searchTerm)}`;
+    if (this.statusFilter) url += `&status=${this.statusFilter}`;
+
+    this.http.get<{ content: Tenant[] }>(url, { headers })
+      .subscribe({
+        next: (response) => {
+          this.tenants.set(response.content || []);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading tenants:', err);
+          this.loading.set(false);
+          // Use mock data for demo
+          this.loadMockTenants();
         }
-        this.loadTenants();
-    }
+      });
+  }
 
-    loadTenants() {
-        this.loading.set(true);
-        const headers = new HttpHeaders({
-            'Authorization': `Bearer ${this.authService.getToken()}`
-        });
+  loadMockTenants() {
+    this.tenants.set([
+      { id: '1', rut: '12.345.678-9', razonSocial: 'Panadería El Trigal', nombreFantasia: 'El Trigal', businessType: 'PANADERIA', plan: 'PRO', activo: true, createdAt: '2024-01-15' },
+      { id: '2', rut: '98.765.432-1', razonSocial: 'Academia Online Pro', nombreFantasia: 'AcademiaOnline', businessType: 'EDUCACION', plan: 'BUSINESS', activo: true, createdAt: '2024-02-01' },
+      { id: '3', rut: '11.222.333-4', razonSocial: 'Editorial Creativa', nombreFantasia: 'Editorial', businessType: 'EDITORIAL', plan: 'PRO', activo: true, createdAt: '2024-02-15' },
+      { id: '4', rut: '55.666.777-8', razonSocial: 'Minimarket Don Pedro', nombreFantasia: 'Don Pedro', businessType: 'RETAIL', plan: 'FREE', activo: false, createdAt: '2024-03-01' }
+    ]);
+  }
 
-        let url = `${environment.authUrl}/api/admin/tenants?size=50`;
-        if (this.searchTerm) url += `&search=${encodeURIComponent(this.searchTerm)}`;
-        if (this.statusFilter) url += `&status=${this.statusFilter}`;
+  search() {
+    this.loadTenants();
+  }
 
-        this.http.get<{ content: Tenant[] }>(url, { headers })
-            .subscribe({
-                next: (response) => {
-                    this.tenants.set(response.content || []);
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    console.error('Error loading tenants:', err);
-                    this.loading.set(false);
-                    // Use mock data for demo
-                    this.loadMockTenants();
-                }
-            });
-    }
+  getIndustryIcon(type: string): string {
+    const icons: Record<string, string> = {
+      'RETAIL': '🛒',
+      'PANADERIA': '🥖',
+      'EDUCACION': '🎓',
+      'EDITORIAL': '📚',
+      'RESTAURANTE': '🍕'
+    };
+    return icons[type] || '🏢';
+  }
 
-    loadMockTenants() {
-        this.tenants.set([
-            { id: '1', rut: '12.345.678-9', razonSocial: 'Panadería El Trigal', nombreFantasia: 'El Trigal', businessType: 'PANADERIA', plan: 'PRO', activo: true, createdAt: '2024-01-15' },
-            { id: '2', rut: '98.765.432-1', razonSocial: 'Academia Online Pro', nombreFantasia: 'AcademiaOnline', businessType: 'EDUCACION', plan: 'BUSINESS', activo: true, createdAt: '2024-02-01' },
-            { id: '3', rut: '11.222.333-4', razonSocial: 'Editorial Creativa', nombreFantasia: 'Editorial', businessType: 'EDITORIAL', plan: 'PRO', activo: true, createdAt: '2024-02-15' },
-            { id: '4', rut: '55.666.777-8', razonSocial: 'Minimarket Don Pedro', nombreFantasia: 'Don Pedro', businessType: 'RETAIL', plan: 'FREE', activo: false, createdAt: '2024-03-01' }
-        ]);
-    }
+  editTenant(tenant: Tenant) {
+    this.router.navigate(['/admin/tenants', tenant.id, 'edit']);
+  }
 
-    search() {
-        this.loadTenants();
-    }
+  manageUsers(tenant: Tenant) {
+    this.router.navigate(['/admin/tenants', tenant.id, 'users']);
+  }
 
-    getIndustryIcon(type: string): string {
-        const icons: Record<string, string> = {
-            'RETAIL': '🛒',
-            'PANADERIA': '🥖',
-            'EDUCACION': '🎓',
-            'EDITORIAL': '📚',
-            'RESTAURANTE': '🍕'
-        };
-        return icons[type] || '🏢';
-    }
+  toggleStatus(tenant: Tenant) {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.authService.getToken()}`
+    });
 
-    editTenant(tenant: Tenant) {
-        // TODO: Implement edit modal
-        console.log('Edit tenant:', tenant);
-    }
-
-    toggleStatus(tenant: Tenant) {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.authService.getToken()}`
-        });
-
-        this.http.put(`${environment.authUrl}/api/admin/tenants/${tenant.id}/status`,
-            { activo: !tenant.activo },
-            { headers }
-        ).subscribe({
-            next: () => this.loadTenants(),
-            error: (err) => console.error('Error toggling status:', err)
-        });
-    }
+    this.http.put(`${environment.authUrl}/api/admin/tenants/${tenant.id}/status`,
+      { activo: !tenant.activo },
+      { headers }
+    ).subscribe({
+      next: () => this.loadTenants(),
+      error: (err) => console.error('Error toggling status:', err)
+    });
+  }
 }

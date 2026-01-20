@@ -21,5 +21,13 @@ export const ADMIN_ROUTES: Routes = [
     {
         path: 'tenants/new',
         loadComponent: () => import('./tenant-wizard.component').then(m => m.TenantWizardComponent)
+    },
+    {
+        path: 'tenants/:id/edit',
+        loadComponent: () => import('./tenant-wizard.component').then(m => m.TenantWizardComponent)
+    },
+    {
+        path: 'tenants/:id/users',
+        loadComponent: () => import('./tenant-users.component').then(m => m.TenantUsersComponent)
     }
 ];
