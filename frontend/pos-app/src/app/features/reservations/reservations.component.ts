@@ -976,7 +976,7 @@ interface AutomationConfig {
                         </div>
                         <div class="form-row">
                           <label>Descripción por Defecto</label>
-                          <input type="text" [(ngModel)]="automationConfig.mercadoPago.defaultDescription" placeholder="Reserva - {{negocio}}">
+                          <input type="text" [(ngModel)]="automationConfig.mercadoPago.defaultDescription" placeholder="Reserva - Mi Negocio">
                         </div>
                         <div class="form-row">
                           <label>URL de Éxito (opcional)</label>
