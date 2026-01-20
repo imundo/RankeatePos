@@ -947,7 +947,6 @@ interface AutomationConfig {
             </div>
           </div>
         </div>
-        </div>
       }
 
       <!-- Mobile Bottom Action Bar -->
