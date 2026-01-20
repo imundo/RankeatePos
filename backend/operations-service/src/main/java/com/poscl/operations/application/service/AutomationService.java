@@ -50,6 +50,15 @@ public class AutomationService {
         return automationLogRepository.findByAutomationIdOrderBySentAtDesc(automationId);
     }
 
+    public List<AutomationLog> getAllLogs(UUID tenantId, int limit) {
+        // Get all logs ordered by date, limited
+        return automationLogRepository.findAll()
+                .stream()
+                .sorted((a, b) -> b.getSentAt().compareTo(a.getSentAt()))
+                .limit(limit)
+                .toList();
+    }
+
     /**
      * Trigger automations based on an event type for a specific reservation
      */

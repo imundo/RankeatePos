@@ -24,6 +24,7 @@ public class ReservationsService {
     private final ReservationRepository reservationRepository;
     private final RestaurantTableRepository tableRepository;
     private final AutomationService automationService;
+    private final CrmSyncService crmSyncService;
 
     // ==================== RESERVATIONS ====================
 
@@ -69,6 +70,9 @@ public class ReservationsService {
         // Trigger "Nueva Reserva" automation
         automationService.triggerAutomations(tenantId, "nueva-reserva", saved);
 
+        // Sync customer with CRM
+        crmSyncService.syncReservationCustomer(tenantId, clienteNombre, clienteTelefono, null, saved.getId());
+
         return saved;
     }
 
@@ -97,8 +101,12 @@ public class ReservationsService {
                 automationService.triggerAutomations(reservation.getTenantId(), "confirmacion", saved);
             } else if ("CANCELADA".equalsIgnoreCase(newStatus)) {
                 automationService.triggerAutomations(reservation.getTenantId(), "cancelacion", saved);
+                crmSyncService.recordCancellation(reservation.getTenantId(), reservation.getClienteTelefono(),
+                        saved.getId());
             } else if ("COMPLETADA".equalsIgnoreCase(newStatus)) {
                 automationService.triggerAutomations(reservation.getTenantId(), "completada", saved);
+                crmSyncService.recordCompletedVisit(reservation.getTenantId(), reservation.getClienteTelefono(),
+                        reservation.getClienteNombre(), saved.getId());
             }
         }
 
