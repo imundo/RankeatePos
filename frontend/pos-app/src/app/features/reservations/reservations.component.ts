@@ -3137,9 +3137,10 @@ export class ReservationsComponent implements OnInit {
       return;
     }
     this.toastService.info('🔄 Probando conexión Email...');
-    setTimeout(() => {
-      this.toastService.success('✅ Conexión Email exitosa');
-    }, 1500);
+    this.reservationsService.testEmailConnection(this.automationConfig.email).subscribe({
+      next: () => this.toastService.success('✅ Conexión Email exitosa'),
+      error: (e) => this.toastService.error('❌ Error: ' + (e.error?.message || 'Conexión fallida'))
+    });
   }
 
   testWhatsAppConnection(): void {
@@ -3148,9 +3149,10 @@ export class ReservationsComponent implements OnInit {
       return;
     }
     this.toastService.info('🔄 Probando conexión WhatsApp...');
-    setTimeout(() => {
-      this.toastService.success('✅ Conexión WhatsApp exitosa');
-    }, 1500);
+    this.reservationsService.testWhatsAppConnection(this.automationConfig.whatsapp).subscribe({
+      next: () => this.toastService.success('✅ Conexión WhatsApp exitosa'),
+      error: (e) => this.toastService.error('❌ Error: ' + (e.error?.message || 'Conexión fallida'))
+    });
   }
 
   testMercadoPagoConnection(): void {
@@ -3159,15 +3161,39 @@ export class ReservationsComponent implements OnInit {
       return;
     }
     this.toastService.info('🔄 Probando conexión Mercado Pago...');
-    setTimeout(() => {
-      this.toastService.success('✅ Conexión Mercado Pago exitosa - Links de pago disponibles');
-    }, 1500);
+    this.reservationsService.testMercadoPagoConnection(this.automationConfig.mercadoPago).subscribe({
+      next: () => this.toastService.success('✅ Conexión Mercado Pago exitosa - Links de pago disponibles'),
+      error: (e) => this.toastService.error('❌ Error: ' + (e.error?.message || 'Conexión fallida'))
+    });
   }
 
   saveAutomationConfig(): void {
-    // In production, save to backend
+    this.toastService.info('💾 Guardando configuración...');
+    // Save to localStorage as backup
     localStorage.setItem('automationConfig', JSON.stringify(this.automationConfig));
-    this.toastService.success('💾 Configuración guardada correctamente');
+    // Save to backend
+    this.reservationsService.saveAutomationConfig(this.automationConfig).subscribe({
+      next: () => this.toastService.success('✅ Configuración guardada correctamente'),
+      error: () => {
+        // If backend fails, at least localStorage has it
+        this.toastService.warning('⚠️ Guardado localmente (backend no disponible)');
+      }
+    });
+  }
+
+  toggleAutomation(auto: Automation): void {
+    const previousState = auto.activa;
+    auto.activa = !auto.activa;
+
+    this.reservationsService.toggleAutomation(auto.id).subscribe({
+      next: () => {
+        this.toastService.success(auto.activa ? '✅ Automatización activada' : '⏸️ Automatización pausada');
+      },
+      error: () => {
+        auto.activa = previousState; // Rollback
+        this.toastService.error('❌ Error al cambiar estado');
+      }
+    });
   }
 
   getLocationEmoji(ubicacion: string): string {
@@ -3369,41 +3395,7 @@ export class ReservationsComponent implements OnInit {
     return icons[trigger] || '⚡';
   }
 
-  toggleAutomation(auto: Automation): void {
-    const newState = !auto.activa;
 
-    // Optimistic update
-    this.automations.update(list =>
-      list.map(a => a.id === auto.id ? { ...a, activa: newState } : a)
-    );
-
-    // Call backend to save
-    const backendModel = {
-      id: auto.id,
-      nombre: auto.nombre,
-      tipo: auto.tipo.toUpperCase(),
-      triggerEvent: auto.trigger,
-      active: newState,
-      channels: JSON.stringify(auto.canales),
-      templateContent: JSON.stringify({
-        content: this.messageTemplates().find(t => t.id === auto.templateId)?.contenido || 'Contenido por defecto'
-      })
-    };
-
-    this.reservationsService.saveAutomation(backendModel).subscribe({
-      next: (saved) => {
-        console.log(`Automation "${saved.nombre}" updated: ${saved.active}`);
-      },
-      error: (e) => {
-        console.error('Error saving automation', e);
-        // Revert on error
-        this.automations.update(list =>
-          list.map(a => a.id === auto.id ? { ...a, activa: !newState } : a)
-        );
-        alert('Error al actualizar automatización');
-      }
-    });
-  }
 
   editTemplate(template: MessageTemplate): void {
     const newContent = prompt('Editar contenido del template:\n\nVariables disponibles: ' + template.variables.map(v => `{{${v}}}`).join(', '), template.contenido);

@@ -150,14 +150,62 @@ export class ReservationsService {
         });
     }
 
+    toggleAutomation(id: string): Observable<any> {
+        return this.http.put<any>(`${this.baseUrl}/automations/${id}/toggle`, {}, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateTemplate(id: string, template: { asunto: string; contenido: string }): Observable<any> {
+        return this.http.put<any>(`${this.baseUrl}/automations/${id}/template`, template, {
+            headers: this.getHeaders()
+        });
+    }
+
     getAutomationLogs(id: string): Observable<any[]> {
         return this.http.get<any[]>(`${this.baseUrl}/automations/${id}/logs`, {
             headers: this.getHeaders()
         });
     }
 
+    getAllAutomationLogs(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/automations/logs`, {
+            headers: this.getHeaders()
+        });
+    }
+
     testConnection(config: any): Observable<any> {
         return this.http.post<any>(`${this.baseUrl}/automations/test`, config, {
+            headers: this.getHeaders()
+        });
+    }
+
+    testEmailConnection(config: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations/test/email`, config, {
+            headers: this.getHeaders()
+        });
+    }
+
+    testWhatsAppConnection(config: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations/test/whatsapp`, config, {
+            headers: this.getHeaders()
+        });
+    }
+
+    testMercadoPagoConnection(config: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations/test/mercadopago`, config, {
+            headers: this.getHeaders()
+        });
+    }
+
+    saveAutomationConfig(config: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/automations/config`, config, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getAutomationConfig(): Observable<any> {
+        return this.http.get<any>(`${this.baseUrl}/automations/config`, {
             headers: this.getHeaders()
         });
     }

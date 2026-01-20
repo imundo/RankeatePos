@@ -11,16 +11,21 @@ import java.util.UUID;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
-    List<Reservation> findByTenantIdAndFechaOrderByHoraAsc(UUID tenantId, LocalDate fecha);
+        List<Reservation> findByTenantIdAndFechaOrderByHoraAsc(UUID tenantId, LocalDate fecha);
 
-    List<Reservation> findByTenantIdAndBranchIdAndFechaOrderByHoraAsc(
-            UUID tenantId, UUID branchId, LocalDate fecha);
+        List<Reservation> findByTenantIdAndBranchIdAndFechaOrderByHoraAsc(
+                        UUID tenantId, UUID branchId, LocalDate fecha);
 
-    List<Reservation> findByTenantIdAndEstadoAndFechaBetween(
-            UUID tenantId, String estado, LocalDate start, LocalDate end);
+        List<Reservation> findByTenantIdAndEstadoAndFechaBetween(
+                        UUID tenantId, String estado, LocalDate start, LocalDate end);
 
-    List<Reservation> findByTableIdAndFechaAndEstadoIn(
-            UUID tableId, LocalDate fecha, List<String> estados);
+        List<Reservation> findByTableIdAndFechaAndEstadoIn(
+                        UUID tableId, LocalDate fecha, List<String> estados);
 
-    Long countByTenantIdAndFechaAndEstadoIn(UUID tenantId, LocalDate fecha, List<String> estados);
+        Long countByTenantIdAndFechaAndEstadoIn(UUID tenantId, LocalDate fecha, List<String> estados);
+
+        // Methods for AutomationScheduler
+        List<Reservation> findByFechaAndEstado(LocalDate fecha, String estado);
+
+        List<Reservation> findByFechaAndHoraStartingWithAndEstado(LocalDate fecha, String horaPrefix, String estado);
 }
