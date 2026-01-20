@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { ReservationsService, CreateReservationRequest } from '@core/services/reservations.service';
 import { CountUpDirective } from '@core/directives/count-up.directive';
+import { ToastService } from '@core/services/toast.service';
+import { ToastContainerComponent } from '@core/components/toast-container.component';
 
 // Multi-industry service types
 interface ServiceType {
@@ -138,8 +140,9 @@ interface AutomationConfig {
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CountUpDirective],
+  imports: [CommonModule, FormsModule, RouterLink, CountUpDirective, ToastContainerComponent],
   template: `
+    <app-toast-container></app-toast-container>
     <div class="reservations-container">
       <!-- Premium Header with Glassmorphism -->
       <header class="res-header premium-header">
@@ -944,7 +947,16 @@ interface AutomationConfig {
             </div>
           </div>
         </div>
+        </div>
       }
+
+      <!-- Mobile Bottom Action Bar -->
+      <div class="mobile-bottom-bar">
+        <button class="fab-primary" (click)="openNewReservation()">
+          <span class="fab-icon">+</span>
+          Nueva Reserva
+        </button>
+      </div>
     </div>
   `,
   styles: [`
@@ -954,6 +966,24 @@ interface AutomationConfig {
       color: white;
       padding: 1.5rem;
       position: relative;
+    }
+
+    /* Mobile: Container and global mobile styles */
+    @media (max-width: 768px) {
+      .reservations-container {
+        padding: 0.75rem;
+        padding-bottom: 5rem; /* Space for bottom bar */
+      }
+      .res-header { margin-bottom: 1rem; }
+      .header-content { padding: 0.75rem 1rem; gap: 0.75rem; }
+      .header-left { gap: 0.75rem; }
+      .back-btn-premium { width: 40px; height: 40px; }
+      .title-section h1 { font-size: 1.15rem; }
+      .subtitle { display: none; }
+      .status-pill { font-size: 0.6rem; padding: 0.2rem 0.5rem; }
+      .quick-actions { gap: 0.35rem; }
+      .icon-action-btn { width: 44px; height: 44px; font-size: 1.1rem; }
+      .primary-action-btn { display: none; } /* Hidden, use bottom bar */
     }
 
     /* Premium Header */
@@ -1131,7 +1161,6 @@ interface AutomationConfig {
     .action-btn.secondary { background: rgba(255,255,255,0.1); color: white; }
     .action-btn.danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-    /* Stats */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -1140,7 +1169,31 @@ interface AutomationConfig {
     }
     @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+    
+    /* Mobile: Horizontal scroll carousel */
+    @media (max-width: 768px) {
+      .stats-grid {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+        margin: 0 -0.75rem 1rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .stats-grid::-webkit-scrollbar { display: none; }
+      .stat-card {
+        flex: 0 0 140px;
+        scroll-snap-align: start;
+        padding: 1rem;
+      }
+      .stat-icon { font-size: 1.75rem; }
+      .stat-value { font-size: 1.3rem; }
+      .stat-label { font-size: 0.7rem; }
+    }
 
     .stat-card {
       position: relative;
@@ -1237,6 +1290,34 @@ interface AutomationConfig {
       gap: 0.75rem;
     }
     @media (max-width: 1100px) { .campaign-grid { grid-template-columns: repeat(2, 1fr); } }
+    
+    /* Mobile: Campaign cards horizontal scroll */
+    @media (max-width: 768px) {
+      .marketing-hub-section { margin: 0 -0.75rem 1rem; border-radius: 0; border-left: none; border-right: none; }
+      .marketing-header { padding: 0.75rem 1rem; }
+      .marketing-content { padding: 0 1rem 1rem; gap: 1rem; flex-direction: column; }
+      .quick-campaigns { min-width: unset; }
+      .quick-campaigns h4 { margin-bottom: 0.5rem; font-size: 0.8rem; }
+      .campaign-grid {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0.5rem;
+        padding-bottom: 0.25rem;
+        scrollbar-width: none;
+      }
+      .campaign-grid::-webkit-scrollbar { display: none; }
+      .campaign-card {
+        flex: 0 0 130px;
+        scroll-snap-align: center;
+        padding: 0.75rem;
+      }
+      .campaign-icon { font-size: 1.25rem; }
+      .campaign-name { font-size: 0.75rem; }
+      .campaign-desc { display: none; }
+      .campaign-stats { min-width: unset; padding: 0.75rem; gap: 0.75rem; }
+      .stat-number { font-size: 1.2rem; }
+    }
 
     .campaign-card {
       display: flex;
@@ -1436,6 +1517,38 @@ interface AutomationConfig {
       font-size: 0.65rem; 
       color: rgba(255,255,255,0.4); 
       text-transform: capitalize;
+    }
+
+    /* Mobile: Service types horizontal scroll */
+    @media (max-width: 768px) {
+      .service-type-section {
+        padding: 0.75rem 1rem;
+        margin: 0 -0.75rem 1rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+      .service-type-header { margin-bottom: 0.75rem; }
+      .service-hint { display: none; }
+      .service-type-grid {
+        display: flex;
+        overflow-x: auto;
+        gap: 0.5rem;
+        padding-bottom: 0.25rem;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+      }
+      .service-type-grid::-webkit-scrollbar { display: none; }
+      .service-type-card {
+        flex: 0 0 auto;
+        padding: 0.5rem 0.75rem;
+        flex-direction: row;
+        gap: 0.4rem;
+        min-width: unset;
+      }
+      .svc-icon { font-size: 1.1rem; }
+      .svc-name { font-size: 0.75rem; }
+      .svc-industry { display: none; }
     }
 
     /* Main Content */
@@ -1721,6 +1834,25 @@ interface AutomationConfig {
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .modal-content.modal-sm { max-width: 420px; }
+
+    /* Mobile: Full-screen modals with slide-up */
+    @media (max-width: 768px) {
+      .modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+      }
+      .modal-content {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 24px 24px 0 0;
+        animation: slideUpModal 0.3s ease-out;
+      }
+      .modal-content.modal-sm { max-width: 100%; }
+      @keyframes slideUpModal {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+    }
 
     .modal-header {
       display: flex;
@@ -2070,6 +2202,49 @@ interface AutomationConfig {
       color: rgba(255,255,255,0.4);
     }
 
+    /* Mobile Bottom Action Bar */
+    .mobile-bottom-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      background: linear-gradient(to top, rgba(15, 15, 26, 0.98) 80%, transparent);
+      z-index: 100;
+    }
+    @media (max-width: 768px) {
+      .mobile-bottom-bar { display: block; }
+    }
+    .fab-primary {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .fab-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5); }
+    .fab-primary:active { transform: translateY(0); }
+    .fab-icon {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
     /* Automation Button */
     .automation-btn {
       display: flex;
@@ -2331,6 +2506,10 @@ interface AutomationConfig {
 export class ReservationsComponent implements OnInit {
   private authService = inject(AuthService);
   private reservationsService = inject(ReservationsService);
+  private toastService = inject(ToastService);
+
+  // Loading states
+  isSaving = signal(false);
 
   // Multi-industry service types configuration
   serviceTypes: ServiceType[] = [
@@ -2755,6 +2934,8 @@ export class ReservationsComponent implements OnInit {
       this.closeModal();
     } else {
       // Create new reservation via API
+      this.isSaving.set(true);
+
       const request: CreateReservationRequest = {
         clienteNombre: this.formData.cliente,
         clienteTelefono: this.formData.telefono,
@@ -2785,17 +2966,21 @@ export class ReservationsComponent implements OnInit {
 
           this.reservations.update(list => [mappedRes, ...list]);
           this.closeModal();
+          this.toastService.success('✅ Reserva creada correctamente');
 
           // Refresh automations log if open
           if (this.showAutomationModal()) {
             this.loadAutomationLogs();
           }
+          this.isSaving.set(false);
         },
         error: (err) => {
           console.error('Error creating reservation:', err);
-          alert('Error al crear la reserva. Intente nuevamente.');
+          this.toastService.error('❌ Error al crear la reserva. Intente nuevamente.');
+          this.isSaving.set(false);
         }
       });
+      return; // Don't call closeModal below, handled in subscribe
     }
 
     this.closeModal();
