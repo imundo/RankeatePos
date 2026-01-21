@@ -215,6 +215,56 @@ public class AdminController {
         return forwardGetRequest(uri, authHeader);
     }
 
+    @GetMapping("/users/{userId}")
+    @Operation(summary = "Proxy: Obtener usuario por ID")
+    public Mono<ResponseEntity<Map<String, Object>>> getUser(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId) {
+        log.info("BFF: GET /api/admin/users/{}", userId);
+        return forwardGetRequest("/api/admin/users/" + userId, authHeader);
+    }
+
+    // ==================== User Modules Proxy ====================
+
+    @GetMapping("/users/{userId}/modules")
+    @Operation(summary = "Proxy: Obtener módulos de usuario")
+    public Mono<ResponseEntity<Map<String, Object>>> getUserModules(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId) {
+        log.info("BFF: GET /api/admin/users/{}/modules", userId);
+        return forwardGetRequest("/api/admin/users/" + userId + "/modules", authHeader);
+    }
+
+    @PutMapping("/users/{userId}/modules")
+    @Operation(summary = "Proxy: Actualizar módulos de usuario")
+    public Mono<ResponseEntity<Map<String, Object>>> updateUserModules(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId,
+            @RequestBody Map<String, Boolean> moduleStates) {
+        log.info("BFF: PUT /api/admin/users/{}/modules", userId);
+        return forwardPutRequest("/api/admin/users/" + userId + "/modules", authHeader, moduleStates);
+    }
+
+    @PostMapping("/users/{userId}/modules/toggle")
+    @Operation(summary = "Proxy: Toggle módulo individual de usuario")
+    public Mono<ResponseEntity<Map<String, Object>>> toggleUserModule(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId,
+            @RequestBody Map<String, Object> request) {
+        log.info("BFF: POST /api/admin/users/{}/modules/toggle", userId);
+        return forwardPostRequest("/api/admin/users/" + userId + "/modules/toggle", authHeader, request);
+    }
+
+    @PostMapping("/users/{userId}/modules/preset")
+    @Operation(summary = "Proxy: Aplicar preset de permisos a usuario")
+    public Mono<ResponseEntity<Map<String, Object>>> applyUserPreset(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId,
+            @RequestBody Map<String, String> request) {
+        log.info("BFF: POST /api/admin/users/{}/modules/preset", userId);
+        return forwardPostRequest("/api/admin/users/" + userId + "/modules/preset", authHeader, request);
+    }
+
     // ==================== Private Helpers ====================
 
     private Mono<ResponseEntity<Map<String, Object>>> forwardGetRequest(String uri, String authHeader) {
