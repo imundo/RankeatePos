@@ -23,6 +23,12 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     @Query("SELECT t FROM Tenant t LEFT JOIN FETCH t.branches WHERE t.id = :id")
     Optional<Tenant> findByIdWithBranches(UUID id);
 
+    @Query("SELECT DISTINCT t FROM Tenant t " +
+            "LEFT JOIN FETCH t.tenantModules tm " +
+            "LEFT JOIN FETCH tm.module " +
+            "WHERE t.id = :id")
+    Optional<Tenant> findByIdWithModules(UUID id);
+
     // Counting methods for Admin stats
     long countByActivoTrue();
 

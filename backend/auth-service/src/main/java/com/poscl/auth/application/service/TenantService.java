@@ -98,6 +98,14 @@ public class TenantService {
     }
 
     /**
+     * Busca un tenant por ID con módulos precargados (evita N+1)
+     */
+    public Tenant findByIdWithModules(UUID id) {
+        return tenantRepository.findByIdWithModules(id)
+                .orElseThrow(() -> new RuntimeException("Tenant no encontrado: " + id));
+    }
+
+    /**
      * Crea un nuevo tenant
      */
     public Tenant create(TenantRequest request) {

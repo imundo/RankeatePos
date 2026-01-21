@@ -93,7 +93,7 @@ public class AdminController {
     @Operation(summary = "Detalle de tenant", description = "Información completa de un cliente")
     public ResponseEntity<TenantDto> getTenant(@PathVariable UUID id) {
         log.info("GET /api/admin/tenants/{}", id);
-        Tenant tenant = tenantService.findById(id);
+        Tenant tenant = tenantService.findByIdWithModules(id);
         return ResponseEntity.ok(toDto(tenant));
     }
 
