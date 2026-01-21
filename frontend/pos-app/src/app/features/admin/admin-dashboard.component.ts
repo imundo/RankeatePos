@@ -654,8 +654,8 @@ export class AdminDashboardComponent implements OnInit {
   quickActions: QuickAction[] = [
     { label: 'Ver Clientes', description: 'Gestionar todos los clientes', icon: '🏢', route: '/admin/tenants', color: '#6366f1' },
     { label: 'Nuevo Cliente', description: 'Crear con wizard paso a paso', icon: '🚀', route: '/admin/tenants/new', color: '#8b5cf6' },
-    { label: 'Facturación', description: 'Pagos y suscripciones', icon: '💳', route: '/admin/billing', color: '#10b981', badge: 'Próximamente' },
-    { label: 'Reportes', description: 'Analytics y métricas', icon: '📊', route: '/admin/reports', color: '#f59e0b', badge: 'Próximamente' }
+    { label: 'Planes', description: 'Configurar membresías', icon: '💳', route: '/admin/tenants', color: '#10b981' },
+    { label: 'Módulos', description: 'Gestión de funcionalidades', icon: '📊', route: '/admin/tenants', color: '#f59e0b' }
   ];
 
   ngOnInit() {
