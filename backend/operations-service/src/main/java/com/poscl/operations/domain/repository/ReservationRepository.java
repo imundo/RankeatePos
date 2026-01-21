@@ -27,5 +27,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
         // Methods for AutomationScheduler
         List<Reservation> findByFechaAndEstado(LocalDate fecha, String estado);
 
-        List<Reservation> findByFechaAndHoraStartingWithAndEstado(LocalDate fecha, String horaPrefix, String estado);
+        List<Reservation> findByFechaAndHoraBetweenAndEstado(LocalDate fecha, java.time.LocalTime startTime,
+                        java.time.LocalTime endTime, String estado);
 }

@@ -65,12 +65,14 @@ public class AutomationScheduler {
         log.info("Running 2h reminder check...");
 
         LocalDate today = LocalDate.now();
-        LocalDateTime twoHoursFromNow = LocalDateTime.now().plusHours(2);
-        String targetHour = String.format("%02d:00", twoHoursFromNow.getHour());
+        LocalDateTime targetTime = LocalDateTime.now().plusHours(2);
+        java.time.LocalTime start = java.time.LocalTime.of(targetTime.getHour(), 0);
+        java.time.LocalTime end = java.time.LocalTime.of(targetTime.getHour(), 59, 59);
 
-        List<Reservation> reservations = reservationRepository.findByFechaAndHoraStartingWithAndEstado(
+        List<Reservation> reservations = reservationRepository.findByFechaAndHoraBetweenAndEstado(
                 today,
-                targetHour,
+                start,
+                end,
                 "CONFIRMADA");
 
         log.info("Found {} reservations in ~2h requiring reminder", reservations.size());
