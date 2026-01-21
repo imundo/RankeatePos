@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { BillingComponent } from './billing.component';
 
 @Component({
-    selector: 'app-my-account',
-    standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule],
-    template: `
+  selector: 'app-my-account',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, BillingComponent],
+  template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <!-- Animated Header -->
       <header class="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white">
@@ -192,56 +193,56 @@ import { AuthService } from '../../core/services/auth.service';
   `
 })
 export class MyAccountComponent implements OnInit {
-    private authService = inject(AuthService);
+  private authService = inject(AuthService);
 
-    tabs = [
-        { id: 'profile', label: 'Perfil', icon: '🏢' },
-        { id: 'billing', label: 'Facturación', icon: '💳' },
-        { id: 'security', label: 'Seguridad', icon: '🔐' }
-    ];
+  tabs = [
+    { id: 'profile', label: 'Perfil', icon: '🏢' },
+    { id: 'billing', label: 'Facturación', icon: '💳' },
+    { id: 'security', label: 'Seguridad', icon: '🔐' }
+  ];
 
-    activeTab = 'profile';
-    tenantName = '';
-    saving = false;
+  activeTab = 'profile';
+  tenantName = '';
+  saving = false;
 
-    profile = {
-        rut: '',
-        razonSocial: '',
-        nombreFantasia: '',
-        email: '',
-        telefono: '',
-        direccion: '',
-        plan: 'PRO'
-    };
+  profile = {
+    rut: '',
+    razonSocial: '',
+    nombreFantasia: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    plan: 'PRO'
+  };
 
-    passwordForm = {
-        current: '',
-        new: '',
-        confirm: ''
-    };
+  passwordForm = {
+    current: '',
+    new: '',
+    confirm: ''
+  };
 
-    ngOnInit() {
-        this.loadProfile();
+  ngOnInit() {
+    this.loadProfile();
+  }
+
+  loadProfile() {
+    const currentUser = (this.authService as any).userValue;
+    if (currentUser) {
+      this.tenantName = currentUser.tenantName || 'Mi Negocio';
+      // Load profile from API in production
     }
+  }
 
-    loadProfile() {
-        const currentUser = this.authService.userValue;
-        if (currentUser) {
-            this.tenantName = currentUser.tenantName || 'Mi Negocio';
-            // Load profile from API in production
-        }
-    }
+  getInitials(): string {
+    return this.tenantName.substring(0, 2).toUpperCase() || 'MN';
+  }
 
-    getInitials(): string {
-        return this.tenantName.substring(0, 2).toUpperCase() || 'MN';
-    }
-
-    saveProfile() {
-        this.saving = true;
-        // API call would go here
-        setTimeout(() => {
-            this.saving = false;
-            console.log('Profile saved', this.profile);
-        }, 1000);
-    }
+  saveProfile() {
+    this.saving = true;
+    // API call would go here
+    setTimeout(() => {
+      this.saving = false;
+      console.log('Profile saved', this.profile);
+    }, 1000);
+  }
 }

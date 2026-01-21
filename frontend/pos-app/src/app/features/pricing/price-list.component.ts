@@ -3,34 +3,34 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 interface PriceList {
-    id: string;
-    nombre: string;
-    descripcion?: string;
-    tipo: 'general' | 'sucursal' | 'cliente' | 'temporal';
-    sucursalId?: string;
-    sucursalNombre?: string;
-    fechaInicio?: string;
-    fechaFin?: string;
-    activa: boolean;
-    productCount: number;
-    createdAt: string;
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  tipo: 'general' | 'sucursal' | 'cliente' | 'temporal';
+  sucursalId?: string;
+  sucursalNombre?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  activa: boolean;
+  productCount: number;
+  createdAt: string;
 }
 
 interface PriceListProduct {
-    id: string;
-    productoId: string;
-    nombre: string;
-    sku: string;
-    precioBase: number;
-    precioLista: number;
-    descuento?: number;
+  id: string;
+  productoId: string;
+  nombre: string;
+  sku: string;
+  precioBase: number;
+  precioLista: number;
+  descuento?: number;
 }
 
 @Component({
-    selector: 'app-price-list',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    template: `
+  selector: 'app-price-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
       <!-- Header -->
       <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
@@ -234,97 +234,97 @@ interface PriceListProduct {
   `
 })
 export class PriceListComponent implements OnInit {
-    showModal = false;
-    activeFilter = 'all';
+  showModal = false;
+  activeFilter = 'all';
 
-    stats = [
-        { icon: '📋', label: 'Listas Activas', value: 4, bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' },
-        { icon: '🏢', label: 'Por Sucursal', value: 2, bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' },
-        { icon: '👥', label: 'Por Cliente', value: 1, bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' },
-        { icon: '📅', label: 'Temporales', value: 1, bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)' }
-    ];
+  stats = [
+    { icon: '📋', label: 'Listas Activas', value: 4, bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' },
+    { icon: '🏢', label: 'Por Sucursal', value: 2, bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' },
+    { icon: '👥', label: 'Por Cliente', value: 1, bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' },
+    { icon: '📅', label: 'Temporales', value: 1, bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)' }
+  ];
 
-    filters = [
-        { id: 'all', label: 'Todas', icon: '📋' },
-        { id: 'sucursal', label: 'Por Sucursal', icon: '🏢' },
-        { id: 'cliente', label: 'Por Cliente', icon: '👥' },
-        { id: 'temporal', label: 'Temporales', icon: '📅' }
-    ];
+  filters = [
+    { id: 'all', label: 'Todas', icon: '📋' },
+    { id: 'sucursal', label: 'Por Sucursal', icon: '🏢' },
+    { id: 'cliente', label: 'Por Cliente', icon: '👥' },
+    { id: 'temporal', label: 'Temporales', icon: '📅' }
+  ];
 
-    listTypes = [
-        { id: 'sucursal', icon: '🏢', label: 'Por Sucursal', desc: 'Precios específicos por local' },
-        { id: 'cliente', icon: '👥', label: 'Por Cliente', desc: 'Precios para clientes VIP' },
-        { id: 'temporal', icon: '📅', label: 'Temporal', desc: 'Ofertas por tiempo limitado' },
-        { id: 'general', icon: '📋', label: 'General', desc: 'Lista de precios base' }
-    ];
+  listTypes = [
+    { id: 'sucursal', icon: '🏢', label: 'Por Sucursal', desc: 'Precios específicos por local' },
+    { id: 'cliente', icon: '👥', label: 'Por Cliente', desc: 'Precios para clientes VIP' },
+    { id: 'temporal', icon: '📅', label: 'Temporal', desc: 'Ofertas por tiempo limitado' },
+    { id: 'general', icon: '📋', label: 'General', desc: 'Lista de precios base' }
+  ];
 
-    priceLists: PriceList[] = [
-        { id: '1', nombre: 'Precios Centro', descripcion: 'Precios exclusivos para sucursal centro', tipo: 'sucursal', sucursalNombre: 'Sucursal Centro', activa: true, productCount: 45, createdAt: '2026-01-15' },
-        { id: '2', nombre: 'Precios Oriente', descripcion: 'Precios zona oriente', tipo: 'sucursal', sucursalNombre: 'Sucursal Oriente', activa: true, productCount: 45, createdAt: '2026-01-10' },
-        { id: '3', nombre: 'Clientes VIP', descripcion: 'Descuentos especiales para clientes frecuentes', tipo: 'cliente', activa: true, productCount: 120, createdAt: '2026-01-05' },
-        { id: '4', nombre: 'Verano 2026', descripcion: 'Promoción de temporada', tipo: 'temporal', fechaInicio: '2026-01-01', fechaFin: '2026-02-28', activa: true, productCount: 30, createdAt: '2025-12-20' }
-    ];
+  priceLists: PriceList[] = [
+    { id: '1', nombre: 'Precios Centro', descripcion: 'Precios exclusivos para sucursal centro', tipo: 'sucursal', sucursalNombre: 'Sucursal Centro', activa: true, productCount: 45, createdAt: '2026-01-15' },
+    { id: '2', nombre: 'Precios Oriente', descripcion: 'Precios zona oriente', tipo: 'sucursal', sucursalNombre: 'Sucursal Oriente', activa: true, productCount: 45, createdAt: '2026-01-10' },
+    { id: '3', nombre: 'Clientes VIP', descripcion: 'Descuentos especiales para clientes frecuentes', tipo: 'cliente', activa: true, productCount: 120, createdAt: '2026-01-05' },
+    { id: '4', nombre: 'Verano 2026', descripcion: 'Promoción de temporada', tipo: 'temporal', fechaInicio: '2026-01-01', fechaFin: '2026-02-28', activa: true, productCount: 30, createdAt: '2025-12-20' }
+  ];
 
-    newList: Partial<PriceList> = {
-        nombre: '',
-        tipo: 'sucursal',
-        descripcion: ''
+  newList: Partial<PriceList> & { tipo: string } = {
+    nombre: '',
+    tipo: 'sucursal',
+    descripcion: ''
+  };
+
+  get filteredLists(): PriceList[] {
+    if (this.activeFilter === 'all') return this.priceLists;
+    return this.priceLists.filter(l => l.tipo === this.activeFilter);
+  }
+
+  ngOnInit() { }
+
+  openCreateModal() {
+    this.newList = { nombre: '', tipo: 'sucursal', descripcion: '' };
+    this.showModal = true;
+  }
+
+  createList() {
+    console.log('Creating list:', this.newList);
+    this.showModal = false;
+  }
+
+  getTypeClass(tipo: string): string {
+    const classes: Record<string, string> = {
+      'general': 'bg-slate-100 text-slate-600',
+      'sucursal': 'bg-blue-100 text-blue-600',
+      'cliente': 'bg-amber-100 text-amber-600',
+      'temporal': 'bg-pink-100 text-pink-600'
     };
+    return classes[tipo] || 'bg-slate-100';
+  }
 
-    get filteredLists(): PriceList[] {
-        if (this.activeFilter === 'all') return this.priceLists;
-        return this.priceLists.filter(l => l.tipo === this.activeFilter);
-    }
+  getTypeBadgeClass(tipo: string): string {
+    const classes: Record<string, string> = {
+      'general': 'bg-slate-100 text-slate-700',
+      'sucursal': 'bg-blue-100 text-blue-700',
+      'cliente': 'bg-amber-100 text-amber-700',
+      'temporal': 'bg-pink-100 text-pink-700'
+    };
+    return classes[tipo] || 'bg-slate-100 text-slate-700';
+  }
 
-    ngOnInit() { }
+  getTypeIcon(tipo: string): string {
+    const icons: Record<string, string> = {
+      'general': '📋',
+      'sucursal': '🏢',
+      'cliente': '👥',
+      'temporal': '📅'
+    };
+    return icons[tipo] || '📋';
+  }
 
-    openCreateModal() {
-        this.newList = { nombre: '', tipo: 'sucursal', descripcion: '' };
-        this.showModal = true;
-    }
-
-    createList() {
-        console.log('Creating list:', this.newList);
-        this.showModal = false;
-    }
-
-    getTypeClass(tipo: string): string {
-        const classes: Record<string, string> = {
-            'general': 'bg-slate-100 text-slate-600',
-            'sucursal': 'bg-blue-100 text-blue-600',
-            'cliente': 'bg-amber-100 text-amber-600',
-            'temporal': 'bg-pink-100 text-pink-600'
-        };
-        return classes[tipo] || 'bg-slate-100';
-    }
-
-    getTypeBadgeClass(tipo: string): string {
-        const classes: Record<string, string> = {
-            'general': 'bg-slate-100 text-slate-700',
-            'sucursal': 'bg-blue-100 text-blue-700',
-            'cliente': 'bg-amber-100 text-amber-700',
-            'temporal': 'bg-pink-100 text-pink-700'
-        };
-        return classes[tipo] || 'bg-slate-100 text-slate-700';
-    }
-
-    getTypeIcon(tipo: string): string {
-        const icons: Record<string, string> = {
-            'general': '📋',
-            'sucursal': '🏢',
-            'cliente': '👥',
-            'temporal': '📅'
-        };
-        return icons[tipo] || '📋';
-    }
-
-    getTypeLabel(tipo: string): string {
-        const labels: Record<string, string> = {
-            'general': 'General',
-            'sucursal': 'Sucursal',
-            'cliente': 'Cliente',
-            'temporal': 'Temporal'
-        };
-        return labels[tipo] || tipo;
-    }
+  getTypeLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      'general': 'General',
+      'sucursal': 'Sucursal',
+      'cliente': 'Cliente',
+      'temporal': 'Temporal'
+    };
+    return labels[tipo] || tipo;
+  }
 }
