@@ -163,15 +163,34 @@ export class AdminService {
 
     getModulesList(): { key: string, label: string, category: string }[] {
         return [
-            { key: 'pos', label: 'Punto de Venta', category: 'Core' },
-            { key: 'inventory', label: 'Inventario Avanzado', category: 'Core' },
-            { key: 'facturacion', label: 'Facturación Electrónica', category: 'Fiscal' },
-            { key: 'reservations', label: 'Reservas y Citas', category: 'Growth' },
-            { key: 'customer-loyalty', label: 'Fidelización Clientes', category: 'Growth' },
-            { key: 'kds', label: 'Pantalla de Cocina (KDS)', category: 'Operations' },
-            { key: 'delivery', label: 'Delivery Integration', category: 'Growth' },
-            { key: 'remuneraciones', label: 'RRHH y Remuneraciones', category: 'Admin' },
-            { key: 'contabilidad', label: 'Contabilidad', category: 'Admin' }
+            { key: 'dashboard', label: '📊 Dashboard', category: 'General' },
+            { key: 'pos', label: '💰 Nueva Venta (POS)', category: 'Ventas' },
+            { key: 'sales-history', label: '📜 Historial de Ventas', category: 'Ventas' },
+            { key: 'cash-close', label: '🔒 Cierre de Caja', category: 'Ventas' },
+            { key: 'quotes', label: '📝 Cotizaciones', category: 'Ventas' },
+
+            { key: 'inventory', label: '📦 Lista de Productos', category: 'Inventario' },
+            { key: 'stock-movements', label: '🚚 Movimientos de Stock', category: 'Inventario' },
+            { key: 'suppliers', label: '🏭 Proveedores', category: 'Inventario' },
+            { key: 'purchases', label: '🛒 Órdenes de Compra', category: 'Inventario' },
+
+            { key: 'invoices', label: '📄 Facturas Emitidas', category: 'Finanzas' },
+            { key: 'expenses', label: '💸 Gastos y Pagos', category: 'Finanzas' },
+            { key: 'cash-flow', label: '📈 Flujo de Caja', category: 'Finanzas' },
+            { key: 'banks', label: '🏦 Cuentas Bancarias', category: 'Finanzas' },
+
+            { key: 'reservations', label: '📅 Agenda y Reservas', category: 'Operaciones' },
+            { key: 'kds', label: '🍳 Pantalla Cocina (KDS)', category: 'Operaciones' },
+            { key: 'menu-digital', label: '📱 Menú Digital (QR)', category: 'Operaciones' },
+
+            { key: 'crm', label: '👥 Base de Clientes', category: 'Marketing' },
+            { key: 'loyalty', label: '🌟 Programa Lealtad', category: 'Marketing' },
+            { key: 'email-marketing', label: '📧 Campañas Email', category: 'Marketing' },
+            { key: 'whatsapp', label: '💬 Mensajería WhatsApp', category: 'Marketing' },
+
+            { key: 'users', label: '👤 Gestión Usuarios', category: 'Configuración' },
+            { key: 'company', label: '🏢 Datos Empresa', category: 'Configuración' },
+            { key: 'printers', label: '🖨️ Impresoras', category: 'Configuración' }
         ];
     }
 
