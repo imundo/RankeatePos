@@ -396,20 +396,21 @@ import { CardModule } from 'primeng/card';
         
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 0.875rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
         }
         
         .module-card {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem 1.25rem;
+            gap: 0.875rem;
+            padding: 0.875rem 1rem;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 56px;
         }
         
         .module-card:hover {
@@ -419,20 +420,19 @@ import { CardModule } from 'primeng/card';
         }
         
         .module-card.active {
-            background: rgba(99, 102, 241, 0.1);
+            background: rgba(99, 102, 241, 0.12);
             border-color: var(--primary-color);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
         }
         
         .module-icon {
-            font-size: 1.5rem;
-            width: 44px;
-            height: 44px;
+            font-size: 1.25rem;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            border-radius: 8px;
             flex-shrink: 0;
         }
         
@@ -441,23 +441,30 @@ import { CardModule } from 'primeng/card';
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.125rem;
+            overflow: hidden;
         }
         
         .module-name {
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.3;
         }
         
         .module-desc {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        
+        :host ::ng-deep .module-card .p-inputswitch {
+            flex-shrink: 0;
         }
         
         /* Users Table */
@@ -676,20 +683,19 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
         plan: ['FREE']
     });
 
-    // Default modules - fallback if API doesn't return data
+    // Default modules - aligned with database V13__create_modules_catalog.sql
     private defaultModules: ModuleConfig[] = [
-        { id: 'mod-pos', code: 'pos', name: 'Punto de Venta', description: 'Terminal de ventas y cobro', icon: '💰', category: 'ventas', sortOrder: 1 },
-        { id: 'mod-inventory', code: 'inventory', name: 'Inventario', description: 'Control de stock y productos', icon: '📦', category: 'operaciones', sortOrder: 2 },
-        { id: 'mod-invoicing', code: 'invoicing', name: 'Facturación', description: 'DTEs electrónicos SII', icon: '📄', category: 'contabilidad', sortOrder: 3 },
-        { id: 'mod-crm', code: 'crm', name: 'CRM', description: 'Gestión de clientes', icon: '👥', category: 'marketing', sortOrder: 4 },
-        { id: 'mod-loyalty', code: 'loyalty', name: 'Fidelización', description: 'Puntos y premios', icon: '⭐', category: 'marketing', sortOrder: 5 },
-        { id: 'mod-reservations', code: 'reservations', name: 'Reservas', description: 'Citas y reservaciones', icon: '📅', category: 'operaciones', sortOrder: 6 },
-        { id: 'mod-kds', code: 'kds', name: 'Cocina (KDS)', description: 'Pantalla de comandas', icon: '🍳', category: 'restaurante', sortOrder: 7 },
-        { id: 'mod-payroll', code: 'payroll', name: 'RRHH', description: 'Gestión de empleados', icon: '💼', category: 'rrhh', sortOrder: 8 },
-        { id: 'mod-accounting', code: 'accounting', name: 'Contabilidad', description: 'Libros y reportes contables', icon: '📊', category: 'contabilidad', sortOrder: 9 },
-        { id: 'mod-ecommerce', code: 'ecommerce', name: 'E-Commerce', description: 'Tienda en línea', icon: '🛒', category: 'ventas', sortOrder: 10 },
-        { id: 'mod-analytics', code: 'analytics', name: 'Analítica', description: 'Reportes y dashboards', icon: '📈', category: 'reportes', sortOrder: 11 },
-        { id: 'mod-delivery', code: 'delivery', name: 'Delivery', description: 'Gestión de entregas', icon: '🚚', category: 'operaciones', sortOrder: 12 }
+        { id: 'mod-pos', code: 'pos', name: 'Punto de Venta', description: 'Ventas, caja y transacciones', icon: '🛒', category: 'Core', sortOrder: 1 },
+        { id: 'mod-products', code: 'products', name: 'Catálogo', description: 'Productos, categorías y precios', icon: '📦', category: 'Core', sortOrder: 2 },
+        { id: 'mod-inventory', code: 'inventory', name: 'Inventario', description: 'Stock, bodegas y movimientos', icon: '📊', category: 'Core', sortOrder: 3 },
+        { id: 'mod-customers', code: 'customers', name: 'Clientes', description: 'Base de datos y CRM', icon: '👥', category: 'Growth', sortOrder: 10 },
+        { id: 'mod-reservations', code: 'reservations', name: 'Reservas', description: 'Citas y disponibilidad', icon: '📅', category: 'Growth', sortOrder: 11 },
+        { id: 'mod-marketing', code: 'marketing', name: 'Marketing', description: 'Campañas y fidelización', icon: '📣', category: 'Growth', sortOrder: 12 },
+        { id: 'mod-reports', code: 'reports', name: 'Reportes', description: 'Analytics y exportaciones', icon: '📈', category: 'Admin', sortOrder: 20 },
+        { id: 'mod-users', code: 'users', name: 'Usuarios', description: 'Gestión de equipo', icon: '👤', category: 'Admin', sortOrder: 21 },
+        { id: 'mod-billing', code: 'billing', name: 'Facturación', description: 'DTE y documentos tributarios', icon: '🧾', category: 'Admin', sortOrder: 22 },
+        { id: 'mod-settings', code: 'settings', name: 'Configuración', description: 'Ajustes del sistema', icon: '⚙️', category: 'Admin', sortOrder: 23 },
+        { id: 'mod-integrations', code: 'integrations', name: 'Integraciones', description: 'APIs y conexiones', icon: '🔌', category: 'Admin', sortOrder: 24 }
     ];
 
     ngOnInit() {
