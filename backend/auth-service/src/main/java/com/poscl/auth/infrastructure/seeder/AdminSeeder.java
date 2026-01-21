@@ -1,6 +1,9 @@
 package com.poscl.auth.infrastructure.seeder;
 
-import com.poscl.auth.domain.entity.*;
+import com.poscl.auth.domain.entity.Branch;
+import com.poscl.auth.domain.entity.Module;
+import com.poscl.auth.domain.entity.Tenant;
+import com.poscl.auth.domain.entity.TenantModule;
 import com.poscl.auth.domain.repository.*;
 import com.poscl.shared.dto.BusinessType;
 import lombok.RequiredArgsConstructor;

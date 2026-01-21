@@ -186,28 +186,6 @@ public class AdminController {
         return ResponseEntity.ok(toDto(tenant));
     }
 
-    private TenantDto toDto(Tenant tenant) {
-        // Map active tenant modules to codes
-        List<String> activeModules = tenant.getTenantModules() != null
-                ? tenant.getTenantModules().stream()
-                        .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
-                        .map(tm -> tm.getModule().getCode())
-                        .collect(Collectors.toList())
-                : List.of();
-
-        return TenantDto.builder()
-                .id(tenant.getId())
-                .rut(tenant.getRut())
-                .razonSocial(tenant.getRazonSocial())
-                .nombreFantasia(tenant.getNombreFantasia())
-                .businessType(tenant.getBusinessType())
-                .plan(tenant.getPlan())
-                .modules(activeModules)
-                .activo(tenant.getActivo())
-                .createdAt(tenant.getCreatedAt())
-                .build();
-    }
-
     @PutMapping("/tenants/{id}/status")
     @Operation(summary = "Cambiar estado de tenant", description = "Activar/Suspender un cliente")
     public ResponseEntity<TenantDto> updateTenantStatus(
@@ -406,6 +384,14 @@ public class AdminController {
     // ==================== DTOs ====================
 
     private TenantDto toDto(Tenant tenant) {
+        // Map active tenant modules to codes
+        List<String> activeModules = tenant.getTenantModules() != null
+                ? tenant.getTenantModules().stream()
+                        .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
+                        .map(tm -> tm.getModule().getCode())
+                        .collect(Collectors.toList())
+                : List.of();
+
         return TenantDto.builder()
                 .id(tenant.getId())
                 .rut(tenant.getRut())
@@ -413,6 +399,7 @@ public class AdminController {
                 .nombreFantasia(tenant.getNombreFantasia())
                 .businessType(tenant.getBusinessType())
                 .plan(tenant.getPlan())
+                .modules(activeModules)
                 .activo(tenant.getActivo())
                 .createdAt(tenant.getCreatedAt())
                 .build();
