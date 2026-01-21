@@ -650,12 +650,14 @@ export class AdminDashboardComponent implements OnInit {
   animatedValues = signal<number[]>([0, 0, 0, 0]);
   isAnimating = signal(false);
   recentTenants = signal<AdminTenant[]>([]);
+  loading = signal(true);
 
   quickActions: QuickAction[] = [
     { label: 'Ver Clientes', description: 'Gestionar todos los clientes', icon: '🏢', route: '/admin/tenants', color: '#6366f1' },
     { label: 'Nuevo Cliente', description: 'Crear con wizard paso a paso', icon: '🚀', route: '/admin/tenants/new', color: '#8b5cf6' },
-    { label: 'Planes', description: 'Configurar membresías', icon: '💳', route: '/admin/tenants', color: '#10b981' },
-    { label: 'Módulos', description: 'Gestión de funcionalidades', icon: '📊', route: '/admin/tenants', color: '#f59e0b' }
+    { label: 'Planes', description: 'Configurar membresías', icon: '💳', route: '/admin/plans', color: '#10b981' },
+    { label: 'Módulos', description: 'Gestión de funcionalidades', icon: '📊', route: '/admin/modules', color: '#f59e0b' },
+    { label: 'Industrias', description: 'Tipos de negocio', icon: '🏪', route: '/admin/industries', color: '#ec4899' }
   ];
 
   ngOnInit() {
@@ -663,13 +665,16 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadData() {
+    this.loading.set(true);
     this.adminService.getTenants().subscribe({
       next: (tenants) => {
+        console.log('Dashboard loaded tenants:', tenants);
         this.recentTenants.set(tenants.slice(0, 5));
 
         const activeTenants = tenants.filter(t => t.activo).length;
-        const totalUsers = tenants.reduce((sum, t) => sum + (t as any).userCount || 1, 0);
-        const mrr = tenants.length * 39990; // Approximate MRR
+        const totalUsers = tenants.length * 2; // Approximate
+        const prices: Record<string, number> = { 'FREE': 0, 'BASIC': 19990, 'PRO': 39990, 'BUSINESS': 79990, 'ENTERPRISE': 149990 };
+        const mrr = tenants.reduce((sum, t) => sum + (prices[t.plan] || 39990), 0);
 
         const newStats = [
           { ...this.stats()[0], value: tenants.length },
@@ -680,8 +685,12 @@ export class AdminDashboardComponent implements OnInit {
 
         this.stats.set(newStats);
         this.animateCounters(newStats);
+        this.loading.set(false);
       },
-      error: (err) => console.error('Error loading tenants:', err)
+      error: (err) => {
+        console.error('Error loading tenants:', err);
+        this.loading.set(false);
+      }
     });
   }
 

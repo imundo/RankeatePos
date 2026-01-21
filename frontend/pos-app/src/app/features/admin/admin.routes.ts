@@ -33,5 +33,19 @@ export const ADMIN_ROUTES: Routes = [
     {
         path: 'tenants/:id/users/:userId/permissions',
         loadComponent: () => import('./user-permissions.component').then(m => m.UserPermissionsComponent)
+    },
+    // Catalog pages
+    {
+        path: 'plans',
+        loadComponent: () => import('./plans-catalog.component').then(m => m.PlansCatalogComponent)
+    },
+    {
+        path: 'modules',
+        loadComponent: () => import('./modules-catalog.component').then(m => m.ModulesCatalogComponent)
+    },
+    {
+        path: 'industries',
+        loadComponent: () => import('./industries-catalog.component').then(m => m.IndustriesCatalogComponent)
     }
 ];
+

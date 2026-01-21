@@ -60,7 +60,8 @@ export interface ModuleConfig {
 })
 export class AdminService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/admin`;
+    // Use authUrl since AdminController is in auth-service
+    private apiUrl = `${environment.authUrl}/admin`;
 
     // Pre-configured Plans
     plans: PlanConfig[] = [
@@ -87,10 +88,29 @@ export class AdminService {
         }
     ];
 
+    // Dashboard Stats
+    getDashboardStats(): Observable<{ totalTenants: number; activeTenants: number; totalUsers: number; mrr: number }> {
+        return this.getTenants().pipe(
+            map(tenants => ({
+                totalTenants: tenants.length,
+                activeTenants: tenants.filter(t => t.activo).length,
+                totalUsers: tenants.length * 2, // Approximate
+                mrr: tenants.reduce((sum, t) => {
+                    const prices: Record<string, number> = { 'FREE': 0, 'BASIC': 19990, 'PRO': 39990, 'BUSINESS': 79990, 'ENTERPRISE': 149990 };
+                    return sum + (prices[t.plan] || 0);
+                }, 0)
+            }))
+        );
+    }
+
     // Tenants
     getTenants(): Observable<Tenant[]> {
         return this.http.get<any>(`${this.apiUrl}/tenants`).pipe(
-            map(response => response.content || [])
+            map(response => {
+                // Handle both paginated and array responses
+                if (Array.isArray(response)) return response;
+                return response.content || response.data || [];
+            })
         );
     }
 
