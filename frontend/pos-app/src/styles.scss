@@ -1,6 +1,9 @@
 /* POS Chile - Global Styles - Modern Glassmorphism Design */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+// Admin Theme (PrimeNG overrides for Admin Dashboard)
+@import 'styles/admin-theme';
+
 // Design System Variables
 :root {
   // Primary Palette - Indigo Modern

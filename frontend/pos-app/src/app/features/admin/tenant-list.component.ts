@@ -2,11 +2,23 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from '../../core/auth/auth.service';
 import { AdminService } from '../../core/services/admin.service';
-import { environment } from '../../../environments/environment';
 import { TenantEditModalComponent } from './tenant-edit-modal.component';
+
+// PrimeNG Imports
+import { TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { DropdownModule } from 'primeng/dropdown';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
+import { RippleModule } from 'primeng/ripple';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 interface Tenant {
   id: string;
@@ -23,436 +35,543 @@ interface Tenant {
 @Component({
   selector: 'app-tenant-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TenantEditModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    TenantEditModalComponent,
+    TableModule,
+    InputTextModule,
+    ButtonModule,
+    TagModule,
+    DropdownModule,
+    ToastModule,
+    ConfirmDialogModule,
+    SkeletonModule,
+    TooltipModule,
+    RippleModule,
+    IconFieldModule,
+    InputIconModule
+  ],
+  providers: [MessageService, ConfirmationService],
   template: `
+    <p-toast position="top-right"></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+    
     <div class="admin-page">
-      <header class="page-header">
-        <div class="header-content">
-          <a routerLink="/admin/dashboard" class="back-link">← Dashboard</a>
-          <h1>📋 Clientes</h1>
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-left">
+                <a routerLink="/admin/dashboard" class="back-link">
+                    <i class="pi pi-arrow-left"></i>
+                    Dashboard
+                </a>
+                <h1>
+                    <i class="pi pi-building"></i>
+                    Clientes
+                </h1>
+            </div>
+            <p-button 
+                label="Nuevo Cliente" 
+                icon="pi pi-plus" 
+                routerLink="/admin/tenants/new"
+                styleClass="p-button-success">
+            </p-button>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ tenants().length }}</span>
+                <span class="stat-label">Total Clientes</span>
+            </div>
+            <div class="stat-item active">
+                <span class="stat-value">{{ tenants().filter(t => t.activo).length }}</span>
+                <span class="stat-label">Activos</span>
+            </div>
+            <div class="stat-item inactive">
+                <span class="stat-value">{{ tenants().filter(t => !t.activo).length }}</span>
+                <span class="stat-label">Suspendidos</span>
+            </div>
         </div>
-        <button (click)="openCreateModal()" class="btn-primary">
-          ➕ Nuevo Cliente
-        </button>
-      </header>
 
-      @if (successMessage()) {
-        <div class="success-banner">
-          ✅ {{ successMessage() }}
+        <!-- Data Table -->
+        <div class="table-container">
+            <p-table 
+                #dt
+                [value]="tenants()" 
+                [loading]="loading()"
+                [paginator]="true" 
+                [rows]="10"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} clientes"
+                [rowsPerPageOptions]="[5, 10, 25, 50]"
+                [globalFilterFields]="['razonSocial', 'nombreFantasia', 'rut', 'businessType', 'plan']"
+                styleClass="p-datatable-striped p-datatable-gridlines"
+                responsiveLayout="stack"
+                [breakpoint]="'768px'"
+                dataKey="id">
+                
+                <!-- Caption / Search -->
+                <ng-template pTemplate="caption">
+                    <div class="table-header">
+                        <p-iconField iconPosition="left">
+                            <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                            <input 
+                                pInputText 
+                                type="text" 
+                                (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                                placeholder="Buscar clientes..." />
+                        </p-iconField>
+                        
+                        <p-dropdown 
+                            [options]="statusOptions" 
+                            [(ngModel)]="statusFilter"
+                            (onChange)="filterByStatus()"
+                            placeholder="Estado"
+                            [showClear]="true"
+                            styleClass="status-filter">
+                        </p-dropdown>
+                    </div>
+                </ng-template>
+                
+                <!-- Header -->
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th pSortableColumn="razonSocial">
+                            Empresa <p-sortIcon field="razonSocial"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="rut">
+                            RUT <p-sortIcon field="rut"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="businessType">
+                            Industria <p-sortIcon field="businessType"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="plan">
+                            Plan <p-sortIcon field="plan"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="activo">
+                            Estado <p-sortIcon field="activo"></p-sortIcon>
+                        </th>
+                        <th style="width: 120px">Acciones</th>
+                    </tr>
+                </ng-template>
+                
+                <!-- Body -->
+                <ng-template pTemplate="body" let-tenant>
+                    <tr>
+                        <td>
+                            <div class="tenant-cell">
+                                <div class="tenant-avatar" [style.background]="getAvatarGradient(tenant)">
+                                    {{ tenant.razonSocial?.charAt(0) || 'T' }}
+                                </div>
+                                <div class="tenant-info">
+                                    <span class="tenant-name">{{ tenant.razonSocial }}</span>
+                                    @if (tenant.nombreFantasia) {
+                                        <span class="tenant-fantasy">{{ tenant.nombreFantasia }}</span>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="rut-badge">{{ tenant.rut }}</span>
+                        </td>
+                        <td>
+                            <p-tag [value]="tenant.businessType" [icon]="getIndustryIcon(tenant.businessType)" severity="info"></p-tag>
+                        </td>
+                        <td>
+                            <p-tag [value]="tenant.plan" [severity]="getPlanSeverity(tenant.plan)"></p-tag>
+                        </td>
+                        <td>
+                            <p-tag 
+                                [value]="tenant.activo ? 'Activo' : 'Suspendido'" 
+                                [severity]="tenant.activo ? 'success' : 'danger'"
+                                [icon]="tenant.activo ? 'pi pi-check-circle' : 'pi pi-times-circle'">
+                            </p-tag>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <p-button 
+                                    icon="pi pi-pencil" 
+                                    [rounded]="true" 
+                                    [text]="true"
+                                    severity="info"
+                                    pTooltip="Editar" 
+                                    (onClick)="editTenant(tenant)">
+                                </p-button>
+                                <p-button 
+                                    [icon]="tenant.activo ? 'pi pi-ban' : 'pi pi-check'" 
+                                    [rounded]="true" 
+                                    [text]="true"
+                                    [severity]="tenant.activo ? 'danger' : 'success'"
+                                    [pTooltip]="tenant.activo ? 'Suspender' : 'Activar'" 
+                                    (onClick)="confirmToggleStatus(tenant)">
+                                </p-button>
+                                <p-button 
+                                    icon="pi pi-users" 
+                                    [rounded]="true" 
+                                    [text]="true"
+                                    severity="secondary"
+                                    pTooltip="Ver usuarios" 
+                                    [routerLink]="['/admin/tenants', tenant.id, 'users']">
+                                </p-button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                
+                <!-- Empty State -->
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="pi pi-building"></i>
+                                <h3>No hay clientes</h3>
+                                <p>Crea tu primer cliente para comenzar</p>
+                                <p-button 
+                                    label="Nuevo Cliente" 
+                                    icon="pi pi-plus" 
+                                    routerLink="/admin/tenants/new">
+                                </p-button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                
+                <!-- Loading -->
+                <ng-template pTemplate="loadingbody">
+                    @for (i of [1,2,3,4,5]; track i) {
+                        <tr>
+                            <td><p-skeleton width="80%" height="1.5rem"></p-skeleton></td>
+                            <td><p-skeleton width="70%" height="1.5rem"></p-skeleton></td>
+                            <td><p-skeleton width="60%" height="1.5rem"></p-skeleton></td>
+                            <td><p-skeleton width="50%" height="1.5rem"></p-skeleton></td>
+                            <td><p-skeleton width="40%" height="1.5rem"></p-skeleton></td>
+                            <td><p-skeleton width="80px" height="1.5rem"></p-skeleton></td>
+                        </tr>
+                    }
+                </ng-template>
+            </p-table>
         </div>
-      }
 
-      <!-- Search & Filters -->
-      <div class="search-bar">
-        <input 
-          type="text" 
-          [(ngModel)]="searchTerm"
-          placeholder="Buscar por nombre o RUT..."
-          (input)="search()">
-        <select [(ngModel)]="statusFilter" (change)="search()">
-          <option value="">Todos</option>
-          <option value="active">Activos</option>
-          <option value="inactive">Suspendidos</option>
-        </select>
-      </div>
-
-      <!-- Tenants Table -->
-      <div class="table-container">
-        @if (loading()) {
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Cargando clientes...</p>
-          </div>
-        } @else if (filteredTenants().length === 0) {
-          <div class="empty-state">
-            <span class="empty-icon">🏢</span>
-            <h3>No hay clientes</h3>
-            <p>Crea tu primer cliente para comenzar</p>
-            <button (click)="openCreateModal()" class="btn-primary">➕ Nuevo Cliente</button>
-          </div>
-        } @else {
-          <table>
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>RUT</th>
-                <th>Industria</th>
-                <th>Plan</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (tenant of filteredTenants(); track tenant.id) {
-                <tr>
-                  <td>
-                    <div class="tenant-name">
-                      <strong>{{ tenant.razonSocial }}</strong>
-                      @if (tenant.nombreFantasia) {
-                        <span class="fantasy-name">{{ tenant.nombreFantasia }}</span>
-                      }
-                    </div>
-                  </td>
-                  <td>{{ tenant.rut }}</td>
-                  <td>
-                    <span class="badge industry">{{ getIndustryIcon(tenant.businessType) }} {{ tenant.businessType }}</span>
-                  </td>
-                  <td>
-                    <span class="badge plan" [class.pro]="tenant.plan === 'PRO'" [class.business]="tenant.plan === 'BUSINESS'">
-                      {{ tenant.plan }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge status" [class.active]="tenant.activo" [class.inactive]="!tenant.activo">
-                      {{ tenant.activo ? 'Activo' : 'Suspendido' }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="actions">
-                      <button class="btn-icon" title="Editar" (click)="editTenant(tenant)">✏️</button>
-                      <button 
-                        class="btn-icon" 
-                        [title]="tenant.activo ? 'Suspender' : 'Activar'"
-                        (click)="toggleStatus(tenant)">
-                        {{ tenant.activo ? '🔴' : '🟢' }}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
-      </div>
-
-      <!-- Edit Modal -->
-      <app-tenant-edit-modal
-        [isOpen]="isEditModalOpen"
-        [tenantId]="selectedTenantId"
-        (closeEvent)="closeEditModal()"
-        (saveEvent)="onTenantSaved()">
-      </app-tenant-edit-modal>
+        <!-- Edit Modal -->
+        <app-tenant-edit-modal
+            [isOpen]="isEditModalOpen"
+            [tenantId]="selectedTenantId"
+            (closeEvent)="closeEditModal()"
+            (saveEvent)="onTenantSaved()">
+        </app-tenant-edit-modal>
     </div>
-  `,
+    `,
   styles: [`
-    .admin-page {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-      color: white;
-      padding: 2rem;
-    }
+        .admin-page {
+            min-height: 100vh;
+            background: var(--surface-ground);
+            padding: 1.5rem;
+        }
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
 
-    .back-link {
-      color: rgba(255,255,255,0.5);
-      text-decoration: none;
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
-    .back-link:hover { color: white; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
 
-    .header-content h1 {
-      margin: 0;
-      font-size: 1.75rem;
-    }
+        .back-link:hover {
+            color: var(--primary-color);
+        }
 
-    .btn-primary {
-      padding: 0.875rem 1.5rem;
-      background: linear-gradient(135deg, #6366F1, #8B5CF6);
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
+        h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(99,102,241,0.4);
-    }
+        h1 i {
+            color: var(--primary-color);
+        }
 
-    .success-banner {
-      padding: 1rem;
-      background: rgba(16,185,129,0.2);
-      border: 1px solid rgba(16,185,129,0.5);
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-      color: #6EE7B7;
-    }
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
 
-    .search-bar {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
+        .stat-item {
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
 
-    .search-bar input {
-      flex: 1;
-      padding: 0.875rem 1rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      color: white;
-      font-size: 1rem;
-    }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
 
-    .search-bar input:focus {
-      outline: none;
-      border-color: #6366F1;
-    }
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-color-secondary);
+        }
 
-    .search-bar input::placeholder {
-      color: rgba(255,255,255,0.3);
-    }
+        .stat-item.active {
+            border-left: 4px solid var(--green-500);
+        }
 
-    .search-bar select {
-      padding: 0.875rem 1rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      color: white;
-      font-size: 1rem;
-    }
+        .stat-item.inactive {
+            border-left: 4px solid var(--red-500);
+        }
 
-    .table-container {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      overflow: hidden;
-    }
+        /* Table Container */
+        .table-container {
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
-    th, td {
-      padding: 1rem;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+        .table-header input {
+            width: 300px;
+        }
 
-    th {
-      background: rgba(255,255,255,0.05);
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.7);
-    }
+        .status-filter {
+            min-width: 150px;
+        }
 
-    tr:hover {
-      background: rgba(255,255,255,0.02);
-    }
+        /* Tenant Cell */
+        .tenant-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    .tenant-name strong {
-      display: block;
-    }
+        .tenant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
 
-    .fantasy-name {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.5);
-    }
+        .tenant-info {
+            display: flex;
+            flex-direction: column;
+        }
 
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
+        .tenant-name {
+            font-weight: 600;
+        }
 
-    .badge.industry {
-      background: rgba(99,102,241,0.2);
-      color: #A5B4FC;
-    }
+        .tenant-fantasy {
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+        }
 
-    .badge.plan {
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.7);
-    }
+        .rut-badge {
+            font-family: monospace;
+            background: var(--surface-100);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
 
-    .badge.plan.pro {
-      background: rgba(245,158,11,0.2);
-      color: #FCD34D;
-    }
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.25rem;
+        }
 
-    .badge.plan.business {
-      background: rgba(139,92,246,0.2);
-      color: #C4B5FD;
-    }
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
 
-    .badge.status.active {
-      background: rgba(16,185,129,0.2);
-      color: #6EE7B7;
-    }
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--text-color-secondary);
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
 
-    .badge.status.inactive {
-      background: rgba(239,68,68,0.2);
-      color: #FCA5A5;
-    }
+        .empty-state h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1.25rem;
+        }
 
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-    }
+        .empty-state p {
+            color: var(--text-color-secondary);
+            margin: 0 0 1.5rem;
+        }
 
-    .btn-icon {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      background: transparent;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .admin-page {
+                padding: 1rem;
+            }
 
-    .btn-icon:hover {
-      background: rgba(255,255,255,0.1);
-    }
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
 
-    .loading, .empty-state {
-      padding: 4rem;
-      text-align: center;
-    }
-    
-    .spinner {
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top: 3px solid #6366F1;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+            h1 {
+                font-size: 1.5rem;
+            }
 
-    .empty-icon {
-      font-size: 4rem;
-      display: block;
-      margin-bottom: 1rem;
-    }
+            .table-header {
+                flex-direction: column;
+            }
 
-    .empty-state h3 {
-      margin: 0 0 0.5rem;
-    }
+            .table-header input {
+                width: 100%;
+            }
 
-    .empty-state p {
-      color: rgba(255,255,255,0.5);
-      margin: 0 0 1.5rem;
-    }
+            .status-filter {
+                width: 100%;
+            }
 
-    @media (max-width: 768px) {
-      .search-bar {
-        flex-direction: column;
-      }
-      .table-container {
-        overflow-x: auto;
-      }
-    }
-  `]
+            .stats-bar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .stat-item {
+                padding: 0.75rem;
+            }
+
+            .stat-value {
+                font-size: 1.25rem;
+            }
+        }
+    `]
 })
 export class TenantListComponent implements OnInit {
   private adminService = inject(AdminService);
   private route = inject(ActivatedRoute);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
 
   tenants = signal<Tenant[]>([]);
-  filteredTenants = signal<Tenant[]>([]);
   loading = signal(true);
-  searchTerm = '';
-  statusFilter = '';
-  successMessage = signal<string | null>(null);
+  statusFilter: string | null = null;
+
+  statusOptions = [
+    { label: 'Activos', value: 'active' },
+    { label: 'Suspendidos', value: 'inactive' }
+  ];
 
   // Modal State
   isEditModalOpen = false;
   selectedTenantId: string | null = null;
 
   ngOnInit() {
-    // Check for success message from wizard
     const created = this.route.snapshot.queryParams['created'];
     if (created) {
-      this.successMessage.set('Cliente creado exitosamente');
-      setTimeout(() => this.successMessage.set(null), 5000);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Cliente creado exitosamente'
+      });
     }
     this.loadTenants();
   }
 
   loadTenants() {
     this.loading.set(true);
-    // Use AdminService instead of direct HTTP to ensure correct URL construction
     this.adminService.getTenants().subscribe({
       next: (tenants) => {
-        // Map AdminTenant to local Tenant interface if needed, or just use as is
-        // The interfaces are compatible
         this.tenants.set(tenants as unknown as Tenant[]);
-        this.filterTenants();
         this.loading.set(false);
       },
       error: (err) => {
         console.error('Error loading tenants:', err);
         this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los clientes'
+        });
       }
     });
   }
 
-  search() {
-    this.filterTenants();
+  filterByStatus() {
+    // The p-table handles filtering via globalFilterFields
+    // For custom status filter, we could implement a custom filter
   }
 
-  filterTenants() {
-    let result = this.tenants();
-
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      result = result.filter(t =>
-        t.razonSocial.toLowerCase().includes(term) ||
-        t.rut.toLowerCase().includes(term) ||
-        (t.nombreFantasia && t.nombreFantasia.toLowerCase().includes(term))
-      );
-    }
-
-    if (this.statusFilter) {
-      const isActive = this.statusFilter === 'active';
-      result = result.filter(t => t.activo === isActive);
-    }
-
-    this.filteredTenants.set(result);
+  getAvatarGradient(tenant: Tenant): string {
+    const gradients = [
+      'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      'linear-gradient(135deg, #f59e0b, #d97706)',
+      'linear-gradient(135deg, #10b981, #059669)',
+      'linear-gradient(135deg, #ef4444, #dc2626)',
+      'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+    ];
+    const index = (tenant.razonSocial?.charCodeAt(0) || 0) % gradients.length;
+    return gradients[index];
   }
 
   getIndustryIcon(type: string): string {
     const icons: Record<string, string> = {
-      'RETAIL': '🛒',
-      'PANADERIA': '🥖',
-      'EDUCACION': '🎓',
-      'EDITORIAL': '📚',
-      'RESTAURANTE': '🍕'
+      'RETAIL': 'pi pi-shopping-cart',
+      'PANADERIA': 'pi pi-star',
+      'RESTAURANT': 'pi pi-star',
+      'SERVICIOS': 'pi pi-briefcase',
+      'OTRO': 'pi pi-building'
     };
-    return icons[type] || '🏢';
+    return icons[type] || 'pi pi-building';
   }
 
-  openCreateModal() {
-    this.selectedTenantId = null;
-    this.isEditModalOpen = true; // Use the edit modal in create mode (empty ID)
-    // Note: The TenantEditModalComponent currently handles editing existing tenants.
-    // If it supports creation (tenantId=null), this works. 
-    // If not, we should route to wizard like before:
-    // this.router.navigate(['/admin/tenants/new']);
-    // Looking at TenantEditModalComponent implementation, it expects a tenantId or might create new?
-    // Let's check. If not, revert to RouterLink. 
-    // Actually, let's keep the RouterLink for "Nuevo Cliente" in the template for now to be safe.
-    // Reverting the "Nuevo Cliente" button in template to use RouterLink.
+  getPlanSeverity(plan: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
+      'FREE': 'secondary',
+      'BASIC': 'info',
+      'PRO': 'warning',
+      'BUSINESS': 'success',
+      'ENTERPRISE': 'contrast'
+    };
+    return severities[plan] || 'info';
   }
 
   editTenant(tenant: Tenant) {
@@ -466,15 +585,46 @@ export class TenantListComponent implements OnInit {
   }
 
   onTenantSaved() {
-    this.successMessage.set('Cambios guardados correctamente');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Guardado',
+      detail: 'Cambios guardados correctamente'
+    });
     this.loadTenants();
-    setTimeout(() => this.successMessage.set(null), 3000);
+  }
+
+  confirmToggleStatus(tenant: Tenant) {
+    this.confirmationService.confirm({
+      message: tenant.activo
+        ? `¿Estás seguro de suspender a "${tenant.razonSocial}"? Los usuarios no podrán acceder.`
+        : `¿Reactivar a "${tenant.razonSocial}"?`,
+      header: tenant.activo ? 'Confirmar Suspensión' : 'Confirmar Activación',
+      icon: tenant.activo ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle',
+      acceptLabel: tenant.activo ? 'Suspender' : 'Activar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: tenant.activo ? 'p-button-danger' : 'p-button-success',
+      accept: () => this.toggleStatus(tenant)
+    });
   }
 
   toggleStatus(tenant: Tenant) {
     this.adminService.updateTenantStatus(tenant.id, !tenant.activo).subscribe({
-      next: () => this.loadTenants(),
-      error: (err) => console.error('Error toggling status:', err)
+      next: () => {
+        this.loadTenants();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Estado actualizado',
+          detail: `${tenant.razonSocial} ha sido ${!tenant.activo ? 'activado' : 'suspendido'}`
+        });
+      },
+      error: (err) => {
+        console.error('Error toggling status:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado'
+        });
+      }
     });
   }
 }

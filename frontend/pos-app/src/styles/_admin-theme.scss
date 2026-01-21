@@ -1,0 +1,409 @@
+// ==========================================================================
+// Admin Theme - Premium Styling for Admin Dashboard
+// ==========================================================================
+
+// CSS Custom Properties (Dark Theme)
+:root {
+    // Surface colors
+    --admin-surface-ground: #0f0f23;
+    --admin-surface-card: rgba(255, 255, 255, 0.03);
+    --admin-surface-border: rgba(255, 255, 255, 0.08);
+
+    // Text colors
+    --admin-text-primary: #ffffff;
+    --admin-text-secondary: rgba(255, 255, 255, 0.6);
+    --admin-text-muted: rgba(255, 255, 255, 0.4);
+
+    // Accent colors
+    --admin-primary: #6366f1;
+    --admin-primary-light: #818cf8;
+    --admin-success: #10b981;
+    --admin-warning: #f59e0b;
+    --admin-danger: #ef4444;
+
+    // Gradients
+    --admin-gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+    --admin-gradient-success: linear-gradient(135deg, #10b981, #059669);
+    --admin-gradient-warning: linear-gradient(135deg, #f59e0b, #d97706);
+    --admin-gradient-danger: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+// ==========================================================================
+// PrimeNG Theme Overrides for Admin
+// ==========================================================================
+
+// Dialog styling
+.admin-modal {
+    .p-dialog {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .p-dialog-header {
+        background: var(--surface-card);
+        border-bottom: 1px solid var(--surface-border);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .p-dialog-content {
+        background: var(--surface-ground);
+        padding: 0;
+    }
+
+    .p-dialog-footer {
+        background: var(--surface-card);
+        border-top: 1px solid var(--surface-border);
+        padding: 1rem 1.5rem;
+    }
+}
+
+// TabView styling
+.admin-tabs {
+    .p-tabview-nav {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-tabview-nav-link {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        color: var(--text-color-secondary);
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: var(--primary-color);
+        }
+    }
+
+    .p-tabview-selected .p-tabview-nav-link {
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+    }
+
+    .p-tabview-panels {
+        background: transparent;
+        padding: 1.5rem 0;
+    }
+}
+
+// Table styling
+.admin-table {
+    .p-datatable-header {
+        background: transparent;
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+
+    .p-datatable-thead>tr>th {
+        background: color-mix(in srgb, var(--surface-card) 80%, transparent);
+        color: var(--text-color-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.5rem;
+        border: none;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-datatable-tbody>tr {
+        background: transparent;
+        transition: background 0.15s ease;
+
+        &:hover {
+            background: color-mix(in srgb, var(--primary-color) 5%, transparent);
+        }
+
+        >td {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-bottom: 1px solid var(--surface-border);
+        }
+    }
+
+    .p-paginator {
+        background: transparent;
+        border: none;
+        border-top: 1px solid var(--surface-border);
+        padding: 1rem;
+    }
+}
+
+// Accordion styling (for modules catalog)
+.tenant-accordion {
+    .p-accordion-header-link {
+        background: var(--surface-card) !important;
+        border: 1px solid var(--surface-border) !important;
+        border-radius: 12px !important;
+        padding: 1rem 1.5rem !important;
+        transition: all 0.2s ease;
+
+        &:hover {
+            border-color: var(--primary-400) !important;
+        }
+    }
+
+    .p-accordion-header-link[aria-expanded="true"] {
+        border-color: var(--primary-color) !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    .p-accordion-content {
+        background: var(--surface-card);
+        border: 1px solid var(--primary-color);
+        border-top: none;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .p-accordion-tab {
+        margin-bottom: 1rem;
+    }
+}
+
+// ==========================================================================
+// Glassmorphism Utilities
+// ==========================================================================
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+}
+
+.glass-panel-light {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+
+// ==========================================================================
+// Animation Keyframes
+// ==========================================================================
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+// Animation utilities
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+}
+
+// Staggered animations
+@for $i from 1 through 10 {
+    .stagger-#{$i} {
+        animation-delay: #{$i * 50}ms;
+    }
+}
+
+// ==========================================================================
+// Interactive States
+// ==========================================================================
+
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.hover-glow {
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent);
+    }
+}
+
+.hover-scale {
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.02);
+    }
+}
+
+// ==========================================================================
+// Mobile Responsive Utilities
+// ==========================================================================
+
+.hide-mobile {
+    @media (max-width: 768px) {
+        display: none !important;
+    }
+}
+
+.show-mobile {
+    display: none !important;
+
+    @media (max-width: 768px) {
+        display: block !important;
+    }
+}
+
+.stack-mobile {
+    @media (max-width: 768px) {
+        flex-direction: column !important;
+    }
+}
+
+// ==========================================================================
+// Admin Specific Components
+// ==========================================================================
+
+// Avatar with gradient
+.admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 1rem;
+    background: var(--admin-gradient-primary);
+}
+
+// Status badge
+.admin-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &.active {
+        background: color-mix(in srgb, var(--green-500) 20%, transparent);
+        color: var(--green-400);
+    }
+
+    &.inactive {
+        background: color-mix(in srgb, var(--red-500) 20%, transparent);
+        color: var(--red-400);
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+}
+
+// Card with hover effect
+.admin-card {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: var(--primary-400);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Section header
+.admin-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+}

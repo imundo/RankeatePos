@@ -1,421 +1,716 @@
-import { Component, EventEmitter, Input, Output, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, inject, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { AdminService, Tenant, ModuleConfig, AdminUser } from '../../core/services/admin.service';
 
+// PrimeNG Imports
+import { DialogModule } from 'primeng/dialog';
+import { TabViewModule } from 'primeng/tabview';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
+import { RippleModule } from 'primeng/ripple';
+import { CardModule } from 'primeng/card';
+
 @Component({
-    selector: 'app-tenant-edit-modal',
-    standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule],
-    template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" *ngIf="isOpen">
-      <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-indigo-500/20">
+  selector: 'app-tenant-edit-modal',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DialogModule,
+    TabViewModule,
+    InputTextModule,
+    DropdownModule,
+    InputSwitchModule,
+    ButtonModule,
+    TableModule,
+    TagModule,
+    SkeletonModule,
+    TooltipModule,
+    RippleModule,
+    CardModule
+  ],
+  template: `
+    <p-dialog 
+        [(visible)]="isOpen" 
+        [modal]="true" 
+        [closable]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+        [breakpoints]="{'960px': '90vw', '640px': '100vw'}"
+        [style]="{width: '900px', maxHeight: '90vh'}"
+        [contentStyle]="{'overflow': 'auto', 'padding': '0'}"
+        styleClass="admin-modal"
+        (onHide)="close()">
         
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-indigo-500/20 bg-slate-900/50">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-xl">
-              {{ tenant?.nombreFantasia?.charAt(0) || tenant?.razonSocial?.charAt(0) || 'E' }}
-            </div>
-            <div>
-              <h2 class="text-xl font-bold text-white">{{ tenant?.nombreFantasia || 'Editar Empresa' }}</h2>
-              <p class="text-sm text-indigo-300 font-mono">{{ tenant?.rut }}</p>
-            </div>
-          </div>
-          <button (click)="close()" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- content -->
-        <div class="flex flex-1 overflow-hidden">
-          
-          <!-- Sidebar / Tabs -->
-          <div class="w-64 bg-slate-800/30 border-r border-indigo-500/10 flex flex-col p-4 gap-2">
-            <button 
-              *ngFor="let tab of tabs" 
-              (click)="activeTab = tab.id"
-              class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-              [ngClass]="activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-400 hover:bg-white/5 hover:text-white'">
-              <span class="text-xl">{{ tab.icon }}</span>
-              <span class="font-medium">{{ tab.label }}</span>
-            </button>
-          </div>
-
-          <!-- Tab Content -->
-          <div class="flex-1 overflow-y-auto p-6 bg-slate-900 custom-scrollbar">
-            
-            <!-- Loading State -->
-            <div *ngIf="loading" class="flex items-center justify-center h-full">
-              <div class="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div>
-
-            <ng-container *ngIf="!loading">
-              
-              <!-- Tab: General Info -->
-              <div *ngIf="activeTab === 'info'" [formGroup]="infoForm" class="space-y-6">
-                <div class="grid grid-cols-2 gap-6">
-                  <div class="col-span-2">
-                    <label class="block text-sm font-medium text-slate-400 mb-2">Razón Social</label>
-                    <input type="text" formControlName="razonSocial" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2">RUT</label>
-                    <input type="text" formControlName="rut" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2">Nombre Fantasía</label>
-                    <input type="text" formControlName="nombreFantasia" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2">Giro</label>
-                    <input type="text" formControlName="giro" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2">Tipo Negocio</label>
-                    <select formControlName="businessType" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors appearance-none">
-                      <option value="RETAIL">Retail</option>
-                      <option value="RESTAURANT">Restaurante</option>
-                      <option value="PANADERIA">Panadería</option>
-                      <option value="MINIMARKET">Minimarket</option>
-                      <option value="BARBERIA">Barbería</option>
-                      <option value="OTRO">Otro</option>
-                    </select>
-                  </div>
+        <!-- Custom Header -->
+        <ng-template pTemplate="header">
+            <div class="modal-header">
+                <div class="header-avatar" [style.background]="getAvatarGradient()">
+                    {{ tenant?.nombreFantasia?.charAt(0) || tenant?.razonSocial?.charAt(0) || 'E' }}
                 </div>
-
-                <div class="pt-4 border-t border-indigo-500/10">
-                   <h3 class="text-lg font-semibold text-white mb-4">Dirección</h3>
-                   <div class="grid grid-cols-2 gap-6">
-                      <div class="col-span-2">
-                        <label class="block text-sm font-medium text-slate-400 mb-2">Dirección</label>
-                        <input type="text" formControlName="direccion" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-2">Comuna</label>
-                        <input type="text" formControlName="comuna" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-2">Región</label>
-                        <input type="text" formControlName="region" class="w-full bg-slate-800 border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none border transition-colors">
-                      </div>
-                   </div>
+                <div class="header-info">
+                    <h2>{{ tenant?.nombreFantasia || 'Editar Empresa' }}</h2>
+                    <span class="header-rut">{{ tenant?.rut }}</span>
                 </div>
-              </div>
+            </div>
+        </ng-template>
 
-              <!-- Tab: Modules -->
-              <div *ngIf="activeTab === 'modules'" class="space-y-6">
-                <div class="flex items-center justify-between mb-4">
-                  <h3 class="text-lg font-semibold text-white">Módulos Activos</h3>
-                  <span class="text-sm text-slate-400">{{ activeModulesCount }} habilitados</span>
+        <!-- Content with TabView -->
+        <div class="modal-content">
+            @if (loading) {
+                <div class="loading-skeleton">
+                    <p-skeleton height="2rem" styleClass="mb-3"></p-skeleton>
+                    <p-skeleton height="4rem" styleClass="mb-3"></p-skeleton>
+                    <p-skeleton height="4rem" styleClass="mb-3"></p-skeleton>
+                    <p-skeleton height="4rem"></p-skeleton>
                 </div>
-
-                <div class="grid grid-cols-1 gap-4">
-                  <div *ngFor="let module of allModules" 
-                       class="flex items-center justify-between p-4 rounded-xl border border-slate-800 transition-all cursor-pointer group hover:border-indigo-500/50"
-                       [ngClass]="moduleStates[module.code] ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-800/50'">
+            } @else {
+                <p-tabView [(activeIndex)]="activeTabIndex" styleClass="admin-tabs">
                     
-                    <div class="flex items-center gap-4">
-                      <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
-                           [ngClass]="moduleStates[module.code] ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'">
-                        {{ module.icon || '📦' }}
-                      </div>
-                      <div>
-                        <h4 class="font-medium text-white group-hover:text-indigo-300 transition-colors">{{ module.name }}</h4>
-                        <p class="text-sm text-slate-500">{{ module.description }}</p>
-                      </div>
-                    </div>
-
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" 
-                             [checked]="moduleStates[module.code]" 
-                             (change)="toggleModule(module.code)"
-                             class="sr-only peer">
-                      <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tab: Users -->
-              <div *ngIf="activeTab === 'users'" class="space-y-6">
-                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-white">Usuarios Administradores</h3>
-                    <!-- TODO: Add generic create user modal support -->
-                    <!-- <button class="btn-secondary text-sm">Validar</button> -->
-                 </div>
-
-                 <div class="bg-slate-800/50 rounded-xl border border-slate-800 overflow-hidden">
-                    <table class="w-full text-left">
-                       <thead class="bg-slate-800 text-xs uppercase text-slate-400">
-                          <tr>
-                             <th class="px-4 py-3">Nombre</th>
-                             <th class="px-4 py-3">Email</th>
-                             <th class="px-4 py-3">Estado</th>
-                          </tr>
-                       </thead>
-                       <tbody class="divide-y divide-slate-800">
-                          <tr *ngFor="let user of tenantUsers">
-                             <td class="px-4 py-3 text-white font-medium">{{ user.nombre }} {{ user.apellido }}</td>
-                             <td class="px-4 py-3 text-slate-400">{{ user.email }}</td>
-                             <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-                                      [ngClass]="user.activo ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
-                                   {{ user.activo ? 'Activo' : 'Inactivo' }}
-                                </span>
-                             </td>
-                          </tr>
-                          <tr *ngIf="tenantUsers.length === 0">
-                             <td colspan="3" class="px-4 py-8 text-center text-slate-500">
-                                No se encontraron usuarios para este tenant.
-                             </td>
-                          </tr>
-                       </tbody>
-                    </table>
-                 </div>
-              </div>
-
-              <!-- Tab: Status/Plan -->
-              <div *ngIf="activeTab === 'status'" [formGroup]="infoForm" class="space-y-6">
-                 <div class="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                    <h3 class="text-lg font-semibold text-purple-200 mb-2">Plan de Suscripción</h3>
-                    <div class="flex gap-4 mt-4">
-                       <div *ngFor="let plan of plans" 
-                            class="flex-1 p-4 rounded-lg border cursor-pointer transition-all"
-                            [ngClass]="infoForm.get('plan')?.value === plan.code ? 'bg-purple-600/20 border-purple-500 shadow-lg' : 'bg-slate-800 border-slate-700 opacity-60 hover:opacity-100'"
-                            (click)="infoForm.get('plan')?.setValue(plan.code)">
-                          <div class="text-center">
-                             <h4 class="font-bold text-white">{{ plan.name }}</h4>
-                             <p class="text-sm text-purple-300">{{ plan.price | currency:'CLP' }}</p>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div class="p-6 rounded-xl border border-slate-800"
-                      [ngClass]="tenant?.activo ? 'bg-green-500/5' : 'bg-red-500/5'">
-                    <div class="flex items-center justify-between">
-                       <div>
-                          <h3 class="text-lg font-semibold text-white mb-1">Estado del Tenant</h3>
-                          <p class="text-sm text-slate-400">
-                             {{ tenant?.activo ? 'La empresa está operativa y los usuarios pueden ingresar.' : 'La empresa está suspendida y nadie puede ingresar.' }}
-                          </p>
-                       </div>
-                       <label class="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" formControlName="activo" class="sr-only peer">
-                          <div class="w-14 h-7 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
-                       </label>
-                    </div>
-                 </div>
-              </div>
-
-            </ng-container>
-          </div>
+                    <!-- Tab: Información -->
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-building mr-2"></i>
+                            <span>Información</span>
+                        </ng-template>
+                        
+                        <form [formGroup]="infoForm" class="form-grid">
+                            <div class="form-row full">
+                                <label>Razón Social</label>
+                                <input pInputText formControlName="razonSocial" placeholder="Nombre legal de la empresa" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>RUT</label>
+                                <input pInputText formControlName="rut" placeholder="12.345.678-9" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Nombre Fantasía</label>
+                                <input pInputText formControlName="nombreFantasia" placeholder="Nombre comercial" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Giro</label>
+                                <input pInputText formControlName="giro" placeholder="Actividad comercial" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Tipo de Negocio</label>
+                                <p-dropdown 
+                                    formControlName="businessType" 
+                                    [options]="businessTypes" 
+                                    optionLabel="label" 
+                                    optionValue="value"
+                                    placeholder="Seleccionar tipo"
+                                    styleClass="w-full">
+                                </p-dropdown>
+                            </div>
+                            
+                            <div class="form-section full">
+                                <h4><i class="pi pi-map-marker"></i> Dirección</h4>
+                            </div>
+                            
+                            <div class="form-row full">
+                                <label>Dirección</label>
+                                <input pInputText formControlName="direccion" placeholder="Calle, número" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Comuna</label>
+                                <input pInputText formControlName="comuna" />
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Región</label>
+                                <input pInputText formControlName="region" />
+                            </div>
+                        </form>
+                    </p-tabPanel>
+                    
+                    <!-- Tab: Módulos -->
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-th-large mr-2"></i>
+                            <span>Módulos</span>
+                            <p-tag [value]="activeModulesCount + ''" severity="info" styleClass="ml-2"></p-tag>
+                        </ng-template>
+                        
+                        <div class="modules-header">
+                            <span class="modules-subtitle">Activa o desactiva los módulos disponibles para esta empresa</span>
+                        </div>
+                        
+                        <div class="modules-grid">
+                            @for (module of allModules; track module.code) {
+                                <div class="module-card" [class.active]="moduleStates[module.code]" (click)="toggleModule(module.code)">
+                                    <div class="module-icon">{{ module.icon || '📦' }}</div>
+                                    <div class="module-info">
+                                        <span class="module-name">{{ module.name }}</span>
+                                        <span class="module-desc">{{ module.description }}</span>
+                                    </div>
+                                    <p-inputSwitch 
+                                        [(ngModel)]="moduleStates[module.code]" 
+                                        (click)="$event.stopPropagation()">
+                                    </p-inputSwitch>
+                                </div>
+                            }
+                        </div>
+                    </p-tabPanel>
+                    
+                    <!-- Tab: Usuarios -->
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-users mr-2"></i>
+                            <span>Usuarios</span>
+                        </ng-template>
+                        
+                        <p-table [value]="tenantUsers" [tableStyle]="{'min-width': '100%'}" styleClass="p-datatable-sm admin-table">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-user>
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar">{{ user.nombre?.charAt(0) || 'U' }}</div>
+                                            <span>{{ user.nombre }} {{ user.apellido }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <p-tag [value]="user.activo ? 'Activo' : 'Inactivo'" 
+                                               [severity]="user.activo ? 'success' : 'danger'">
+                                        </p-tag>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="emptymessage">
+                                <tr>
+                                    <td colspan="3" class="empty-message">
+                                        <i class="pi pi-users"></i>
+                                        <span>No hay usuarios registrados</span>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </p-tabPanel>
+                    
+                    <!-- Tab: Plan & Estado -->
+                    <p-tabPanel>
+                        <ng-template pTemplate="header">
+                            <i class="pi pi-cog mr-2"></i>
+                            <span>Plan & Estado</span>
+                        </ng-template>
+                        
+                        <div class="plan-section">
+                            <h4>Plan de Suscripción</h4>
+                            <div class="plans-grid">
+                                @for (plan of plans; track plan.code) {
+                                    <div class="plan-card" 
+                                         [class.selected]="infoForm.get('plan')?.value === plan.code"
+                                         (click)="infoForm.get('plan')?.setValue(plan.code)">
+                                        <div class="plan-name">{{ plan.name }}</div>
+                                        <div class="plan-price">{{ plan.price | currency:'CLP':'symbol-narrow':'1.0-0' }}</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="status-section" [class.active]="infoForm.get('activo')?.value">
+                            <div class="status-info">
+                                <h4>Estado del Tenant</h4>
+                                <p>{{ infoForm.get('activo')?.value ? 'Empresa operativa - usuarios pueden ingresar' : 'Empresa suspendida - acceso bloqueado' }}</p>
+                            </div>
+                            <p-inputSwitch formControlName="activo" [formGroup]="infoForm"></p-inputSwitch>
+                        </div>
+                    </p-tabPanel>
+                    
+                </p-tabView>
+            }
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-indigo-500/10 bg-slate-900/50 flex justify-end gap-3">
-          <button (click)="close()" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors font-medium">
-            Cancelar
-          </button>
-          <button (click)="save()" 
-                  [disabled]="loading || submitting"
-                  class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-            <span *ngIf="submitting" class="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
-            {{ submitting ? 'Guardando...' : 'Guardar Cambios' }}
-          </button>
-        </div>
-
-      </div>
-    </div>
-  `,
-    styles: [`
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-  `]
+        <ng-template pTemplate="footer">
+            <div class="modal-footer">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="close()"></p-button>
+                <p-button 
+                    label="Guardar Cambios" 
+                    icon="pi pi-check" 
+                    [loading]="submitting"
+                    [disabled]="loading || submitting"
+                    (onClick)="save()">
+                </p-button>
+            </div>
+        </ng-template>
+        
+    </p-dialog>
+    `,
+  styles: [`
+        /* Modal Header */
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .header-info h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .header-rut {
+            font-size: 0.875rem;
+            color: var(--text-color-secondary);
+            font-family: monospace;
+        }
+        
+        /* Modal Content */
+        .modal-content {
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+        
+        .loading-skeleton {
+            padding: 1rem;
+        }
+        
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-row.full {
+            grid-column: 1 / -1;
+        }
+        
+        .form-row label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-color-secondary);
+        }
+        
+        .form-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--surface-border);
+        }
+        
+        .form-section h4 {
+            margin: 0 0 0.5rem;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Modules Grid */
+        .modules-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modules-subtitle {
+            color: var(--text-color-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .module-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .module-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .module-card.active {
+            background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+            border-color: var(--primary-color);
+        }
+        
+        .module-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-ground);
+            border-radius: 8px;
+        }
+        
+        .module-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .module-name {
+            font-weight: 600;
+        }
+        
+        .module-desc {
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+        }
+        
+        /* Users Table */
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-400));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 3rem !important;
+            color: var(--text-color-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .empty-message i {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+        
+        /* Plans Section */
+        .plan-section {
+            margin-bottom: 2rem;
+        }
+        
+        .plan-section h4 {
+            margin: 0 0 1rem;
+            font-weight: 600;
+        }
+        
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        
+        .plan-card {
+            padding: 1rem;
+            background: var(--surface-card);
+            border: 2px solid var(--surface-border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .plan-card:hover {
+            border-color: var(--primary-400);
+        }
+        
+        .plan-card.selected {
+            border-color: var(--primary-color);
+            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+            box-shadow: 0 0 20px color-mix(in srgb, var(--primary-color) 30%, transparent);
+        }
+        
+        .plan-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        /* Status Section */
+        .status-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-section.active {
+            border-color: var(--green-500);
+            background: color-mix(in srgb, var(--green-500) 5%, transparent);
+        }
+        
+        .status-info h4 {
+            margin: 0 0 0.25rem;
+        }
+        
+        .status-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+        }
+        
+        /* Modal Footer */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .plans-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .status-section {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    `]
 })
-export class TenantEditModalComponent implements OnInit {
-    @Input() tenantId: string | null = null;
-    @Input() isOpen = false;
-    @Output() closeEvent = new EventEmitter<void>();
-    @Output() saveEvent = new EventEmitter<void>();
+export class TenantEditModalComponent implements OnInit, OnChanges {
+  @Input() tenantId: string | null = null;
+  @Input() isOpen = false;
+  @Output() closeEvent = new EventEmitter<void>();
+  @Output() saveEvent = new EventEmitter<void>();
 
-    private fb = inject(FormBuilder);
-    private adminService = inject(AdminService);
+  private fb = inject(FormBuilder);
+  private adminService = inject(AdminService);
 
-    activeTab = 'info';
-    loading = false;
-    submitting = false;
+  activeTabIndex = 0;
+  loading = false;
+  submitting = false;
 
-    tenant: Tenant | null = null;
-    allModules: ModuleConfig[] = [];
-    moduleStates: Record<string, boolean> = {};
-    tenantUsers: AdminUser[] = [];
+  tenant: Tenant | null = null;
+  allModules: ModuleConfig[] = [];
+  moduleStates: Record<string, boolean> = {};
+  tenantUsers: AdminUser[] = [];
 
-    // TODO: Fetch from API or use constants
-    plans = [
-        { code: 'FREE', name: 'Gratis', price: 0 },
-        { code: 'BASIC', name: 'Básico', price: 25000 },
-        { code: 'PRO', name: 'Pro', price: 45000 },
-        { code: 'BUSINESS', name: 'Business', price: 80000 },
-        { code: 'ENTERPRISE', name: 'Enterprise', price: 150000 }
-    ];
+  businessTypes = [
+    { label: 'Retail', value: 'RETAIL' },
+    { label: 'Restaurante', value: 'RESTAURANT' },
+    { label: 'Panadería', value: 'PANADERIA' },
+    { label: 'Minimarket', value: 'MINIMARKET' },
+    { label: 'Barbería', value: 'BARBERIA' },
+    { label: 'Servicios', value: 'SERVICIOS' },
+    { label: 'Otro', value: 'OTRO' }
+  ];
 
-    tabs = [
-        { id: 'info', label: 'Información', icon: '🏢' },
-        { id: 'modules', label: 'Módulos', icon: '🧩' },
-        { id: 'users', label: 'Usuarios', icon: '👥' },
-        { id: 'status', label: 'Estado & Plan', icon: '⚙️' }
-    ];
+  plans = [
+    { code: 'FREE', name: 'Gratis', price: 0 },
+    { code: 'BASIC', name: 'Básico', price: 25000 },
+    { code: 'PRO', name: 'Pro', price: 45000 },
+    { code: 'BUSINESS', name: 'Business', price: 80000 },
+    { code: 'ENTERPRISE', name: 'Enterprise', price: 150000 }
+  ];
 
-    infoForm: FormGroup = this.fb.group({
-        razonSocial: ['', Validators.required],
-        rut: ['', Validators.required],
-        nombreFantasia: [''],
-        giro: [''],
-        direccion: [''],
-        comuna: [''],
-        region: [''],
-        businessType: ['OTRO'],
-        activo: [true],
-        plan: ['FREE']
+  infoForm: FormGroup = this.fb.group({
+    razonSocial: ['', Validators.required],
+    rut: ['', Validators.required],
+    nombreFantasia: [''],
+    giro: [''],
+    direccion: [''],
+    comuna: [''],
+    region: [''],
+    businessType: ['OTRO'],
+    activo: [true],
+    plan: ['FREE']
+  });
+
+  ngOnInit() {
+    this.adminService.getModulesFromApi().subscribe(modules => {
+      this.allModules = modules.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['isOpen'] && this.isOpen && this.tenantId) {
+      this.loadTenantData();
+    }
+  }
+
+  loadTenantData() {
+    if (!this.tenantId) return;
+    this.loading = true;
+    this.activeTabIndex = 0;
+
+    this.adminService.getTenant(this.tenantId).subscribe({
+      next: (tenant) => {
+        this.tenant = tenant;
+        this.infoForm.patchValue({
+          razonSocial: tenant.razonSocial,
+          rut: tenant.rut,
+          nombreFantasia: tenant.nombreFantasia,
+          giro: '',
+          direccion: '',
+          comuna: '',
+          region: '',
+          businessType: tenant.businessType,
+          activo: tenant.activo,
+          plan: tenant.plan
+        });
+
+        this.moduleStates = {};
+        this.allModules.forEach(m => {
+          this.moduleStates[m.code] = tenant.modules ? tenant.modules.includes(m.code) : false;
+        });
+
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading tenant', err);
+        this.loading = false;
+      }
     });
 
-    ngOnInit() {
-        this.adminService.getModulesFromApi().subscribe(modules => {
-            this.allModules = modules.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
-        });
-    }
+    this.adminService.getTenantUsers(this.tenantId).subscribe({
+      next: (users) => this.tenantUsers = users,
+      error: (err) => console.error('Error loading users', err)
+    });
+  }
 
-    ngOnChanges() {
-        if (this.isOpen && this.tenantId) {
-            this.loadTenantData();
-        }
-    }
+  toggleModule(code: string) {
+    this.moduleStates[code] = !this.moduleStates[code];
+  }
 
-    loadTenantData() {
-        if (!this.tenantId) return;
-        this.loading = true;
+  get activeModulesCount(): number {
+    return Object.values(this.moduleStates).filter(v => v).length;
+  }
 
-        // Load Tenant Details
-        this.adminService.getTenant(this.tenantId).subscribe({
-            next: (tenant) => {
-                this.tenant = tenant;
-                this.infoForm.patchValue({
-                    razonSocial: tenant.razonSocial,
-                    rut: tenant.rut,
-                    nombreFantasia: tenant.nombreFantasia,
-                    giro: '', // Not in basic tenant interface immediately available, might need extension
-                    direccion: '',
-                    comuna: '',
-                    region: '',
-                    businessType: tenant.businessType,
-                    activo: tenant.activo,
-                    plan: tenant.plan
-                });
+  getAvatarGradient(): string {
+    const gradients = [
+      'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      'linear-gradient(135deg, #f59e0b, #d97706)',
+      'linear-gradient(135deg, #10b981, #059669)',
+      'linear-gradient(135deg, #ef4444, #dc2626)',
+      'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+    ];
+    const index = (this.tenant?.razonSocial?.charCodeAt(0) || 0) % gradients.length;
+    return gradients[index];
+  }
 
-                // Initialize modules state based on tenant.modules (array of codes)
-                this.moduleStates = {};
-                this.allModules.forEach(m => {
-                    this.moduleStates[m.code] = tenant.modules ? tenant.modules.includes(m.code) : false;
-                });
+  save() {
+    if (this.infoForm.invalid || !this.tenantId) return;
 
-                this.loading = false;
-            },
-            error: (err) => {
-                console.error('Error loading tenant', err);
-                this.loading = false;
+    this.submitting = true;
+    const formValues = this.infoForm.value;
+
+    const updateDetails$ = this.adminService.updateTenant(this.tenantId, {
+      razonSocial: formValues.razonSocial,
+      nombreFantasia: formValues.nombreFantasia,
+      businessType: formValues.businessType,
+      plan: formValues.plan,
+      rut: formValues.rut
+    });
+
+    const updateModules$ = this.adminService.updateTenantModules(this.tenantId, this.moduleStates);
+    const updateStatus$ = this.adminService.updateTenantStatus(this.tenantId, formValues.activo);
+
+    updateDetails$.subscribe({
+      next: () => {
+        updateModules$.subscribe({
+          next: () => {
+            if (this.tenant?.activo !== formValues.activo) {
+              updateStatus$.subscribe({
+                next: () => this.finishSave(),
+                error: (e) => this.handleError(e)
+              });
+            } else {
+              this.finishSave();
             }
+          },
+          error: (e) => this.handleError(e)
         });
+      },
+      error: (e) => this.handleError(e)
+    });
+  }
 
-        // Load Tenant Users (async/parallel)
-        this.adminService.getTenantUsers(this.tenantId).subscribe({
-            next: (users) => this.tenantUsers = users,
-            error: (err) => console.error('Error loading users', err)
-        });
-    }
+  finishSave() {
+    this.submitting = false;
+    this.saveEvent.emit();
+    this.close();
+  }
 
-    toggleModule(code: string) {
-        this.moduleStates[code] = !this.moduleStates[code];
-    }
+  handleError(err: any) {
+    console.error('Error updating tenant', err);
+    this.submitting = false;
+  }
 
-    get activeModulesCount(): number {
-        return Object.values(this.moduleStates).filter(v => v).length;
-    }
-
-    save() {
-        if (this.infoForm.invalid || !this.tenantId) return;
-
-        this.submitting = true;
-        const formValues = this.infoForm.value;
-
-        // 1. Update Details
-        const updateDetails$ = this.adminService.updateTenant(this.tenantId, {
-            razonSocial: formValues.razonSocial,
-            nombreFantasia: formValues.nombreFantasia,
-            businessType: formValues.businessType,
-            plan: formValues.plan,
-            rut: formValues.rut
-            // Add other fields if DTO supports them
-        });
-
-        // 2. Update Modules
-        const updateModules$ = this.adminService.updateTenantModules(this.tenantId, this.moduleStates);
-
-        // 3. Update Status (if changed)
-        const updateStatus$ = this.adminService.updateTenantStatus(this.tenantId, formValues.activo);
-
-        // Execute sequentially or parallel? Native forkJoin is better but let's simple chain for safe execution flow
-        updateDetails$.subscribe({
-            next: () => {
-                updateModules$.subscribe({
-                    next: () => {
-                        if (this.tenant?.activo !== formValues.activo) {
-                            updateStatus$.subscribe({
-                                next: () => this.finishSave(),
-                                error: (e) => this.handleError(e)
-                            });
-                        } else {
-                            this.finishSave();
-                        }
-                    },
-                    error: (e) => this.handleError(e)
-                });
-            },
-            error: (e) => this.handleError(e)
-        });
-    }
-
-    finishSave() {
-        this.submitting = false;
-        this.saveEvent.emit();
-        this.close();
-    }
-
-    handleError(err: any) {
-        console.error('Error updating tenant', err);
-        this.submitting = false;
-        // Show toast/alert?
-    }
-
-    close() {
-        this.closeEvent.emit();
-    }
+  close() {
+    this.closeEvent.emit();
+  }
 }

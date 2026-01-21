@@ -4,6 +4,23 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService, Tenant } from '../../core/services/admin.service';
 
+// PrimeNG Imports
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
+import { RippleModule } from 'primeng/ripple';
+import { AccordionModule } from 'primeng/accordion';
+import { BadgeModule } from 'primeng/badge';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { MessageService } from 'primeng/api';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+
 interface ModuleConfig {
   code: string;
   name: string;
@@ -14,7 +31,7 @@ interface ModuleConfig {
 interface TenantModules {
   tenant: Tenant;
   modules: Record<string, boolean>;
-  expanded: boolean;
+  saving?: boolean;
 }
 
 const ALL_MODULES: ModuleConfig[] = [
@@ -32,406 +49,574 @@ const ALL_MODULES: ModuleConfig[] = [
 @Component({
   selector: 'app-modules-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    CardModule,
+    InputTextModule,
+    InputSwitchModule,
+    ButtonModule,
+    TagModule,
+    ToastModule,
+    SkeletonModule,
+    TooltipModule,
+    RippleModule,
+    AccordionModule,
+    BadgeModule,
+    ProgressBarModule,
+    IconFieldModule,
+    InputIconModule
+  ],
+  providers: [MessageService],
   template: `
+    <p-toast position="top-right"></p-toast>
+    
     <div class="modules-page">
-      <!-- Header -->
-      <header class="page-header">
-        <div class="header-left">
-          <a routerLink="/admin/dashboard" class="back-link">← Dashboard</a>
-          <h1>📊 Gestión de Módulos</h1>
-          <p class="subtitle">Control de acceso por empresa</p>
-        </div>
-        <div class="header-stats">
-          <div class="stat">
-            <span class="stat-value">{{ tenantsData().length }}</span>
-            <span class="stat-label">Empresas</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ allModules.length }}</span>
-            <span class="stat-label">Módulos</span>
-          </div>
-        </div>
-      </header>
-
-      <!-- Search -->
-      <div class="search-section">
-        <input 
-          type="text" 
-          [(ngModel)]="searchTerm" 
-          placeholder="🔍 Buscar empresa..."
-          class="search-input">
-      </div>
-
-      <!-- Module Legend -->
-      <div class="modules-legend">
-        <span class="legend-title">Módulos:</span>
-        @for (module of allModules; track module.code) {
-          <span class="legend-item" [title]="module.description">
-            {{ module.icon }} {{ module.name }}
-          </span>
-        }
-      </div>
-
-      <!-- Tenants Grid -->
-      @if (loading()) {
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando empresas...</p>
-        </div>
-      } @else {
-        <div class="tenants-list">
-          @for (item of filteredTenants(); track item.tenant.id; let i = $index) {
-            <div class="tenant-card" [class.expanded]="item.expanded" [style.--delay]="i * 50 + 'ms'">
-              <!-- Card Header -->
-              <div class="card-header" (click)="toggleExpand(item)">
-                <div class="tenant-info">
-                  <div class="tenant-avatar" [style.background]="getAvatarColor(item.tenant.businessType)">
-                    {{ item.tenant.razonSocial.charAt(0) }}
-                  </div>
-                  <div class="tenant-details">
-                    <h3>{{ item.tenant.razonSocial }}</h3>
-                    <span class="tenant-meta">
-                      <span class="badge plan">{{ item.tenant.plan }}</span>
-                      <span class="badge industry">{{ item.tenant.businessType }}</span>
-                    </span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <span class="module-count">{{ getActiveModuleCount(item) }}/{{ allModules.length }}</span>
-                  <button class="expand-btn">
-                    {{ item.expanded ? '▲' : '▼' }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Expanded Modules -->
-              @if (item.expanded) {
-                <div class="modules-grid">
-                  @for (module of allModules; track module.code) {
-                    <div class="module-item" [class.enabled]="item.modules[module.code]">
-                      <div class="module-header">
-                        <span class="module-icon">{{ module.icon }}</span>
-                        <label class="toggle">
-                          <input 
-                            type="checkbox" 
-                            [checked]="item.modules[module.code]"
-                            (change)="toggleModule(item, module.code)">
-                          <span class="slider"></span>
-                        </label>
-                      </div>
-                      <span class="module-name">{{ module.name }}</span>
-                      <span class="module-desc">{{ module.description }}</span>
-                    </div>
-                  }
-                </div>
-                <div class="card-footer">
-                  <button class="btn-enable-all" (click)="enableAll(item)">✅ Habilitar todos</button>
-                  <button class="btn-disable-all" (click)="disableAll(item)">❌ Deshabilitar todos</button>
-                  <button class="btn-save" (click)="saveModules(item)">💾 Guardar cambios</button>
-                </div>
-              }
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-left">
+                <a routerLink="/admin/dashboard" class="back-link">
+                    <i class="pi pi-arrow-left"></i>
+                    Dashboard
+                </a>
+                <h1>
+                    <i class="pi pi-th-large"></i>
+                    Gestión de Módulos
+                </h1>
+                <p class="subtitle">Control de acceso a funcionalidades por empresa</p>
             </div>
-          }
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="pi pi-building"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ tenantsData().length }}</span>
+                        <span class="stat-label">Empresas</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="pi pi-th-large"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ allModules.length }}</span>
+                        <span class="stat-label">Módulos</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Module Legend -->
+        <div class="modules-legend">
+            <span class="legend-title">Módulos disponibles:</span>
+            <div class="legend-items">
+                @for (module of allModules; track module.code) {
+                    <div class="legend-chip" [pTooltip]="module.description" tooltipPosition="top">
+                        <span class="chip-icon">{{ module.icon }}</span>
+                        <span class="chip-name">{{ module.name }}</span>
+                    </div>
+                }
+            </div>
         </div>
-      }
+
+        <!-- Search -->
+        <div class="search-section">
+            <p-iconField iconPosition="left">
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input 
+                    pInputText 
+                    type="text" 
+                    [(ngModel)]="searchTerm"
+                    placeholder="Buscar empresa..." />
+            </p-iconField>
+        </div>
+
+        <!-- Tenants List -->
+        @if (loading()) {
+            <div class="skeleton-list">
+                @for (i of [1,2,3,4]; track i) {
+                    <div class="skeleton-card">
+                        <div class="skeleton-header">
+                            <p-skeleton shape="circle" size="3rem"></p-skeleton>
+                            <div class="skeleton-text">
+                                <p-skeleton width="60%" height="1.2rem"></p-skeleton>
+                                <p-skeleton width="40%" height="0.8rem" styleClass="mt-2"></p-skeleton>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        } @else {
+            <p-accordion [multiple]="true" styleClass="tenant-accordion">
+                @for (item of filteredTenants(); track item.tenant.id; let i = $index) {
+                    <p-accordionTab>
+                        <ng-template pTemplate="header">
+                            <div class="accordion-header">
+                                <div class="tenant-avatar" [style.background]="getAvatarColor(item.tenant.businessType)">
+                                    {{ item.tenant.razonSocial?.charAt(0) || 'T' }}
+                                </div>
+                                <div class="tenant-info">
+                                    <span class="tenant-name">{{ item.tenant.razonSocial }}</span>
+                                    <div class="tenant-meta">
+                                        <p-tag [value]="item.tenant.plan" [severity]="getPlanSeverity(item.tenant.plan)" styleClass="plan-tag"></p-tag>
+                                        <p-tag [value]="item.tenant.businessType" severity="secondary"></p-tag>
+                                    </div>
+                                </div>
+                                <div class="module-progress">
+                                    <span class="progress-label">{{ getActiveModuleCount(item) }}/{{ allModules.length }}</span>
+                                    <p-progressBar 
+                                        [value]="(getActiveModuleCount(item) / allModules.length) * 100" 
+                                        [showValue]="false"
+                                        styleClass="progress-mini">
+                                    </p-progressBar>
+                                </div>
+                            </div>
+                        </ng-template>
+                        
+                        <div class="modules-content">
+                            <div class="modules-grid">
+                                @for (module of allModules; track module.code) {
+                                    <div class="module-card" 
+                                         [class.active]="item.modules[module.code]"
+                                         (click)="toggleModule(item, module.code)">
+                                        <div class="module-icon">{{ module.icon }}</div>
+                                        <div class="module-details">
+                                            <span class="module-name">{{ module.name }}</span>
+                                            <span class="module-desc">{{ module.description }}</span>
+                                        </div>
+                                        <p-inputSwitch 
+                                            [(ngModel)]="item.modules[module.code]"
+                                            (click)="$event.stopPropagation()">
+                                        </p-inputSwitch>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="actions-bar">
+                                <div class="quick-actions">
+                                    <p-button 
+                                        label="Activar todos" 
+                                        icon="pi pi-check-circle" 
+                                        severity="success"
+                                        [text]="true"
+                                        (onClick)="enableAll(item)">
+                                    </p-button>
+                                    <p-button 
+                                        label="Desactivar todos" 
+                                        icon="pi pi-times-circle" 
+                                        severity="danger"
+                                        [text]="true"
+                                        (onClick)="disableAll(item)">
+                                    </p-button>
+                                </div>
+                                <p-button 
+                                    label="Guardar Cambios" 
+                                    icon="pi pi-save" 
+                                    [loading]="item.saving"
+                                    (onClick)="saveModules(item)">
+                                </p-button>
+                            </div>
+                        </div>
+                    </p-accordionTab>
+                }
+            </p-accordion>
+            
+            @if (filteredTenants().length === 0) {
+                <div class="empty-state">
+                    <i class="pi pi-search"></i>
+                    <h3>No se encontraron empresas</h3>
+                    <p>Intenta con otro término de búsqueda</p>
+                </div>
+            }
+        }
     </div>
-  `,
+    `,
   styles: [`
-    :host {
-      display: block;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0a0a1a 0%, #12122a 50%, #1a1a3a 100%);
-      color: white;
-    }
+        .modules-page {
+            min-height: 100vh;
+            background: var(--surface-ground);
+            padding: 1.5rem;
+        }
 
-    .modules-page {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
 
-    /* Header */
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 2rem;
-    }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
-    .header-left { display: flex; flex-direction: column; gap: 0.5rem; }
-    .back-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem; }
-    .back-link:hover { color: white; }
-    h1 { 
-      margin: 0; 
-      font-size: 1.75rem;
-      background: linear-gradient(90deg, #fff, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .subtitle { color: rgba(255,255,255,0.5); margin: 0; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
 
-    .header-stats {
-      display: flex;
-      gap: 1.5rem;
-    }
+        .back-link:hover {
+            color: var(--primary-color);
+        }
 
-    .stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem 1.5rem;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-    }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: #10b981; }
-    .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    /* Search */
-    .search-section { margin-bottom: 1.5rem; }
-    .search-input {
-      width: 100%;
-      max-width: 400px;
-      padding: 0.875rem 1.25rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      color: white;
-      font-size: 1rem;
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: #6366f1;
-      background: rgba(99,102,241,0.1);
-    }
-    .search-input::placeholder { color: rgba(255,255,255,0.3); }
+        h1 i {
+            color: var(--primary-color);
+        }
 
-    /* Legend */
-    .modules-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      align-items: center;
-      padding: 1rem;
-      background: rgba(255,255,255,0.02);
-      border-radius: 12px;
-      margin-bottom: 1.5rem;
-    }
-    .legend-title { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
-    .legend-item {
-      padding: 0.35rem 0.75rem;
-      background: rgba(255,255,255,0.05);
-      border-radius: 20px;
-      font-size: 0.8rem;
-      cursor: help;
-    }
+        .subtitle {
+            margin: 0;
+            color: var(--text-color-secondary);
+        }
 
-    /* Loading */
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem;
-      color: rgba(255,255,255,0.5);
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+        .header-stats {
+            display: flex;
+            gap: 1rem;
+        }
 
-    /* Tenants List */
-    .tenants-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+        }
 
-    .tenant-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      overflow: hidden;
-      animation: fadeIn 0.4s ease forwards;
-      animation-delay: var(--delay);
-      opacity: 0;
-    }
-    @keyframes fadeIn { to { opacity: 1; } }
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
 
-    .tenant-card.expanded {
-      border-color: rgba(99,102,241,0.3);
-    }
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.25rem 1.5rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .card-header:hover { background: rgba(255,255,255,0.02); }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
 
-    .tenant-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-color-secondary);
+        }
 
-    .tenant-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: white;
-    }
+        /* Module Legend */
+        .modules-legend {
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
 
-    .tenant-details h3 { margin: 0 0 0.25rem; font-size: 1.1rem; }
-    .tenant-meta { display: flex; gap: 0.5rem; }
+        .legend-title {
+            font-size: 0.875rem;
+            color: var(--text-color-secondary);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
 
-    .badge {
-      padding: 0.2rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .badge.plan { background: rgba(99,102,241,0.2); color: #a78bfa; }
-    .badge.industry { background: rgba(16,185,129,0.2); color: #34d399; }
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
 
-    .card-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        .legend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--surface-100);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: help;
+            transition: all 0.2s;
+        }
 
-    .module-count {
-      padding: 0.5rem 1rem;
-      background: rgba(16,185,129,0.15);
-      border-radius: 20px;
-      font-size: 0.9rem;
-      color: #10b981;
-      font-weight: 600;
-    }
+        .legend-chip:hover {
+            background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
 
-    .expand-btn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.05);
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .expand-btn:hover { background: rgba(255,255,255,0.1); }
+        .chip-icon {
+            font-size: 1rem;
+        }
 
-    /* Modules Grid */
-    .modules-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 1rem;
-      padding: 0 1.5rem 1rem;
-    }
+        /* Search Section */
+        .search-section {
+            margin-bottom: 1.5rem;
+        }
 
-    .module-item {
-      padding: 1rem;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px;
-      transition: all 0.2s;
-    }
-    .module-item.enabled {
-      background: rgba(16,185,129,0.08);
-      border-color: rgba(16,185,129,0.3);
-    }
+        .search-section input {
+            width: 100%;
+            max-width: 400px;
+        }
 
-    .module-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
+        /* Skeleton Loading */
+        .skeleton-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
 
-    .module-icon { font-size: 1.5rem; }
-    .module-name { display: block; font-size: 0.9rem; font-weight: 600; }
-    .module-desc { display: block; font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
+        .skeleton-card {
+            padding: 1.5rem;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+        }
 
-    /* Toggle */
-    .toggle { position: relative; width: 44px; height: 24px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background: rgba(255,255,255,0.1);
-      border-radius: 12px;
-      transition: 0.3s;
-    }
-    .slider::before {
-      content: '';
-      position: absolute;
-      width: 18px; height: 18px;
-      left: 3px; bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: 0.3s;
-    }
-    .toggle input:checked + .slider { background: #10b981; }
-    .toggle input:checked + .slider::before { transform: translateX(20px); }
+        .skeleton-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-    /* Footer */
-    .card-footer {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-      background: rgba(0,0,0,0.2);
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
+        .skeleton-text {
+            flex: 1;
+        }
 
-    .card-footer button {
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+        /* Accordion Header */
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            padding-right: 1rem;
+        }
 
-    .btn-enable-all { background: rgba(16,185,129,0.15); color: #10b981; }
-    .btn-enable-all:hover { background: rgba(16,185,129,0.25); }
-    .btn-disable-all { background: rgba(239,68,68,0.15); color: #f87171; }
-    .btn-disable-all:hover { background: rgba(239,68,68,0.25); }
-    .btn-save { 
-      margin-left: auto;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6); 
-      color: white;
-    }
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+        .tenant-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-      .page-header { flex-direction: column; gap: 1rem; }
-      .header-stats { width: 100%; }
-      .modules-grid { grid-template-columns: repeat(2, 1fr); }
-      .card-footer { flex-wrap: wrap; }
-      .btn-save { margin-left: 0; width: 100%; margin-top: 0.5rem; }
-    }
-  `]
+        .tenant-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tenant-name {
+            font-weight: 600;
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .tenant-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .module-progress {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            min-width: 100px;
+        }
+
+        .progress-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        :host ::ng-deep .progress-mini {
+            height: 6px;
+            width: 100px;
+        }
+
+        /* Modules Content */
+        .modules-content {
+            padding: 1rem 0;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--surface-ground);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .module-card:hover {
+            border-color: var(--primary-400);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .module-card.active {
+            background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+            border-color: var(--primary-color);
+        }
+
+        .module-icon {
+            font-size: 1.5rem;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-card);
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .module-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .module-name {
+            font-weight: 600;
+            display: block;
+        }
+
+        .module-desc {
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--surface-border);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-color-secondary);
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-color-secondary);
+            margin: 0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .modules-page {
+                padding: 1rem;
+            }
+
+            .page-header {
+                flex-direction: column;
+            }
+
+            .header-stats {
+                width: 100%;
+            }
+
+            .stat-card {
+                flex: 1;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .accordion-header {
+                flex-wrap: wrap;
+            }
+
+            .module-progress {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                margin-top: 0.5rem;
+            }
+
+            :host ::ng-deep .progress-mini {
+                width: 60%;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .quick-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    `]
 })
 export class ModulesCatalogComponent implements OnInit {
   private adminService = inject(AdminService);
+  private messageService = inject(MessageService);
 
   tenantsData = signal<TenantModules[]>([]);
   loading = signal(true);
@@ -458,7 +643,7 @@ export class ModulesCatalogComponent implements OnInit {
         const data = tenants.map(tenant => ({
           tenant,
           modules: this.mapTenantModules(tenant.modules),
-          expanded: false
+          saving: false
         }));
         this.tenantsData.set(data);
         this.loading.set(false);
@@ -466,6 +651,11 @@ export class ModulesCatalogComponent implements OnInit {
       error: (err) => {
         console.error('Error loading tenants:', err);
         this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las empresas'
+        });
       }
     });
   }
@@ -473,76 +663,43 @@ export class ModulesCatalogComponent implements OnInit {
   mapTenantModules(modulesArray: string[] | undefined): Record<string, boolean> {
     const result: Record<string, boolean> = {};
     const activeModules = new Set(modulesArray || []);
-
-    // Initialize all modules as false, then set true for active ones
     ALL_MODULES.forEach(m => {
       result[m.code] = activeModules.has(m.code);
     });
     return result;
   }
 
-  // Deprecated: getModulesForPlan is no longer the primary source of truth, 
-  // but we keep it referenced if needed for new tenants defaults.
-  getModulesForPlan(plan: string): Record<string, boolean> {
-    const planModules: Record<string, string[]> = {
-      'FREE': ['pos'],
-      'BASIC': ['pos', 'inventory'],
-      'PRO': ['pos', 'inventory', 'invoicing', 'crm'],
-      'BUSINESS': ['pos', 'inventory', 'invoicing', 'crm', 'loyalty', 'reservations'],
-      'ENTERPRISE': ALL_MODULES.map(m => m.code)
-    };
-
-    const enabled = planModules[plan] || planModules['FREE'];
-    const result: Record<string, boolean> = {};
-    ALL_MODULES.forEach(m => { result[m.code] = enabled.includes(m.code); });
-    return result;
-  }
-
-  toggleExpand(item: TenantModules) {
-    this.tenantsData.update(list =>
-      list.map(t => t.tenant.id === item.tenant.id ? { ...t, expanded: !t.expanded } : t)
-    );
-  }
-
   toggleModule(item: TenantModules, code: string) {
-    this.tenantsData.update(list =>
-      list.map(t => {
-        if (t.tenant.id === item.tenant.id) {
-          return { ...t, modules: { ...t.modules, [code]: !t.modules[code] } };
-        }
-        return t;
-      })
-    );
+    item.modules[code] = !item.modules[code];
   }
 
   enableAll(item: TenantModules) {
-    const allEnabled: Record<string, boolean> = {};
-    ALL_MODULES.forEach(m => { allEnabled[m.code] = true; });
-    this.tenantsData.update(list =>
-      list.map(t => t.tenant.id === item.tenant.id ? { ...t, modules: allEnabled } : t)
-    );
+    ALL_MODULES.forEach(m => { item.modules[m.code] = true; });
   }
 
   disableAll(item: TenantModules) {
-    const allDisabled: Record<string, boolean> = {};
-    ALL_MODULES.forEach(m => { allDisabled[m.code] = false; });
-    this.tenantsData.update(list =>
-      list.map(t => t.tenant.id === item.tenant.id ? { ...t, modules: allDisabled } : t)
-    );
+    ALL_MODULES.forEach(m => { item.modules[m.code] = false; });
   }
 
   saveModules(item: TenantModules) {
-    this.loading.set(true);
+    item.saving = true;
     this.adminService.updateTenantModules(item.tenant.id, item.modules).subscribe({
       next: () => {
-        // Success feedback could be a toast, for now alert is okay or just console
-        console.log(`Módulos actualizados para ${item.tenant.razonSocial}`);
-        this.loading.set(false);
+        item.saving = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Guardado',
+          detail: `Módulos actualizados para ${item.tenant.razonSocial}`
+        });
       },
       error: (err) => {
         console.error('Error saving modules:', err);
-        alert('Error al guardar los módulos. Intente nuevamente.');
-        this.loading.set(false);
+        item.saving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron guardar los módulos'
+        });
       }
     });
   }
@@ -557,8 +714,20 @@ export class ModulesCatalogComponent implements OnInit {
       'PANADERIA': 'linear-gradient(135deg, #f59e0b, #d97706)',
       'EDUCACION': 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
       'EDITORIAL': 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-      'RESTAURANTE': 'linear-gradient(135deg, #ef4444, #dc2626)'
+      'RESTAURANTE': 'linear-gradient(135deg, #ef4444, #dc2626)',
+      'SERVICIOS': 'linear-gradient(135deg, #10b981, #059669)'
     };
     return colors[type] || 'linear-gradient(135deg, #6b7280, #4b5563)';
+  }
+
+  getPlanSeverity(plan: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
+      'FREE': 'secondary',
+      'BASIC': 'info',
+      'PRO': 'warning',
+      'BUSINESS': 'success',
+      'ENTERPRISE': 'contrast'
+    };
+    return severities[plan] || 'info';
   }
 }
