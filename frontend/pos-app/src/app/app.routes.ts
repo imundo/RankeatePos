@@ -102,6 +102,16 @@ export const routes: Routes = [
         // TODO: Add adminGuard to verify SAAS_ADMIN role
     },
     {
+        path: 'my-account',
+        loadComponent: () => import('./features/account/my-account.component').then(m => m.MyAccountComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'price-lists',
+        loadComponent: () => import('./features/pricing/price-list.component').then(m => m.PriceListComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'facturacion',
         loadChildren: () => import('./features/facturacion/facturacion.routes').then(m => m.FACTURACION_ROUTES),
         canActivate: [authGuard]
