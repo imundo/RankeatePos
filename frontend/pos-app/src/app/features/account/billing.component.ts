@@ -2,25 +2,25 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface Plan {
-    code: string;
-    name: string;
-    price: number;
-    features: string[];
-    popular?: boolean;
+  code: string;
+  name: string;
+  price: number;
+  features: string[];
+  popular?: boolean;
 }
 
 interface Invoice {
-    id: string;
-    date: string;
-    amount: number;
-    status: 'paid' | 'pending' | 'failed';
+  id: string;
+  date: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'failed';
 }
 
 @Component({
-    selector: 'app-billing',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-billing',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="space-y-8">
       <!-- Current Plan Card -->
       <div class="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-3xl p-8 text-white">
@@ -57,47 +57,42 @@ interface Invoice {
 
       <!-- Plan Selection Modal -->
       <div *ngIf="showPlans" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div *ngFor="let plan of plans" 
-             class="relative bg-white rounded-2xl border-2 transition-all duration-300 overflow-hidden group hover:shadow-xl"
-             [class.border-indigo-500]="plan.code === currentPlan.code"
-             [class.border-slate-200]="plan.code !== currentPlan.code"
-             [class.shadow-xl]="plan.popular"
-             [class.shadow-indigo-500/20]="plan.popular">
-          
-          <!-- Popular Badge -->
-          <div *ngIf="plan.popular" 
-               class="absolute top-0 left-0 right-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-center py-2 text-sm font-medium">
-            ⭐ Más Popular
-          </div>
-          
-          <div class="p-6" [class.pt-12]="plan.popular">
-            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ plan.name }}</h3>
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-4xl font-bold text-slate-900">\${{ plan.price | number }}</span>
-              <span class="text-slate-500">/mes</span>
+        <ng-container *ngFor="let plan of plans">
+          <div class="relative bg-white rounded-2xl border-2 transition-all duration-300 overflow-hidden group hover:shadow-xl"
+               [ngClass]="{'border-indigo-500': plan.code === currentPlan.code, 'border-slate-200': plan.code !== currentPlan.code, 'shadow-xl shadow-indigo-500/20': plan.popular}">
+            
+            <!-- Popular Badge -->
+            <div *ngIf="plan.popular" class="absolute top-0 left-0 right-0 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-center py-2 text-sm font-medium">
+              ⭐ Más Popular
             </div>
             
-            <ul class="space-y-3 mb-6">
-              <li *ngFor="let feature of plan.features" class="flex items-center gap-2 text-sm text-slate-600">
-                <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                {{ feature }}
-              </li>
-            </ul>
-            
-            <button *ngIf="plan.code !== currentPlan.code"
-                    (click)="selectPlan(plan)"
-                    class="w-full py-3 rounded-xl font-semibold transition-all"
-                    [class]="plan.popular ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
-              Seleccionar Plan
-            </button>
-            <div *ngIf="plan.code === currentPlan.code" 
-                 class="w-full py-3 rounded-xl bg-green-100 text-green-700 font-semibold text-center">
-              ✓ Plan Actual
+            <div class="p-6" [ngClass]="{'pt-12': plan.popular}">
+              <h3 class="text-xl font-bold text-slate-800 mb-2">{{ plan.name }}</h3>
+              <div class="flex items-baseline gap-1 mb-6">
+                <span class="text-4xl font-bold text-slate-900">\${{ plan.price | number }}</span>
+                <span class="text-slate-500">/mes</span>
+              </div>
+              
+              <ul class="space-y-3 mb-6">
+                <li *ngFor="let feature of plan.features" class="flex items-center gap-2 text-sm text-slate-600">
+                  <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  {{ feature }}
+                </li>
+              </ul>
+              
+              <button *ngIf="plan.code !== currentPlan.code" (click)="selectPlan(plan)"
+                      class="w-full py-3 rounded-xl font-semibold transition-all"
+                      [ngClass]="plan.popular ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
+                Seleccionar Plan
+              </button>
+              <div *ngIf="plan.code === currentPlan.code" class="w-full py-3 rounded-xl bg-green-100 text-green-700 font-semibold text-center">
+                ✓ Plan Actual
+              </div>
             </div>
           </div>
-        </div>
+        </ng-container>
       </div>
 
       <!-- Payment Method -->
@@ -163,66 +158,66 @@ interface Invoice {
   `
 })
 export class BillingComponent implements OnInit {
-    showPlans = false;
-    nextBillingDate = '15 Feb 2026';
+  showPlans = false;
+  nextBillingDate = '15 Feb 2026';
 
-    currentPlan: Plan = {
-        code: 'PRO',
-        name: 'Pro',
-        price: 45990,
-        features: []
+  currentPlan: Plan = {
+    code: 'PRO',
+    name: 'Pro',
+    price: 45990,
+    features: []
+  };
+
+  plans: Plan[] = [
+    {
+      code: 'BASIC',
+      name: 'Básico',
+      price: 25990,
+      features: ['Hasta 5 usuarios', 'POS + Inventario', 'Reportes básicos', 'Soporte email']
+    },
+    {
+      code: 'PRO',
+      name: 'Pro',
+      price: 45990,
+      popular: true,
+      features: ['Hasta 15 usuarios', 'Todos los módulos', 'Facturación electrónica', 'Múltiples sucursales', 'Soporte prioritario']
+    },
+    {
+      code: 'ENTERPRISE',
+      name: 'Enterprise',
+      price: 89990,
+      features: ['Usuarios ilimitados', 'API acceso completo', 'Integraciones custom', 'SLA garantizado', 'Soporte 24/7', 'Account Manager']
+    }
+  ];
+
+  invoices: Invoice[] = [
+    { id: 'INV-2026-001', date: '15 Ene 2026', amount: 45990, status: 'paid' },
+    { id: 'INV-2025-012', date: '15 Dic 2025', amount: 45990, status: 'paid' },
+    { id: 'INV-2025-011', date: '15 Nov 2025', amount: 45990, status: 'paid' }
+  ];
+
+  ngOnInit() { }
+
+  selectPlan(plan: Plan) {
+    console.log('Selected plan:', plan);
+    // API call to change plan
+  }
+
+  getStatusClass(status: string): string {
+    const classes: Record<string, string> = {
+      'paid': 'bg-green-100 text-green-700',
+      'pending': 'bg-amber-100 text-amber-700',
+      'failed': 'bg-red-100 text-red-700'
     };
+    return classes[status] || 'bg-slate-100 text-slate-700';
+  }
 
-    plans: Plan[] = [
-        {
-            code: 'BASIC',
-            name: 'Básico',
-            price: 25990,
-            features: ['Hasta 5 usuarios', 'POS + Inventario', 'Reportes básicos', 'Soporte email']
-        },
-        {
-            code: 'PRO',
-            name: 'Pro',
-            price: 45990,
-            popular: true,
-            features: ['Hasta 15 usuarios', 'Todos los módulos', 'Facturación electrónica', 'Múltiples sucursales', 'Soporte prioritario']
-        },
-        {
-            code: 'ENTERPRISE',
-            name: 'Enterprise',
-            price: 89990,
-            features: ['Usuarios ilimitados', 'API acceso completo', 'Integraciones custom', 'SLA garantizado', 'Soporte 24/7', 'Account Manager']
-        }
-    ];
-
-    invoices: Invoice[] = [
-        { id: 'INV-2026-001', date: '15 Ene 2026', amount: 45990, status: 'paid' },
-        { id: 'INV-2025-012', date: '15 Dic 2025', amount: 45990, status: 'paid' },
-        { id: 'INV-2025-011', date: '15 Nov 2025', amount: 45990, status: 'paid' }
-    ];
-
-    ngOnInit() { }
-
-    selectPlan(plan: Plan) {
-        console.log('Selected plan:', plan);
-        // API call to change plan
-    }
-
-    getStatusClass(status: string): string {
-        const classes: Record<string, string> = {
-            'paid': 'bg-green-100 text-green-700',
-            'pending': 'bg-amber-100 text-amber-700',
-            'failed': 'bg-red-100 text-red-700'
-        };
-        return classes[status] || 'bg-slate-100 text-slate-700';
-    }
-
-    getStatusLabel(status: string): string {
-        const labels: Record<string, string> = {
-            'paid': 'Pagada',
-            'pending': 'Pendiente',
-            'failed': 'Fallida'
-        };
-        return labels[status] || status;
-    }
+  getStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      'paid': 'Pagada',
+      'pending': 'Pendiente',
+      'failed': 'Fallida'
+    };
+    return labels[status] || status;
+  }
 }
