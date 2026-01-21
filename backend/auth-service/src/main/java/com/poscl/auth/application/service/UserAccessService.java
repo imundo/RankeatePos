@@ -119,17 +119,21 @@ public class UserAccessService {
 
         switch (presetName.toUpperCase()) {
             case "CAJERO":
-                moduleCodes = Arrays.asList("pos", "products", "customers");
+                moduleCodes = Arrays.asList("pos", "products", "customers", "cash-close");
                 break;
             case "BODEGUERO":
-                moduleCodes = Arrays.asList("products", "inventory");
+                moduleCodes = Arrays.asList("products", "inventory", "stock-movements", "suppliers", "purchases");
                 break;
             case "ENCARGADO":
-                moduleCodes = Arrays.asList("pos", "products", "inventory", "customers", "reports");
+                moduleCodes = Arrays.asList("pos", "products", "inventory", "customers", "reports",
+                        "sales-history", "cash-close", "quotes", "reservations", "expenses", "cash-flow");
                 break;
             case "ADMIN":
                 moduleCodes = Arrays.asList("pos", "products", "inventory", "customers", "reservations",
-                        "marketing", "reports", "users", "settings");
+                        "marketing", "reports", "users", "settings", "dashboard", "sales-history", "cash-close",
+                        "quotes", "stock-movements", "suppliers", "purchases", "invoices", "expenses",
+                        "cash-flow", "banks", "kds", "menu-digital", "email-marketing", "whatsapp",
+                        "company", "printers");
                 break;
             case "FULL":
                 return grantAllModules(userId, grantedBy);
