@@ -187,7 +187,7 @@ interface PriceListProduct {
               <label class="block text-sm font-medium text-slate-700 mb-1.5">Tipo de Lista</label>
               <div class="grid grid-cols-2 gap-3">
                 <button *ngFor="let type of listTypes" 
-                        (click)="newList.tipo = type.id"
+                        (click)="setListType(type.id)"
                         class="p-4 rounded-xl border-2 text-left transition-all"
                         [class]="newList.tipo === type.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'">
                   <span class="text-xl">{{ type.icon }}</span>
@@ -286,6 +286,10 @@ export class PriceListComponent implements OnInit {
   createList() {
     console.log('Creating list:', this.newList);
     this.showModal = false;
+  }
+
+  setListType(typeId: string) {
+    this.newList.tipo = typeId as any;
   }
 
   getTypeClass(tipo: string): string {
