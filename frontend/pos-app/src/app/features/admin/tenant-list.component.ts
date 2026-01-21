@@ -104,13 +104,15 @@ interface Tenant {
                   <td>
                     <div class="actions">
                       <button class="btn-icon" title="Editar" (click)="editTenant(tenant)">✏️</button>
+                      <button class="btn-icon users-btn" title="Usuarios" (click)="manageUsers(tenant)">
+                        👥
+                      </button>
                       <button 
                         class="btn-icon" 
                         [title]="tenant.activo ? 'Suspender' : 'Activar'"
                         (click)="toggleStatus(tenant)">
-                        {{ tenant.activo ? '🔒' : '🔓' }}
+                        {{ tenant.activo ? '🔴' : '🟢' }}
                       </button>
-                      <button class="btn-icon" title="Usuarios" (click)="manageUsers(tenant)">👥</button>
                     </div>
                   </td>
                 </tr>
