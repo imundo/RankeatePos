@@ -89,18 +89,14 @@ export class AdminService {
     ];
 
     // Dashboard Stats
+    // Dashboard Stats
     getDashboardStats(): Observable<{ totalTenants: number; activeTenants: number; totalUsers: number; mrr: number }> {
-        return this.getTenants().pipe(
-            map(tenants => ({
-                totalTenants: tenants.length,
-                activeTenants: tenants.filter(t => t.activo).length,
-                totalUsers: tenants.length * 2, // Approximate
-                mrr: tenants.reduce((sum, t) => {
-                    const prices: Record<string, number> = { 'FREE': 0, 'BASIC': 19990, 'PRO': 39990, 'BUSINESS': 79990, 'ENTERPRISE': 149990 };
-                    return sum + (prices[t.plan] || 0);
-                }, 0)
-            }))
-        );
+        return this.http.get<{ totalTenants: number; activeTenants: number; totalUsers: number; mrr: number }>(`${this.apiUrl}/stats`);
+    }
+
+    // System Health
+    getSystemHealth(): Observable<Record<string, string>> {
+        return this.http.get<Record<string, string>>(`${this.apiUrl}/health`);
     }
 
     // Tenants

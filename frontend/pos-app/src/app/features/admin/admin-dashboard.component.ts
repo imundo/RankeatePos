@@ -669,32 +669,32 @@ export class AdminDashboardComponent implements OnInit {
 
   loadData() {
     this.loading.set(true);
-    this.adminService.getTenants().subscribe({
-      next: (tenants) => {
-        console.log('Dashboard loaded tenants:', tenants);
-        this.recentTenants.set(tenants.slice(0, 5));
 
-        const activeTenants = tenants.filter(t => t.activo).length;
-        const totalUsers = tenants.length * 2; // Approximate
-        const prices: Record<string, number> = { 'FREE': 0, 'BASIC': 19990, 'PRO': 39990, 'BUSINESS': 79990, 'ENTERPRISE': 149990 };
-        const mrr = tenants.reduce((sum, t) => sum + (prices[t.plan] || 39990), 0);
-
+    // Load Stats
+    this.adminService.getDashboardStats().subscribe({
+      next: (stats) => {
         const newStats = [
-          { ...this.stats()[0], value: tenants.length },
-          { ...this.stats()[1], value: activeTenants },
-          { ...this.stats()[2], value: totalUsers },
-          { ...this.stats()[3], value: mrr }
+          { ...this.stats()[0], value: stats.totalTenants },
+          { ...this.stats()[1], value: stats.activeTenants },
+          { ...this.stats()[2], value: stats.totalUsers },
+          { ...this.stats()[3], value: stats.mrr }
         ];
-
         this.stats.set(newStats);
         this.animateCounters(newStats);
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading tenants:', err);
-        this.loading.set(false);
+      error: (err) => console.error('Error loading stats:', err)
+    });
+
+    // Load Recent Tenants (Activity)
+    this.adminService.getTenants().subscribe({
+      next: (tenants) => {
+        this.recentTenants.set(tenants.slice(0, 5));
       }
     });
+
+    // Load System Health (Optional, currently mocked in UI but let's try to fetch if we had it)
+    // For now we keep the UI as is or we can wire it if we added getSystemHealth to admin.service
   }
 
   animateCounters(stats: StatCard[]) {

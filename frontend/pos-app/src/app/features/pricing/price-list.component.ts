@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PriceListService } from '../../core/services/price-list.service';
 
 interface PriceList {
   id: string;
@@ -234,14 +235,16 @@ interface PriceListProduct {
   `
 })
 export class PriceListComponent implements OnInit {
+  private priceListService = inject(PriceListService);
+
   showModal = false;
   activeFilter = 'all';
 
   stats = [
-    { icon: '📋', label: 'Listas Activas', value: 4, bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' },
-    { icon: '🏢', label: 'Por Sucursal', value: 2, bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' },
-    { icon: '👥', label: 'Por Cliente', value: 1, bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' },
-    { icon: '📅', label: 'Temporales', value: 1, bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)' }
+    { icon: '📋', label: 'Listas Activas', value: 0, bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' },
+    { icon: '🏢', label: 'Por Sucursal', value: 0, bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' },
+    { icon: '👥', label: 'Por Cliente', value: 0, bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' },
+    { icon: '📅', label: 'Temporales', value: 0, bg: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)' }
   ];
 
   filters = [
@@ -258,12 +261,7 @@ export class PriceListComponent implements OnInit {
     { id: 'general', icon: '📋', label: 'General', desc: 'Lista de precios base' }
   ];
 
-  priceLists: PriceList[] = [
-    { id: '1', nombre: 'Precios Centro', descripcion: 'Precios exclusivos para sucursal centro', tipo: 'sucursal', sucursalNombre: 'Sucursal Centro', activa: true, productCount: 45, createdAt: '2026-01-15' },
-    { id: '2', nombre: 'Precios Oriente', descripcion: 'Precios zona oriente', tipo: 'sucursal', sucursalNombre: 'Sucursal Oriente', activa: true, productCount: 45, createdAt: '2026-01-10' },
-    { id: '3', nombre: 'Clientes VIP', descripcion: 'Descuentos especiales para clientes frecuentes', tipo: 'cliente', activa: true, productCount: 120, createdAt: '2026-01-05' },
-    { id: '4', nombre: 'Verano 2026', descripcion: 'Promoción de temporada', tipo: 'temporal', fechaInicio: '2026-01-01', fechaFin: '2026-02-28', activa: true, productCount: 30, createdAt: '2025-12-20' }
-  ];
+  priceLists: PriceList[] = [];
 
   newList: Partial<PriceList> & { tipo: string } = {
     nombre: '',
@@ -276,7 +274,36 @@ export class PriceListComponent implements OnInit {
     return this.priceLists.filter(l => l.tipo === this.activeFilter);
   }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.loadLists();
+  }
+
+  loadLists() {
+    this.priceListService.getAll().subscribe({
+      next: (lists) => {
+        // Map types if necessary or assume backend returns compatible strings
+        this.priceLists = lists.map(l => ({
+          ...l,
+          // Ensure tipo is handled correctly for UI (lowercase for styling)
+          tipo: (l.tipo?.toLowerCase() || 'general') as any
+        }));
+        this.updateStats();
+      },
+      error: (err) => console.error('Error loading price lists', err)
+    });
+  }
+
+  updateStats() {
+    const active = this.priceLists.filter(l => l.activa).length;
+    const sucursal = this.priceLists.filter(l => l.tipo === 'sucursal').length;
+    const cliente = this.priceLists.filter(l => l.tipo === 'cliente').length;
+    const temporal = this.priceLists.filter(l => l.tipo === 'temporal').length;
+
+    this.stats[0].value = active;
+    this.stats[1].value = sucursal;
+    this.stats[2].value = cliente;
+    this.stats[3].value = temporal;
+  }
 
   openCreateModal() {
     this.newList = { nombre: '', tipo: 'sucursal', descripcion: '' };
@@ -284,8 +311,28 @@ export class PriceListComponent implements OnInit {
   }
 
   createList() {
-    console.log('Creating list:', this.newList);
-    this.showModal = false;
+    // Basic validation
+    if (!this.newList.nombre) return;
+
+    // Map to API request - simplified for now, assuming service handles DTO mapping or component matches
+    const request = {
+      ...this.newList,
+      // Convert to uppercase for backend Enum
+      tipo: (this.newList.tipo?.toUpperCase() || 'SUCURSAL') as any
+    };
+
+    this.priceListService.create(request as any).subscribe({
+      next: (created) => {
+        const mapped = {
+          ...created,
+          tipo: (created.tipo?.toLowerCase() || 'general') as any
+        };
+        this.priceLists.unshift(mapped);
+        this.updateStats();
+        this.showModal = false;
+      },
+      error: (err) => console.error('Error creating list', err)
+    });
   }
 
   setListType(typeId: string) {

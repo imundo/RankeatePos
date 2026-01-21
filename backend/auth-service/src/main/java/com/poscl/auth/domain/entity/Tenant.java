@@ -94,10 +94,11 @@ public class Tenant {
     @Builder.Default
     private String plan = "FREE";
 
-    @Column(columnDefinition = "text")
-    private String modules; // JSON array of enabled modules: ["pos", "inventory", "reservations"]
-
     // Relaciones
+    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<TenantModule> tenantModules = new ArrayList<>();
+
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Branch> branches = new ArrayList<>();
@@ -122,6 +123,11 @@ public class Tenant {
     public void addBranch(Branch branch) {
         branches.add(branch);
         branch.setTenant(this);
+    }
+
+    public void addModule(TenantModule tenantModule) {
+        tenantModules.add(tenantModule);
+        tenantModule.setTenant(this);
     }
 
     public void addUser(User user) {

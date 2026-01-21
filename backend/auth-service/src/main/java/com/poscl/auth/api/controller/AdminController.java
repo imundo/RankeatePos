@@ -1,6 +1,7 @@
 package com.poscl.auth.api.controller;
 
 import com.poscl.auth.api.dto.*;
+import com.poscl.auth.application.service.AdminService;
 import com.poscl.auth.application.service.TenantService;
 import com.poscl.auth.application.service.UserService;
 import com.poscl.auth.application.service.ModuleService;
@@ -52,22 +53,20 @@ public class AdminController {
     private final PlanService planService;
     private final UserAccessService userAccessService;
 
+    private final AdminService adminService;
+
     // ==================== Platform Stats ====================
 
     @GetMapping("/stats")
     @Operation(summary = "Estadísticas de plataforma", description = "KPIs globales de SmartPos")
     public ResponseEntity<Map<String, Object>> getStats() {
         log.info("GET /api/admin/stats - Fetching platform stats");
+        return ResponseEntity.ok(adminService.getDashboardStats());
+    }
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalTenants", tenantService.countAll());
-        stats.put("activeTenants", tenantService.countActive());
-        stats.put("totalUsers", userService.countAll());
-        // TODO: Add MRR, churn, etc. when billing is implemented
-        stats.put("mrr", 0);
-        stats.put("churnRate", 0.0);
-
-        return ResponseEntity.ok(stats);
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> getSystemHealth() {
+        return ResponseEntity.ok(adminService.getSystemHealth());
     }
 
     // ==================== Tenant Management ====================
@@ -113,7 +112,7 @@ public class AdminController {
             log.warn("BusinessType inválido: {}, usando OTRO", request.getBusinessType());
         }
 
-        // Create tenant
+        // Create tenant (without modules initially)
         Tenant tenant = tenantService.create(TenantRequest.builder()
                 .rut(request.getRut())
                 .razonSocial(request.getRazonSocial())
@@ -124,32 +123,89 @@ public class AdminController {
                 .region(request.getRegion())
                 .businessType(businessType)
                 .plan(request.getPlan())
-                .modules(getModulesForPlan(request.getPlan()))
                 .build());
 
-        // Create admin user for this tenant
-        User adminUser = userService.createForTenant(
-                tenant.getId(),
-                UserRequest.builder()
-                        .email(request.getAdminEmail())
-                        .password(request.getAdminPassword())
-                        .nombre(request.getAdminNombre())
-                        .apellido(request.getAdminApellido())
-                        .telefono(request.getAdminTelefono())
-                        .roleName("OWNER_ADMIN")
-                        .build());
+        // Assign modules
+        if (request.getModules() != null && !request.getModules().isEmpty()) {
+            tenantService.updateModules(tenant.getId(), request.getModules());
+        } else {
+            // Default modules based on plan (fallback)
+            // For now, we enable standard modules for the demo
+            // TODO: Use ModuleService or PlanService to get default modules
+        }
 
-        // TODO: Send welcome email with credentials
+        // Create Admin User
+        try {
+            CreateUserRequest userRequest = CreateUserRequest.builder()
+                    .email(request.getAdminEmail())
+                    .password(request.getAdminPassword())
+                    .nombre(request.getAdminNombre())
+                    .apellido(request.getAdminApellido())
+                    .telefono(request.getAdminTelefono())
+                    .roles(List.of("TENANT_ADMIN"))
+                    .build();
 
-        WizardResultDto result = WizardResultDto.builder()
+            log.info("Creating admin user for tenant: {}", request.getAdminEmail());
+            userService.create(tenant.getId(), null, userRequest);
+
+        } catch (Exception e) {
+            log.error("Error creating admin user: {}", e.getMessage());
+            // We don't rollback tenant creation for now, but maybe we should?
+            // For now just log it as the tenant is viable without user (can be added later)
+        }
+
+        return ResponseEntity.ok(WizardResultDto.builder()
                 .tenantId(tenant.getId())
-                .tenantName(tenant.getRazonSocial())
-                .userId(adminUser.getId())
-                .userEmail(adminUser.getEmail())
-                .message("Tenant y usuario creados exitosamente")
-                .build();
+                .rut(tenant.getRut())
+                .razonSocial(tenant.getRazonSocial())
+                .message("Tenant creado exitosamente")
+                .build());
+    }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    @PutMapping("/tenants/{id}/modules")
+    @Operation(summary = "Actualizar módulos de tenant", description = "Activar/Desactivar módulos para una empresa")
+    public ResponseEntity<List<String>> updateTenantModules(@PathVariable UUID id,
+            @RequestBody Map<String, Boolean> modules) {
+        log.info("PUT /api/admin/tenants/{}/modules", id);
+        tenantService.updateModules(id, modules);
+
+        Tenant updatedTenant = tenantService.findById(id);
+        return ResponseEntity.ok(updatedTenant.getTenantModules().stream()
+                .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
+                .map(tm -> tm.getModule().getCode())
+                .collect(Collectors.toList()));
+    }
+
+    @PutMapping("/tenants/{id}")
+    @Operation(summary = "Actualizar tenant", description = "Permite editar datos comerciales y plan")
+    public ResponseEntity<TenantDto> updateTenant(
+            @PathVariable UUID id,
+            @RequestBody TenantRequest request) {
+        log.info("PUT /api/admin/tenants/{}", id);
+        Tenant tenant = tenantService.update(id, request);
+        return ResponseEntity.ok(toDto(tenant));
+    }
+
+    private TenantDto toDto(Tenant tenant) {
+        // Map active tenant modules to codes
+        List<String> activeModules = tenant.getTenantModules() != null
+                ? tenant.getTenantModules().stream()
+                        .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
+                        .map(tm -> tm.getModule().getCode())
+                        .collect(Collectors.toList())
+                : List.of();
+
+        return TenantDto.builder()
+                .id(tenant.getId())
+                .rut(tenant.getRut())
+                .razonSocial(tenant.getRazonSocial())
+                .nombreFantasia(tenant.getNombreFantasia())
+                .businessType(tenant.getBusinessType())
+                .plan(tenant.getPlan())
+                .modules(activeModules)
+                .activo(tenant.getActivo())
+                .createdAt(tenant.getCreatedAt())
+                .build();
     }
 
     @PutMapping("/tenants/{id}/status")

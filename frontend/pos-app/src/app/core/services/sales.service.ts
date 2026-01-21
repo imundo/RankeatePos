@@ -251,6 +251,23 @@ export interface DailyStats {
     montoPendiente: number;
     topProductos?: TopProduct[];
     ventasPorHora?: HourlyStat[];
+    ventasPorMetodoPago?: PaymentMethodStat[];
+    ventasPorSucursal?: BranchStat[];
+}
+
+export interface PaymentMethodStat {
+    metodoPago: string;
+    transacciones: number;
+    total: number;
+    porcentaje: number;
+}
+
+export interface BranchStat {
+    sucursalId: string;
+    sucursalNombre: string;
+    transacciones: number;
+    ventas: number;
+    porcentaje: number;
 }
 
 export interface TopProduct {

@@ -16,7 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -351,6 +355,86 @@ public class SaleService {
             }
         }
 
+        // Initialize Hourly Map
+        Map<Integer, DailyStatsDto.HourlyStat> hourlyMap = new HashMap<>();
+        for (int i = 0; i < 24; i++) {
+            hourlyMap.put(i, DailyStatsDto.HourlyStat.builder()
+                    .hora(i)
+                    .horaLabel(String.format("%02d:00", i))
+                    .transacciones(0)
+                    .total(BigDecimal.ZERO)
+                    .build());
+        }
+
+        // Initialize Payment & Branch Maps
+        Map<String, DailyStatsDto.PaymentMethodStat> paymentMap = new HashMap<>();
+        Map<UUID, DailyStatsDto.BranchStat> branchMap = new HashMap<>();
+
+        for (Sale sale : sales) {
+            BigDecimal monto = BigDecimal.valueOf(sale.getTotal());
+
+            // Hourly Stats (All sales)
+            if (sale.getCreatedAt() != null) {
+                int hour = sale.getCreatedAt().atZone(chileZone).getHour();
+                DailyStatsDto.HourlyStat hStat = hourlyMap.get(hour);
+                if (hStat != null) {
+                    hStat.setTransacciones(hStat.getTransacciones() + 1);
+                    hStat.setTotal(hStat.getTotal().add(monto));
+                }
+            }
+
+            if (sale.getEstado() == Sale.Estado.COMPLETADA) {
+                // Payment Method Stats
+                for (SalePayment payment : sale.getPayments()) {
+                    String medio = payment.getMedio() != null ? payment.getMedio() : "OTROS";
+                    DailyStatsDto.PaymentMethodStat pStat = paymentMap.computeIfAbsent(medio,
+                            k -> DailyStatsDto.PaymentMethodStat.builder()
+                                    .metodoPago(k)
+                                    .transacciones(0)
+                                    .total(BigDecimal.ZERO)
+                                    .porcentaje(BigDecimal.ZERO)
+                                    .build());
+                    pStat.setTransacciones(pStat.getTransacciones() + 1);
+                    pStat.setTotal(pStat.getTotal().add(BigDecimal.valueOf(payment.getMonto())));
+                }
+
+                // Branch Stats
+                if (sale.getSession() != null && sale.getSession().getRegister() != null) {
+                    UUID branchId = sale.getSession().getRegister().getBranchId();
+                    DailyStatsDto.BranchStat bStat = branchMap.computeIfAbsent(branchId,
+                            k -> DailyStatsDto.BranchStat.builder()
+                                    .sucursalId(k)
+                                    .sucursalNombre("Sucursal") // Placeholder as we don't have name here
+                                    .transacciones(0)
+                                    .ventas(BigDecimal.ZERO)
+                                    .porcentaje(BigDecimal.ZERO)
+                                    .build());
+                    bStat.setTransacciones(bStat.getTransacciones() + 1);
+                    bStat.setVentas(bStat.getVentas().add(monto));
+                }
+            }
+        }
+
+        // Finalize lists and percentages
+        List<DailyStatsDto.HourlyStat> ventasPorHora = new ArrayList<>(hourlyMap.values());
+        ventasPorHora.sort(Comparator.comparingInt(DailyStatsDto.HourlyStat::getHora));
+
+        List<DailyStatsDto.PaymentMethodStat> ventasPorMetodoPago = new ArrayList<>(paymentMap.values());
+        if (totalVentas.compareTo(BigDecimal.ZERO) > 0) {
+            for (DailyStatsDto.PaymentMethodStat p : ventasPorMetodoPago) {
+                p.setPorcentaje(p.getTotal().multiply(BigDecimal.valueOf(100)).divide(totalVentas, 1,
+                        java.math.RoundingMode.HALF_UP));
+            }
+        }
+
+        List<DailyStatsDto.BranchStat> ventasPorSucursal = new ArrayList<>(branchMap.values());
+        if (totalVentas.compareTo(BigDecimal.ZERO) > 0) {
+            for (DailyStatsDto.BranchStat b : ventasPorSucursal) {
+                b.setPorcentaje(b.getVentas().multiply(BigDecimal.valueOf(100)).divide(totalVentas, 1,
+                        java.math.RoundingMode.HALF_UP));
+            }
+        }
+
         BigDecimal ticketPromedio = totalTransacciones > 0
                 ? totalVentas.divide(BigDecimal.valueOf(totalTransacciones), 0, java.math.RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
@@ -394,6 +478,9 @@ public class SaleService {
                 .montoAprobado(montoAprobado)
                 .montoPendiente(montoPendiente)
                 .topProductos(topProductos)
+                .ventasPorHora(ventasPorHora)
+                .ventasPorMetodoPago(ventasPorMetodoPago)
+                .ventasPorSucursal(ventasPorSucursal)
                 .build();
     }
 

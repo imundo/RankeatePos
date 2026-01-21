@@ -43,6 +43,9 @@ public class DailyStatsDto {
     // Ventas por método de pago
     private List<PaymentMethodStat> ventasPorMetodoPago;
 
+    // Ventas por sucursal
+    private List<BranchStat> ventasPorSucursal;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -74,6 +77,18 @@ public class DailyStatsDto {
         private String metodoPago;
         private Integer transacciones;
         private BigDecimal total;
+        private BigDecimal porcentaje;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BranchStat {
+        private java.util.UUID sucursalId;
+        private String sucursalNombre;
+        private Integer transacciones;
+        private BigDecimal ventas;
         private BigDecimal porcentaje;
     }
 }

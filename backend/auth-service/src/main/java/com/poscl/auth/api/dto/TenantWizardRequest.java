@@ -57,4 +57,7 @@ public class TenantWizardRequest {
 
     private String adminApellido;
     private String adminTelefono;
+
+    // Paso 5: Módulos (Opcional, si se seleccionan en el wizard)
+    private java.util.Map<String, Boolean> modules;
 }

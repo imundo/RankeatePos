@@ -22,12 +22,42 @@ import java.util.UUID;
 public class TenantService {
 
     private final TenantRepository tenantRepository;
+    private final com.poscl.auth.domain.repository.ModuleRepository moduleRepository;
 
     /**
      * Cuenta total de tenants
      */
     public long countAll() {
         return tenantRepository.count();
+    }
+
+    // ...
+
+    public void updateModules(UUID tenantId, java.util.Map<String, Boolean> modulesMap) {
+        Tenant tenant = findById(tenantId);
+
+        modulesMap.forEach((code, isActive) -> {
+            moduleRepository.findByCode(code).ifPresent(module -> {
+                // Check if already assigned
+                var existing = tenant.getTenantModules().stream()
+                        .filter(tm -> tm.getModule().getId().equals(module.getId()))
+                        .findFirst();
+
+                if (existing.isPresent()) {
+                    existing.get().setActive(isActive);
+                } else {
+                    if (Boolean.TRUE.equals(isActive)) {
+                        tenant.addModule(com.poscl.auth.domain.entity.TenantModule.builder()
+                                .tenant(tenant)
+                                .module(module)
+                                .active(true)
+                                .build());
+                    }
+                }
+            });
+        });
+
+        tenantRepository.save(tenant);
     }
 
     /**
@@ -90,7 +120,6 @@ public class TenantService {
                 .telefono(request.getTelefono())
                 .businessType(request.getBusinessType())
                 .plan(request.getPlan() != null ? request.getPlan() : "FREE")
-                .modules(request.getModules())
                 .activo(true)
                 .build();
 
@@ -138,9 +167,6 @@ public class TenantService {
             tenant.setBusinessType(request.getBusinessType());
         if (request.getPlan() != null)
             tenant.setPlan(request.getPlan());
-        if (request.getModules() != null)
-            tenant.setModules(request.getModules());
 
         return tenantRepository.save(tenant);
     }
-}
