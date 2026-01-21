@@ -15,6 +15,7 @@ public enum BusinessType {
     SERVICIOS("Servicios", "Servicios profesionales y consultoría"),
     EDUCACION("Educación", "Cursos, capacitaciones y formación"),
     IMPRENTA("Imprenta", "Servicios de impresión y editorial"),
+    RESTAURANT("Restaurante", "Restaurante y servicios de comida"),
     OTRO("Otro", "Negocio genérico");
 
     private final String displayName;

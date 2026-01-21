@@ -100,7 +100,7 @@ public class AdminSeeder implements CommandLineRunner {
                 .codigo("CM01")
                 .direccion("Av. Providencia 1234")
                 .telefono("+56911112222")
-                .activo(true)
+                .activa(true)
                 .build());
 
         tenant.addBranch(Branch.builder()

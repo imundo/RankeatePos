@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TenantDto {
-    
+
     private UUID id;
     private String rut;
     private String razonSocial;
@@ -33,7 +33,8 @@ public class TenantDto {
     private Boolean precioConIva;
     private Boolean activo;
     private String plan;
+    private List<String> modules;
     private Instant createdAt;
-    
+
     private List<BranchDto> branches;
 }

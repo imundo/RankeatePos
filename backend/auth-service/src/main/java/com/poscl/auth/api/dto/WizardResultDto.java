@@ -17,6 +17,8 @@ import java.util.UUID;
 public class WizardResultDto {
     private UUID tenantId;
     private String tenantName;
+    private String rut;
+    private String razonSocial;
     private UUID userId;
     private String userEmail;
     private String message;
