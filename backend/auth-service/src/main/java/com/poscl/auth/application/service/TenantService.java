@@ -170,3 +170,4 @@ public class TenantService {
 
         return tenantRepository.save(tenant);
     }
+}
