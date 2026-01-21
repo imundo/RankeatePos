@@ -225,9 +225,9 @@ public class AdminController {
                 .apellido(user.getApellido())
                 .activo(user.getActivo())
                 .createdAt(user.getCreatedAt())
-                .roles(user.getRoles() != null
-                        ? user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet())
-                        : Set.of())
+                .roles(user.getRoles() != null && !user.getRoles().isEmpty()
+                        ? user.getRoles().stream().map(role -> role.getNombre()).collect(Collectors.toSet())
+                        : new java.util.HashSet<>())
                 .build();
     }
 }

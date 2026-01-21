@@ -1,14 +1,13 @@
 package com.poscl.operations.application.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,7 +18,6 @@ import java.net.http.HttpResponse;
  * Email service supporting both SendGrid API and SMTP
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
@@ -36,12 +34,25 @@ public class EmailService {
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
+    @Autowired
+    public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+        if (mailSender == null) {
+            log.warn(
+                    "JavaMailSender not configured - SMTP email will be disabled. Configure spring.mail.* properties or use SendGrid.");
+        }
+    }
+
     /**
      * Send email using the best available method
      */
     public boolean send(String to, String subject, String body) {
         if (sendGridApiKey != null && !sendGridApiKey.isEmpty()) {
             return sendViaSendGrid(to, subject, body);
+        }
+        if (mailSender == null) {
+            log.warn("Cannot send email: No email provider configured (SendGrid or SMTP)");
+            return false;
         }
         return sendViaSmtp(to, subject, body);
     }
@@ -110,6 +121,10 @@ public class EmailService {
      * Send simple text email
      */
     public boolean sendSimple(String to, String subject, String text) {
+        if (mailSender == null) {
+            log.warn("Cannot send simple email: SMTP not configured");
+            return false;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
