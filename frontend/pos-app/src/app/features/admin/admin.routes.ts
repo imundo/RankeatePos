@@ -52,6 +52,10 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./role-manager.component').then(m => m.RoleManagerComponent)
     },
     {
+        path: 'audit-logs',
+        loadComponent: () => import('./audit-log-viewer.component').then(m => m.AuditLogViewerComponent)
+    },
+    {
         path: 'branches',
         loadComponent: () => import('./branches.component').then(m => m.BranchesComponent)
     }
