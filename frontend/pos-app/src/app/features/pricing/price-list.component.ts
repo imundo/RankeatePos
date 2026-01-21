@@ -14,7 +14,7 @@ interface PriceList {
   fechaFin?: string;
   activa: boolean;
   productCount: number;
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface PriceListProduct {
