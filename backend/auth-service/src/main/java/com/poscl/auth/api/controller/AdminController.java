@@ -3,8 +3,14 @@ package com.poscl.auth.api.controller;
 import com.poscl.auth.api.dto.*;
 import com.poscl.auth.application.service.TenantService;
 import com.poscl.auth.application.service.UserService;
+import com.poscl.auth.application.service.ModuleService;
+import com.poscl.auth.application.service.PlanService;
+import com.poscl.auth.application.service.UserAccessService;
 import com.poscl.auth.domain.entity.Tenant;
 import com.poscl.auth.domain.entity.User;
+import com.poscl.auth.domain.entity.Module;
+import com.poscl.auth.domain.entity.Plan;
+import com.poscl.auth.domain.entity.UserModuleAccess;
 import com.poscl.shared.dto.BusinessType;
 import com.poscl.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -41,6 +48,9 @@ public class AdminController {
 
     private final TenantService tenantService;
     private final UserService userService;
+    private final ModuleService moduleService;
+    private final PlanService planService;
+    private final UserAccessService userAccessService;
 
     // ==================== Platform Stats ====================
 
@@ -192,6 +202,151 @@ public class AdminController {
         return ResponseEntity.ok(toUserDto(user));
     }
 
+    // ==================== Modules Management ====================
+
+    @GetMapping("/modules")
+    @Operation(summary = "Listar módulos", description = "Catálogo de funcionalidades del sistema")
+    public ResponseEntity<List<ModuleDto>> listModules() {
+        log.info("GET /api/admin/modules");
+        List<ModuleDto> modules = moduleService.findAll().stream()
+                .map(this::toModuleDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(modules);
+    }
+
+    @GetMapping("/modules/grouped")
+    @Operation(summary = "Módulos agrupados por categoría", description = "Para UI de permisos")
+    public ResponseEntity<Map<String, List<ModuleDto>>> listModulesGrouped() {
+        log.info("GET /api/admin/modules/grouped");
+        Map<String, List<ModuleDto>> grouped = moduleService.findAllGroupedByCategory()
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream().map(this::toModuleDto).collect(Collectors.toList())));
+        return ResponseEntity.ok(grouped);
+    }
+
+    // ==================== Plans Management ====================
+
+    @GetMapping("/plans")
+    @Operation(summary = "Listar planes", description = "Planes de suscripción disponibles")
+    public ResponseEntity<List<PlanDto>> listPlans() {
+        log.info("GET /api/admin/plans");
+        List<PlanDto> plans = planService.findAll().stream()
+                .map(this::toPlanDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(plans);
+    }
+
+    @GetMapping("/plans/{code}")
+    @Operation(summary = "Detalle de plan", description = "Información de un plan específico")
+    public ResponseEntity<PlanDto> getPlan(@PathVariable String code) {
+        log.info("GET /api/admin/plans/{}", code);
+        return planService.findByCode(code)
+                .map(plan -> ResponseEntity.ok(toPlanDto(plan)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ==================== User Permissions ====================
+
+    @GetMapping("/users/{userId}/modules")
+    @Operation(summary = "Permisos de usuario", description = "Lista de módulos habilitados para un usuario")
+    public ResponseEntity<UserPermissionsDto> getUserPermissions(@PathVariable UUID userId) {
+        log.info("GET /api/admin/users/{}/modules", userId);
+
+        List<UserModuleAccess> access = userAccessService.getUserModules(userId);
+        List<Module> allModules = moduleService.findAll();
+
+        // Build complete permissions list
+        Map<UUID, UserModuleAccess> accessMap = access.stream()
+                .collect(Collectors.toMap(UserModuleAccess::getModuleId, a -> a));
+
+        List<ModuleAccessDto> permissions = allModules.stream()
+                .map(module -> {
+                    UserModuleAccess a = accessMap.get(module.getId());
+                    return ModuleAccessDto.builder()
+                            .moduleId(module.getId())
+                            .code(module.getCode())
+                            .name(module.getName())
+                            .icon(module.getIcon())
+                            .category(module.getCategory())
+                            .enabled(a != null && Boolean.TRUE.equals(a.getEnabled()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(UserPermissionsDto.builder()
+                .userId(userId)
+                .modules(permissions)
+                .build());
+    }
+
+    @PutMapping("/users/{userId}/modules")
+    @Operation(summary = "Actualizar permisos", description = "Actualiza todos los módulos de un usuario")
+    public ResponseEntity<UserPermissionsDto> updateUserPermissions(
+            @PathVariable UUID userId,
+            @RequestBody Map<String, Boolean> moduleStates) {
+        log.info("PUT /api/admin/users/{}/modules - {} modules", userId, moduleStates.size());
+
+        // Convert module codes to IDs
+        Map<UUID, Boolean> statesByIds = new HashMap<>();
+        for (Map.Entry<String, Boolean> entry : moduleStates.entrySet()) {
+            moduleService.findByCode(entry.getKey())
+                    .ifPresent(module -> statesByIds.put(module.getId(), entry.getValue()));
+        }
+
+        userAccessService.updateUserModules(userId, statesByIds, null);
+
+        return getUserPermissions(userId);
+    }
+
+    @PostMapping("/users/{userId}/modules/toggle")
+    @Operation(summary = "Toggle módulo", description = "Habilita/deshabilita un módulo específico")
+    public ResponseEntity<ModuleAccessDto> toggleUserModule(
+            @PathVariable UUID userId,
+            @RequestBody ToggleModuleRequest request) {
+        log.info("POST /api/admin/users/{}/modules/toggle - {} = {}", userId, request.getModuleCode(),
+                request.getEnabled());
+
+        Module module = moduleService.findByCode(request.getModuleCode())
+                .orElseThrow(() -> new RuntimeException("Module not found: " + request.getModuleCode()));
+
+        UserModuleAccess access = userAccessService.toggleModule(userId, module.getId(), request.getEnabled(), null);
+
+        return ResponseEntity.ok(ModuleAccessDto.builder()
+                .moduleId(module.getId())
+                .code(module.getCode())
+                .name(module.getName())
+                .icon(module.getIcon())
+                .category(module.getCategory())
+                .enabled(access.getEnabled())
+                .build());
+    }
+
+    @PostMapping("/users/{userId}/modules/preset")
+    @Operation(summary = "Aplicar preset", description = "Aplica un conjunto predefinido de permisos")
+    public ResponseEntity<UserPermissionsDto> applyPreset(
+            @PathVariable UUID userId,
+            @RequestBody PresetRequest request) {
+        log.info("POST /api/admin/users/{}/modules/preset - {}", userId, request.getPreset());
+
+        userAccessService.applyPreset(userId, request.getPreset(), null);
+
+        return getUserPermissions(userId);
+    }
+
+    @PostMapping("/users/{userId}/modules/copy-from/{sourceUserId}")
+    @Operation(summary = "Copiar permisos", description = "Copia permisos de otro usuario")
+    public ResponseEntity<UserPermissionsDto> copyPermissions(
+            @PathVariable UUID userId,
+            @PathVariable UUID sourceUserId) {
+        log.info("POST /api/admin/users/{}/modules/copy-from/{}", userId, sourceUserId);
+
+        userAccessService.copyPermissions(sourceUserId, userId, null);
+
+        return getUserPermissions(userId);
+    }
+
     // ==================== DTOs ====================
 
     private TenantDto toDto(Tenant tenant) {
@@ -208,13 +363,10 @@ public class AdminController {
     }
 
     private String getModulesForPlan(String plan) {
-        if ("PRO".equalsIgnoreCase(plan)) {
-            return "[\"pos\", \"products\", \"marketing\", \"crm\", \"admin\"]";
-        } else if ("BUSINESS".equalsIgnoreCase(plan)) {
-            return "[\"pos\", \"products\", \"marketing\", \"crm\", \"admin\", \"reports\", \"users\", \"inventory\"]";
-        }
-        // FREE / STARTER
-        return "[\"pos\", \"products\"]";
+        return planService.findByCode(plan)
+                .map(p -> p.getIncludedModules().toString().replace("[", "[\"").replace(", ", "\", \"").replace("]",
+                        "\"]"))
+                .orElse("[\"pos\", \"products\"]");
     }
 
     private UserDto toUserDto(User user) {
@@ -228,6 +380,36 @@ public class AdminController {
                 .roles(user.getRoles() != null && !user.getRoles().isEmpty()
                         ? user.getRoles().stream().map(role -> role.getNombre()).collect(Collectors.toSet())
                         : new java.util.HashSet<>())
+                .build();
+    }
+
+    private ModuleDto toModuleDto(Module module) {
+        return ModuleDto.builder()
+                .id(module.getId())
+                .code(module.getCode())
+                .name(module.getName())
+                .description(module.getDescription())
+                .icon(module.getIcon())
+                .category(module.getCategory())
+                .sortOrder(module.getSortOrder())
+                .active(module.getActive())
+                .build();
+    }
+
+    private PlanDto toPlanDto(Plan plan) {
+        return PlanDto.builder()
+                .id(plan.getId())
+                .code(plan.getCode())
+                .name(plan.getName())
+                .description(plan.getDescription())
+                .price(plan.getPrice())
+                .currency(plan.getCurrency())
+                .billingCycle(plan.getBillingCycle())
+                .includedModules(plan.getIncludedModules())
+                .maxUsers(plan.getMaxUsers())
+                .maxBranches(plan.getMaxBranches())
+                .maxProducts(plan.getMaxProducts())
+                .active(plan.getActive())
                 .build();
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -9,7 +9,7 @@ export interface Tenant {
     rut: string;
     razonSocial: string;
     nombreFantasia: string;
-    plan: 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
+    plan: 'FREE' | 'BASIC' | 'PRO' | 'BUSINESS' | 'ENTERPRISE';
     modules: string[]; // ['pos', 'inventory', 'reservations', 'facturacion', etc.]
     activo: boolean;
     businessType: string;
@@ -17,21 +17,42 @@ export interface Tenant {
     createdAt?: string;
 }
 
+// Alias for backward compatibility
+export type AdminTenant = Tenant;
+
 export interface AdminUser {
     id: string;
     tenantId: string;
     nombre: string;
+    apellido?: string;
     email: string;
     roles: string[];
     activo: boolean;
 }
 
 export interface PlanConfig {
+    id?: string;
     code: string;
     name: string;
     price: number;
-    features: string[]; // Modules included
-    description: string;
+    currency?: string;
+    features?: string[]; // Modules included
+    includedModules?: string[];
+    description?: string;
+    maxUsers?: number;
+    maxBranches?: number;
+    maxProducts?: number;
+}
+
+export interface ModuleConfig {
+    id: string;
+    code: string;
+    name: string;
+    description?: string;
+    icon: string;
+    category: string;
+    sortOrder?: number;
+    active?: boolean;
 }
 
 @Injectable({
@@ -167,5 +188,40 @@ export class AdminService {
             { key: 'remuneraciones', label: 'RRHH y Remuneraciones', category: 'Admin' },
             { key: 'contabilidad', label: 'Contabilidad', category: 'Admin' }
         ];
+    }
+
+    // API: Get plans from backend
+    getPlansFromApi(): Observable<PlanConfig[]> {
+        return this.http.get<PlanConfig[]>(`${this.apiUrl}/plans`);
+    }
+
+    // API: Get modules from backend
+    getModulesFromApi(): Observable<ModuleConfig[]> {
+        return this.http.get<ModuleConfig[]>(`${this.apiUrl}/modules`);
+    }
+
+    // API: Get modules grouped by category
+    getModulesGrouped(): Observable<Record<string, ModuleConfig[]>> {
+        return this.http.get<Record<string, ModuleConfig[]>>(`${this.apiUrl}/modules/grouped`);
+    }
+
+    // API: Get user permissions
+    getUserPermissions(userId: string): Observable<{ userId: string; modules: any[] }> {
+        return this.http.get<{ userId: string; modules: any[] }>(`${this.apiUrl}/users/${userId}/modules`);
+    }
+
+    // API: Update user permissions
+    updateUserPermissions(userId: string, moduleStates: Record<string, boolean>): Observable<any> {
+        return this.http.put(`${this.apiUrl}/users/${userId}/modules`, moduleStates);
+    }
+
+    // API: Apply preset to user
+    applyUserPreset(userId: string, preset: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/users/${userId}/modules/preset`, { preset });
+    }
+
+    // API: Toggle single module
+    toggleUserModule(userId: string, moduleCode: string, enabled: boolean): Observable<any> {
+        return this.http.post(`${this.apiUrl}/users/${userId}/modules/toggle`, { moduleCode, enabled });
     }
 }

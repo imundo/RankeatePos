@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminService, AdminUser, Tenant } from '@core/services/admin.service';
 
 @Component({
@@ -61,6 +61,7 @@ import { AdminService, AdminUser, Tenant } from '@core/services/admin.service';
                   </td>
                   <td>
                     <div class="actions">
+                      <button class="btn-icon" title="Permisos" (click)="goToPermissions(user)">🔐</button>
                       <button class="btn-icon" title="Editar" (click)="openUserModal(user)">✏️</button>
                     </div>
                   </td>
@@ -197,6 +198,7 @@ import { AdminService, AdminUser, Tenant } from '@core/services/admin.service';
 })
 export class TenantUsersComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private adminService = inject(AdminService);
 
   tenant = signal<Tenant | null>(null);
@@ -314,6 +316,13 @@ export class TenantUsersComponent implements OnInit {
         },
         error: (err) => console.error(err)
       });
+    }
+  }
+
+  goToPermissions(user: AdminUser) {
+    const tenantId = this.tenant()?.id;
+    if (tenantId) {
+      this.router.navigate(['/admin/tenants', tenantId, 'users', user.id, 'permissions']);
     }
   }
 }

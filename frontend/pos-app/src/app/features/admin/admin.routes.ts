@@ -29,5 +29,9 @@ export const ADMIN_ROUTES: Routes = [
     {
         path: 'tenants/:id/users',
         loadComponent: () => import('./tenant-users.component').then(m => m.TenantUsersComponent)
+    },
+    {
+        path: 'tenants/:id/users/:userId/permissions',
+        loadComponent: () => import('./user-permissions.component').then(m => m.UserPermissionsComponent)
     }
 ];
