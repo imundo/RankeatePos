@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
@@ -21,40 +21,40 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
 interface Tenant {
-  id: string;
-  rut: string;
-  razonSocial: string;
-  nombreFantasia: string;
-  businessType: string;
-  plan: string;
-  modules?: string[];
-  activo: boolean;
-  createdAt: string;
+    id: string;
+    rut: string;
+    razonSocial: string;
+    nombreFantasia: string;
+    businessType: string;
+    plan: string;
+    modules?: string[];
+    activo: boolean;
+    createdAt: string;
 }
 
 @Component({
-  selector: 'app-tenant-list',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    TenantEditModalComponent,
-    TableModule,
-    InputTextModule,
-    ButtonModule,
-    TagModule,
-    DropdownModule,
-    ToastModule,
-    ConfirmDialogModule,
-    SkeletonModule,
-    TooltipModule,
-    RippleModule,
-    IconFieldModule,
-    InputIconModule
-  ],
-  providers: [MessageService, ConfirmationService],
-  template: `
+    selector: 'app-tenant-list',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        RouterLink,
+        TenantEditModalComponent,
+        TableModule,
+        InputTextModule,
+        ButtonModule,
+        TagModule,
+        DropdownModule,
+        ToastModule,
+        ConfirmDialogModule,
+        SkeletonModule,
+        TooltipModule,
+        RippleModule,
+        IconFieldModule,
+        InputIconModule
+    ],
+    providers: [MessageService, ConfirmationService],
+    template: `
     <p-toast position="top-right"></p-toast>
     <p-confirmDialog></p-confirmDialog>
     
@@ -86,11 +86,11 @@ interface Tenant {
                 <span class="stat-label">Total Clientes</span>
             </div>
             <div class="stat-item active">
-                <span class="stat-value">{{ tenants().filter(t => t.activo).length }}</span>
+                <span class="stat-value">{{ activeCount() }}</span>
                 <span class="stat-label">Activos</span>
             </div>
             <div class="stat-item inactive">
-                <span class="stat-value">{{ tenants().filter(t => !t.activo).length }}</span>
+                <span class="stat-value">{{ inactiveCount() }}</span>
                 <span class="stat-label">Suspendidos</span>
             </div>
         </div>
@@ -263,7 +263,7 @@ interface Tenant {
         </app-tenant-edit-modal>
     </div>
     `,
-  styles: [`
+    styles: [`
         .admin-page {
             min-height: 100vh;
             background: var(--surface-ground);
@@ -486,145 +486,149 @@ interface Tenant {
     `]
 })
 export class TenantListComponent implements OnInit {
-  private adminService = inject(AdminService);
-  private route = inject(ActivatedRoute);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+    private adminService = inject(AdminService);
+    private route = inject(ActivatedRoute);
+    private messageService = inject(MessageService);
+    private confirmationService = inject(ConfirmationService);
 
-  tenants = signal<Tenant[]>([]);
-  loading = signal(true);
-  statusFilter: string | null = null;
+    tenants = signal<Tenant[]>([]);
+    loading = signal(true);
+    statusFilter: string | null = null;
 
-  statusOptions = [
-    { label: 'Activos', value: 'active' },
-    { label: 'Suspendidos', value: 'inactive' }
-  ];
+    // Computed counts for template (avoids arrow functions in templates)
+    activeCount = computed(() => this.tenants().filter(t => t.activo).length);
+    inactiveCount = computed(() => this.tenants().filter(t => !t.activo).length);
 
-  // Modal State
-  isEditModalOpen = false;
-  selectedTenantId: string | null = null;
-
-  ngOnInit() {
-    const created = this.route.snapshot.queryParams['created'];
-    if (created) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Cliente creado exitosamente'
-      });
-    }
-    this.loadTenants();
-  }
-
-  loadTenants() {
-    this.loading.set(true);
-    this.adminService.getTenants().subscribe({
-      next: (tenants) => {
-        this.tenants.set(tenants as unknown as Tenant[]);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading tenants:', err);
-        this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los clientes'
-        });
-      }
-    });
-  }
-
-  filterByStatus() {
-    // The p-table handles filtering via globalFilterFields
-    // For custom status filter, we could implement a custom filter
-  }
-
-  getAvatarGradient(tenant: Tenant): string {
-    const gradients = [
-      'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      'linear-gradient(135deg, #f59e0b, #d97706)',
-      'linear-gradient(135deg, #10b981, #059669)',
-      'linear-gradient(135deg, #ef4444, #dc2626)',
-      'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+    statusOptions = [
+        { label: 'Activos', value: 'active' },
+        { label: 'Suspendidos', value: 'inactive' }
     ];
-    const index = (tenant.razonSocial?.charCodeAt(0) || 0) % gradients.length;
-    return gradients[index];
-  }
 
-  getIndustryIcon(type: string): string {
-    const icons: Record<string, string> = {
-      'RETAIL': 'pi pi-shopping-cart',
-      'PANADERIA': 'pi pi-star',
-      'RESTAURANT': 'pi pi-star',
-      'SERVICIOS': 'pi pi-briefcase',
-      'OTRO': 'pi pi-building'
-    };
-    return icons[type] || 'pi pi-building';
-  }
+    // Modal State
+    isEditModalOpen = false;
+    selectedTenantId: string | null = null;
 
-  getPlanSeverity(plan: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
-    const severities: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
-      'FREE': 'secondary',
-      'BASIC': 'info',
-      'PRO': 'warning',
-      'BUSINESS': 'success',
-      'ENTERPRISE': 'contrast'
-    };
-    return severities[plan] || 'info';
-  }
-
-  editTenant(tenant: Tenant) {
-    this.selectedTenantId = tenant.id;
-    this.isEditModalOpen = true;
-  }
-
-  closeEditModal() {
-    this.isEditModalOpen = false;
-    this.selectedTenantId = null;
-  }
-
-  onTenantSaved() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Guardado',
-      detail: 'Cambios guardados correctamente'
-    });
-    this.loadTenants();
-  }
-
-  confirmToggleStatus(tenant: Tenant) {
-    this.confirmationService.confirm({
-      message: tenant.activo
-        ? `¿Estás seguro de suspender a "${tenant.razonSocial}"? Los usuarios no podrán acceder.`
-        : `¿Reactivar a "${tenant.razonSocial}"?`,
-      header: tenant.activo ? 'Confirmar Suspensión' : 'Confirmar Activación',
-      icon: tenant.activo ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle',
-      acceptLabel: tenant.activo ? 'Suspender' : 'Activar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: tenant.activo ? 'p-button-danger' : 'p-button-success',
-      accept: () => this.toggleStatus(tenant)
-    });
-  }
-
-  toggleStatus(tenant: Tenant) {
-    this.adminService.updateTenantStatus(tenant.id, !tenant.activo).subscribe({
-      next: () => {
+    ngOnInit() {
+        const created = this.route.snapshot.queryParams['created'];
+        if (created) {
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Éxito',
+                detail: 'Cliente creado exitosamente'
+            });
+        }
         this.loadTenants();
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Estado actualizado',
-          detail: `${tenant.razonSocial} ha sido ${!tenant.activo ? 'activado' : 'suspendido'}`
+    }
+
+    loadTenants() {
+        this.loading.set(true);
+        this.adminService.getTenants().subscribe({
+            next: (tenants) => {
+                this.tenants.set(tenants as unknown as Tenant[]);
+                this.loading.set(false);
+            },
+            error: (err) => {
+                console.error('Error loading tenants:', err);
+                this.loading.set(false);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'No se pudieron cargar los clientes'
+                });
+            }
         });
-      },
-      error: (err) => {
-        console.error('Error toggling status:', err);
+    }
+
+    filterByStatus() {
+        // The p-table handles filtering via globalFilterFields
+        // For custom status filter, we could implement a custom filter
+    }
+
+    getAvatarGradient(tenant: Tenant): string {
+        const gradients = [
+            'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            'linear-gradient(135deg, #f59e0b, #d97706)',
+            'linear-gradient(135deg, #10b981, #059669)',
+            'linear-gradient(135deg, #ef4444, #dc2626)',
+            'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+        ];
+        const index = (tenant.razonSocial?.charCodeAt(0) || 0) % gradients.length;
+        return gradients[index];
+    }
+
+    getIndustryIcon(type: string): string {
+        const icons: Record<string, string> = {
+            'RETAIL': 'pi pi-shopping-cart',
+            'PANADERIA': 'pi pi-star',
+            'RESTAURANT': 'pi pi-star',
+            'SERVICIOS': 'pi pi-briefcase',
+            'OTRO': 'pi pi-building'
+        };
+        return icons[type] || 'pi pi-building';
+    }
+
+    getPlanSeverity(plan: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
+        const severities: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast'> = {
+            'FREE': 'secondary',
+            'BASIC': 'info',
+            'PRO': 'warning',
+            'BUSINESS': 'success',
+            'ENTERPRISE': 'contrast'
+        };
+        return severities[plan] || 'info';
+    }
+
+    editTenant(tenant: Tenant) {
+        this.selectedTenantId = tenant.id;
+        this.isEditModalOpen = true;
+    }
+
+    closeEditModal() {
+        this.isEditModalOpen = false;
+        this.selectedTenantId = null;
+    }
+
+    onTenantSaved() {
         this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado'
+            severity: 'success',
+            summary: 'Guardado',
+            detail: 'Cambios guardados correctamente'
         });
-      }
-    });
-  }
+        this.loadTenants();
+    }
+
+    confirmToggleStatus(tenant: Tenant) {
+        this.confirmationService.confirm({
+            message: tenant.activo
+                ? `¿Estás seguro de suspender a "${tenant.razonSocial}"? Los usuarios no podrán acceder.`
+                : `¿Reactivar a "${tenant.razonSocial}"?`,
+            header: tenant.activo ? 'Confirmar Suspensión' : 'Confirmar Activación',
+            icon: tenant.activo ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle',
+            acceptLabel: tenant.activo ? 'Suspender' : 'Activar',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: tenant.activo ? 'p-button-danger' : 'p-button-success',
+            accept: () => this.toggleStatus(tenant)
+        });
+    }
+
+    toggleStatus(tenant: Tenant) {
+        this.adminService.updateTenantStatus(tenant.id, !tenant.activo).subscribe({
+            next: () => {
+                this.loadTenants();
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Estado actualizado',
+                    detail: `${tenant.razonSocial} ha sido ${!tenant.activo ? 'activado' : 'suspendido'}`
+                });
+            },
+            error: (err) => {
+                console.error('Error toggling status:', err);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'No se pudo cambiar el estado'
+                });
+            }
+        });
+    }
 }
