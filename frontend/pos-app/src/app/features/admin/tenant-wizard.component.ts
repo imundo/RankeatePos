@@ -7,38 +7,38 @@ import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 
 interface WizardStep {
-    title: string;
-    icon: string;
-    completed: boolean;
+  title: string;
+  icon: string;
+  completed: boolean;
 }
 
 interface TenantWizardData {
-    // Step 1: Business
-    rut: string;
-    razonSocial: string;
-    nombreFantasia: string;
-    giro: string;
-    businessType: string;
-    // Step 2: Location
-    direccion: string;
-    comuna: string;
-    region: string;
-    telefono: string;
-    // Step 3: Plan
-    plan: string;
-    // Step 4: Admin User
-    adminEmail: string;
-    adminPassword: string;
-    adminNombre: string;
-    adminApellido: string;
-    adminTelefono: string;
+  // Step 1: Business
+  rut: string;
+  razonSocial: string;
+  nombreFantasia: string;
+  giro: string;
+  businessType: string;
+  // Step 2: Location
+  direccion: string;
+  comuna: string;
+  region: string;
+  telefono: string;
+  // Step 3: Plan
+  plan: string;
+  // Step 4: Admin User
+  adminEmail: string;
+  adminPassword: string;
+  adminNombre: string;
+  adminApellido: string;
+  adminTelefono: string;
 }
 
 @Component({
-    selector: 'app-tenant-wizard',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-tenant-wizard',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="wizard-container">
       <!-- Header -->
       <header class="wizard-header">
@@ -180,32 +180,53 @@ interface TenantWizardData {
 
         <!-- Step 3: Plan -->
         @if (currentStep() === 2) {
-          <div class="step-content">
+          <div class="step-content plan-step">
             <h2>💳 Selección de Plan</h2>
             <p class="step-description">Elige el plan que mejor se adapte al negocio</p>
 
-            <div class="plan-options">
-              @for (plan of plans; track plan.value) {
-                <div 
-                  class="plan-card"
-                  [class.selected]="data.plan === plan.value"
-                  [class.popular]="plan.popular"
-                  (click)="data.plan = plan.value">
-                  @if (plan.popular) {
-                    <span class="popular-badge">Popular</span>
-                  }
-                  <h3>{{ plan.name }}</h3>
-                  <div class="plan-price">
-                    <span class="price">{{ plan.price }}</span>
-                    <span class="period">/mes</span>
-                  </div>
-                  <ul class="plan-features">
-                    @for (feature of plan.features; track feature) {
-                      <li>✓ {{ feature }}</li>
+            <div class="plan-layout">
+              <div class="plan-options">
+                @for (plan of plans; track plan.value) {
+                  <div 
+                    class="plan-card"
+                    [class.selected]="data.plan === plan.value"
+                    [class.popular]="plan.popular"
+                    (click)="data.plan = plan.value">
+                    @if (plan.popular) {
+                      <span class="popular-badge">Recomendado</span>
                     }
-                  </ul>
+                    <h3>{{ plan.name }}</h3>
+                    <div class="plan-price">
+                      <span class="price">{{ plan.price }}</span>
+                      <span class="period">/mes</span>
+                    </div>
+                    <div class="plan-limits">
+                      <span>{{ plan.users }} usuarios</span>
+                      <span>{{ plan.products }}</span>
+                    </div>
+                    <ul class="plan-features">
+                      @for (feature of plan.features; track feature) {
+                        <li>✓ {{ feature }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+
+              <!-- Modules Preview -->
+              <div class="modules-preview">
+                <h4>🧩 Módulos Incluidos en {{ getPlanLabel(data.plan) }}</h4>
+                <div class="modules-list">
+                  @for (module of getModulesForSelectedPlan(); track module.code) {
+                    <div class="module-item" [class.included]="module.included">
+                      <span class="module-icon">{{ module.icon }}</span>
+                      <span class="module-name">{{ module.name }}</span>
+                      <span class="module-status">{{ module.included ? '✅' : '🔒' }}</span>
+                    </div>
+                  }
                 </div>
-              }
+                <p class="upgrade-hint">💡 Puedes cambiar de plan en cualquier momento</p>
+              </div>
             </div>
           </div>
         }
@@ -334,7 +355,7 @@ interface TenantWizardData {
       </footer>
     </div>
   `,
-    styles: [`
+  styles: [`
     .wizard-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
@@ -550,11 +571,94 @@ interface TenantWizardData {
     .industry-icon { font-size: 2rem; }
     .industry-name { font-size: 0.8rem; }
 
+    /* Plan Layout */
+    .plan-step .plan-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+
     /* Plan Options */
     .plan-options {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .plan-limits {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .plan-limits span {
+      padding: 0.25rem 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+
+    /* Modules Preview */
+    .modules-preview {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: sticky;
+      top: 2rem;
+    }
+
+    .modules-preview h4 {
+      margin: 0 0 1.5rem;
+      font-size: 1rem;
+    }
+
+    .modules-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .module-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.02);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .module-item.included {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .module-item:not(.included) {
+      opacity: 0.5;
+    }
+
+    .module-icon {
+      font-size: 1.25rem;
+    }
+
+    .module-name {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .module-status {
+      font-size: 0.9rem;
+    }
+
+    .upgrade-hint {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
     }
 
     .plan-card {
@@ -738,137 +842,168 @@ interface TenantWizardData {
   `]
 })
 export class TenantWizardComponent {
-    private http = inject(HttpClient);
-    private router = inject(Router);
-    private authService = inject(AuthService);
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
-    currentStep = signal(0);
-    loading = signal(false);
-    error = signal<string | null>(null);
+  currentStep = signal(0);
+  loading = signal(false);
+  error = signal<string | null>(null);
 
-    steps: WizardStep[] = [
-        { title: 'Negocio', icon: '📋', completed: false },
-        { title: 'Ubicación', icon: '📍', completed: false },
-        { title: 'Plan', icon: '💳', completed: false },
-        { title: 'Admin', icon: '👤', completed: false },
-        { title: 'Confirmar', icon: '✅', completed: false }
-    ];
+  steps: WizardStep[] = [
+    { title: 'Negocio', icon: '📋', completed: false },
+    { title: 'Ubicación', icon: '📍', completed: false },
+    { title: 'Plan', icon: '💳', completed: false },
+    { title: 'Admin', icon: '👤', completed: false },
+    { title: 'Confirmar', icon: '✅', completed: false }
+  ];
 
-    industries = [
-        { value: 'RETAIL', label: 'Retail', icon: '🛒' },
-        { value: 'PANADERIA', label: 'Panadería', icon: '🥖' },
-        { value: 'EDUCACION', label: 'Cursos', icon: '🎓' },
-        { value: 'EDITORIAL', label: 'Editorial', icon: '📚' },
-        { value: 'RESTAURANTE', label: 'Restaurant', icon: '🍕' }
-    ];
+  industries = [
+    { value: 'RETAIL', label: 'Retail', icon: '🛒' },
+    { value: 'PANADERIA', label: 'Panadería', icon: '🥖' },
+    { value: 'EDUCACION', label: 'Cursos', icon: '🎓' },
+    { value: 'EDITORIAL', label: 'Editorial', icon: '📚' },
+    { value: 'RESTAURANTE', label: 'Restaurant', icon: '🍕' }
+  ];
 
-    plans = [
-        {
-            value: 'FREE',
-            name: 'Starter',
-            price: 'Gratis',
-            popular: false,
-            features: ['1 usuario', '100 productos', 'POS básico', 'Sin soporte']
+  plans = [
+    {
+      value: 'FREE',
+      name: 'Starter',
+      price: 'Gratis',
+      users: '1',
+      products: '100 productos',
+      popular: false,
+      features: ['POS básico', 'Inventario simple'],
+      modules: ['pos']
+    },
+    {
+      value: 'PRO',
+      name: 'Pro',
+      price: '$29.990',
+      users: '3',
+      products: 'Ilimitados',
+      popular: true,
+      features: ['Facturación electrónica', 'CRM básico', 'Soporte email'],
+      modules: ['pos', 'inventory', 'invoicing', 'crm']
+    },
+    {
+      value: 'BUSINESS',
+      name: 'Business',
+      price: '$79.990',
+      users: '10',
+      products: 'Ilimitados',
+      popular: false,
+      features: ['Multi-sucursal', 'Fidelización', 'Reportes avanzados', 'Soporte 24/7'],
+      modules: ['pos', 'inventory', 'invoicing', 'crm', 'loyalty', 'kds', 'reservations', 'payroll', 'accounting']
+    }
+  ];
+
+  allModules = [
+    { code: 'pos', name: 'Punto de Venta', icon: '💰' },
+    { code: 'inventory', name: 'Inventario', icon: '📦' },
+    { code: 'invoicing', name: 'Facturación Electrónica', icon: '📄' },
+    { code: 'crm', name: 'Clientes (CRM)', icon: '👥' },
+    { code: 'loyalty', name: 'Fidelización', icon: '⭐' },
+    { code: 'reservations', name: 'Reservas', icon: '📅' },
+    { code: 'kds', name: 'Pantalla Cocina (KDS)', icon: '🍳' },
+    { code: 'payroll', name: 'Remuneraciones', icon: '💼' },
+    { code: 'accounting', name: 'Contabilidad', icon: '📊' }
+  ];
+
+  data: TenantWizardData = {
+    rut: '',
+    razonSocial: '',
+    nombreFantasia: '',
+    giro: '',
+    businessType: '',
+    direccion: '',
+    comuna: '',
+    region: '',
+    telefono: '',
+    plan: 'PRO',
+    adminEmail: '',
+    adminPassword: '',
+    adminNombre: '',
+    adminApellido: '',
+    adminTelefono: ''
+  };
+
+  canProceed(): boolean {
+    switch (this.currentStep()) {
+      case 0:
+        return !!(this.data.rut && this.data.razonSocial && this.data.giro && this.data.businessType);
+      case 1:
+        return true; // Location is optional
+      case 2:
+        return !!this.data.plan;
+      case 3:
+        return !!(this.data.adminEmail && this.data.adminPassword && this.data.adminNombre && this.data.adminPassword.length >= 6);
+      case 4:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  goToStep(step: number) {
+    if (step <= this.currentStep()) {
+      this.currentStep.set(step);
+    }
+  }
+
+  nextStep() {
+    if (this.currentStep() < this.steps.length - 1) {
+      this.currentStep.update(s => s + 1);
+    }
+  }
+
+  prevStep() {
+    if (this.currentStep() > 0) {
+      this.currentStep.update(s => s - 1);
+    }
+  }
+
+  getIndustryLabel(value: string): string {
+    return this.industries.find(i => i.value === value)?.label || value;
+  }
+
+  getPlanLabel(value: string): string {
+    return this.plans.find(p => p.value === value)?.name || value;
+  }
+
+  getModulesForSelectedPlan(): { code: string; name: string; icon: string; included: boolean }[] {
+    const selectedPlan = this.plans.find(p => p.value === this.data.plan);
+    const planModules = selectedPlan?.modules || [];
+
+    return this.allModules.map(module => ({
+      ...module,
+      included: planModules.includes(module.code)
+    }));
+  }
+
+  submit() {
+    this.loading.set(true);
+    this.error.set(null);
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.authService.getToken()}`
+    });
+
+    this.http.post(`${environment.authUrl}/api/admin/tenants/wizard`, this.data, { headers })
+      .subscribe({
+        next: (result: any) => {
+          this.loading.set(false);
+          // Navigate to tenant list with success message
+          this.router.navigate(['/admin/tenants'], {
+            queryParams: { created: result.tenantId }
+          });
         },
-        {
-            value: 'PRO',
-            name: 'Pro',
-            price: '$29.990',
-            popular: true,
-            features: ['3 usuarios', 'Productos ilimitados', 'Branding', 'CRM básico', 'Soporte email']
-        },
-        {
-            value: 'BUSINESS',
-            name: 'Business',
-            price: '$79.990',
-            popular: false,
-            features: ['10 usuarios', 'Multi-sucursal', 'Fidelización', 'Reportes avanzados', 'Soporte prioritario']
+        error: (err) => {
+          this.loading.set(false);
+          this.error.set(err.error?.message || 'Error al crear el cliente');
         }
-    ];
-
-    data: TenantWizardData = {
-        rut: '',
-        razonSocial: '',
-        nombreFantasia: '',
-        giro: '',
-        businessType: '',
-        direccion: '',
-        comuna: '',
-        region: '',
-        telefono: '',
-        plan: 'PRO',
-        adminEmail: '',
-        adminPassword: '',
-        adminNombre: '',
-        adminApellido: '',
-        adminTelefono: ''
-    };
-
-    canProceed(): boolean {
-        switch (this.currentStep()) {
-            case 0:
-                return !!(this.data.rut && this.data.razonSocial && this.data.giro && this.data.businessType);
-            case 1:
-                return true; // Location is optional
-            case 2:
-                return !!this.data.plan;
-            case 3:
-                return !!(this.data.adminEmail && this.data.adminPassword && this.data.adminNombre && this.data.adminPassword.length >= 6);
-            case 4:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    goToStep(step: number) {
-        if (step <= this.currentStep()) {
-            this.currentStep.set(step);
-        }
-    }
-
-    nextStep() {
-        if (this.currentStep() < this.steps.length - 1) {
-            this.currentStep.update(s => s + 1);
-        }
-    }
-
-    prevStep() {
-        if (this.currentStep() > 0) {
-            this.currentStep.update(s => s - 1);
-        }
-    }
-
-    getIndustryLabel(value: string): string {
-        return this.industries.find(i => i.value === value)?.label || value;
-    }
-
-    getPlanLabel(value: string): string {
-        return this.plans.find(p => p.value === value)?.name || value;
-    }
-
-    submit() {
-        this.loading.set(true);
-        this.error.set(null);
-
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.authService.getToken()}`
-        });
-
-        this.http.post(`${environment.authUrl}/api/admin/tenants/wizard`, this.data, { headers })
-            .subscribe({
-                next: (result: any) => {
-                    this.loading.set(false);
-                    // Navigate to tenant list with success message
-                    this.router.navigate(['/admin/tenants'], {
-                        queryParams: { created: result.tenantId }
-                    });
-                },
-                error: (err) => {
-                    this.loading.set(false);
-                    this.error.set(err.error?.message || 'Error al crear el cliente');
-                }
-            });
-    }
+      });
+  }
 }
