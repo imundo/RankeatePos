@@ -37,9 +37,9 @@ public class Role {
     @Column(length = 200)
     private String descripcion;
 
+    @Column(name = "permisos", columnDefinition = "text[]")
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Builder.Default
-    private List<String> permisos = new ArrayList<>();
+    private String[] permisos;
 
     @Column(name = "es_sistema", nullable = false)
     @Builder.Default
@@ -60,7 +60,13 @@ public class Role {
 
     // Helpers
     public boolean hasPermission(String permission) {
-        return permisos != null && permisos.contains(permission);
+        if (permisos == null)
+            return false;
+        for (String p : permisos) {
+            if (p.equals(permission))
+                return true;
+        }
+        return false;
     }
 
     public boolean isSystemRole() {
