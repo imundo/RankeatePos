@@ -8,13 +8,14 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/http/auth.interceptor';
 import { errorInterceptor } from './core/http/error.interceptor';
+import { branchContextInterceptor } from './core/interceptors/branch-context.interceptor';
 
 export const appConfig: ApplicationConfig = {
     providers: [
         provideZoneChangeDetection({ eventCoalescing: true }),
         provideRouter(routes, withPreloading(PreloadAllModules)),
         provideHttpClient(
-            withInterceptors([authInterceptor, errorInterceptor])
+            withInterceptors([authInterceptor, branchContextInterceptor, errorInterceptor])
         ),
         provideAnimations(),
         provideServiceWorker('ngsw-worker.js', {
