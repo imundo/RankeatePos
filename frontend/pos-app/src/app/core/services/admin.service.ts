@@ -228,4 +228,101 @@ export class AdminService {
     toggleUserModule(userId: string, moduleCode: string, enabled: boolean): Observable<any> {
         return this.http.post(`${this.apiUrl}/users/${userId}/modules/toggle`, { moduleCode, enabled });
     }
+
+    // ================== ROLES API ==================
+
+    getRoles(): Observable<Role[]> {
+        return this.http.get<Role[]>(`${environment.authUrl}/roles`);
+    }
+
+    getRolesForTenant(tenantId: string): Observable<Role[]> {
+        return this.http.get<Role[]>(`${environment.authUrl}/roles/tenant/${tenantId}`);
+    }
+
+    getRole(id: string): Observable<Role> {
+        return this.http.get<Role>(`${environment.authUrl}/roles/${id}`);
+    }
+
+    createRole(role: CreateRoleRequest): Observable<Role> {
+        return this.http.post<Role>(`${environment.authUrl}/roles`, role);
+    }
+
+    createRoleForTenant(tenantId: string, role: CreateRoleRequest): Observable<Role> {
+        return this.http.post<Role>(`${environment.authUrl}/roles/tenant/${tenantId}`, role);
+    }
+
+    updateRole(id: string, role: UpdateRoleRequest): Observable<Role> {
+        return this.http.put<Role>(`${environment.authUrl}/roles/${id}`, role);
+    }
+
+    updateRolePermissions(id: string, permissions: string[]): Observable<Role> {
+        return this.http.patch<Role>(`${environment.authUrl}/roles/${id}/permissions`, { permissions });
+    }
+
+    deleteRole(id: string): Observable<void> {
+        return this.http.delete<void>(`${environment.authUrl}/roles/${id}`);
+    }
+
+    // ================== AUDIT LOGS API ==================
+
+    getAuditLogs(tenantId: string, page = 0, size = 20): Observable<PagedAuditLogs> {
+        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/tenant/${tenantId}?page=${page}&size=${size}`);
+    }
+
+    getUserAuditLogs(userId: string, page = 0, size = 20): Observable<PagedAuditLogs> {
+        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/user/${userId}?page=${page}&size=${size}`);
+    }
+
+    getRecentAuditLogs(tenantId: string, days = 7, page = 0, size = 20): Observable<PagedAuditLogs> {
+        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/recent/${tenantId}?days=${days}&page=${page}&size=${size}`);
+    }
+}
+
+// Role interfaces
+export interface Role {
+    id: string;
+    tenantId?: string;
+    nombre: string;
+    descripcion?: string;
+    permisos: string[];
+    esSistema: boolean;
+    activo: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface CreateRoleRequest {
+    nombre: string;
+    descripcion?: string;
+    permisos: string[];
+}
+
+export interface UpdateRoleRequest {
+    nombre?: string;
+    descripcion?: string;
+    permisos?: string[];
+}
+
+// AuditLog interfaces
+export interface AuditLog {
+    id: string;
+    tenantId?: string;
+    userId?: string;
+    userEmail?: string;
+    action: string;
+    entityType?: string;
+    entityId?: string;
+    description?: string;
+    oldValue?: string;
+    newValue?: string;
+    ipAddress?: string;
+    createdAt: string;
+}
+
+export interface PagedAuditLogs {
+    content: AuditLog[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
 }
