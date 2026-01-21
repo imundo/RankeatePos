@@ -457,7 +457,7 @@ export class ModulesCatalogComponent implements OnInit {
       next: (tenants) => {
         const data = tenants.map(tenant => ({
           tenant,
-          modules: this.getModulesForPlan(tenant.plan),
+          modules: this.mapTenantModules(tenant.modules),
           expanded: false
         }));
         this.tenantsData.set(data);
@@ -470,6 +470,19 @@ export class ModulesCatalogComponent implements OnInit {
     });
   }
 
+  mapTenantModules(modulesArray: string[] | undefined): Record<string, boolean> {
+    const result: Record<string, boolean> = {};
+    const activeModules = new Set(modulesArray || []);
+
+    // Initialize all modules as false, then set true for active ones
+    ALL_MODULES.forEach(m => {
+      result[m.code] = activeModules.has(m.code);
+    });
+    return result;
+  }
+
+  // Deprecated: getModulesForPlan is no longer the primary source of truth, 
+  // but we keep it referenced if needed for new tenants defaults.
   getModulesForPlan(plan: string): Record<string, boolean> {
     const planModules: Record<string, string[]> = {
       'FREE': ['pos'],
@@ -519,9 +532,19 @@ export class ModulesCatalogComponent implements OnInit {
   }
 
   saveModules(item: TenantModules) {
-    console.log('Saving modules for', item.tenant.razonSocial, item.modules);
-    // TODO: Call API to save modules
-    alert(`Módulos guardados para ${item.tenant.razonSocial}`);
+    this.loading.set(true);
+    this.adminService.updateTenantModules(item.tenant.id, item.modules).subscribe({
+      next: () => {
+        // Success feedback could be a toast, for now alert is okay or just console
+        console.log(`Módulos actualizados para ${item.tenant.razonSocial}`);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error saving modules:', err);
+        alert('Error al guardar los módulos. Intente nuevamente.');
+        this.loading.set(false);
+      }
+    });
   }
 
   getActiveModuleCount(item: TenantModules): number {
