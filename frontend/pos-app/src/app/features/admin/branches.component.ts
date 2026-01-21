@@ -5,10 +5,10 @@ import { BranchService, Branch } from '../../core/services/branches.service';
 import { LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star } from 'lucide-angular';
 
 @Component({
-    selector: 'app-branches',
-    standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
-    template: `
+  selector: 'app-branches',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule.pick({ Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star })],
+  template: `
     <div class="p-6 bg-slate-50 min-h-screen">
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
@@ -177,92 +177,92 @@ import { LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash
   `
 })
 export class BranchesComponent implements OnInit {
-    private branchService = inject(BranchService);
-    private fb = inject(FormBuilder);
+  private branchService = inject(BranchService);
+  private fb = inject(FormBuilder);
 
-    branches: Branch[] = [];
-    showModal = false;
-    isEditing = false;
-    isLoading = false;
-    editingId: string | null = null;
+  branches: Branch[] = [];
+  showModal = false;
+  isEditing = false;
+  isLoading = false;
+  editingId: string | null = null;
 
-    branchForm: FormGroup = this.fb.group({
-        codigo: ['', [Validators.required, Validators.pattern('^[A-Z0-9-]+$')]],
-        nombre: ['', Validators.required],
-        direccion: ['', Validators.required],
-        comuna: ['', Validators.required],
-        ciudad: [''],
-        telefono: [''],
-        email: ['', [Validators.email]]
+  branchForm: FormGroup = this.fb.group({
+    codigo: ['', [Validators.required, Validators.pattern('^[A-Z0-9-]+$')]],
+    nombre: ['', Validators.required],
+    direccion: ['', Validators.required],
+    comuna: ['', Validators.required],
+    ciudad: [''],
+    telefono: [''],
+    email: ['', [Validators.email]]
+  });
+
+  ngOnInit() {
+    this.loadBranches();
+  }
+
+  loadBranches() {
+    this.branchService.getBranches().subscribe({
+      next: (data) => this.branches = data,
+      error: (err) => console.error('Error loading branches', err)
     });
+  }
 
-    ngOnInit() {
+  openModal() {
+    this.isEditing = false;
+    this.editingId = null;
+    this.branchForm.reset();
+    this.showModal = true;
+  }
+
+  editBranch(branch: Branch) {
+    this.isEditing = true;
+    this.editingId = branch.id;
+    this.branchForm.patchValue(branch);
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+    this.branchForm.reset();
+  }
+
+  onSubmit() {
+    if (this.branchForm.invalid) return;
+
+    this.isLoading = true;
+    const data = this.branchForm.value;
+
+    const request = this.isEditing && this.editingId
+      ? this.branchService.updateBranch(this.editingId, data)
+      : this.branchService.createBranch(data);
+
+    request.subscribe({
+      next: () => {
         this.loadBranches();
+        this.closeModal();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error saving branch', err);
+        this.isLoading = false;
+        // Should show toast
+      }
+    });
+  }
+
+  deleteBranch(branch: Branch) {
+    if (confirm(`¿Estás seguro de eliminar la sucursal ${branch.nombre}?`)) {
+      this.branchService.deleteBranch(branch.id).subscribe({
+        next: () => this.loadBranches(),
+        error: (err) => console.error('Error deleting branch', err)
+      });
     }
+  }
 
-    loadBranches() {
-        this.branchService.getBranches().subscribe({
-            next: (data) => this.branches = data,
-            error: (err) => console.error('Error loading branches', err)
-        });
-    }
-
-    openModal() {
-        this.isEditing = false;
-        this.editingId = null;
-        this.branchForm.reset();
-        this.showModal = true;
-    }
-
-    editBranch(branch: Branch) {
-        this.isEditing = true;
-        this.editingId = branch.id;
-        this.branchForm.patchValue(branch);
-        this.showModal = true;
-    }
-
-    closeModal() {
-        this.showModal = false;
-        this.branchForm.reset();
-    }
-
-    onSubmit() {
-        if (this.branchForm.invalid) return;
-
-        this.isLoading = true;
-        const data = this.branchForm.value;
-
-        const request = this.isEditing && this.editingId
-            ? this.branchService.updateBranch(this.editingId, data)
-            : this.branchService.createBranch(data);
-
-        request.subscribe({
-            next: () => {
-                this.loadBranches();
-                this.closeModal();
-                this.isLoading = false;
-            },
-            error: (err) => {
-                console.error('Error saving branch', err);
-                this.isLoading = false;
-                // Should show toast
-            }
-        });
-    }
-
-    deleteBranch(branch: Branch) {
-        if (confirm(`¿Estás seguro de eliminar la sucursal ${branch.nombre}?`)) {
-            this.branchService.deleteBranch(branch.id).subscribe({
-                next: () => this.loadBranches(),
-                error: (err) => console.error('Error deleting branch', err)
-            });
-        }
-    }
-
-    setPrincipal(branch: Branch) {
-        this.branchService.setPrincipal(branch.id).subscribe({
-            next: () => this.loadBranches(),
-            error: (err) => console.error('Error setting principal branch', err)
-        });
-    }
+  setPrincipal(branch: Branch) {
+    this.branchService.setPrincipal(branch.id).subscribe({
+      next: () => this.loadBranches(),
+      error: (err) => console.error('Error setting principal branch', err)
+    });
+  }
 }
