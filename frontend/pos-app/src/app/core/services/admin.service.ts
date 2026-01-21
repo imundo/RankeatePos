@@ -126,54 +126,19 @@ export class AdminService {
         return this.http.put<AdminUser>(`${this.apiUrl}/users/${userId}`, data);
     }
 
-    // Demo / Mock Data for specific industries (aligned with User's image)
-    getDemoTenants(): Tenant[] {
-        return [
-            {
-                id: 'demo-bakery',
-                rut: '76.123.456-7',
-                razonSocial: 'Panadería El Trigal SpA',
-                nombreFantasia: 'Panadería El Trigal',
-                plan: 'PRO',
-                modules: ['pos', 'inventory', 'facturacion'],
-                activo: true,
-                businessType: 'BAKERY',
-                logoUrl: 'assets/icons/bread.png'
-            },
-            {
-                id: 'demo-academy',
-                rut: '76.999.888-1',
-                razonSocial: 'Academia Pro Ltda',
-                nombreFantasia: 'Academia Pro',
-                plan: 'BASIC',
-                modules: ['pos', 'reservations'],
-                activo: true,
-                businessType: 'EDUCATION',
-                logoUrl: 'assets/icons/education.png'
-            },
-            {
-                id: 'demo-minimarket',
-                rut: '76.555.444-2',
-                razonSocial: 'Minimarket Don Pedro',
-                nombreFantasia: 'Minimarket Don Pedro',
-                plan: 'PRO',
-                modules: ['pos', 'inventory', 'facturacion', 'customer-loyalty'],
-                activo: true,
-                businessType: 'RETAIL',
-                logoUrl: 'assets/icons/cart.png'
-            },
-            {
-                id: 'demo-deli',
-                rut: '76.333.222-3',
-                razonSocial: 'Charcutería La Selecta',
-                nombreFantasia: 'Charcutería La Selecta',
-                plan: 'ENTERPRISE',
-                modules: ['pos', 'inventory', 'facturacion', 'customer-loyalty', 'reservations'],
-                activo: true,
-                businessType: 'DELI',
-                logoUrl: 'assets/icons/cheese.png'
-            }
-        ];
+    // Get user by ID
+    getUser(userId: string): Observable<AdminUser> {
+        return this.http.get<AdminUser>(`${this.apiUrl}/users/${userId}`);
+    }
+
+    // Delete user
+    deleteUser(userId: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/users/${userId}`);
+    }
+
+    // Toggle user status
+    toggleUserStatus(userId: string, active: boolean): Observable<AdminUser> {
+        return this.http.patch<AdminUser>(`${this.apiUrl}/users/${userId}/status`, { active });
     }
 
     getModulesList(): { key: string, label: string, category: string }[] {

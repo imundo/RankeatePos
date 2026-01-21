@@ -239,13 +239,7 @@ export class TenantUsersComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading users', err);
-        // Fallback for Demo
-        if (tenantId === 'demo-bakery') {
-          this.users.set([
-            { id: '1', tenantId, nombre: 'Juan Panadero', email: 'juan@demo.cl', roles: ['ADMIN', 'CASHIER'], activo: true },
-            { id: '2', tenantId, nombre: 'Maria Caja', email: 'maria@demo.cl', roles: ['CASHIER'], activo: true }
-          ]);
-        }
+        this.users.set([]);
         this.loading.set(false);
       }
     });
