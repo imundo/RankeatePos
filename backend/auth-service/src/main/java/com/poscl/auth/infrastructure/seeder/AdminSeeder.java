@@ -108,7 +108,7 @@ public class AdminSeeder implements CommandLineRunner {
                 .codigo("SN02")
                 .direccion("Av. Vitacura 5678")
                 .telefono("+56933334444")
-                .activo(true)
+                .activa(true)
                 .build());
 
         tenantRepository.save(tenant);
