@@ -22,6 +22,7 @@ import { SalesEventService } from '@core/services/sales-event.service';
 import { StockService } from '@core/services/stock.service'; // Import StockService
 import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
+import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 interface CartItem {
   variantId: string;
@@ -47,7 +48,9 @@ interface CartItem {
     DialogModule,
     ToastModule,
     BadgeModule,
-    InputNumberModule
+    BadgeModule,
+    InputNumberModule,
+    BranchSwitcherComponent
   ],
   providers: [MessageService],
   template: `
@@ -61,6 +64,7 @@ interface CartItem {
             <span class="logo-emoji">{{ industryConfig().icon }}</span>
           }
           <span class="tenant-name">{{ tenantName() }}</span>
+          <app-branch-switcher class="ml-4"></app-branch-switcher>
         </div>
         <div class="header-right">
           <!-- WhatsApp Notifications -->

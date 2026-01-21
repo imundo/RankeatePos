@@ -9,6 +9,7 @@ import { SalesEventService, ActivityEvent } from '@core/services/sales-event.ser
 import { UserPreferencesService, ModuleInfo } from '@core/services/user-preferences.service';
 import { OfflineService } from '@core/offline/offline.service';
 import { environment } from '@env/environment';
+import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 interface DashboardStats {
   ventasHoy: number;
@@ -31,7 +32,7 @@ interface StatCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BranchSwitcherComponent],
   template: `
     <div class="dashboard-mobile">
       <!-- Compact Mobile Header -->
@@ -60,6 +61,9 @@ interface StatCard {
             <span class="status-dot" [class.online]="isOnline()"></span>
             {{ isOnline() ? 'Sincronizado' : 'Sin conexión' }}
           </p>
+          <div class="mt-2">
+            <app-branch-switcher></app-branch-switcher>
+          </div>
         </div>
         <div class="welcome-icon">👋</div>
       </section>

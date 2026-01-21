@@ -656,6 +656,7 @@ export class AdminDashboardComponent implements OnInit {
     { label: 'Ver Clientes', description: 'Gestionar todos los clientes', icon: '🏢', route: '/admin/tenants', color: '#6366f1' },
     { label: 'Nuevo Cliente', description: 'Crear con wizard paso a paso', icon: '🚀', route: '/admin/tenants/new', color: '#8b5cf6' },
     { label: 'Planes', description: 'Configurar membresías', icon: '💳', route: '/admin/plans', color: '#10b981' },
+    { label: 'Sucursales', description: 'Gestionar ubicaciones', icon: '🏢', route: '/admin/branches', color: '#3b82f6' },
     { label: 'Módulos', description: 'Gestión de funcionalidades', icon: '📊', route: '/admin/modules', color: '#f59e0b' },
     { label: 'Industrias', description: 'Tipos de negocio', icon: '🏪', route: '/admin/industries', color: '#ec4899' }
   ];

@@ -5,6 +5,7 @@ import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
+import { BranchesComponent } from '../admin/branches.component';
 
 interface User {
   id: string;
@@ -14,19 +15,10 @@ interface User {
   activo: boolean;
 }
 
-interface Branch {
-  id: string;
-  codigo: string;
-  nombre: string;
-  direccion: string;
-  telefono: string;
-  activa: boolean;
-}
-
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BranchesComponent],
   template: `
     <div class="settings-container">
       <header class="settings-header">
@@ -149,44 +141,9 @@ interface Branch {
           </section>
         }
 
-        <!-- Branches Tab -->
+        <!-- Branches Tab using Component -->
         @if (activeTab() === 'branches') {
-          <section class="section">
-            <div class="section-header">
-              <h3>📍 Sucursales</h3>
-              <button class="btn-add" (click)="openBranchDialog()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-                Nueva Sucursal
-              </button>
-            </div>
-
-            <div class="branches-grid">
-              @for (branch of branches(); track branch.id) {
-                <div class="branch-card" [class.inactive]="!branch.activa">
-                  <div class="branch-header">
-                    <span class="branch-code">{{ branch.codigo }}</span>
-                    <span class="branch-status" [class.active]="branch.activa">
-                      {{ branch.activa ? 'Activa' : 'Inactiva' }}
-                    </span>
-                  </div>
-                  <h4 class="branch-name">{{ branch.nombre }}</h4>
-                  <p class="branch-address">{{ branch.direccion }}</p>
-                  <p class="branch-phone">📞 {{ branch.telefono }}</p>
-                  <div class="branch-actions">
-                    <button class="btn-action" (click)="editBranch(branch)">Editar</button>
-                  </div>
-                </div>
-              } @empty {
-                <div class="empty-state full">
-                  <span>🏪</span>
-                  <p>No hay sucursales registradas</p>
-                  <button class="btn-add" (click)="openBranchDialog()">Agregar Primera Sucursal</button>
-                </div>
-              }
-            </div>
-          </section>
+          <app-branches></app-branches>
         }
 
         <!-- Taxes Tab -->
@@ -430,56 +387,6 @@ interface Branch {
       &.danger:hover { background: rgba(239, 68, 68, 0.3); }
     }
 
-    /* Branches Grid */
-    .branches-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-
-    .branch-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 1.25rem;
-      transition: all 0.2s;
-
-      &:hover { border-color: rgba(99, 102, 241, 0.3); }
-      &.inactive { opacity: 0.6; }
-    }
-
-    .branch-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-    }
-
-    .branch-code {
-      padding: 0.25rem 0.5rem;
-      background: rgba(99, 102, 241, 0.2);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .branch-status {
-      padding: 0.25rem 0.5rem;
-      background: rgba(239, 68, 68, 0.2);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      &.active { background: rgba(16, 185, 129, 0.2); color: #10B981; }
-    }
-
-    .branch-name { margin: 0 0 0.5rem; font-size: 1.1rem; }
-    .branch-address { margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
-    .branch-phone { margin: 0.5rem 0; color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; }
-
-    .branch-actions {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
     /* Taxes */
     .tax-config { display: flex; flex-direction: column; gap: 1rem; }
 
@@ -523,7 +430,6 @@ interface Branch {
       padding: 3rem;
       color: rgba(255, 255, 255, 0.5);
       span { font-size: 3rem; margin-bottom: 1rem; }
-      &.full { grid-column: 1 / -1; }
     }
   `]
 })
@@ -535,7 +441,6 @@ export class SettingsComponent implements OnInit {
 
   activeTab = signal<'general' | 'users' | 'branches' | 'taxes'>('general');
   users = signal<User[]>([]);
-  branches = signal<Branch[]>([]);
   selectedCountry = 'CL';
 
   userName = () => this.authService.user()?.nombre || 'Usuario';
@@ -561,7 +466,6 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
-    this.loadBranches();
   }
 
   loadUsers() {
@@ -573,19 +477,6 @@ export class SettingsComponent implements OnInit {
           this.users.set([
             { id: '1', nombre: 'Admin Principal', email: 'admin@demo.cl', rol: 'ADMIN', activo: true },
             { id: '2', nombre: 'Cajero Juan', email: 'cajero@demo.cl', rol: 'CAJERO', activo: true },
-          ]);
-        }
-      });
-  }
-
-  loadBranches() {
-    this.http.get<Branch[]>(`${this.baseUrl}/branches`, { headers: this.getHeaders() })
-      .subscribe({
-        next: (branches) => this.branches.set(branches),
-        error: () => {
-          // Mock data for demo
-          this.branches.set([
-            { id: '1', codigo: 'SUC-001', nombre: 'Casa Matriz', direccion: 'Av. Principal 123', telefono: '+56 9 1234 5678', activa: true },
           ]);
         }
       });
@@ -603,14 +494,6 @@ export class SettingsComponent implements OnInit {
     if (confirm(`¿Eliminar usuario ${user.nombre}?`)) {
       console.log('Delete user', user);
     }
-  }
-
-  openBranchDialog(branch?: Branch) {
-    console.log('Open branch dialog', branch);
-  }
-
-  editBranch(branch: Branch) {
-    this.openBranchDialog(branch);
   }
 
   logout() {

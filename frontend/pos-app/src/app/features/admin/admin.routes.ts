@@ -46,6 +46,10 @@ export const ADMIN_ROUTES: Routes = [
     {
         path: 'industries',
         loadComponent: () => import('./industries-catalog.component').then(m => m.IndustriesCatalogComponent)
+    },
+    {
+        path: 'branches',
+        loadComponent: () => import('./branches.component').then(m => m.BranchesComponent)
     }
 ];
 
