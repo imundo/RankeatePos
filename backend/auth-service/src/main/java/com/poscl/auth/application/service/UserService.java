@@ -365,4 +365,64 @@ public class UserService {
                 user.setUpdatedAt(Instant.now());
                 return userRepository.save(user);
         }
+
+        // ================== ADMIN ACTIONS ==================
+
+        /**
+         * Admin resets user password
+         */
+        public void adminResetPassword(UUID userId, String newPassword) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new DomainException("USER_NOT_FOUND",
+                                                "Usuario no encontrado", HttpStatus.NOT_FOUND));
+
+                user.setPasswordHash(passwordEncoder.encode(newPassword));
+                user.setUpdatedAt(Instant.now());
+                userRepository.save(user);
+                log.info("Admin reset password for user: {}", user.getEmail());
+        }
+
+        /**
+         * Toggle user active status
+         */
+        public User toggleStatus(UUID userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new DomainException("USER_NOT_FOUND",
+                                                "Usuario no encontrado", HttpStatus.NOT_FOUND));
+
+                user.setActivo(!Boolean.TRUE.equals(user.getActivo()));
+                user.setUpdatedAt(Instant.now());
+                log.info("Toggled user {} status to: {}", user.getEmail(), user.getActivo());
+                return userRepository.save(user);
+        }
+
+        /**
+         * Assign branches to user
+         */
+        public User assignBranches(UUID userId, Set<UUID> branchIds) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new DomainException("USER_NOT_FOUND",
+                                                "Usuario no encontrado", HttpStatus.NOT_FOUND));
+
+                Set<Branch> branches = branchIds.stream()
+                                .map(id -> branchRepository.findById(id)
+                                                .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND",
+                                                                "Sucursal no encontrada: " + id, HttpStatus.NOT_FOUND)))
+                                .collect(Collectors.toSet());
+
+                user.setBranches(branches);
+                user.setUpdatedAt(Instant.now());
+                log.info("Assigned {} branches to user: {}", branches.size(), user.getEmail());
+                return userRepository.save(user);
+        }
+
+        /**
+         * Get user with branches
+         */
+        @Transactional(readOnly = true)
+        public User findByIdWithBranches(UUID userId) {
+                return userRepository.findById(userId)
+                                .orElseThrow(() -> new DomainException("USER_NOT_FOUND",
+                                                "Usuario no encontrado", HttpStatus.NOT_FOUND));
+        }
 }

@@ -120,4 +120,45 @@ public class UserController {
         log.info("PUT /api/users/{}/toggle-active", id);
         return ResponseEntity.ok(userService.toggleActive(tenantId, id, userId));
     }
+
+    @PostMapping("/{id}/reset-password")
+    @Operation(summary = "Reset contraseña", description = "Admin reinicia la contraseña del usuario")
+    public ResponseEntity<Void> resetPassword(
+            @PathVariable UUID id,
+            @RequestBody ResetPasswordRequest request) {
+
+        log.info("POST /api/users/{}/reset-password", id);
+        userService.adminResetPassword(id, request.newPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/branches")
+    @Operation(summary = "Asignar sucursales", description = "Asigna sucursales a un usuario")
+    public ResponseEntity<UserDto> assignBranches(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @PathVariable UUID id,
+            @RequestBody BranchAssignmentRequest request) {
+
+        log.info("PUT /api/users/{}/branches - Branches: {}", id, request.branchIds());
+        var user = userService.assignBranches(id, request.branchIds());
+        return ResponseEntity.ok(userService.findById(tenantId, id));
+    }
+
+    @GetMapping("/{id}/branches")
+    @Operation(summary = "Obtener sucursales", description = "Obtiene las sucursales asignadas al usuario")
+    public ResponseEntity<List<UUID>> getUserBranches(@PathVariable UUID id) {
+        log.info("GET /api/users/{}/branches", id);
+        var user = userService.findByIdWithBranches(id);
+        var branchIds = user.getBranches().stream()
+                .map(b -> b.getId())
+                .toList();
+        return ResponseEntity.ok(branchIds);
+    }
+
+    // ============ Request DTOs ============
+    public record ResetPasswordRequest(String newPassword) {
+    }
+
+    public record BranchAssignmentRequest(java.util.Set<UUID> branchIds) {
+    }
 }
