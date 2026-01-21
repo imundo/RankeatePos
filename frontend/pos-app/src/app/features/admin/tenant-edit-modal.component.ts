@@ -676,9 +676,36 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
         plan: ['FREE']
     });
 
+    // Default modules - fallback if API doesn't return data
+    private defaultModules: ModuleConfig[] = [
+        { id: 'mod-pos', code: 'pos', name: 'Punto de Venta', description: 'Terminal de ventas y cobro', icon: '💰', category: 'ventas', sortOrder: 1 },
+        { id: 'mod-inventory', code: 'inventory', name: 'Inventario', description: 'Control de stock y productos', icon: '📦', category: 'operaciones', sortOrder: 2 },
+        { id: 'mod-invoicing', code: 'invoicing', name: 'Facturación', description: 'DTEs electrónicos SII', icon: '📄', category: 'contabilidad', sortOrder: 3 },
+        { id: 'mod-crm', code: 'crm', name: 'CRM', description: 'Gestión de clientes', icon: '👥', category: 'marketing', sortOrder: 4 },
+        { id: 'mod-loyalty', code: 'loyalty', name: 'Fidelización', description: 'Puntos y premios', icon: '⭐', category: 'marketing', sortOrder: 5 },
+        { id: 'mod-reservations', code: 'reservations', name: 'Reservas', description: 'Citas y reservaciones', icon: '📅', category: 'operaciones', sortOrder: 6 },
+        { id: 'mod-kds', code: 'kds', name: 'Cocina (KDS)', description: 'Pantalla de comandas', icon: '🍳', category: 'restaurante', sortOrder: 7 },
+        { id: 'mod-payroll', code: 'payroll', name: 'RRHH', description: 'Gestión de empleados', icon: '💼', category: 'rrhh', sortOrder: 8 },
+        { id: 'mod-accounting', code: 'accounting', name: 'Contabilidad', description: 'Libros y reportes contables', icon: '📊', category: 'contabilidad', sortOrder: 9 },
+        { id: 'mod-ecommerce', code: 'ecommerce', name: 'E-Commerce', description: 'Tienda en línea', icon: '🛒', category: 'ventas', sortOrder: 10 },
+        { id: 'mod-analytics', code: 'analytics', name: 'Analítica', description: 'Reportes y dashboards', icon: '📈', category: 'reportes', sortOrder: 11 },
+        { id: 'mod-delivery', code: 'delivery', name: 'Delivery', description: 'Gestión de entregas', icon: '🚚', category: 'operaciones', sortOrder: 12 }
+    ];
+
     ngOnInit() {
-        this.adminService.getModulesFromApi().subscribe(modules => {
-            this.allModules = modules.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+        // Load modules from API with fallback to defaults
+        this.adminService.getModulesFromApi().subscribe({
+            next: (modules) => {
+                if (modules && modules.length > 0) {
+                    this.allModules = modules.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+                } else {
+                    this.allModules = this.defaultModules;
+                }
+            },
+            error: () => {
+                // Use defaults if API fails
+                this.allModules = this.defaultModules;
+            }
         });
     }
 
