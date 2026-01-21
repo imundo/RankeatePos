@@ -42,7 +42,7 @@ public class BranchService {
 
         if (branchData.getCodigo() != null
                 && branchRepository.existsByTenant_IdAndCodigo(tenantId, branchData.getCodigo())) {
-            throw new DomainException("DUPLICATE_CODE", "El código de sucursal ya existe", HttpStatus.Conflict);
+            throw new DomainException("DUPLICATE_CODE", "El código de sucursal ya existe", HttpStatus.CONFLICT);
         }
 
         // Check if this is the first branch, if so make it principal
