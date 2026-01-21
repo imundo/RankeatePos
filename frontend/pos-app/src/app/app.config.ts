@@ -1,4 +1,5 @@
-import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, isDevMode, importProvidersFrom } from '@angular/core';
+import { LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star } from 'lucide-angular';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -19,6 +20,9 @@ export const appConfig: ApplicationConfig = {
         provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
-        })
+        }),
+        importProvidersFrom(LucideAngularModule.pick({
+            Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star
+        }))
     ]
 };

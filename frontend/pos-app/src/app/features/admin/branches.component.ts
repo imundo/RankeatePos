@@ -7,7 +7,7 @@ import { LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash
 @Component({
   selector: 'app-branches',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule.pick({ Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star })],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
     <div class="p-6 bg-slate-50 min-h-screen">
       <!-- Header -->
