@@ -10,20 +10,27 @@ import { AdminService, AuditLog } from '../../core/services/admin.service';
   template: `
     <div class="admin-page p-6 min-h-screen">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex justify-between items-end mb-8">
         <div>
-          <h1 class="text-2xl font-bold text-white">Registro de Actividad</h1>
-          <p class="text-slate-400 mt-1">Historial de acciones del sistema</p>
+          <h1 class="text-3xl font-bold text-white tracking-tight">Registro de Actividad</h1>
+          <p class="text-slate-400 mt-2 text-lg">Monitoreo y auditoría de acciones del sistema</p>
         </div>
         <div class="flex gap-3">
-          <select [(ngModel)]="selectedDays" (change)="loadLogs()" 
-                  class="bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2 border transition-colors outline-none focus:ring-2 focus:ring-indigo-500">
-            <option [value]="7">Últimos 7 días</option>
-            <option [value]="30">Últimos 30 días</option>
-            <option [value]="90">Últimos 90 días</option>
-          </select>
+          <div class="relative group">
+            <select [(ngModel)]="selectedDays" (change)="loadLogs()" 
+                    class="appearance-none bg-slate-800 text-white rounded-xl px-4 py-2.5 pr-10 border border-slate-700/50 hover:border-slate-600 transition-all cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500/50">
+              <option [value]="7">Últimos 7 días</option>
+              <option [value]="30">Últimos 30 días</option>
+              <option [value]="90">Últimos 90 días</option>
+              <option [value]="365">Último año</option>
+            </select>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
           <button (click)="loadLogs()" 
-                  class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-slate-700">
+                  class="p-2.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-all border border-slate-700/50 hover:border-slate-600"
+                  title="Actualizar">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -32,110 +39,102 @@ import { AdminService, AuditLog } from '../../core/services/admin.service';
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 backdrop-blur-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-slate-800/40 rounded-2xl p-6 border border-slate-700/30 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
+          <div class="flex items-start justify-between">
             <div>
-              <p class="text-2xl font-bold text-white">{{ totalLogs }}</p>
-              <p class="text-sm text-slate-400">Total Acciones</p>
+              <p class="text-sm font-medium text-slate-400 mb-1">Total Movimientos</p>
+              <h3 class="text-3xl font-bold text-white">{{ totalLogs }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
           </div>
         </div>
         
-        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 backdrop-blur-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-              </svg>
-            </div>
+        <div class="bg-slate-800/40 rounded-2xl p-6 border border-slate-700/30 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
+          <div class="flex items-start justify-between">
             <div>
-              <p class="text-2xl font-bold text-white">{{ countByAction('LOGIN') }}</p>
-              <p class="text-sm text-slate-400">Logins</p>
+              <p class="text-sm font-medium text-slate-400 mb-1">Inicios de Sesión</p>
+              <h3 class="text-3xl font-bold text-white">{{ countByAction('LOGIN') }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
             </div>
           </div>
         </div>
         
-        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 backdrop-blur-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-            </div>
+        <div class="bg-slate-800/40 rounded-2xl p-6 border border-slate-700/30 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
+          <div class="flex items-start justify-between">
             <div>
-              <p class="text-2xl font-bold text-white">{{ countByAction('UPDATE') }}</p>
-              <p class="text-sm text-slate-400">Modificaciones</p>
+              <p class="text-sm font-medium text-slate-400 mb-1">Cambios Realizados</p>
+              <h3 class="text-3xl font-bold text-white">{{ countByAction('UPDATE') + countByAction('CREATE') }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </div>
           </div>
         </div>
         
-        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 backdrop-blur-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </div>
+        <div class="bg-slate-800/40 rounded-2xl p-6 border border-slate-700/30 backdrop-blur-sm hover:bg-slate-800/60 transition-colors">
+          <div class="flex items-start justify-between">
             <div>
-              <p class="text-2xl font-bold text-white">{{ countByAction('DELETE') }}</p>
-              <p class="text-sm text-slate-400">Eliminaciones</p>
+              <p class="text-sm font-medium text-slate-400 mb-1">Eliminaciones</p>
+              <h3 class="text-3xl font-bold text-white">{{ countByAction('DELETE') }}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Timeline Table -->
-      <div class="bg-slate-800/30 rounded-xl border border-slate-700/50 overflow-hidden backdrop-blur-sm">
-        <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
-          <h2 class="font-semibold text-white">Timeline de Actividad</h2>
-          <span class="text-xs text-slate-500 uppercase tracking-wider font-medium">En tiempo real</span>
-        </div>
-        
+      <!-- Data Table -->
+      <div class="bg-slate-800/40 rounded-2xl border border-slate-700/30 overflow-hidden backdrop-blur-md shadow-xl">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-700/50 text-slate-400 text-xs uppercase">
-                        <th class="px-6 py-4 font-medium">Usuario</th>
-                        <th class="px-6 py-4 font-medium">Acción</th>
-                        <th class="px-6 py-4 font-medium">Detalle</th>
-                        <th class="px-6 py-4 font-medium text-right">Fecha</th>
+                    <tr class="border-b border-slate-700/50 bg-slate-900/30 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                        <th class="px-8 py-5">Usuario / IP</th>
+                        <th class="px-6 py-5">Acción</th>
+                        <th class="px-6 py-5">Detalle</th>
+                        <th class="px-8 py-5 text-right">Fecha</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-700/30">
-                  <tr *ngFor="let log of logs" class="hover:bg-white/5 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                           <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                  <tr *ngFor="let log of logs" class="hover:bg-slate-700/20 transition-colors group">
+                    <td class="px-8 py-4">
+                        <div class="flex items-center gap-4">
+                           <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300 ring-2 ring-slate-800">
                              {{ (log.userEmail || 'S')[0].toUpperCase() }}
                            </div>
                            <div class="flex flex-col">
-                             <span class="text-sm font-medium text-white">{{ log.userEmail || 'Sistema' }}</span>
-                             <span class="text-xs text-slate-500">{{ log.ipAddress || 'Internal' }}</span>
+                             <span class="text-sm font-medium text-white group-hover:text-indigo-300 transition-colors">{{ log.userEmail || 'Sistema' }}</span>
+                             <span class="text-xs text-slate-500 font-mono mt-0.5">{{ log.ipAddress || 'Internal' }}</span>
                            </div>
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border"
                               [ngClass]="getActionBadgeClass(log.action)">
-                           <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                           <span class="w-2 h-2 rounded-full bg-current animate-pulse"></span>
                            {{ formatAction(log.action) }}
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col gap-1">
                            <span class="text-sm text-slate-300">{{ log.description || getDefaultDescription(log) }}</span>
-                           <span *ngIf="log.entityType" class="text-xs text-slate-500 mt-0.5">Entidad: {{ log.entityType }}</span>
+                           <span *ngIf="log.entityType" class="text-xs text-slate-500 flex items-center gap-1">
+                             <span class="text-slate-600">ID:</span> {{ log.entityType }}
+                           </span>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-right">
-                        <span class="text-sm text-slate-400 font-mono">{{ formatDate(log.createdAt) }}</span>
+                    <td class="px-8 py-4 text-right">
+                        <div class="flex flex-col items-end gap-0.5">
+                          <span class="text-sm text-slate-300 font-medium">{{ formatDate(log.createdAt).split(' ')[0] }}</span>
+                          <span class="text-xs text-slate-500">{{ formatDate(log.createdAt).split(' ')[1] }}</span>
+                        </div>
                     </td>
                   </tr>
                 </tbody>
@@ -143,34 +142,34 @@ import { AdminService, AuditLog } from '../../core/services/admin.service';
         </div>
         
         <!-- Empty State -->
-        <div *ngIf="logs.length === 0 && !loading" class="py-16 text-center">
-          <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 border border-slate-700">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        <div *ngIf="logs.length === 0 && !loading" class="py-20 text-center">
+          <div class="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-600 border border-slate-700/50">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-white">Sin registros</h3>
-          <p class="text-slate-500 mt-2">No hay actividad registrada en este período.</p>
+          <h3 class="text-xl font-semibold text-white mb-2">Sin actividad reciente</h3>
+          <p class="text-slate-500 max-w-sm mx-auto">No se han registrado acciones en el período seleccionado.</p>
         </div>
         
         <!-- Loading -->
-        <div *ngIf="loading" class="py-16 text-center">
-          <div class="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto"></div>
-          <p class="text-slate-400 mt-4">Cargando registros...</p>
+        <div *ngIf="loading" class="py-20 text-center">
+          <div class="animate-spin w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full mx-auto shadow-lg shadow-indigo-500/20"></div>
+          <p class="text-slate-400 mt-4 font-medium">Cargando registros...</p>
         </div>
         
         <!-- Pagination -->
-        <div *ngIf="totalPages > 1" class="px-6 py-4 border-t border-slate-700/50 flex justify-between items-center bg-slate-800/30">
-          <span class="text-sm text-slate-500">
+        <div *ngIf="totalPages > 1" class="px-8 py-5 border-t border-slate-700/50 flex justify-between items-center bg-slate-900/30">
+          <span class="text-sm text-slate-500 font-medium">
             Página {{ currentPage + 1 }} de {{ totalPages }}
           </span>
-          <div class="flex gap-2">
+          <div class="flex gap-3">
             <button (click)="prevPage()" [disabled]="currentPage === 0"
-                    class="px-3 py-1.5 text-sm rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    class="px-4 py-2 text-sm font-medium rounded-xl border border-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               Anterior
             </button>
             <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-                    class="px-3 py-1.5 text-sm rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    class="px-4 py-2 text-sm font-medium rounded-xl border border-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               Siguiente
             </button>
           </div>

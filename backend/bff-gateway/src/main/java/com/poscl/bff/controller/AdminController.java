@@ -160,6 +160,42 @@ public class AdminController {
                 .onErrorResume(e -> handleProxyError(e, "Error fetching plans"));
     }
 
+    // ==================== Audit Logs Proxy ====================
+
+    @GetMapping("/audit-logs/tenant/{tenantId}")
+    @Operation(summary = "Proxy: Obtener logs de auditoría por tenant")
+    public Mono<ResponseEntity<Map<String, Object>>> getAuditLogsByTenant(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String uri = String.format("/api/audit-logs/tenant/%s?page=%d&size=%d", tenantId, page, size);
+        return forwardGetRequest(uri, authHeader);
+    }
+
+    @GetMapping("/audit-logs/user/{userId}")
+    @Operation(summary = "Proxy: Obtener logs de auditoría por usuario")
+    public Mono<ResponseEntity<Map<String, Object>>> getAuditLogsByUser(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String uri = String.format("/api/audit-logs/user/%s?page=%d&size=%d", userId, page, size);
+        return forwardGetRequest(uri, authHeader);
+    }
+
+    @GetMapping("/audit-logs/recent/{tenantId}")
+    @Operation(summary = "Proxy: Obtener logs de auditoría recientes")
+    public Mono<ResponseEntity<Map<String, Object>>> getRecentAuditLogs(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID tenantId,
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String uri = String.format("/api/audit-logs/recent/%s?days=%d&page=%d&size=%d", tenantId, days, page, size);
+        return forwardGetRequest(uri, authHeader);
+    }
+
     // ==================== User Management Proxy ====================
 
     @GetMapping("/users")

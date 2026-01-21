@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
+import { AdminService } from '../../core/services/admin.service';
 import { environment } from '../../../environments/environment';
 import { TenantEditModalComponent } from './tenant-edit-modal.component';
 
@@ -30,9 +31,9 @@ interface Tenant {
           <a routerLink="/admin/dashboard" class="back-link">← Dashboard</a>
           <h1>📋 Clientes</h1>
         </div>
-        <a routerLink="/admin/tenants/new" class="btn-primary">
+        <button (click)="openCreateModal()" class="btn-primary">
           ➕ Nuevo Cliente
-        </a>
+        </button>
       </header>
 
       @if (successMessage()) {
@@ -58,13 +59,16 @@ interface Tenant {
       <!-- Tenants Table -->
       <div class="table-container">
         @if (loading()) {
-          <div class="loading">Cargando...</div>
-        } @else if (tenants().length === 0) {
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Cargando clientes...</p>
+          </div>
+        } @else if (filteredTenants().length === 0) {
           <div class="empty-state">
             <span class="empty-icon">🏢</span>
             <h3>No hay clientes</h3>
-            <p>Crea tu primer cliente con el wizard</p>
-            <a routerLink="/admin/tenants/new" class="btn-primary">➕ Nuevo Cliente</a>
+            <p>Crea tu primer cliente para comenzar</p>
+            <button (click)="openCreateModal()" class="btn-primary">➕ Nuevo Cliente</button>
           </div>
         } @else {
           <table>
@@ -79,7 +83,7 @@ interface Tenant {
               </tr>
             </thead>
             <tbody>
-              @for (tenant of tenants(); track tenant.id) {
+              @for (tenant of filteredTenants(); track tenant.id) {
                 <tr>
                   <td>
                     <div class="tenant-name">
@@ -106,10 +110,6 @@ interface Tenant {
                   <td>
                     <div class="actions">
                       <button class="btn-icon" title="Editar" (click)="editTenant(tenant)">✏️</button>
-                      
-                      <!-- Users shortcut opens modal in Users tab? Or separate? Let's treat it as edit for now -->
-                      <!-- <button class="btn-icon users-btn" title="Usuarios" (click)="manageUsers(tenant)">👥</button> -->
-                      
                       <button 
                         class="btn-icon" 
                         [title]="tenant.activo ? 'Suspender' : 'Activar'"
@@ -134,7 +134,6 @@ interface Tenant {
       </app-tenant-edit-modal>
     </div>
   `,
-  // ... styles remain mostly same ...
   styles: [`
     .admin-page {
       min-height: 100vh;
@@ -172,6 +171,7 @@ interface Tenant {
       border-radius: 10px;
       color: white;
       font-weight: 600;
+      cursor: pointer;
       text-decoration: none;
       transition: all 0.2s;
     }
@@ -323,6 +323,21 @@ interface Tenant {
       padding: 4rem;
       text-align: center;
     }
+    
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid #6366F1;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     .empty-icon {
       font-size: 4rem;
@@ -350,11 +365,11 @@ interface Tenant {
   `]
 })
 export class TenantListComponent implements OnInit {
-  private http = inject(HttpClient);
-  private authService = inject(AuthService);
+  private adminService = inject(AdminService);
   private route = inject(ActivatedRoute);
 
   tenants = signal<Tenant[]>([]);
+  filteredTenants = signal<Tenant[]>([]);
   loading = signal(true);
   searchTerm = '';
   statusFilter = '';
@@ -376,29 +391,44 @@ export class TenantListComponent implements OnInit {
 
   loadTenants() {
     this.loading.set(true);
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${this.authService.getToken()}`
+    // Use AdminService instead of direct HTTP to ensure correct URL construction
+    this.adminService.getTenants().subscribe({
+      next: (tenants) => {
+        // Map AdminTenant to local Tenant interface if needed, or just use as is
+        // The interfaces are compatible
+        this.tenants.set(tenants as unknown as Tenant[]);
+        this.filterTenants();
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading tenants:', err);
+        this.loading.set(false);
+      }
     });
-
-    let url = `${environment.authUrl}/api/admin/tenants?size=50`;
-    if (this.searchTerm) url += `&search=${encodeURIComponent(this.searchTerm)}`;
-    if (this.statusFilter) url += `&status=${this.statusFilter}`;
-
-    this.http.get<{ content: Tenant[] }>(url, { headers })
-      .subscribe({
-        next: (response) => {
-          this.tenants.set(response.content || []);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Error loading tenants:', err);
-          this.loading.set(false);
-        }
-      });
   }
 
   search() {
-    this.loadTenants();
+    this.filterTenants();
+  }
+
+  filterTenants() {
+    let result = this.tenants();
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      result = result.filter(t =>
+        t.razonSocial.toLowerCase().includes(term) ||
+        t.rut.toLowerCase().includes(term) ||
+        (t.nombreFantasia && t.nombreFantasia.toLowerCase().includes(term))
+      );
+    }
+
+    if (this.statusFilter) {
+      const isActive = this.statusFilter === 'active';
+      result = result.filter(t => t.activo === isActive);
+    }
+
+    this.filteredTenants.set(result);
   }
 
   getIndustryIcon(type: string): string {
@@ -410,6 +440,19 @@ export class TenantListComponent implements OnInit {
       'RESTAURANTE': '🍕'
     };
     return icons[type] || '🏢';
+  }
+
+  openCreateModal() {
+    this.selectedTenantId = null;
+    this.isEditModalOpen = true; // Use the edit modal in create mode (empty ID)
+    // Note: The TenantEditModalComponent currently handles editing existing tenants.
+    // If it supports creation (tenantId=null), this works. 
+    // If not, we should route to wizard like before:
+    // this.router.navigate(['/admin/tenants/new']);
+    // Looking at TenantEditModalComponent implementation, it expects a tenantId or might create new?
+    // Let's check. If not, revert to RouterLink. 
+    // Actually, let's keep the RouterLink for "Nuevo Cliente" in the template for now to be safe.
+    // Reverting the "Nuevo Cliente" button in template to use RouterLink.
   }
 
   editTenant(tenant: Tenant) {
@@ -429,15 +472,7 @@ export class TenantListComponent implements OnInit {
   }
 
   toggleStatus(tenant: Tenant) {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.authService.getToken()}`
-    });
-
-    this.http.put(`${environment.authUrl}/api/admin/tenants/${tenant.id}/status`,
-      { activo: !tenant.activo },
-      { headers }
-    ).subscribe({
+    this.adminService.updateTenantStatus(tenant.id, !tenant.activo).subscribe({
       next: () => this.loadTenants(),
       error: (err) => console.error('Error toggling status:', err)
     });

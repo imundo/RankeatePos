@@ -268,17 +268,18 @@ export class AdminService {
     }
 
     // ================== AUDIT LOGS API ==================
+    // Proxied via BFF at /api/admin/audit-logs/...
 
     getAuditLogs(tenantId: string, page = 0, size = 20): Observable<PagedAuditLogs> {
-        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/tenant/${tenantId}?page=${page}&size=${size}`);
+        return this.http.get<PagedAuditLogs>(`${this.apiUrl}/audit-logs/tenant/${tenantId}?page=${page}&size=${size}`);
     }
 
     getUserAuditLogs(userId: string, page = 0, size = 20): Observable<PagedAuditLogs> {
-        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/user/${userId}?page=${page}&size=${size}`);
+        return this.http.get<PagedAuditLogs>(`${this.apiUrl}/audit-logs/user/${userId}?page=${page}&size=${size}`);
     }
 
     getRecentAuditLogs(tenantId: string, days = 7, page = 0, size = 20): Observable<PagedAuditLogs> {
-        return this.http.get<PagedAuditLogs>(`${environment.authUrl}/audit-logs/recent/${tenantId}?days=${days}&page=${page}&size=${size}`);
+        return this.http.get<PagedAuditLogs>(`${this.apiUrl}/audit-logs/recent/${tenantId}?days=${days}&page=${page}&size=${size}`);
     }
 }
 
