@@ -127,6 +127,14 @@ export class AdminService {
         return this.http.delete<void>(`${this.apiUrl}/tenants/${id}`);
     }
 
+    updateTenantModules(id: string, modules: Record<string, boolean>): Observable<any> {
+        return this.http.put(`${this.apiUrl}/tenants/${id}/modules`, modules);
+    }
+
+    updateTenantStatus(id: string, active: boolean): Observable<Tenant> {
+        return this.http.put<Tenant>(`${this.apiUrl}/tenants/${id}/status`, { active });
+    }
+
     // Users Management (Super Admin)
     getTenantUsers(tenantId: string): Observable<AdminUser[]> {
         return this.http.get<any>(`${this.apiUrl}/users?tenantId=${tenantId}`).pipe(

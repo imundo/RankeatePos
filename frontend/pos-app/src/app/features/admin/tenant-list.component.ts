@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from '@core/auth/auth.service';
-import { environment } from '@env/environment';
+import { AuthService } from '../../core/auth/auth.service';
+import { environment } from '../../../environments/environment';
+import { TenantEditModalComponent } from './tenant-edit-modal.component';
 
 interface Tenant {
   id: string;
@@ -13,6 +14,7 @@ interface Tenant {
   nombreFantasia: string;
   businessType: string;
   plan: string;
+  modules?: string[];
   activo: boolean;
   createdAt: string;
 }
@@ -20,7 +22,7 @@ interface Tenant {
 @Component({
   selector: 'app-tenant-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TenantEditModalComponent],
   template: `
     <div class="admin-page">
       <header class="page-header">
@@ -104,9 +106,10 @@ interface Tenant {
                   <td>
                     <div class="actions">
                       <button class="btn-icon" title="Editar" (click)="editTenant(tenant)">✏️</button>
-                      <button class="btn-icon users-btn" title="Usuarios" (click)="manageUsers(tenant)">
-                        👥
-                      </button>
+                      
+                      <!-- Users shortcut opens modal in Users tab? Or separate? Let's treat it as edit for now -->
+                      <!-- <button class="btn-icon users-btn" title="Usuarios" (click)="manageUsers(tenant)">👥</button> -->
+                      
                       <button 
                         class="btn-icon" 
                         [title]="tenant.activo ? 'Suspender' : 'Activar'"
@@ -121,8 +124,17 @@ interface Tenant {
           </table>
         }
       </div>
+
+      <!-- Edit Modal -->
+      <app-tenant-edit-modal
+        [isOpen]="isEditModalOpen"
+        [tenantId]="selectedTenantId"
+        (closeEvent)="closeEditModal()"
+        (saveEvent)="onTenantSaved()">
+      </app-tenant-edit-modal>
     </div>
   `,
+  // ... styles remain mostly same ...
   styles: [`
     .admin-page {
       min-height: 100vh;
@@ -341,13 +353,16 @@ export class TenantListComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
 
   tenants = signal<Tenant[]>([]);
   loading = signal(true);
   searchTerm = '';
   statusFilter = '';
   successMessage = signal<string | null>(null);
+
+  // Modal State
+  isEditModalOpen = false;
+  selectedTenantId: string | null = null;
 
   ngOnInit() {
     // Check for success message from wizard
@@ -378,19 +393,8 @@ export class TenantListComponent implements OnInit {
         error: (err) => {
           console.error('Error loading tenants:', err);
           this.loading.set(false);
-          // Use mock data for demo
-          this.loadMockTenants();
         }
       });
-  }
-
-  loadMockTenants() {
-    this.tenants.set([
-      { id: '1', rut: '12.345.678-9', razonSocial: 'Panadería El Trigal', nombreFantasia: 'El Trigal', businessType: 'PANADERIA', plan: 'PRO', activo: true, createdAt: '2024-01-15' },
-      { id: '2', rut: '98.765.432-1', razonSocial: 'Academia Online Pro', nombreFantasia: 'AcademiaOnline', businessType: 'EDUCACION', plan: 'BUSINESS', activo: true, createdAt: '2024-02-01' },
-      { id: '3', rut: '11.222.333-4', razonSocial: 'Editorial Creativa', nombreFantasia: 'Editorial', businessType: 'EDITORIAL', plan: 'PRO', activo: true, createdAt: '2024-02-15' },
-      { id: '4', rut: '55.666.777-8', razonSocial: 'Minimarket Don Pedro', nombreFantasia: 'Don Pedro', businessType: 'RETAIL', plan: 'FREE', activo: false, createdAt: '2024-03-01' }
-    ]);
   }
 
   search() {
@@ -409,11 +413,19 @@ export class TenantListComponent implements OnInit {
   }
 
   editTenant(tenant: Tenant) {
-    this.router.navigate(['/admin/tenants', tenant.id, 'edit']);
+    this.selectedTenantId = tenant.id;
+    this.isEditModalOpen = true;
   }
 
-  manageUsers(tenant: Tenant) {
-    this.router.navigate(['/admin/tenants', tenant.id, 'users']);
+  closeEditModal() {
+    this.isEditModalOpen = false;
+    this.selectedTenantId = null;
+  }
+
+  onTenantSaved() {
+    this.successMessage.set('Cambios guardados correctamente');
+    this.loadTenants();
+    setTimeout(() => this.successMessage.set(null), 3000);
   }
 
   toggleStatus(tenant: Tenant) {
