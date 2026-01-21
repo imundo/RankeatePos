@@ -23,6 +23,12 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final com.poscl.auth.infrastructure.security.JwtAuthenticationFilter jwtAuthFilter;
+
+    public SecurityConfig(com.poscl.auth.infrastructure.security.JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -45,6 +51,9 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated());
+
+        http.addFilterBefore(jwtAuthFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
