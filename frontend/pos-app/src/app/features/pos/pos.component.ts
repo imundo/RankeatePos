@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -21,13 +21,9 @@ import { FacturacionService } from '../facturacion/services/facturacion.service'
 import { SalesEventService } from '@core/services/sales-event.service';
 import { StockService } from '@core/services/stock.service';
 import { BarcodeService } from '@core/services/barcode.service';
-import { GestureService } from '@core/services/gesture.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
-import { FABMenuComponent, FABAction } from '@shared/components/fab-menu/fab-menu.component';
-import { BottomSheetComponent } from '@shared/components/bottom-sheet/bottom-sheet.component';
-import { SwipeableItemDirective } from '@shared/directives/swipeable-item.directive';
 
 interface CartItem {
   variantId: string;
@@ -55,10 +51,7 @@ interface CartItem {
     BadgeModule,
     InputNumberModule,
     BranchSwitcherComponent,
-    BottomNavComponent,
-    FABMenuComponent,
-    BottomSheetComponent,
-    SwipeableItemDirective
+    BottomNavComponent
   ],
   providers: [MessageService],
   template: `
@@ -264,28 +257,28 @@ interface CartItem {
             }
           </div>
 
-          <!-- Floating Action Button (FAB) with Quick Actions -->
-          <div class="fab-container" [class.fab-open]="fabOpen">
+          <!-- Floating Action Button (FAB) with Quick Actions - Desktop Only -->
+          <div class="fab-container desktop-only" [class.fab-open]="fabOpen">
             <!-- Sub Actions (expand from main FAB) -->
             @if (fabOpen) {
               <div class="fab-submenu">
-                <button class="fab-action" (click)=\"openWeightInput(); fabOpen = false\" title="Pesar">
+                <button class="fab-action" (click)="openWeightInput(); fabOpen = false" title="Pesar">
                   <span class="fab-icon">⚖️</span>
                   <span class="fab-label">Pesar</span>
                 </button>
-                <button class="fab-action" (click)=\"openSpecialOrder(); fabOpen = false\" title="Pedido">
+                <button class="fab-action" (click)="openSpecialOrder(); fabOpen = false" title="Pedido">
                   <span class="fab-icon">📦</span>
                   <span class="fab-label">Pedido</span>
                 </button>
-                <button class="fab-action" (click)=\"applyPromotion(); fabOpen = false\" title="Promoción">
+                <button class="fab-action" (click)="applyPromotion(); fabOpen = false" title="Promoción">
                   <span class="fab-icon">🎁</span>
                   <span class="fab-label">Promo</span>
                 </button>
-                <button class="fab-action" (click)=\"openClientSearch(); fabOpen = false\" title="Cliente">
+                <button class="fab-action" (click)="openClientSearch(); fabOpen = false" title="Cliente">
                   <span class="fab-icon">👤</span>
                   <span class="fab-label">Cliente</span>
                 </button>
-                <button class="fab-action" (click)=\"savePending(); fabOpen = false\" title="Guardar">
+                <button class="fab-action" (click)="savePending(); fabOpen = false" title="Guardar">
                   <span class="fab-icon">💾</span>
                   <span class="fab-label">Guardar</span>
                 </button>
@@ -303,8 +296,8 @@ interface CartItem {
           </div>
         </section>
 
-        <!-- Cart Section -->
-        <section class="cart-section">
+        <!-- Cart Section - Desktop Only -->
+        <section class="cart-section desktop-only">
           <div class="cart-header">
             <h2>Carrito</h2>
             @if (cartItems().length > 0) {
@@ -1180,74 +1173,23 @@ interface CartItem {
       <!-- Mobile Bottom Navigation -->
       <app-bottom-nav 
         [items]="mobileNavItems"
-        [showFab]="true"
-        fabIcon="plus"
+        [showFab]="false"
         (fabClick)="onMobileFabClick()">
       </app-bottom-nav>
 
-      <!-- Mobile FAB Menu -->
-      <app-fab-menu
-        [actions]="mobileFabActions"
-        icon="zap"
-        (actionClick)="onMobileFabAction($event)">
-      </app-fab-menu>
-
-      <!-- Mobile Cart Bottom Sheet -->
-      <app-bottom-sheet
-        #mobileCartSheet
-        [snapPoints]="[0.25, 0.5, 0.9]"
-        [initialSnap]="0"
-        [showHeader]="true"
-        [showFooter]="true"
-        (snapChange)="onCartSnapChange($event)">
-        
-        <div header>
-          <div class="cart-summary-pill">
-            <div class="cart-count">
-              <span class="count-badge">{{ cartItems().length }}</span>
-              <span>productos</span>
-            </div>
-            <span class="cart-total">{{ formatPrice(total()) }}</span>
+      <!-- Mobile Cart Pill (Floating) -->
+      @if (cartItems().length > 0) {
+        <div class="mobile-cart-pill mobile-only" (click)="openCheckoutWithBarcodes()">
+          <div class="cart-pill-info">
+            <span class="cart-pill-count">{{ cartItems().length }}</span>
+            <span class="cart-pill-label">items</span>
+          </div>
+          <div class="cart-pill-total">
+            <span>Pagar</span>
+            <span class="pill-price">{{ formatPrice(total()) }}</span>
           </div>
         </div>
-        
-        <div content>
-          @if (cartItems().length === 0) {
-            <div class="empty-state-mobile">
-              <span class="empty-icon">🛒</span>
-              <p class="empty-title">Carrito vacío</p>
-              <p class="empty-description">Toca un producto para agregarlo</p>
-            </div>
-          } @else {
-            @for (item of cartItems(); track item.variantId; let i = $index) {
-              <div class="cart-item-touch"
-                   appSwipeable
-                   (swipeLeft)="removeItem(i)">
-                <div class="item-details">
-                  <span class="item-name">{{ item.productNombre }}</span>
-                  <span class="item-price">{{ formatPrice(item.precioUnitario) }} c/u</span>
-                </div>
-                <div class="item-quantity">
-                  <button class="qty-btn" (click)="updateQuantity(i, -1)">−</button>
-                  <span class="qty-value">{{ item.cantidad }}</span>
-                  <button class="qty-btn" (click)="updateQuantity(i, 1)">+</button>
-                </div>
-                <span class="item-subtotal">{{ formatPrice(item.subtotal) }}</span>
-              </div>
-            }
-          }
-        </div>
-        
-        <div footer>
-          @if (cartItems().length > 0) {
-            <button class="checkout-btn-mobile" (click)="openCheckoutWithBarcodes()">
-              <span>💳</span>
-              <span>Pagar</span>
-              <span class="checkout-total">{{ formatPrice(total()) }}</span>
-            </button>
-          }
-        </div>
-      </app-bottom-sheet>
+      }
     </div>
 
     <p-toast position="bottom-center"></p-toast>
@@ -3244,8 +3186,6 @@ export class PosComponent implements OnInit {
   // MOBILE-FIRST PROPERTIES
   // ============================================
 
-  @ViewChild('mobileCartSheet') mobileCartSheet!: BottomSheetComponent;
-
   // Mobile Navigation Items
   mobileNavItems: NavItem[] = [
     { route: '/pos', icon: 'shopping-cart', label: 'Ventas' },
@@ -3254,56 +3194,9 @@ export class PosComponent implements OnInit {
     { route: '/settings', icon: 'settings', label: 'Config' }
   ];
 
-  // Mobile FAB Quick Actions
-  mobileFabActions: FABAction[] = [
-    { id: 'weight', icon: 'scale', label: 'Pesar', color: '#F59E0B' },
-    { id: 'order', icon: 'package', label: 'Pedido', color: '#8B5CF6' },
-    { id: 'promo', icon: 'gift', label: 'Promo', color: '#EC4899' },
-    { id: 'client', icon: 'user', label: 'Cliente', color: '#06B6D4' },
-    { id: 'save', icon: 'save', label: 'Guardar', color: '#10B981' }
-  ];
-
-  // Mobile cart state
-  mobileCartExpanded = signal(false);
-
-  // Mobile FAB click handler
+  // Mobile FAB click handler (opens checkout directly)
   onMobileFabClick(): void {
-    if (this.mobileCartSheet) {
-      this.mobileCartSheet.open(1); // Open at 50%
-    }
-  }
-
-  // Mobile FAB action handler
-  onMobileFabAction(action: FABAction): void {
-    switch (action.id) {
-      case 'weight':
-        this.openWeightInput();
-        break;
-      case 'order':
-        this.openSpecialOrder();
-        break;
-      case 'promo':
-        this.applyPromotion();
-        break;
-      case 'client':
-        this.openClientSearch();
-        break;
-      case 'save':
-        this.savePending();
-        break;
-    }
-  }
-
-  // Cart snap change handler
-  onCartSnapChange(snapIndex: number): void {
-    this.mobileCartExpanded.set(snapIndex >= 2);
-  }
-
-  // Open mobile cart
-  openMobileCart(): void {
-    if (this.mobileCartSheet) {
-      this.mobileCartSheet.open(1);
-    }
+    this.openCheckoutWithBarcodes();
   }
 
   // Category icons mapping - multi-industry support
