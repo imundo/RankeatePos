@@ -4,6 +4,9 @@
 // Admin Theme (PrimeNG overrides for Admin Dashboard)
 @import 'styles/admin-theme';
 
+// Mobile Components
+@import 'styles/mobile-components';
+
 // Design System Variables
 :root {
   // Primary Palette - Indigo Modern
@@ -59,6 +62,35 @@
   --transition-fast: all 0.15s ease;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // ============================================
+  // MOBILE-FIRST ADDITIONS
+  // ============================================
+
+  // Safe Area Insets (iPhone notch, Dynamic Island, Android gesture bar)
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  // Touch Targets (Google: 48px, Apple: 44px minimum)
+  --touch-target: 48px;
+  --touch-target-sm: 44px;
+
+  // Thumb Zone Layout
+  --thumb-zone-height: 60vh;
+  --bottom-nav-height: 70px;
+  --bottom-sheet-handle: 28px;
+
+  // Spring Animations (iOS-like physics)
+  --spring-bounce: cubic-bezier(0.32, 0.72, 0, 1);
+  --spring-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  // Enhanced Glassmorphism
+  --glass-blur-strong: 40px;
+  --glass-saturation: 180%;
+  --glass-bg-strong: rgba(30, 30, 50, 0.7);
 }
 
 // Reset & Base
