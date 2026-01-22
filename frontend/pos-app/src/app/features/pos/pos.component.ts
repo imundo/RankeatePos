@@ -2963,17 +2963,109 @@ interface CartItem {
         font-size: 1.25rem;
       }
       
+      /* Ultra-minimal notification badges */
       .notification-badge {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         
-        svg { width: 16px; height: 16px; }
+        svg { width: 14px; height: 14px; }
+        
+        .badge-count {
+          min-width: 12px;
+          height: 12px;
+          font-size: 0.55rem;
+          top: -2px;
+          right: -2px;
+        }
+      }
+      
+      /* Hide non-essential header elements */
+      .tenant-name,
+      .btn-text,
+      .badge-warning,
+      .alert-badge {
+        display: none !important;
+      }
+      
+      /* Compact buttons */
+      .btn {
+        padding: 0.5rem !important;
+        min-width: 36px;
+        
+        i { font-size: 1rem; }
+      }
+      
+      .header-right {
+        gap: 0.375rem;
+      }
+    }
+
+    /* Mobile Tablets (768px) - Minimal Header */
+    @media (max-width: 768px) {
+      .pos-header {
+        padding: 0.625rem 1rem;
+        
+        .header-left {
+          gap: 0.5rem;
+        }
+        
+        .header-right {
+          gap: 0.5rem;
+        }
+      }
+      
+      /* Hide tenant name and branch switcher on mobile */
+      .tenant-name {
+        display: none !important;
+      }
+      
+      /* Hide text in buttons */
+      .btn-text {
+        display: none;
+      }
+      
+      /* Hide pending badge text, keep icon only */
+      .badge-warning {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+      }
+      
+      /* Minimal notification badges */
+      .notification-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        
+        svg { 
+          width: 16px; 
+          height: 16px; 
+        }
         
         .badge-count {
           min-width: 14px;
           height: 14px;
           font-size: 0.6rem;
+          padding: 0 4px;
+          top: -3px;
+          right: -3px;
         }
+      }
+      
+      /* Hide alert badge (docs) on mobile - too noisy */
+      .alert-badge {
+        display: none;
+      }
+      
+      /* Compact sync button */
+      .btn.btn-primary {
+        padding: 0.625rem 0.875rem;
+      }
+      
+      /* Menu button more visible */
+      .btn.btn-outline {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.4);
       }
       
       .pos-grid {
