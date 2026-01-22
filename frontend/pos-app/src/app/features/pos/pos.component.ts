@@ -2047,11 +2047,9 @@ interface CartItem {
       backdrop-filter: blur(20px);
       border-left: 1px solid rgba(255, 255, 255, 0.1);
       
+      /* Hide on mobile - use mobile cart pill instead */
       @media (max-width: 768px) {
-        max-width: none;
-        max-height: 50vh;
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: none !important;
       }
     }
 
@@ -2795,11 +2793,8 @@ interface CartItem {
       }
       
       .cart-section {
-        order: 2;
-        width: 100%;
-        max-height: 40vh;
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Hidden on mobile - using mobile-cart-pill instead */
+        display: none !important;
       }
       
       .pos-grid {
@@ -3087,8 +3082,8 @@ interface CartItem {
       }
       
       .cart-section {
-        max-height: 100vh;
-        width: 280px;
+        /* Stay hidden in landscape mobile too */
+        display: none !important;
       }
       
       .products-section {
