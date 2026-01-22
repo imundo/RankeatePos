@@ -2375,9 +2375,10 @@ interface CartItem {
     .menu-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 999;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999; // Very high z-index to be above everything
       animation: fadeIn 0.2s ease;
     }
 
@@ -2388,13 +2389,27 @@ interface CartItem {
       width: 320px;
       max-width: 90vw;
       height: 100vh;
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-      backdrop-filter: blur(20px);
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 1000;
+      height: 100dvh; // Dynamic viewport height for mobile
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.99), rgba(15, 23, 42, 0.99));
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 10000; // Highest z-index to always be on top
       display: flex;
       flex-direction: column;
-      animation: slideIn 0.3s ease;
+      animation: slideIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      
+      // Mobile adjustments
+      @media (max-width: 768px) {
+        width: 85vw;
+        max-width: 320px;
+        
+        // Safe area support
+        padding-top: env(safe-area-inset-top, 0);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
     }
 
     @keyframes fadeIn {
