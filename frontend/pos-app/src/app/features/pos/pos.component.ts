@@ -3001,21 +3001,28 @@ interface CartItem {
       }
     }
 
-    /* Mobile Tablets (768px) - Minimal Header */
+    /* Mobile Tablets (768px) - ULTRA-MINIMAL Header */
     @media (max-width: 768px) {
       .pos-header {
-        padding: 0.625rem 1rem;
+        padding: 0.5rem 0.875rem;
         
         .header-left {
           gap: 0.5rem;
         }
         
         .header-right {
-          gap: 0.5rem;
+          gap: 0.375rem;
         }
       }
       
-      /* Hide tenant name and branch switcher on mobile */
+      /* Hide ALL notifications on mobile - access via menu */
+      .notification-badge,
+      .alert-badge,
+      .badge-warning {
+        display: none !important;
+      }
+      
+      /* Hide tenant name */
       .tenant-name {
         display: none !important;
       }
@@ -3025,47 +3032,21 @@ interface CartItem {
         display: none;
       }
       
-      /* Hide pending badge text, keep icon only */
-      .badge-warning {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.75rem;
-      }
-      
-      /* Minimal notification badges */
-      .notification-badge {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        
-        svg { 
-          width: 16px; 
-          height: 16px; 
-        }
-        
-        .badge-count {
-          min-width: 14px;
-          height: 14px;
-          font-size: 0.6rem;
-          padding: 0 4px;
-          top: -3px;
-          right: -3px;
-        }
-      }
-      
-      /* Hide alert badge (docs) on mobile - too noisy */
-      .alert-badge {
-        display: none;
-      }
-      
-      /* Compact sync button */
+      /* Smaller sync button - icon only */
       .btn.btn-primary {
-        padding: 0.625rem 0.875rem;
+        padding: 0.5rem 0.625rem;
+        min-width: auto;
+        
+        i { font-size: 0.875rem; }
       }
       
-      /* Menu button more visible */
+      /* Menu button - prominent and accessible */
       .btn.btn-outline {
+        padding: 0.625rem 0.75rem;
         background: rgba(99, 102, 241, 0.15);
         border-color: rgba(99, 102, 241, 0.4);
+        
+        i { font-size: 1.125rem; }
       }
       
       .pos-grid {
