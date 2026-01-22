@@ -799,3 +799,458 @@
 .has-bottom-nav {
     padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
 }
+
+// ============================================
+// GLOBAL MOBILE DIALOGS (All PrimeNG Dialogs)
+// ============================================
+
+@media (max-width: 768px) {
+
+    // All PrimeNG dialogs - fullscreen on mobile
+    .p-dialog {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+
+        .p-dialog-header {
+            padding: 12px 16px !important;
+            background: var(--surface-ground, #1e293b) !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+
+            .p-dialog-title {
+                font-size: 1rem !important;
+                font-weight: 600;
+            }
+
+            .p-dialog-header-icons {
+                .p-dialog-header-icon {
+                    width: 40px;
+                    height: 40px;
+                }
+            }
+        }
+
+        .p-dialog-content {
+            padding: 12px !important;
+            flex: 1;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            max-height: none !important;
+            height: auto !important;
+        }
+
+        .p-dialog-footer {
+            padding: 12px 16px !important;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0)) !important;
+            background: var(--surface-ground, #1e293b) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+    }
+
+    // Fix dialog content scrolling
+    .p-component-overlay {
+        overflow: hidden;
+    }
+}
+
+// ============================================
+// GLOBAL PAGE CONTAINER MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Universal page container
+    .page-container,
+    .dashboard-container,
+    .module-container,
+    .feature-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 0 !important;
+        overflow-x: hidden;
+
+        // Main content scrollable
+        .page-content,
+        .main-content,
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+        }
+    }
+
+    // Page headers compact
+    .page-header,
+    .module-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+
+        h1,
+        h2 {
+            font-size: 1.125rem !important;
+            margin: 0 !important;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+
+            button,
+            .btn {
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+        }
+    }
+}
+
+// ============================================
+// DASHBOARD / STATS CARDS MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Stats grid - 2 columns on mobile
+    .stats-grid,
+    .stat-cards,
+    .kpi-grid,
+    .metrics-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    // Individual stat card compact
+    .stat-card,
+    .kpi-card,
+    .metric-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+
+        .stat-value,
+        .kpi-value,
+        .metric-value {
+            font-size: 1.25rem !important;
+        }
+
+        .stat-label,
+        .kpi-label,
+        .metric-label {
+            font-size: 0.7rem !important;
+        }
+
+        .stat-icon,
+        .kpi-icon {
+            font-size: 1.5rem !important;
+            width: 40px !important;
+            height: 40px !important;
+        }
+
+        .stat-trend {
+            font-size: 0.65rem !important;
+        }
+    }
+
+    // Dashboard sections - compact spacing
+    .dashboard-section,
+    .section-card {
+        margin: 8px 12px !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+
+        .section-title,
+        .section-header h3 {
+            font-size: 0.9rem !important;
+            margin-bottom: 12px !important;
+        }
+    }
+
+    // Activity lists compact
+    .activity-list,
+    .recent-list,
+    .transaction-list {
+
+        .activity-item,
+        .list-item,
+        .transaction-item {
+            padding: 10px 12px !important;
+            gap: 10px !important;
+
+            .item-icon {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 1rem !important;
+            }
+
+            .item-details {
+                .item-title {
+                    font-size: 0.85rem !important;
+                }
+
+                .item-subtitle {
+                    font-size: 0.7rem !important;
+                }
+            }
+
+            .item-value,
+            .item-amount {
+                font-size: 0.85rem !important;
+            }
+        }
+    }
+}
+
+// ============================================
+// EARNINGS / CALENDAR VIEW MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Calendar container
+    .earnings-container,
+    .calendar-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    // Calendar grid compact
+    .calendar-grid,
+    .days-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 4px !important;
+        padding: 8px !important;
+
+        .calendar-day,
+        .day-cell {
+            aspect-ratio: 1 !important;
+            min-height: 40px !important;
+            padding: 4px !important;
+            font-size: 0.75rem !important;
+            border-radius: 8px !important;
+
+            .day-number {
+                font-size: 0.75rem !important;
+            }
+
+            .day-amount,
+            .day-value {
+                font-size: 0.55rem !important;
+            }
+        }
+    }
+
+    // Day detail panel - slide up from bottom
+    .day-detail,
+    .detail-panel {
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 60vh !important;
+        border-radius: 20px 20px 0 0 !important;
+        padding: 16px !important;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0)) !important;
+        overflow-y: auto;
+        background: var(--surface-card, #1e293b);
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+    }
+
+    // Split view - stack on mobile
+    .split-view,
+    .splitter-container {
+        flex-direction: column !important;
+
+        .split-left,
+        .split-right,
+        .splitter-panel {
+            width: 100% !important;
+            max-width: none !important;
+            flex: none !important;
+        }
+
+        .splitter-handle,
+        .resize-handle {
+            display: none !important;
+        }
+    }
+}
+
+// ============================================
+// FORMS MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Form layouts - single column
+    .form-grid,
+    .form-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    // Form inputs larger touch targets
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="search"],
+    textarea,
+    select,
+    .p-inputtext,
+    .p-dropdown,
+    .p-inputnumber {
+        min-height: 48px !important;
+        font-size: 16px !important; // Prevents zoom on iOS
+        padding: 12px 16px !important;
+    }
+
+    // Labels
+    label,
+    .form-label {
+        font-size: 0.85rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    // Form buttons
+    .form-actions,
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 16px;
+
+        button,
+        .btn {
+            width: 100% !important;
+            min-height: 48px !important;
+        }
+    }
+}
+
+// ============================================
+// TABLES MOBILE (Scroll horizontally)
+// ============================================
+
+@media (max-width: 768px) {
+
+    .table-container,
+    .p-datatable {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+
+        table {
+            min-width: 600px; // Force horizontal scroll
+        }
+
+        th,
+        td {
+            padding: 10px 12px !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap;
+        }
+    }
+}
+
+// ============================================
+// MENU SIDEBAR MOBILE OVERLAY
+// ============================================
+
+@media (max-width: 768px) {
+
+    .menu-sidebar,
+    .side-menu {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 85vw !important;
+        max-width: 320px !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 1000 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+
+        &.open {
+            transform: translateX(0);
+        }
+
+        .menu-header {
+            padding-top: calc(16px + env(safe-area-inset-top, 0)) !important;
+        }
+
+        .menu-footer {
+            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0)) !important;
+        }
+    }
+
+    .menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+    }
+}
+
+// ============================================
+// BUTTONS MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Ensure minimum touch target
+    button:not(.p-dialog-header-icon),
+    .btn,
+    .p-button {
+        min-height: 44px;
+
+        &.btn-sm,
+        &.p-button-sm {
+            min-height: 40px;
+        }
+
+        &.btn-lg,
+        &.p-button-lg {
+            min-height: 52px;
+        }
+    }
+
+    // Full width primary actions
+    .btn-primary,
+    .btn-success,
+    .p-button-success,
+    .p-button-primary {
+        &.full-width-mobile {
+            width: 100% !important;
+        }
+    }
+}
