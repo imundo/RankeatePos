@@ -1607,3 +1607,674 @@
         transform: rotate(360deg);
     }
 }
+
+// ============================================
+// DAILY EARNINGS MOBILE REFINEMENTS
+// ============================================
+
+@media (max-width: 768px) {
+
+    .earnings-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .earnings-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+
+        .header-left {
+            width: 100%;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem !important;
+        }
+
+        .header-stats {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .stat-mini {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            text-align: center;
+
+            .stat-value {
+                font-size: 1.1rem !important;
+            }
+        }
+    }
+
+    .earnings-content {
+        flex-direction: column !important;
+        padding: 12px !important;
+        gap: 16px !important;
+    }
+
+    // Calendar section refinements
+    .calendar-section {
+        padding: 12px !important;
+        border-radius: 16px !important;
+    }
+
+    .calendar-header {
+        margin-bottom: 12px !important;
+
+        h2 {
+            font-size: 1.1rem !important;
+        }
+    }
+
+    .btn-nav {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .calendar-weekdays span {
+        font-size: 0.7rem !important;
+        padding: 4px 0 !important;
+    }
+
+    .calendar-days {
+        gap: 3px !important;
+    }
+
+    .calendar-day {
+        border-radius: 8px !important;
+        min-height: 44px;
+        padding: 2px !important;
+
+        .day-number {
+            font-size: 0.85rem !important;
+        }
+
+        .day-amount {
+            font-size: 0.55rem !important;
+        }
+
+        .day-indicator {
+            width: 4px !important;
+            height: 4px !important;
+            bottom: 2px !important;
+        }
+    }
+
+    // Month summary cards - horizontal scroll
+    .month-summary {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        gap: 12px !important;
+        margin-top: 12px !important;
+        padding-bottom: 4px;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    .summary-card {
+        flex: 0 0 auto;
+        min-width: 120px;
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .summary-icon {
+        font-size: 1.25rem !important;
+    }
+
+    .summary-value {
+        font-size: 0.95rem !important;
+    }
+
+    // Detail section
+    .detail-section {
+        padding: 12px !important;
+        border-radius: 16px !important;
+    }
+
+    .detail-header {
+        margin-bottom: 12px !important;
+
+        h3 {
+            font-size: 1rem !important;
+        }
+    }
+
+    .today-badge {
+        padding: 4px 10px !important;
+        font-size: 0.7rem !important;
+    }
+
+    // Day stats grid - 2 columns
+    .day-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .day-stat {
+        padding: 12px !important;
+        border-radius: 12px !important;
+        gap: 8px !important;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .stat-icon {
+            font-size: 1.5rem !important;
+        }
+
+        .stat-amount {
+            font-size: 1.25rem !important;
+        }
+
+        .stat-label {
+            font-size: 0.75rem !important;
+        }
+    }
+
+    // Top products section
+    .top-products-section,
+    .hours-chart-section,
+    .payment-methods-section {
+        margin-bottom: 16px !important;
+
+        h4 {
+            font-size: 0.9rem !important;
+            margin-bottom: 8px !important;
+        }
+    }
+
+    .product-row {
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+        gap: 8px !important;
+
+        .product-rank {
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 0.7rem !important;
+        }
+
+        .product-name {
+            font-size: 0.9rem !important;
+        }
+
+        .product-qty {
+            font-size: 0.8rem !important;
+        }
+
+        .product-total {
+            font-size: 0.85rem !important;
+        }
+    }
+
+    // Hours chart - swipeable
+    .hours-chart {
+        height: 120px !important;
+        padding: 8px !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 4px !important;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    .hour-bar-container {
+        min-width: 28px;
+        flex: 0 0 auto;
+    }
+
+    .hour-bar {
+        max-width: 24px !important;
+    }
+
+    .hour-label {
+        font-size: 0.6rem !important;
+    }
+
+    // Payment methods - stacked
+    .payment-methods-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .payment-method-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+
+        &:hover {
+            transform: none !important;
+        }
+    }
+
+    .pm-icon {
+        font-size: 1.5rem !important;
+    }
+
+    .pm-name {
+        font-size: 0.9rem !important;
+    }
+
+    .pm-count {
+        font-size: 0.7rem !important;
+    }
+
+    .pm-percentage {
+        font-size: 0.85rem !important;
+    }
+
+    .pm-total {
+        font-size: 0.9rem !important;
+        font-weight: 600;
+    }
+
+    .pm-progress-bar {
+        height: 4px !important;
+        margin: 8px 0 !important;
+    }
+
+    // No data state
+    .no-data {
+        padding: 2rem !important;
+
+        .no-data-icon {
+            font-size: 3rem !important;
+        }
+
+        p {
+            font-size: 0.9rem !important;
+        }
+    }
+}
+
+// ============================================
+// INVENTORY MODULE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .inventory-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .inventory-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+    }
+
+    // Search and filter bar
+    .search-bar,
+    .filter-bar,
+    .inventory-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+
+        input,
+        select {
+            flex: 1;
+            min-width: 0;
+            min-height: 44px !important;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+        }
+    }
+
+    // Product cards grid
+    .products-grid,
+    .inventory-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    .product-card,
+    .inventory-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+
+        .product-image,
+        .item-image {
+            height: 80px !important;
+            border-radius: 8px !important;
+        }
+
+        .product-name,
+        .item-name {
+            font-size: 0.9rem !important;
+            margin-top: 8px;
+        }
+
+        .product-stock,
+        .item-stock {
+            font-size: 0.8rem !important;
+        }
+
+        .product-price,
+        .item-price {
+            font-size: 0.95rem !important;
+            font-weight: 600;
+        }
+    }
+
+    // Stock adjustment buttons
+    .stock-actions,
+    .adjustment-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+
+        button {
+            flex: 1;
+            min-height: 40px !important;
+            border-radius: 8px !important;
+            font-size: 0.85rem !important;
+        }
+    }
+
+    // Low stock alerts
+    .low-stock-badge,
+    .stock-warning {
+        padding: 4px 8px !important;
+        font-size: 0.7rem !important;
+        border-radius: 6px !important;
+    }
+}
+
+// ============================================
+// CATALOG MODULE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .catalog-container,
+    .catalog-manager {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .catalog-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+    }
+
+    // Category tabs - horizontal scroll
+    .category-tabs,
+    .catalog-categories {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding: 12px 16px;
+        margin: 0 -16px;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        button,
+        .category-tab {
+            flex: 0 0 auto;
+            min-height: 44px;
+            padding: 10px 20px !important;
+            border-radius: 10px !important;
+            white-space: nowrap;
+            font-size: 0.85rem !important;
+        }
+    }
+
+    // Product grid
+    .catalog-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    .catalog-item,
+    .catalog-product {
+        padding: 12px !important;
+        border-radius: 12px !important;
+
+        .item-image {
+            height: 100px !important;
+            border-radius: 10px !important;
+        }
+
+        .item-name {
+            font-size: 0.9rem !important;
+            margin-top: 10px;
+            line-height: 1.3;
+        }
+
+        .item-category {
+            font-size: 0.75rem !important;
+        }
+
+        .item-price {
+            font-size: 1rem !important;
+            font-weight: 700;
+            color: #10B981;
+        }
+    }
+
+    // Add product FAB
+    .add-product-btn,
+    .fab-add {
+        position: fixed !important;
+        bottom: calc(90px + env(safe-area-inset-bottom, 0)) !important;
+        right: 16px !important;
+        width: 56px !important;
+        height: 56px !important;
+        border-radius: 16px !important;
+        z-index: 900;
+    }
+}
+
+// ============================================
+// REPORTS MODULE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .reports-container,
+    .analytics-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .reports-header {
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+
+        h1 {
+            font-size: 1.25rem !important;
+        }
+    }
+
+    // Report cards
+    .report-cards,
+    .reports-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+    }
+
+    .report-card {
+        padding: 16px !important;
+        border-radius: 12px !important;
+
+        .report-icon {
+            font-size: 1.5rem !important;
+        }
+
+        .report-title {
+            font-size: 0.95rem !important;
+        }
+
+        .report-description {
+            font-size: 0.8rem !important;
+        }
+    }
+
+    // Date range picker
+    .date-picker,
+    .date-range-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+
+        input[type="date"] {
+            width: 100% !important;
+            min-height: 44px !important;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+        }
+    }
+
+    // Export buttons
+    .export-buttons {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+
+        button {
+            flex: 1;
+            min-height: 48px !important;
+        }
+    }
+}
+
+// ============================================
+// ADMIN/BACKOFFICE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .admin-container,
+    .admin-dashboard {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .admin-header {
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+    }
+
+    // Admin cards grid
+    .admin-grid,
+    .admin-cards {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px 16px !important;
+    }
+
+    .admin-card {
+        padding: 16px !important;
+        border-radius: 12px !important;
+        text-align: center;
+
+        .card-icon {
+            font-size: 2rem !important;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 0.9rem !important;
+        }
+    }
+
+    // User management table → cards
+    .users-table,
+    .admin-table {
+        .table-header {
+            display: none !important;
+        }
+
+        .table-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 16px !important;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    }
+}
+
+// ============================================
+// MARKETING/CRM MODULE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .marketing-container,
+    .crm-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    // Customer cards
+    .customer-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    .customer-card {
+        padding: 16px !important;
+        border-radius: 12px !important;
+
+        .customer-avatar {
+            width: 48px !important;
+            height: 48px !important;
+        }
+
+        .customer-name {
+            font-size: 1rem !important;
+        }
+
+        .customer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .customer-tag {
+            padding: 4px 8px !important;
+            font-size: 0.7rem !important;
+        }
+    }
+
+    // Campaign cards
+    .campaigns-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+}
