@@ -1720,33 +1720,38 @@
 
     .calendar-day {
         border-radius: 8px !important;
-        min-height: 48px;
-        padding: 2px !important;
-        aspect-ratio: 1/1.2; // Optimized aspect ratio
+        min-height: auto !important; // Let aspect ratio drive height
+        height: auto !important;
+        padding: 1px !important; // Minimal padding
+        aspect-ratio: 1 / 1 !important; // Strictly square
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
         min-width: 0; // Prevent blowout
+        position: relative; // For indicator
 
         .day-number {
-            font-size: 0.9rem !important;
+            font-size: 0.85rem !important;
             line-height: 1;
+            margin-bottom: 2px;
         }
 
         .day-amount {
-            font-size: 0.55rem !important;
+            font-size: 0.5rem !important;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
+            opacity: 0.9;
         }
 
         .day-indicator {
             width: 4px !important;
             height: 4px !important;
+            position: absolute !important;
             bottom: 4px !important;
-            margin-top: 2px;
+            margin: 0 !important;
         }
     }
 
