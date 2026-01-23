@@ -1255,3 +1255,355 @@
         }
     }
 }
+
+// ============================================
+// SETTINGS PAGE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .settings-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    .settings-header {
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+
+        .header-title h1 {
+            font-size: 1.25rem !important;
+        }
+    }
+
+    .tabs-container {
+        padding: 12px 16px !important;
+        gap: 8px !important;
+        -webkit-overflow-scrolling: touch;
+
+        // Scroll indicator
+        &::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 24px;
+            background: linear-gradient(to right, transparent, rgba(30, 41, 59, 1));
+            pointer-events: none;
+        }
+    }
+
+    .tab {
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+        min-height: 44px;
+
+        span {
+            font-size: 1rem;
+        }
+    }
+
+    .settings-content {
+        padding: 16px !important;
+    }
+
+    // Data table → Card view on mobile
+    .data-table {
+        .table-header {
+            display: none !important;
+        }
+
+        .table-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 16px !important;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .cell-main {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 4px;
+        }
+
+        .cell-secondary {
+            font-size: 0.85rem !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .cell-badge,
+        .cell-status {
+            align-self: flex-start;
+            padding: 6px 12px !important;
+        }
+
+        .cell-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-action {
+            flex: 1;
+            min-height: 44px;
+            border-radius: 10px !important;
+            font-size: 1.1rem;
+        }
+    }
+
+    .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+
+        h3 {
+            font-size: 1rem !important;
+        }
+    }
+
+    .btn-add {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px !important;
+        border-radius: 12px !important;
+    }
+
+    .settings-card {
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px !important;
+    }
+
+    .avatar {
+        width: 64px !important;
+        height: 64px !important;
+        font-size: 1.5rem !important;
+    }
+
+    .user-details {
+        align-items: center;
+    }
+
+    .btn-logout {
+        min-height: 52px !important;
+        font-size: 1rem !important;
+        border-radius: 14px !important;
+    }
+
+    // Taxes tab refinements
+    .tax-select {
+        min-height: 44px;
+        padding: 10px 16px !important;
+        border-radius: 10px !important;
+    }
+
+    .info-box {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px !important;
+        padding: 16px !important;
+    }
+}
+
+// ============================================
+// ANALYTICS PAGE MOBILE
+// ============================================
+
+@media (max-width: 768px) {
+
+    .analytics-container,
+    .analytics-dashboard {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    // KPI cards horizontal scroll
+    .kpi-grid,
+    .stats-grid,
+    .metrics-grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        gap: 12px !important;
+        padding: 4px !important;
+        scroll-snap-type: x mandatory;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        >* {
+            flex: 0 0 auto;
+            min-width: 140px;
+            max-width: 160px;
+            scroll-snap-align: start;
+        }
+    }
+
+    // Chart containers
+    .chart-container,
+    .chart-wrapper {
+        height: 200px !important;
+        min-height: 200px !important;
+        margin: 0 -16px;
+        padding: 0 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    // Date range selector
+    .date-ranges,
+    .range-selector {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding: 4px 0;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        button {
+            flex: 0 0 auto;
+            min-width: 60px;
+            min-height: 40px;
+            white-space: nowrap;
+        }
+    }
+
+    // Report export button
+    .export-btn,
+    .btn-export {
+        width: 100% !important;
+        min-height: 48px !important;
+        margin-top: 16px;
+    }
+}
+
+// ============================================
+// SECONDARY PAGES BOTTOM NAV SPACING
+// ============================================
+
+@media (max-width: 768px) {
+
+    // All feature pages should have bottom padding
+    .inventory-container,
+    .catalog-container,
+    .earnings-container,
+    .reports-container,
+    .admin-container,
+    .account-container,
+    .marketing-container,
+    .facturacion-container,
+    .contabilidad-container,
+    .compras-container,
+    .cotizaciones-container {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)) !important;
+    }
+
+    // Page headers standardization
+    [class*="-header"]:not(.modal-header):not(.dialog-header) {
+        padding: 12px 16px !important;
+        padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
+    }
+}
+
+// ============================================
+// TOUCH FEEDBACK ENHANCEMENTS
+// ============================================
+
+@media (max-width: 768px) {
+
+    // Ripple effect for interactive elements
+    .touch-feedback {
+        position: relative;
+        overflow: hidden;
+
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+            opacity: 0;
+            transform: scale(0);
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        &:active::after {
+            opacity: 1;
+            transform: scale(2);
+            transition: transform 0.15s;
+        }
+    }
+
+    // Active state for cards and list items
+    .module-card-mobile,
+    .quick-action-btn,
+    .stat-card-mobile,
+    .activity-item-mobile,
+    .settings-card,
+    .data-table .table-row {
+        transition: transform 0.15s ease, background 0.15s ease;
+
+        &:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.05);
+        }
+    }
+}
+
+// ============================================
+// PULL TO REFRESH INDICATOR
+// ============================================
+
+.pull-refresh-indicator {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(99, 102, 241, 0.9);
+    border-radius: 0 0 20px 20px;
+    z-index: 9999;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+
+    &.visible {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    &.refreshing .pull-icon {
+        animation: spin 1s linear infinite;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
