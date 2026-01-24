@@ -234,7 +234,7 @@ import { CardModule } from 'primeng/card';
                                 <h4>Estado del Tenant</h4>
                                 <p>{{ infoForm.get('activo')?.value ? 'Empresa operativa - usuarios pueden ingresar' : 'Empresa suspendida - acceso bloqueado' }}</p>
                             </div>
-                            <p-inputSwitch formControlName="activo" [formGroup]="infoForm"></p-inputSwitch>
+                            <p-inputSwitch [formControl]="$any(infoForm.get('activo'))"></p-inputSwitch>
                         </div>
                     </p-tabPanel>
                     
@@ -743,8 +743,11 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
                 });
 
                 this.moduleStates = {};
+                // Normalize tenant modules for case-insensitive check
+                const tenantModulesNormalized = (tenant.modules || []).map(m => m.toLowerCase());
+
                 this.allModules.forEach(m => {
-                    this.moduleStates[m.code] = tenant.modules ? tenant.modules.includes(m.code) : false;
+                    this.moduleStates[m.code] = tenantModulesNormalized.includes(m.code.toLowerCase());
                 });
 
                 this.loading = false;
