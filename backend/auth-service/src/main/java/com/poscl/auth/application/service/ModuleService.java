@@ -30,7 +30,7 @@ public class ModuleService {
     }
 
     public Optional<Module> findByCode(String code) {
-        return moduleRepository.findByCode(code);
+        return moduleRepository.findByCodeIgnoreCase(code);
     }
 
     public Optional<Module> findById(UUID id) {

@@ -236,6 +236,14 @@ public class AdminController {
         return ResponseEntity.ok(toUserDto(user));
     }
 
+    @GetMapping("/users/{id}")
+    @Operation(summary = "Obtener usuario", description = "Obtiene datos de un usuario por ID")
+    public ResponseEntity<UserDto> getUser(@PathVariable UUID id) {
+        log.info("GET /api/admin/users/{}", id);
+        User user = userService.findById(id);
+        return ResponseEntity.ok(toUserDto(user));
+    }
+
     // ==================== Modules Management ====================
 
     @GetMapping("/modules")

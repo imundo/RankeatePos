@@ -108,7 +108,8 @@ const CATEGORIES = ['General', 'Ventas', 'Inventario', 'Finanzas', 'Operaciones'
                         </div>
                         <label class="toggle">
                           <input type="checkbox" 
-                                 [(ngModel)]="module.enabled">
+                                 [checked]="module.enabled"
+                                 (change)="toggleModule(module.key, $event)">
                           <span class="slider"></span>
                         </label>
                       </div>
@@ -410,18 +411,27 @@ export class UserPermissionsComponent implements OnInit {
   private mergeWithConfig(backendModules: any[]): ModuleAccess[] {
     const result: ModuleAccess[] = [];
 
-    // Convert backend array to map for easy lookup
-    // Backend keys might be 'key' or 'code', adjust as needed
+    // Convert backend array to map for easy lookup (normalize to lowercase)
     const backendMap = new Map();
-    backendModules.forEach(m => backendMap.set(m.key || m.code, m.enabled));
+    if (backendModules) {
+      backendModules.forEach(m => {
+        const code = m.key || m.code || '';
+        backendMap.set(code.toLowerCase(), m.enabled);
+      });
+    }
 
     Object.entries(MODULE_CONFIG).forEach(([key, config]) => {
+      // Check exact key or case-insensitive match
+      const isEnabled = backendMap.has(key.toLowerCase())
+        ? backendMap.get(key.toLowerCase())
+        : false;
+
       result.push({
         key: key,
         label: config.label,
         icon: config.icon,
         category: config.category,
-        enabled: backendMap.get(key) === true // Default false if not found
+        enabled: isEnabled
       });
     });
 
@@ -453,6 +463,13 @@ export class UserPermissionsComponent implements OnInit {
     const checked = event.target.checked;
     this.modules.update(current =>
       current.map(m => m.category === category ? { ...m, enabled: checked } : m)
+    );
+  }
+
+  toggleModule(key: string, event: any) {
+    const checked = event.target.checked;
+    this.modules.update(current =>
+      current.map(m => m.key === key ? { ...m, enabled: checked } : m)
     );
   }
 

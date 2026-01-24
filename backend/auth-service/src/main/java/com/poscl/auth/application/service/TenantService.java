@@ -38,11 +38,16 @@ public class TenantService {
         Tenant tenant = findByIdWithModules(tenantId);
 
         // Optimization: Fetch all involved modules in ONE query instad of N
-        java.util.List<String> codes = new java.util.ArrayList<>(modulesMap.keySet());
-        java.util.List<com.poscl.auth.domain.entity.Module> modules = moduleRepository.findByCodeIn(codes);
+        // Normalize keys to lowercase for lookup
+        java.util.Map<String, Boolean> normalizedMap = new java.util.HashMap<>();
+        modulesMap.forEach((k, v) -> normalizedMap.put(k.toLowerCase(), v));
+
+        java.util.List<String> codes = new java.util.ArrayList<>(normalizedMap.keySet());
+        java.util.List<com.poscl.auth.domain.entity.Module> modules = moduleRepository.findByCodeInIgnoreCase(codes);
 
         modules.forEach(module -> {
-            Boolean isActive = modulesMap.get(module.getCode());
+            // Case-insensitive lookup
+            Boolean isActive = normalizedMap.get(module.getCode().toLowerCase());
 
             var existing = tenant.getTenantModules().stream()
                     .filter(tm -> tm.getModule().getId().equals(module.getId()))

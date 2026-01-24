@@ -23,5 +23,10 @@ public interface ModuleRepository extends JpaRepository<Module, UUID> {
 
     List<Module> findByCodeIn(List<String> codes);
 
+    Optional<Module> findByCodeIgnoreCase(String code);
+
+    @Query("SELECT m FROM Module m WHERE LOWER(m.code) IN :codes")
+    List<Module> findByCodeInIgnoreCase(@org.springframework.data.repository.query.Param("codes") List<String> codes);
+
     boolean existsByCode(String code);
 }
