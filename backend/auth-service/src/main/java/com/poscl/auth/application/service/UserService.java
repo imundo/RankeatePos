@@ -243,14 +243,26 @@ public class UserService {
 
                 // Add enabled modules as permissions
                 try {
-                        List<String> userModules = userModuleAccessRepository
-                                        .findEnabledModuleCodesByUserId(user.getId());
-                        if (userModules != null) {
-                                // Normalize to lowercase to ensure matching with frontend
-                                List<String> normalizedModules = userModules.stream()
-                                                .map(String::toLowerCase)
+                        // If user is TENANT_ADMIN, they inherit all active tenant modules
+                        boolean isTenantAdmin = user.hasRole("TENANT_ADMIN") || user.hasRole("ROLE_TENANT_ADMIN");
+
+                        if (isTenantAdmin) {
+                                List<String> tenantModules = user.getTenant().getTenantModules().stream()
+                                                .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
+                                                .map(tm -> tm.getModule().getCode().toLowerCase())
                                                 .collect(Collectors.toList());
-                                permissions.addAll(normalizedModules);
+                                permissions.addAll(tenantModules);
+                        } else {
+                                // Regular users get specific assignments
+                                List<String> userModules = userModuleAccessRepository
+                                                .findEnabledModuleCodesByUserId(user.getId());
+                                if (userModules != null) {
+                                        // Normalize to lowercase to ensure matching with frontend
+                                        List<String> normalizedModules = userModules.stream()
+                                                        .map(String::toLowerCase)
+                                                        .collect(Collectors.toList());
+                                        permissions.addAll(normalizedModules);
+                                }
                         }
                 } catch (Exception e) {
                         log.error("Error loading user modules for user {}: {}", user.getId(), e.getMessage());
