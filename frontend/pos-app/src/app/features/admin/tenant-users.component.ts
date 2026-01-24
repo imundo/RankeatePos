@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminService, AdminUser, Tenant } from '@core/services/admin.service';
+import { UsersService, User } from '@core/services/users.service';
 
 @Component({
   selector: 'app-tenant-users',
@@ -265,11 +266,11 @@ export class TenantUsersComponent implements OnInit {
     // `UserService.java` `findAll` checks `X-Tenant-Id`.
 
     this.usersService.getUsers(0, 100).subscribe({ // Fetch all for now
-      next: (response) => {
+      next: (response: any) => {
         this.users.set(response.content);
         this.loading.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading users', err);
         this.loading.set(false);
       }
@@ -279,6 +280,80 @@ export class TenantUsersComponent implements OnInit {
     // this.adminService.getTenant(tenantId)... // This will fail 403 for Tenant Admin.
   }
 
-  // ... rest of methods updated to use usersService
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      'OWNER_ADMIN': 'Administrador',
+      'MANAGER': 'Encargado',
+      'CASHIER': 'Cajero',
+      'STOCKKEEPER': 'Bodeguero',
+      'ACCOUNTANT': 'Contador'
+    };
+    return labels[role] || role;
+  }
+
+  openUserModal(user?: any) {
+    if (user) {
+      this.editingUser.set(user);
+      this.formUser = { ...user };
+    } else {
+      this.editingUser.set(null);
+      this.formUser = { nombre: '', email: '', password: '', roles: [] };
+    }
+    this.showModal.set(true);
+  }
+
+  closeModal() {
+    this.showModal.set(false);
+  }
+
+  toggleRole(role: string) {
+    const index = this.formUser.roles.indexOf(role);
+    if (index === -1) {
+      this.formUser.roles.push(role);
+    } else {
+      this.formUser.roles.splice(index, 1);
+    }
+  }
+
+  saveUser() {
+    if (this.editingUser()) {
+      this.usersService.updateUser(this.editingUser()!.id, {
+        nombre: this.formUser.nombre,
+        roles: this.formUser.roles,
+        activo: true
+      }).subscribe({
+        next: (updated: any) => {
+          this.users.update(users => users.map(u => u.id === updated.id ? updated : u));
+          this.closeModal();
+        },
+        error: (err: any) => console.error(err)
+      });
+    } else {
+      this.usersService.createUser({
+        nombre: this.formUser.nombre,
+        email: this.formUser.email,
+        password: this.formUser.password,
+        roles: this.formUser.roles,
+        apellido: ''
+      }).subscribe({
+        next: (newItem: any) => {
+          this.users.update(users => [...users, newItem]);
+          this.closeModal();
+        },
+        error: (err: any) => console.error(err)
+      });
+    }
+  }
+
+  goToPermissions(user: any) {
+    const tenantId = this.tenant()?.id;
+    if (tenantId) {
+      this.router.navigate(['/admin/tenants', tenantId, 'users', user.id, 'permissions']);
+    } else {
+      // Fallback: Use permissions page for current tenant context if ID missing?
+      // This component expects tenantId. If missing (loadData failed), we can't route correctly.
+      console.warn('Cannot navigate to permissions: Tenant ID missing');
+    }
+  }
 }
 
