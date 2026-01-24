@@ -243,8 +243,10 @@ public class UserService {
 
                 // Add enabled modules as permissions
                 try {
-                        // If user is TENANT_ADMIN, they inherit all active tenant modules
-                        boolean isTenantAdmin = user.hasRole("TENANT_ADMIN") || user.hasRole("ROLE_TENANT_ADMIN");
+                        // If user is TENANT_ADMIN or OWNER_ADMIN, they inherit all active tenant
+                        // modules
+                        boolean isTenantAdmin = user.hasRole("TENANT_ADMIN") || user.hasRole("ROLE_TENANT_ADMIN") ||
+                                        user.hasRole("OWNER_ADMIN") || user.hasRole("ROLE_OWNER_ADMIN");
 
                         if (isTenantAdmin) {
                                 List<String> tenantModules = user.getTenant().getTenantModules().stream()
