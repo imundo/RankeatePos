@@ -3528,10 +3528,16 @@ export class PosComponent implements OnInit {
   // Permissions Helper
   canAccess(moduleId: string): boolean {
     // POS module is core
-    if (moduleId === 'pos') return true;
-    // If authService is private, we can't access it in template, but we can here
-    // However, signal might be null initially
-    return this.authService.hasModule(moduleId);
+    if (moduleId === 'pos') {
+      return this.authService.hasModule('pos') && this.authService.hasPermission('pos');
+    }
+
+    // Check if Tenant has it AND User has it (case-insensitive)
+    // Note: Backend now sends module codes in permissions array
+    const hasTenantModule = this.authService.hasModule(moduleId);
+    const hasUserPermission = this.authService.hasPermission(moduleId);
+
+    return hasTenantModule && hasUserPermission;
   }
 
   ngOnInit(): void {

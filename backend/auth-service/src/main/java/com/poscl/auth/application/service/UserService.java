@@ -38,6 +38,7 @@ public class UserService {
         private final TenantRepository tenantRepository;
         private final RoleRepository roleRepository;
         private final BranchRepository branchRepository;
+        private final com.poscl.auth.domain.repository.UserModuleAccessRepository userModuleAccessRepository;
         private final PasswordEncoder passwordEncoder;
 
         /**
@@ -235,6 +236,22 @@ public class UserService {
 
         // Mapper
         private UserDto toDto(User user) {
+                Set<String> permissions = user.getRoles().stream()
+                                .flatMap(r -> r.getPermisos() != null ? Arrays.stream(r.getPermisos())
+                                                : java.util.stream.Stream.empty())
+                                .collect(Collectors.toSet());
+
+                // Add enabled modules as permissions
+                try {
+                        List<String> userModules = userModuleAccessRepository
+                                        .findEnabledModuleCodesByUserId(user.getId());
+                        if (userModules != null) {
+                                permissions.addAll(userModules);
+                        }
+                } catch (Exception e) {
+                        log.error("Error loading user modules for user {}: {}", user.getId(), e.getMessage());
+                }
+
                 return UserDto.builder()
                                 .id(user.getId())
                                 .email(user.getEmail())
@@ -245,10 +262,7 @@ public class UserService {
                                 .emailVerificado(user.getEmailVerificado())
                                 .ultimoLogin(user.getUltimoLogin())
                                 .roles(user.getRoles().stream().map(Role::getNombre).collect(Collectors.toSet()))
-                                .permissions(user.getRoles().stream()
-                                                .flatMap(r -> r.getPermisos() != null ? Arrays.stream(r.getPermisos())
-                                                                : java.util.stream.Stream.empty())
-                                                .collect(Collectors.toSet()))
+                                .permissions(permissions)
                                 .branches(user.getBranches().stream()
                                                 .map(b -> UserDto.BranchInfo.builder()
                                                                 .id(b.getId())
