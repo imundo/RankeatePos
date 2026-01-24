@@ -7,6 +7,7 @@ import { AuthService } from '@core/auth/auth.service';
 import { SalesService, DailyStats } from '@core/services/sales.service';
 import { SalesEventService } from '@core/services/sales-event.service';
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
+import { MobileCalendarComponent } from './mobile-calendar.component';
 
 interface DayData {
   date: Date;
@@ -33,7 +34,7 @@ interface DailySummary {
 @Component({
   selector: 'app-daily-earnings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MobileCalendarComponent],
   template: `
     <div class="earnings-container">
       <header class="earnings-header">
@@ -57,191 +58,205 @@ interface DailySummary {
       </header>
 
       <div class="earnings-content">
-        <!-- Calendar Section -->
-        <section class="calendar-section">
-          <div class="calendar-header">
-            <button class="btn-nav" (click)="prevMonth()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 19l-7-7 7-7"/>
-              </svg>
-            </button>
-            <h2>{{ currentMonthName() }} {{ currentYear() }}</h2>
-            <button class="btn-nav" (click)="nextMonth()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 5l7 7-7 7"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="calendar-grid">
-            <div class="calendar-weekdays">
-              @for (day of weekdays; track day) {
-                <span>{{ day }}</span>
-              }
+        <!-- Desktop Layout -->
+        <ng-container *ngIf="!isMobile()">
+          <!-- Calendar Section -->
+          <section class="calendar-section">
+            <div class="calendar-header">
+              <button class="btn-nav" (click)="prevMonth()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <h2>{{ currentMonthName() }} {{ currentYear() }}</h2>
+              <button class="btn-nav" (click)="nextMonth()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
             </div>
-            
-            <div class="calendar-days">
-              @for (day of calendarDays(); track day.date.toISOString()) {
-                <button 
-                  class="calendar-day"
-                  [class.other-month]="!day.isCurrentMonth"
-                  [class.today]="day.isToday"
-                  [class.selected]="day.isSelected"
-                  [class.has-sales]="day.totalSales > 0"
-                  (click)="selectDay(day)"
-                >
-                  <span class="day-number">{{ day.dayNumber }}</span>
-                  @if (day.totalSales > 0 && day.isCurrentMonth) {
-                    <span class="day-indicator"></span>
-                    <span class="day-amount">{{ formatPriceShort(day.totalSales) }}</span>
-                  }
-                </button>
-              }
-            </div>
-          </div>
 
-          <!-- Month Summary -->
-          <div class="month-summary">
-            <div class="summary-card">
-              <span class="summary-icon">📊</span>
-              <div class="summary-info">
-                <span class="summary-value">{{ monthTransactions() }}</span>
-                <span class="summary-label">Transacciones</span>
+            <div class="calendar-grid">
+              <div class="calendar-weekdays">
+                @for (day of weekdays; track day) {
+                  <span>{{ day }}</span>
+                }
+              </div>
+              
+              <div class="calendar-days">
+                @for (day of calendarDays(); track day.date.toISOString()) {
+                  <button 
+                    class="calendar-day"
+                    [class.other-month]="!day.isCurrentMonth"
+                    [class.today]="day.isToday"
+                    [class.selected]="day.isSelected"
+                    [class.has-sales]="day.totalSales > 0"
+                    (click)="selectDay(day)"
+                  >
+                    <span class="day-number">{{ day.dayNumber }}</span>
+                    @if (day.totalSales > 0 && day.isCurrentMonth) {
+                      <span class="day-indicator"></span>
+                      <span class="day-amount">{{ formatPriceShort(day.totalSales) }}</span>
+                    }
+                  </button>
+                }
               </div>
             </div>
-            <div class="summary-card">
-              <span class="summary-icon">✅</span>
-              <div class="summary-info">
-                <span class="summary-value">{{ monthApproved() }}</span>
-                <span class="summary-label">Aprobadas</span>
+
+            <!-- Month Summary -->
+            <div class="month-summary">
+              <div class="summary-card">
+                <span class="summary-icon">📊</span>
+                <div class="summary-info">
+                  <span class="summary-value">{{ monthTransactions() }}</span>
+                  <span class="summary-label">Transacciones</span>
+                </div>
+              </div>
+              <div class="summary-card">
+                <span class="summary-icon">✅</span>
+                <div class="summary-info">
+                  <span class="summary-value">{{ monthApproved() }}</span>
+                  <span class="summary-label">Aprobadas</span>
+                </div>
+              </div>
+              <div class="summary-card accent">
+                <span class="summary-icon">💵</span>
+                <div class="summary-info">
+                  <span class="summary-value">{{ formatPrice(monthTotal()) }}</span>
+                  <span class="summary-label">Total Mes</span>
+                </div>
               </div>
             </div>
-            <div class="summary-card accent">
-              <span class="summary-icon">💵</span>
-              <div class="summary-info">
-                <span class="summary-value">{{ formatPrice(monthTotal()) }}</span>
-                <span class="summary-label">Total Mes</span>
-              </div>
+          </section>
+
+          <!-- Resizable Splitter -->
+          <div 
+            class="splitter"
+            (mousedown)="startResize($event)"
+            [class.dragging]="isDragging()"
+          >
+            <div class="splitter-line"></div>
+          </div>
+
+          <!-- Day Detail Section -->
+          <section class="detail-section" [style.flex]="'1'">
+            <div class="detail-header">
+              <h3>
+                📅 {{ selectedDateFormatted() }}
+                @if (isSelectedToday()) {
+                  <span class="today-badge">Hoy</span>
+                }
+              </h3>
             </div>
-          </div>
-        </section>
 
-        <!-- Resizable Splitter -->
-        <div 
-          class="splitter"
-          (mousedown)="startResize($event)"
-          [class.dragging]="isDragging()"
-        >
-          <div class="splitter-line"></div>
-        </div>
-
-        <!-- Day Detail Section -->
-        <section class="detail-section" [style.flex]="'1'">
-          <div class="detail-header">
-            <h3>
-              📅 {{ selectedDateFormatted() }}
-              @if (isSelectedToday()) {
-                <span class="today-badge">Hoy</span>
-              }
-            </h3>
-          </div>
-
-          @if (selectedDaySummary()) {
-            <div class="detail-content">
-              <!-- Day Stats -->
-              <div class="day-stats-grid">
-                <div class="day-stat sales">
-                  <div class="stat-icon">💰</div>
-                  <div class="stat-details">
-                    <span class="stat-amount">{{ formatPrice(selectedDaySummary()!.totalVentas) }}</span>
-                    <span class="stat-label">Ventas del día</span>
-                  </div>
-                </div>
-                <div class="day-stat transactions">
-                  <div class="stat-icon">🧾</div>
-                  <div class="stat-details">
-                    <span class="stat-amount">{{ selectedDaySummary()!.totalTransacciones }}</span>
-                    <span class="stat-label">Transacciones</span>
-                  </div>
-                </div>
-                <div class="day-stat approved">
-                  <div class="stat-icon">✅</div>
-                  <div class="stat-details">
-                    <span class="stat-amount">{{ selectedDaySummary()!.ventasAprobadas }}</span>
-                    <span class="stat-label">Aprobadas</span>
-                  </div>
-                </div>
-                <div class="day-stat rejected">
-                  <div class="stat-icon">❌</div>
-                  <div class="stat-details">
-                    <span class="stat-amount">{{ selectedDaySummary()!.ventasRechazadas }}</span>
-                    <span class="stat-label">Rechazadas</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Top Products -->
-              <div class="top-products-section">
-                <h4>🏆 Productos Más Vendidos</h4>
-                <div class="products-list">
-                  @for (product of selectedDaySummary()!.productosMasVendidos; track product.nombre; let i = $index) {
-                    <div class="product-row">
-                      <span class="product-rank">{{ i + 1 }}</span>
-                      <span class="product-name">{{ product.nombre }}</span>
-                      <span class="product-qty">x{{ product.cantidad }}</span>
-                      <span class="product-total">{{ formatPrice(product.total) }}</span>
+            @if (selectedDaySummary()) {
+              <div class="detail-content">
+                <!-- Day Stats -->
+                <div class="day-stats-grid">
+                  <div class="day-stat sales">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-details">
+                      <span class="stat-amount">{{ formatPrice(selectedDaySummary()!.totalVentas) }}</span>
+                      <span class="stat-label">Ventas del día</span>
                     </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Hours Chart -->
-              <div class="hours-chart-section">
-                <h4>📈 Ventas por Hora</h4>
-                <div class="hours-chart">
-                  @for (hour of selectedDaySummary()!.ventasPorHora; track hour.hora) {
-                    <div class="hour-bar-container">
-                      <div 
-                        class="hour-bar" 
-                        [style.height.%]="getBarHeight(hour.total)"
-                        [class.highlight]="hour.total === getMaxHourSale()"
-                      ></div>
-                      <span class="hour-label">{{ hour.hora }}</span>
+                  </div>
+                  <div class="day-stat transactions">
+                    <div class="stat-icon">🧾</div>
+                    <div class="stat-details">
+                      <span class="stat-amount">{{ selectedDaySummary()!.totalTransacciones }}</span>
+                      <span class="stat-label">Transacciones</span>
                     </div>
-                  }
+                  </div>
+                  <div class="day-stat approved">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-details">
+                      <span class="stat-amount">{{ selectedDaySummary()!.ventasAprobadas }}</span>
+                      <span class="stat-label">Aprobadas</span>
+                    </div>
+                  </div>
+                  <div class="day-stat rejected">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-details">
+                      <span class="stat-amount">{{ selectedDaySummary()!.ventasRechazadas }}</span>
+                      <span class="stat-label">Rechazadas</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Payment Methods Section -->
-              <div class="payment-methods-section">
-                <h4>💳 Medios de Pago</h4>
-                <div class="payment-methods-grid">
-                  @for (pago of selectedDaySummary()!.mediosPago; track pago.tipo) {
-                    <div class="payment-method-card">
-                      <div class="pm-header">
-                        <span class="pm-icon">{{ pago.icon }}</span>
-                        <div class="pm-info">
-                          <span class="pm-name">{{ pago.tipo }}</span>
-                          <span class="pm-count">{{ pago.cantidad }} transacciones</span>
+                <!-- Top Products -->
+                <div class="top-products-section">
+                  <h4>🏆 Productos Más Vendidos</h4>
+                  <div class="products-list">
+                    @for (product of selectedDaySummary()!.productosMasVendidos; track product.nombre; let i = $index) {
+                      <div class="product-row">
+                        <span class="product-rank">{{ i + 1 }}</span>
+                        <span class="product-name">{{ product.nombre }}</span>
+                        <span class="product-qty">x{{ product.cantidad }}</span>
+                        <span class="product-total">{{ formatPrice(product.total) }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Hours Chart -->
+                <div class="hours-chart-section">
+                  <h4>📈 Ventas por Hora</h4>
+                  <div class="hours-chart">
+                    @for (hour of selectedDaySummary()!.ventasPorHora; track hour.hora) {
+                      <div class="hour-bar-container">
+                        <div 
+                          class="hour-bar" 
+                          [style.height.%]="getBarHeight(hour.total)"
+                          [class.highlight]="hour.total === getMaxHourSale()"
+                        ></div>
+                        <span class="hour-label">{{ hour.hora }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Payment Methods Section -->
+                <div class="payment-methods-section">
+                  <h4>💳 Medios de Pago</h4>
+                  <div class="payment-methods-grid">
+                    @for (pago of selectedDaySummary()!.mediosPago; track pago.tipo) {
+                      <div class="payment-method-card">
+                        <div class="pm-header">
+                          <span class="pm-icon">{{ pago.icon }}</span>
+                          <div class="pm-info">
+                            <span class="pm-name">{{ pago.tipo }}</span>
+                            <span class="pm-count">{{ pago.cantidad }} transacciones</span>
+                          </div>
+                          <span class="pm-percentage">{{ pago.porcentaje }}%</span>
                         </div>
-                        <span class="pm-percentage">{{ pago.porcentaje }}%</span>
+                        <div class="pm-progress-bar">
+                          <div class="pm-progress" [style.width.%]="pago.porcentaje"></div>
+                        </div>
+                        <span class="pm-total">{{ formatPrice(pago.total) }}</span>
                       </div>
-                      <div class="pm-progress-bar">
-                        <div class="pm-progress" [style.width.%]="pago.porcentaje"></div>
-                      </div>
-                      <span class="pm-total">{{ formatPrice(pago.total) }}</span>
-                    </div>
-                  }
+                    }
+                  </div>
                 </div>
               </div>
-            </div>
-          } @else {
-            <div class="no-data">
-              <span class="no-data-icon">📭</span>
-              <p>Sin ventas registradas este día</p>
-            </div>
-          }
-        </section>
+            } @else {
+              <div class="no-data">
+                <span class="no-data-icon">📭</span>
+                <p>Sin ventas registradas este día</p>
+              </div>
+            }
+          </section>
+        </ng-container>
+
+        <!-- Mobile Layout -->
+        <ng-container *ngIf="isMobile()">
+          <app-mobile-calendar
+            [initialDate]="currentDate()"
+            [selectedDate]="selectedDate()"
+            [salesData]="salesData()"
+            (dateSelected)="onMobileDateSelect($event)"
+            (monthChange)="onMobileMonthChange($event)"
+          ></app-mobile-calendar>
+        </ng-container>
       </div>
     </div>
   `,
@@ -912,9 +927,25 @@ export class DailyEarningsComponent implements OnInit, OnDestroy {
   leftPanelWidth = signal(400);
 
   // Mock sales data for demo
-  private salesData = signal<Record<string, DailySummary>>({});
+  salesData = signal<Record<string, DailySummary>>({});
 
   // Splitter resize methods
+  isMobile = signal(window.innerWidth <= 1024);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth <= 1024);
+  }
+
+  onMobileDateSelect(date: Date) {
+    this.selectedDate.set(date);
+  }
+
+  onMobileMonthChange(date: Date) {
+    this.currentDate.set(date);
+    this.loadSalesData();
+  }
+
   startResize(event: MouseEvent) {
     event.preventDefault();
     this.isDragging.set(true);
