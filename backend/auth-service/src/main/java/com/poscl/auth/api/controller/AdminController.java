@@ -240,7 +240,7 @@ public class AdminController {
     @Operation(summary = "Obtener usuario", description = "Obtiene datos de un usuario por ID")
     public ResponseEntity<UserDto> getUser(@PathVariable UUID id) {
         log.info("GET /api/admin/users/{}", id);
-        User user = userService.findById(id);
+        User user = userService.findByIdWithBranches(id);
         return ResponseEntity.ok(toUserDto(user));
     }
 
