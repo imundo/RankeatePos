@@ -415,12 +415,24 @@ interface DailySummary {
         color: rgba(255, 255, 255, 0.4);
         padding: 0.5rem 0;
       }
+
+      @media (max-width: 600px) {
+        gap: 2px;
+        span {
+          font-size: 0.65rem;
+          padding: 2px 0;
+        }
+      }
     }
 
     .calendar-days {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 0.25rem;
+
+      @media (max-width: 600px) {
+        gap: 2px;
+      }
     }
 
     .calendar-day {
@@ -464,6 +476,27 @@ interface DailySummary {
       
       &.has-sales:not(.selected) {
         background: rgba(16, 185, 129, 0.1);
+      }
+
+      @media (max-width: 600px) {
+         padding: 0;
+         border-radius: 8px;
+         
+         .day-amount {
+           display: none !important; /* Hide amount to prevent clutter */
+         }
+         
+         .day-number {
+           font-size: 0.8rem;
+           margin-bottom: 4px; /* Space for dot */
+         }
+
+         .day-indicator {
+           position: absolute;
+           bottom: 4px;
+           width: 4px;
+           height: 4px;
+         }
       }
     }
 

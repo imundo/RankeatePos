@@ -1695,78 +1695,10 @@
         padding: 0 4px;
     }
 
-    .calendar-weekdays {
-        display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
-        gap: 2px !important;
-        margin-bottom: 4px !important;
-        width: 100%;
+    // Calendar logic moved to component for better encapsulation
 
-        span {
-            font-size: 0.7rem !important;
-            padding: 4px 0 !important;
-            text-align: center;
-            min-width: 0; // Prevent blowout
-            overflow: hidden;
-        }
-    }
+    // Calendar logic completely handled by daily-earnings.component.ts
 
-    .calendar-days {
-        display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
-        gap: 2px !important;
-        width: 100%;
-    }
-
-    .calendar-day {
-        border-radius: 8px !important;
-        min-height: auto !important; // Let aspect ratio drive height
-        height: auto !important;
-        padding: 1px !important; // Minimal padding
-        aspect-ratio: 1 / 1 !important; // Strictly square
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-width: 0; // Prevent blowout
-        position: relative; // For indicator
-        margin: 0 !important; // Zero margin
-
-        .day-number {
-            font-size: 0.8rem !important; // Slightly smaller
-            font-weight: 600;
-            line-height: 1;
-            z-index: 2; // Above indicator
-        }
-
-        .day-amount {
-            font-size: 0.5rem !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            opacity: 0.9;
-        }
-
-        .day-indicator {
-            position: absolute !important;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            z-index: 1;
-        }
-
-        &.has-sales {
-            background-color: rgba(16, 185, 129, 0.1);
-
-            .day-indicator {
-                background-color: #10b981;
-            }
-        }
-    }
 
     // Month summary cards - horizontal scroll
     .month-summary {
