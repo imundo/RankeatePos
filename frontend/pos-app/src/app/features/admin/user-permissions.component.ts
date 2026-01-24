@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { AdminService } from '../../core/services/admin.service';
 
 interface ModuleAccess {
   key: string;
@@ -356,7 +357,7 @@ const CATEGORIES = ['General', 'Ventas', 'Inventario', 'Finanzas', 'Operaciones'
   `]
 })
 export class UserPermissionsComponent implements OnInit {
-  private http = inject(HttpClient);
+  private adminService = inject(AdminService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -380,26 +381,15 @@ export class UserPermissionsComponent implements OnInit {
     this.loadUserPermissions();
   }
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('access_token');
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
-  }
-
   loadUserPermissions() {
     // Load user info
-    this.http.get<UserInfo>(
-      `${environment.authUrl}/api/admin/users/${this.userId()}`,
-      { headers: this.getHeaders() }
-    ).subscribe({
-      next: (user) => this.user.set(user),
+    this.adminService.getUser(this.userId()).subscribe({
+      next: (user: any) => this.user.set(user),
       error: (err) => console.error('Error loading user:', err)
     });
 
     // Load permissions
-    this.http.get<{ userId: string; modules: ModuleAccess[] }>(
-      `${environment.authUrl}/api/admin/users/${this.userId()}/modules`,
-      { headers: this.getHeaders() }
-    ).subscribe({
+    this.adminService.getUserPermissions(this.userId()).subscribe({
       next: (response) => {
         // Merge backend response with full config to ensure all items are present
         const mergedModules = this.mergeWithConfig(response.modules);
@@ -481,11 +471,7 @@ export class UserPermissionsComponent implements OnInit {
       if (m.enabled) moduleStates[m.key] = true;
     });
 
-    this.http.put(
-      `${environment.authUrl}/api/admin/users/${this.userId()}/modules`,
-      moduleStates,
-      { headers: this.getHeaders() }
-    ).subscribe({
+    this.adminService.updateUserPermissions(this.userId(), moduleStates).subscribe({
       next: () => {
         this.originalModules.set(JSON.parse(JSON.stringify(this.modules())));
         this.showToast('success', '✅ Permisos actualizados');
