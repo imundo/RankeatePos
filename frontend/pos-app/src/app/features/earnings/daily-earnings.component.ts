@@ -361,11 +361,21 @@ interface DailySummary {
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 1.5rem;
+      box-sizing: border-box; /* Ensure padding doesn't affect width calculations */
       
-      @media (max-width: 600px) {
+      @media (max-width: 1024px) {
+        width: 100% !important; /* Override JS width */
+        flex: none !important;
+        max-width: 100%;
         padding: 1rem;
         border-radius: 16px;
       }
+    }
+
+    .calendar-grid {
+      width: 100%;
+      display: block; /* Ensure it takes full width */
+      margin-bottom: 1rem;
     }
 
     .calendar-header {
@@ -944,10 +954,11 @@ export class DailyEarningsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Set initial width
+    // Set initial width only for desktop
     setTimeout(() => {
+      const isMobile = window.innerWidth <= 1024;
       const calendarSection = document.querySelector('.calendar-section') as HTMLElement;
-      if (calendarSection) {
+      if (calendarSection && !isMobile) {
         calendarSection.style.width = `${this.leftPanelWidth()}px`;
         calendarSection.style.flexShrink = '0';
       }
