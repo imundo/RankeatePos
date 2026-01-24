@@ -402,122 +402,131 @@ interface DailySummary {
       svg { width: 18px; height: 18px; }
     }
 
-    .calendar-weekdays {
+    /* Fixed Calendar Grid Styles */
+    .calendar-weekdays, .calendar-days {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 0.25rem;
-      margin-bottom: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .calendar-weekdays {
+      gap: 2px;
+      margin-bottom: 4px;
       
       span {
         text-align: center;
         font-size: 0.75rem;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.4);
-        padding: 0.5rem 0;
-      }
-
-      @media (max-width: 600px) {
-        gap: 2px;
-        span {
-          font-size: 0.65rem;
-          padding: 2px 0;
-        }
+        padding: 4px 0;
       }
     }
 
     .calendar-days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 0.25rem;
-
-      @media (max-width: 600px) {
-        gap: 2px;
-      }
+      gap: 2px;
     }
 
     .calendar-day {
-      aspect-ratio: 1;
+      /* Reset button defaults */
+      appearance: none;
+      -webkit-appearance: none;
       border: none;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.02);
-      color: white;
-      cursor: pointer;
+      margin: 0;
+      padding: 0;
+      font-family: inherit;
+      line-height: inherit;
+      
+      /* Grid Item Layout */
+      aspect-ratio: 1;
+      width: 100%;
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
-      transition: all 0.2s;
-      padding: 0.25rem;
+      
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      color: white;
+      cursor: pointer;
+      overflow: hidden; /* Contain content */
+      
+      transition: all 0.2s;      
       
       &:hover {
         background: rgba(99, 102, 241, 0.15);
       }
       
-      &.other-month {
-        opacity: 0.3;
-      }
+      &.other-month { opacity: 0.3; }
       
       &.today {
         border: 2px solid #6366F1;
-        
-        .day-number {
-          color: #6366F1;
-          font-weight: 700;
-        }
+        .day-number { color: #6366F1; font-weight: 700; }
       }
       
       &.selected {
         background: linear-gradient(135deg, #6366F1, #8B5CF6);
-        
         .day-number { color: white; }
-        .day-amount { color: rgba(255,255,255,0.9); }
       }
       
       &.has-sales:not(.selected) {
         background: rgba(16, 185, 129, 0.1);
-      }
-
-      @media (max-width: 600px) {
-         padding: 0;
-         border-radius: 8px;
-         
-         .day-amount {
-           display: none !important; /* Hide amount to prevent clutter */
-         }
-         
-         .day-number {
-           font-size: 0.8rem;
-           margin-bottom: 4px; /* Space for dot */
-         }
-
-         .day-indicator {
-           position: absolute;
-           bottom: 4px;
-           width: 4px;
-           height: 4px;
-         }
       }
     }
 
     .day-number {
       font-size: 0.9rem;
       font-weight: 500;
+      z-index: 2;
     }
 
     .day-indicator {
       position: absolute;
       bottom: 4px;
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       background: #10B981;
       border-radius: 50%;
+      z-index: 1;
     }
 
     .day-amount {
       font-size: 0.6rem;
       color: #10B981;
-      margin-top: 2px;
+      margin-top: 1px;
+      white-space: nowrap;
+    }
+
+    /* Mobile Overrides (Max Width 600px) */
+    @media (max-width: 600px) {
+       .calendar-weekdays, .calendar-days {
+         gap: 1px; /* Tighter gap */
+       }
+       
+       .calendar-weekdays span {
+         font-size: 0.65rem;
+         padding: 2px 0;
+       }
+
+       .calendar-day {
+         border-radius: 6px;
+         
+         .day-number {
+           font-size: 0.8rem;
+           margin-bottom: 0; /* Centered layout */
+         }
+
+         /* HIDE Amount on Mobile */
+         .day-amount { display: none !important; }
+         
+         /* Dot Indicator */
+         .day-indicator {
+           bottom: 3px;
+           width: 4px;
+           height: 4px;
+         }
+       }
     }
 
     .month-summary {
