@@ -246,7 +246,11 @@ public class UserService {
                         List<String> userModules = userModuleAccessRepository
                                         .findEnabledModuleCodesByUserId(user.getId());
                         if (userModules != null) {
-                                permissions.addAll(userModules);
+                                // Normalize to lowercase to ensure matching with frontend
+                                List<String> normalizedModules = userModules.stream()
+                                                .map(String::toLowerCase)
+                                                .collect(Collectors.toList());
+                                permissions.addAll(normalizedModules);
                         }
                 } catch (Exception e) {
                         log.error("Error loading user modules for user {}: {}", user.getId(), e.getMessage());

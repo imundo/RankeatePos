@@ -163,7 +163,8 @@ export class AuthService {
     }
 
     hasPermission(permission: string): boolean {
-        return this.userSignal()?.permissions?.includes(permission) ?? false;
+        const permissions = this.userSignal()?.permissions?.map(p => p.toLowerCase()) ?? [];
+        return permissions.includes(permission.toLowerCase());
     }
 
     hasModule(module: string): boolean {
