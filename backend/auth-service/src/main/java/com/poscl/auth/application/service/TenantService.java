@@ -34,27 +34,31 @@ public class TenantService {
     // ...
 
     public void updateModules(UUID tenantId, java.util.Map<String, Boolean> modulesMap) {
-        Tenant tenant = findById(tenantId);
+        // Use withModules to avoid lazy loading N+1 or session issues
+        Tenant tenant = findByIdWithModules(tenantId);
 
-        modulesMap.forEach((code, isActive) -> {
-            moduleRepository.findByCode(code).ifPresent(module -> {
-                // Check if already assigned
-                var existing = tenant.getTenantModules().stream()
-                        .filter(tm -> tm.getModule().getId().equals(module.getId()))
-                        .findFirst();
+        // Optimization: Fetch all involved modules in ONE query instad of N
+        java.util.List<String> codes = new java.util.ArrayList<>(modulesMap.keySet());
+        java.util.List<com.poscl.auth.domain.entity.Module> modules = moduleRepository.findByCodeIn(codes);
 
-                if (existing.isPresent()) {
-                    existing.get().setActive(isActive);
-                } else {
-                    if (Boolean.TRUE.equals(isActive)) {
-                        tenant.addModule(com.poscl.auth.domain.entity.TenantModule.builder()
-                                .tenant(tenant)
-                                .module(module)
-                                .active(true)
-                                .build());
-                    }
+        modules.forEach(module -> {
+            Boolean isActive = modulesMap.get(module.getCode());
+
+            var existing = tenant.getTenantModules().stream()
+                    .filter(tm -> tm.getModule().getId().equals(module.getId()))
+                    .findFirst();
+
+            if (existing.isPresent()) {
+                existing.get().setActive(isActive);
+            } else {
+                if (Boolean.TRUE.equals(isActive)) {
+                    tenant.addModule(com.poscl.auth.domain.entity.TenantModule.builder()
+                            .tenant(tenant)
+                            .module(module)
+                            .active(true)
+                            .build());
                 }
-            });
+            }
         });
 
         tenantRepository.save(tenant);
