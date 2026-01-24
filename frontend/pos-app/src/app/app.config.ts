@@ -1,5 +1,10 @@
 import { ApplicationConfig, provideZoneChangeDetection, isDevMode, importProvidersFrom } from '@angular/core';
-import { LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star } from 'lucide-angular';
+import {
+    LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star,
+    BarChart2, Settings, Grid, Users, ShoppingBag, FileText, Layers, Box, Truck,
+    CreditCard, Calendar, Monitor, Smartphone, LayoutDashboard, ChevronRight,
+    MoreVertical, Search, Bell, Menu, X, LogOut, User, Lock, Key
+} from 'lucide-angular';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -23,7 +28,10 @@ export const appConfig: ApplicationConfig = {
             registrationStrategy: 'registerWhenStable:30000'
         }),
         importProvidersFrom(LucideAngularModule.pick({
-            Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star
+            Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star,
+            BarChart2, Settings, Grid, Users, ShoppingBag, FileText, Layers, Box, Truck,
+            CreditCard, Calendar, Monitor, Smartphone, LayoutDashboard, ChevronRight,
+            MoreVertical, Search, Bell, Menu, X, LogOut, User, Lock, Key
         }))
     ]
 };
