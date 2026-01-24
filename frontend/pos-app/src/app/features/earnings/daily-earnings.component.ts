@@ -420,6 +420,11 @@ interface DailySummary {
         font-weight: 600;
         color: rgba(255, 255, 255, 0.4);
         padding: 4px 0;
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: clip; 
+        white-space: nowrap;
       }
     }
 
@@ -440,6 +445,7 @@ interface DailySummary {
       /* Grid Item Layout */
       aspect-ratio: 1;
       width: 100%;
+      min-width: 0; /* Important for grid child to shrink */
       position: relative;
       display: flex;
       flex-direction: column;
@@ -501,20 +507,24 @@ interface DailySummary {
     /* Mobile Overrides (Max Width 600px) */
     @media (max-width: 600px) {
        .calendar-weekdays, .calendar-days {
-         gap: 1px; /* Tighter gap */
+         gap: 2px;
+         /* Ensure grid doesn't collapse */
+         grid-template-columns: repeat(7, minmax(0, 1fr)); 
        }
        
        .calendar-weekdays span {
-         font-size: 0.65rem;
-         padding: 2px 0;
+         font-size: 0.7rem;
+         padding: 4px 0;
+         /* TRUNCATE TO FIRST LETTER VISUALLY IF NEEDED via transparent color trick or max-width */
+         /* Better approach: Use JS to change label, or simple overflow */
        }
 
        .calendar-day {
          border-radius: 6px;
          
          .day-number {
-           font-size: 0.8rem;
-           margin-bottom: 0; /* Centered layout */
+           font-size: 0.9rem; /* Keep readable */
+           margin: 0;
          }
 
          /* HIDE Amount on Mobile */
@@ -884,7 +894,8 @@ export class DailyEarningsComponent implements OnInit, OnDestroy {
   currentDate = signal(new Date());
   selectedDate = signal(new Date());
 
-  weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  // Use single letters for cleaner mobile UI, avoiding 'DomLunMar' overlap
+  weekdays = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
   // Resizable splitter properties
   isDragging = signal(false);
