@@ -1730,11 +1730,13 @@
         justify-content: center !important;
         min-width: 0; // Prevent blowout
         position: relative; // For indicator
+        margin: 0 !important; // Zero margin
 
         .day-number {
-            font-size: 0.85rem !important;
+            font-size: 0.8rem !important; // Slightly smaller
+            font-weight: 600;
             line-height: 1;
-            margin-bottom: 2px;
+            z-index: 2; // Above indicator
         }
 
         .day-amount {
@@ -1747,11 +1749,22 @@
         }
 
         .day-indicator {
-            width: 4px !important;
-            height: 4px !important;
             position: absolute !important;
-            bottom: 4px !important;
-            margin: 0 !important;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        &.has-sales {
+            background-color: rgba(16, 185, 129, 0.1);
+
+            .day-indicator {
+                background-color: #10b981;
+            }
         }
     }
 
