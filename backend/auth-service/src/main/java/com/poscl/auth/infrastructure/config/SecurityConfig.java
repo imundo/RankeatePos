@@ -61,11 +61,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:4200",
-                "http://localhost:8080",
-                "https://pos-frontend-production-36ac.up.railway.app",
-                "https://pos-bff-gateway-production.up.railway.app"));
+        // Use patterns to allow any subdomains or preview environments
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "https://*.railway.app",
+                "https://*.onrender.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
