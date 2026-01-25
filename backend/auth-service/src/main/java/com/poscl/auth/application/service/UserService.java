@@ -52,12 +52,29 @@ public class UserService {
                 } else {
                         users = userRepository.findByTenant_IdAndDeletedAtIsNull(tenantId, pageable);
                 }
-                return users.map(this::toDto);
+
+                // Batch fetch permissions to avoid N+1
+                Map<UUID, Set<String>> permissionsMap = batchFetchPermissions(users.getContent());
+
+                return users.map(user -> toDtoWithPreloaded(user, permissionsMap.get(user.getId())));
         }
 
-        /**
-         * Obtiene un usuario por ID
-         */
+        private Map<UUID, Set<String>> batchFetchPermissions(List<User> users) {
+                if (users.isEmpty())
+                        return Collections.emptyMap();
+
+                List<UUID> userIds = users.stream().map(User::getId).collect(Collectors.toList());
+                List<com.poscl.auth.domain.entity.UserModuleAccess> accessList = userModuleAccessRepository
+                                .findByUserIdInAndEnabledTrue(userIds);
+
+                Map<UUID, Set<String>> resultMap = new HashMap<>();
+                for (com.poscl.auth.domain.entity.UserModuleAccess access : accessList) {
+                        resultMap.computeIfAbsent(access.getUserId(), k -> new HashSet<>())
+                                        .add(access.getModule().getCode().toLowerCase());
+                }
+                return resultMap;
+        }
+
         @Transactional(readOnly = true)
         public UserDto findById(UUID tenantId, UUID id) {
                 User user = userRepository.findByIdAndTenant_Id(id, tenantId)
@@ -236,6 +253,10 @@ public class UserService {
 
         // Mapper
         private UserDto toDto(User user) {
+                return toDtoWithPreloaded(user, null);
+        }
+
+        private UserDto toDtoWithPreloaded(User user, Set<String> preloadedPermissions) {
                 Set<String> permissions = user.getRoles().stream()
                                 .flatMap(r -> r.getPermisos() != null ? Arrays.stream(r.getPermisos())
                                                 : java.util.stream.Stream.empty())
@@ -249,21 +270,28 @@ public class UserService {
                                         user.hasRole("OWNER_ADMIN") || user.hasRole("ROLE_OWNER_ADMIN");
 
                         if (isTenantAdmin) {
-                                List<String> tenantModules = user.getTenant().getTenantModules().stream()
-                                                .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
-                                                .map(tm -> tm.getModule().getCode().toLowerCase())
-                                                .collect(Collectors.toList());
-                                permissions.addAll(tenantModules);
+                                // Optimized: Tenant should be fetched by UserRepository now
+                                if (user.getTenant() != null) {
+                                        List<String> tenantModules = user.getTenant().getTenantModules().stream()
+                                                        .filter(tm -> Boolean.TRUE.equals(tm.getActive()))
+                                                        .map(tm -> tm.getModule().getCode().toLowerCase())
+                                                        .collect(Collectors.toList());
+                                        permissions.addAll(tenantModules);
+                                }
                         } else {
                                 // Regular users get specific assignments
-                                List<String> userModules = userModuleAccessRepository
-                                                .findEnabledModuleCodesByUserId(user.getId());
-                                if (userModules != null) {
-                                        // Normalize to lowercase to ensure matching with frontend
-                                        List<String> normalizedModules = userModules.stream()
-                                                        .map(String::toLowerCase)
-                                                        .collect(Collectors.toList());
-                                        permissions.addAll(normalizedModules);
+                                if (preloadedPermissions != null) {
+                                        permissions.addAll(preloadedPermissions);
+                                } else {
+                                        // Fallback to N+1 if not preloaded (e.g. single fetch)
+                                        List<String> userModules = userModuleAccessRepository
+                                                        .findEnabledModuleCodesByUserId(user.getId());
+                                        if (userModules != null) {
+                                                List<String> normalizedModules = userModules.stream()
+                                                                .map(String::toLowerCase)
+                                                                .collect(Collectors.toList());
+                                                permissions.addAll(normalizedModules);
+                                        }
                                 }
                         }
                 } catch (Exception e) {

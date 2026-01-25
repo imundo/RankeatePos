@@ -18,6 +18,9 @@ public interface UserModuleAccessRepository extends JpaRepository<UserModuleAcce
 
     List<UserModuleAccess> findByUserIdAndEnabledTrue(UUID userId);
 
+    @Query("SELECT uma FROM UserModuleAccess uma JOIN FETCH uma.module WHERE uma.userId IN :userIds AND uma.enabled = true")
+    List<UserModuleAccess> findByUserIdInAndEnabledTrue(@Param("userIds") List<UUID> userIds);
+
     Optional<UserModuleAccess> findByUserIdAndModuleId(UUID userId, UUID moduleId);
 
     @Query("SELECT uma FROM UserModuleAccess uma JOIN FETCH uma.module WHERE uma.userId = :userId")

@@ -35,9 +35,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         // Methods for UserService
         Optional<User> findByIdAndTenant_Id(UUID id, UUID tenantId);
 
+        @Query("SELECT u FROM User u LEFT JOIN FETCH u.tenant LEFT JOIN FETCH u.roles WHERE u.tenant.id = :tenantId AND u.deletedAt IS NULL")
         Page<User> findByTenant_IdAndDeletedAtIsNull(UUID tenantId, Pageable pageable);
 
-        @Query("SELECT u FROM User u WHERE u.tenant.id = :tenantId AND u.deletedAt IS NULL AND " +
+        @Query("SELECT u FROM User u LEFT JOIN FETCH u.tenant LEFT JOIN FETCH u.roles WHERE u.tenant.id = :tenantId AND u.deletedAt IS NULL AND "
+                        +
                         "(LOWER(u.email) LIKE %:search% OR LOWER(u.nombre) LIKE %:search% OR LOWER(u.apellido) LIKE %:search%)")
         Page<User> searchByTenantId(UUID tenantId, String search, Pageable pageable);
 
