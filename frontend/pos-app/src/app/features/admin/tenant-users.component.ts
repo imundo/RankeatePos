@@ -200,34 +200,14 @@ import { UsersService, User } from '@core/services/users.service';
 export class TenantUsersComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  // private adminService = inject(AdminService); // Incorrect service
-  private usersService = inject(UsersService); // Correct service
-  private adminService = inject(AdminService); // Keeping only for getTenant if needed, but ideally should use CompanyService or similar. However, getTenant is strictly Admin. 
-  // Wait, if I am a TENANT_ADMIN, I can't call getTenant on admin API either if it is restricted. 
-  // Let's check if the user is SAAS_ADMIN or TENANT_ADMIN.
-  // Actually, for "My Users", I should use /api/users (which list users for MY tenant).
-  // But here the component seems designed for an admin viewing a specific tenant.
-  // URL: /admin/tenants/:id/users
-  // If this page is ONLY for Super Admin, then AdminService is correct, but why 405?
-  // User said: "sigue igual no aparece ningun elemento del menu" -> This might be a different issue.
-  // BUT the screenshot shows HTTP 405 on PUT /api/admin/users/...
-  // AND the user is "Carlos González" (admin@eltrigal.cl).
-  // If "Carlos" is a TENANT_ADMIN trying to use this page, he shouldn't access /admin/tenants/:id/...
-  // He should access /settings/users or similar.
-  // However, if he IS accessing this page, we must fix the service call OR redirect him.
+  private usersService = inject(UsersService);
 
-  // RETHINK: The user is trying to edit users.
-  // If this component is shared? No, it's in features/admin.
-  // If the user is managing THEIR OWN users, they should be using a different component likely.
-  // BUT if they are reusing this component, we need to make it smart.
-
-  // Let's assume for now we switch to UsersService which points to /api/users.
-  // If I am super admin, I can see all users.
-  // If I am tenant admin, I can see my users.
-
-  tenant = signal<any>(null);
+  // Signals
+  tenantId = signal<string>('');
+  tenant = signal<any>(null); // We would fetch this if we had a TenantsService, or just rely on ID
   users = signal<any[]>([]);
   loading = signal(true);
+  availableRoles = signal<string[]>([]);
 
   showModal = signal(false);
   editingUser = signal<any>(null);
@@ -241,31 +221,20 @@ export class TenantUsersComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const tenantId = params.get('id');
-      if (tenantId) {
-        this.loadData(tenantId);
+      const id = params.get('id');
+      if (id) {
+        this.tenantId.set(id);
+        this.loadData();
       }
     });
   }
 
-  loadData(tenantId: string) {
+  loadData() {
     this.loading.set(true);
-    // If we are Super Admin, we can use AdminService. If Tenant Admin, we might fail.
-    // Ideally we should use a service that works for both or check roles.
-    // For the immediate fix of the 405 error for THIS user:
+    const tId = this.tenantId();
 
-    // We will try to fetch using UsersService which hits /api/users
-    // Note: /api/users in UsersService doesn't accept tenantId param in the method signature shown in previous file content
-    // It filters by logged in tenant X-Tenant-Id header.
-    // If this page is strictly for "Manage Users of Tenant X", it implies Super Admin context.
-
-    // CAUTION: If the user "admin@eltrigal.cl" is trying to manage users, he should probably be at /settings/users or /company/users, NOT /admin/tenants/...
-    // If he is at /admin/..., he is in the WRONG PLACE if he is not SAAS_ADMIN.
-
-    // However, correcting the service call to `UsersService` (which uses /api/users) might fix it IF the backend /api/users supports it.
-    // `UserService.java` `findAll` checks `X-Tenant-Id`.
-
-    this.usersService.getUsers(0, 100).subscribe({ // Fetch all for now
+    // Fetch users for the specific tenant
+    this.usersService.getUsers(0, 100, undefined, tId).subscribe({
       next: (response: any) => {
         this.users.set(response.content);
         this.loading.set(false);
@@ -276,8 +245,11 @@ export class TenantUsersComponent implements OnInit {
       }
     });
 
-    // We skip getTenant for now if it fails, or try it.
-    // this.adminService.getTenant(tenantId)... // This will fail 403 for Tenant Admin.
+    // Fetch roles available for assignment
+    this.usersService.getRoles(tId).subscribe({
+      next: (roles) => this.availableRoles.set(roles),
+      error: (err) => console.error('Error loading roles', err)
+    });
   }
 
   getRoleLabel(role: string): string {
@@ -286,7 +258,8 @@ export class TenantUsersComponent implements OnInit {
       'MANAGER': 'Encargado',
       'CASHIER': 'Cajero',
       'STOCKKEEPER': 'Bodeguero',
-      'ACCOUNTANT': 'Contador'
+      'ACCOUNTANT': 'Contador',
+      'SAAS_ADMIN': 'Super Admin'
     };
     return labels[role] || role;
   }
@@ -294,39 +267,53 @@ export class TenantUsersComponent implements OnInit {
   openUserModal(user?: any) {
     if (user) {
       this.editingUser.set(user);
-      this.formUser = { ...user };
+      this.formUser = {
+        nombre: user.nombre,
+        email: user.email,
+        password: '', // Don't show password
+        roles: user.roles ? [...user.roles] : []
+      };
     } else {
       this.editingUser.set(null);
-      this.formUser = { nombre: '', email: '', password: '', roles: [] };
+      this.formUser = {
+        nombre: '',
+        email: '',
+        password: '',
+        roles: ['USER'] // Default role
+      };
     }
     this.showModal.set(true);
   }
 
   closeModal() {
     this.showModal.set(false);
+    this.formUser = { nombre: '', email: '', password: '', roles: [] };
+    this.editingUser.set(null);
   }
 
   toggleRole(role: string) {
-    const index = this.formUser.roles.indexOf(role);
+    const roles = this.formUser.roles;
+    const index = roles.indexOf(role);
     if (index === -1) {
-      this.formUser.roles.push(role);
+      this.formUser.roles.push(role); // Add role
     } else {
-      this.formUser.roles.splice(index, 1);
+      this.formUser.roles.splice(index, 1); // Remove role
     }
   }
 
   saveUser() {
+    const tId = this.tenantId();
     if (this.editingUser()) {
-      this.usersService.updateUser(this.editingUser()!.id, {
+      this.usersService.updateUser(this.editingUser().id, {
         nombre: this.formUser.nombre,
         roles: this.formUser.roles,
         activo: true
-      }).subscribe({
+      }, tId).subscribe({
         next: (updated: any) => {
           this.users.update(users => users.map(u => u.id === updated.id ? updated : u));
           this.closeModal();
         },
-        error: (err: any) => console.error(err)
+        error: (err: any) => console.error('Error updating user', err)
       });
     } else {
       this.usersService.createUser({
@@ -335,24 +322,29 @@ export class TenantUsersComponent implements OnInit {
         password: this.formUser.password,
         roles: this.formUser.roles,
         apellido: ''
-      }).subscribe({
+      }, tId).subscribe({
         next: (newItem: any) => {
           this.users.update(users => [...users, newItem]);
           this.closeModal();
         },
-        error: (err: any) => console.error(err)
+        error: (err: any) => console.error('Error creating user', err)
       });
     }
   }
 
+  toggleActive(user: any) {
+    this.usersService.toggleUserActive(user.id, this.tenantId()).subscribe({
+      next: (updated: any) => {
+        this.users.update(users => users.map(u => u.id === updated.id ? updated : u));
+      },
+      error: (err: any) => console.error('Error toggling status', err)
+    });
+  }
+
   goToPermissions(user: any) {
-    const tenantId = this.tenant()?.id;
-    if (tenantId) {
-      this.router.navigate(['/admin/tenants', tenantId, 'users', user.id, 'permissions']);
-    } else {
-      // Fallback: Use permissions page for current tenant context if ID missing?
-      // This component expects tenantId. If missing (loadData failed), we can't route correctly.
-      console.warn('Cannot navigate to permissions: Tenant ID missing');
+    const tId = this.tenantId();
+    if (tId) {
+      this.router.navigate(['/admin/tenants', tId, 'users', user.id, 'permissions']);
     }
   }
 }

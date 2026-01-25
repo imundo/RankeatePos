@@ -57,16 +57,16 @@ export class UsersService {
         private authService: AuthService
     ) { }
 
-    private getHeaders() {
+    private getHeaders(tenantId?: string) {
         return {
-            'X-Tenant-Id': this.authService.getTenantId() || '',
+            'X-Tenant-Id': tenantId || this.authService.getTenantId() || '',
             'X-User-Id': this.authService.getUserId() || ''
         };
     }
 
     // ========== USERS ==========
 
-    getUsers(page = 0, size = 20, search?: string): Observable<PageResponse<User>> {
+    getUsers(page = 0, size = 20, search?: string, tenantId?: string): Observable<PageResponse<User>> {
         let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
@@ -76,52 +76,52 @@ export class UsersService {
         }
 
         return this.http.get<PageResponse<User>>(`${this.baseUrl}/users`, {
-            headers: this.getHeaders(),
+            headers: this.getHeaders(tenantId),
             params
         });
     }
 
-    getUser(id: string): Observable<User> {
+    getUser(id: string, tenantId?: string): Observable<User> {
         return this.http.get<User>(`${this.baseUrl}/users/${id}`, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
-    createUser(request: CreateUserRequest): Observable<User> {
+    createUser(request: CreateUserRequest, tenantId?: string): Observable<User> {
         return this.http.post<User>(`${this.baseUrl}/users`, request, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
-    updateUser(id: string, request: UpdateUserRequest): Observable<User> {
+    updateUser(id: string, request: UpdateUserRequest, tenantId?: string): Observable<User> {
         return this.http.put<User>(`${this.baseUrl}/users/${id}`, request, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
-    deleteUser(id: string): Observable<void> {
+    deleteUser(id: string, tenantId?: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/users/${id}`, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
     // ========== ROLES ==========
 
-    getRoles(): Observable<string[]> {
+    getRoles(tenantId?: string): Observable<string[]> {
         return this.http.get<string[]>(`${this.baseUrl}/users/roles`, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
-    assignRoles(userId: string, roles: string[]): Observable<User> {
+    assignRoles(userId: string, roles: string[], tenantId?: string): Observable<User> {
         return this.http.put<User>(`${this.baseUrl}/users/${userId}/roles`, roles, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 
-    toggleUserActive(userId: string): Observable<User> {
+    toggleUserActive(userId: string, tenantId?: string): Observable<User> {
         return this.http.put<User>(`${this.baseUrl}/users/${userId}/toggle-active`, {}, {
-            headers: this.getHeaders()
+            headers: this.getHeaders(tenantId)
         });
     }
 }

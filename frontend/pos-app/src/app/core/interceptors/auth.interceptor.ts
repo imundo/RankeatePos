@@ -17,8 +17,8 @@ export class AuthInterceptor implements HttpInterceptor {
             headers = headers.set('Authorization', `Bearer ${token}`);
         }
 
-        if (tenantId) {
-            headers = headers.set('X-Tenant-ID', tenantId);
+        if (tenantId && !headers.has('X-Tenant-Id') && !headers.has('X-Tenant-ID')) {
+            headers = headers.set('X-Tenant-Id', tenantId);
         }
 
         const authRequest = request.clone({ headers });

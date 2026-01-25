@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -132,21 +134,33 @@ public class AdminController {
 
     @GetMapping("/modules")
     @Operation(summary = "Proxy: Listar módulos")
-    public Mono<ResponseEntity<Object>> listModules(@RequestHeader("Authorization") String authHeader) {
+    public Mono<ResponseEntity<List<Object>>> listModules(@RequestHeader("Authorization") String authHeader) {
+        log.info("BFF: GET /api/admin/modules -> Proxying to /api/modules");
         return authWebClient.get()
-                .uri("/api/admin/modules")
+                .uri("/api/modules")
                 .header("Authorization", authHeader)
                 .retrieve()
-                .toEntity(Object.class)
+                .bodyToMono(new ParameterizedTypeReference<List<Object>>() {
+                })
+                .map(ResponseEntity::ok)
                 .timeout(PROXY_TIMEOUT)
-                .onErrorResume(e -> handleProxyError(e, "Error fetching modules"));
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()));
     }
 
     @GetMapping("/modules/grouped")
-    @Operation(summary = "Proxy: Listar módulos agrupados")
+    @Operation(summary = "Proxy: Módulos agrupados")
     public Mono<ResponseEntity<Map<String, Object>>> listModulesGrouped(
             @RequestHeader("Authorization") String authHeader) {
-        return forwardGetRequest("/api/admin/modules/grouped", authHeader);
+        log.info("BFF: GET /api/admin/modules/grouped -> Proxying to /api/modules/grouped");
+        return authWebClient.get()
+                .uri("/api/modules/grouped")
+                .header("Authorization", authHeader)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                })
+                .map(ResponseEntity::ok)
+                .timeout(PROXY_TIMEOUT)
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()));
     }
 
     @GetMapping("/plans")
