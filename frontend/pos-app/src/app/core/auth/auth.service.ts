@@ -168,7 +168,8 @@ export class AuthService {
     }
 
     hasModule(module: string): boolean {
-        return this.tenantSignal()?.modules?.includes(module) ?? false;
+        const modules = this.tenantSignal()?.modules?.map(m => m.toLowerCase()) ?? [];
+        return modules.includes(module.toLowerCase());
     }
 
     private handleAuthResponse(response: AuthResponse): void {

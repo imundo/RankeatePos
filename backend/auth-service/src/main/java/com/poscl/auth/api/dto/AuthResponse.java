@@ -56,5 +56,6 @@ public class AuthResponse {
         private String logoUrl;
         private String businessType;
         private String plan;
+        private java.util.List<String> modules;
     }
 }

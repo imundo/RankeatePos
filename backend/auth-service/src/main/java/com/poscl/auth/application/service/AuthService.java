@@ -231,6 +231,13 @@ public class AuthService {
                                                 .logoUrl(tenant.getLogoUrl())
                                                 .businessType(tenant.getBusinessType().name())
                                                 .plan(tenant.getPlan())
+                                                .modules(tenant.getTenantModules() != null ? tenant.getTenantModules()
+                                                                .stream()
+                                                                .filter(tm -> Boolean.TRUE.equals(tm.getActive())
+                                                                                && tm.getModule() != null)
+                                                                .map(tm -> tm.getModule().getCode().toLowerCase())
+                                                                .collect(java.util.stream.Collectors.toList())
+                                                                : java.util.Collections.emptyList())
                                                 .build())
                                 .build();
         }
