@@ -165,6 +165,16 @@ import { AuthService } from '@core/auth/auth.service';
                 <span class="demo-name">Charcutería La Selecta</span>
                 <span class="demo-email">admin&#64;laselecta.cl</span>
               </button>
+              <button class="demo-card" (click)="fillDemo('admin@elbigote.cl', 'demo1234')">
+                <span class="demo-icon">💈</span>
+                <span class="demo-name">Barbería El Bigote</span>
+                <span class="demo-email">admin&#64;elbigote.cl</span>
+              </button>
+              <button class="demo-card" (click)="fillDemo('admin@mentesana.cl', 'demo1234')">
+                <span class="demo-icon">🧠</span>
+                <span class="demo-name">Centro Mente Sana</span>
+                <span class="demo-email">admin&#64;mentesana.cl</span>
+              </button>
             </div>
 
           </div>

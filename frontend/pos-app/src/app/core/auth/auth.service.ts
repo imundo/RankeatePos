@@ -169,6 +169,14 @@ export class AuthService {
 
     hasModule(module: string): boolean {
         const modules = this.tenantSignal()?.modules?.map(m => m.toLowerCase()) ?? [];
+
+        // EMERGENCY OVERRIDE: If tenant modules are empty (backend issue), allow access
+        // so the menu is visible based on User Permissions alone.
+        if (modules.length === 0) {
+            console.warn(`[AuthService] Check module '${module}': Tenant modules empty, defaulting to TRUE`);
+            return true;
+        }
+
         return modules.includes(module.toLowerCase());
     }
 

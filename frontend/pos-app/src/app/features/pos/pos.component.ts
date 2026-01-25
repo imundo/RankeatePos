@@ -1208,8 +1208,8 @@ interface CartItem {
       justify-content: space-between;
       padding: 1rem 1.5rem;
       background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1000;
     }
 
     .header-left {
@@ -3532,10 +3532,21 @@ export class PosComponent implements OnInit {
       return this.authService.hasModule('pos') && this.authService.hasPermission('pos');
     }
 
-    // Check if Tenant has it AND User has it (case-insensitive)
-    // Note: Backend now sends module codes in permissions array
+    // Check if Tenant has it AND User has it
+    // Only check permissions if they are loaded
+    if (!this.authService.user()) {
+      return false;
+    }
+
     const hasTenantModule = this.authService.hasModule(moduleId);
     const hasUserPermission = this.authService.hasPermission(moduleId);
+
+    // DEBUG LOGS (Remove after fixing)
+    if (moduleId === 'pos' || moduleId === 'catalog') {
+      console.log(`[DEBUG] canAccess(${moduleId}): Tenant=${hasTenantModule}, User=${hasUserPermission}`);
+      console.log('Tenant Modules:', this.authService.tenant()?.modules);
+      console.log('User Permissions:', this.authService.user()?.permissions);
+    }
 
     return hasTenantModule && hasUserPermission;
   }

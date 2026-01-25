@@ -14,6 +14,7 @@ COPY shared-lib /build/shared-lib
 COPY billing-service /build/billing-service
 
 RUN apk add --no-cache maven && \
+    mvn install -N -DskipTests && \
     mvn -f /build/shared-lib/pom.xml install -DskipTests && \
     mvn -f /build/billing-service/pom.xml package -DskipTests
 

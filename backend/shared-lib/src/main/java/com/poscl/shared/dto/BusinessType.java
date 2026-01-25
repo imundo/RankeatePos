@@ -16,6 +16,8 @@ public enum BusinessType {
     EDUCACION("Educación", "Cursos, capacitaciones y formación"),
     IMPRENTA("Imprenta", "Servicios de impresión y editorial"),
     RESTAURANT("Restaurante", "Restaurante y servicios de comida"),
+    BARBERIA("Barbería", "Peluquería, barbería y estética"),
+    SALUD("Salud", "Consultas médicas, psicológicas y dental"),
     OTRO("Otro", "Negocio genérico");
 
     private final String displayName;

@@ -26,6 +26,7 @@ public class AdminSeeder implements CommandLineRunner {
     private final TenantRepository tenantRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final UserModuleAccessRepository userModuleAccessRepository;
 
     @Override
     @Transactional
@@ -65,8 +66,11 @@ public class AdminSeeder implements CommandLineRunner {
     }
 
     private void seedDemoTenant() {
-        if (tenantRepository.findByRut("76.123.456-7").isPresent())
+        java.util.Optional<Tenant> existingTenantOpt = tenantRepository.findByRut("76.123.456-7");
+        if (existingTenantOpt.isPresent()) {
+            repairTenantModules(existingTenantOpt.get());
             return;
+        }
 
         // Create Tenant
         Tenant tenant = Tenant.builder()
@@ -113,5 +117,81 @@ public class AdminSeeder implements CommandLineRunner {
 
         tenantRepository.save(tenant);
         log.info("Seeded Demo Tenant: La Sazón del Dev");
+        repairUserModuleAccess(tenant);
+    }
+
+    private void repairTenantModules(Tenant tenant) {
+        List<Module> allModules = moduleRepository.findAll();
+        boolean changed = false;
+
+        for (Module m : allModules) {
+            boolean hasModule = tenant.getTenantModules().stream()
+                    .anyMatch(tm -> tm.getModule().getId().equals(m.getId()));
+
+            if (!hasModule) {
+                TenantModule tm = TenantModule.builder()
+                        .tenant(tenant)
+                        .module(m)
+                        .active(true)
+                        .build();
+                tenant.addModule(tm);
+                changed = true;
+                log.info("Repairing Demo Tenant: Added module {}", m.getCode());
+            }
+        }
+
+        if (changed) {
+            tenantRepository.save(tenant);
+            log.info("Repaired Demo Tenant modules.");
+        } else {
+            log.info("Demo Tenant already has all modules.");
+        }
+
+        repairUserModuleAccess(tenant);
+    }
+
+    private void repairUserModuleAccess(Tenant tenant) {
+        java.util.Optional<com.poscl.auth.domain.entity.User> adminOpt = userRepository
+                .findByEmailAndTenantIdWithRoles("admin@eltrigal.cl", tenant.getId());
+
+        com.poscl.auth.domain.entity.User admin = null;
+
+        if (adminOpt.isPresent()) {
+            admin = adminOpt.get();
+        } else {
+            java.util.Optional<com.poscl.auth.domain.entity.User> globalAdmin = userRepository
+                    .findByEmailWithRolesAndBranches("admin@eltrigal.cl");
+
+            if (globalAdmin.isPresent()) {
+                admin = globalAdmin.get();
+                log.info("Found detached admin@eltrigal.cl. Repairing linkage to tenant {}", tenant.getId());
+                admin.setTenant(tenant);
+                admin.setActivo(true);
+                admin.setDeletedAt(null);
+                admin = userRepository.save(admin);
+            }
+        }
+
+        if (admin != null) {
+            List<Module> allModules = moduleRepository.findAll();
+            int grantedCount = 0;
+
+            for (Module m : allModules) {
+                if (!userModuleAccessRepository.existsByUserIdAndModuleIdAndEnabledTrue(admin.getId(), m.getId())) {
+                    com.poscl.auth.domain.entity.UserModuleAccess access = com.poscl.auth.domain.entity.UserModuleAccess
+                            .builder()
+                            .userId(admin.getId())
+                            .moduleId(m.getId())
+                            .enabled(true)
+                            .grantedAt(Instant.now())
+                            .build();
+                    userModuleAccessRepository.save(access);
+                    grantedCount++;
+                }
+            }
+            if (grantedCount > 0) {
+                log.info("Repaired User Module Access: Granted {} modules to admin@eltrigal.cl", grantedCount);
+            }
+        }
     }
 }

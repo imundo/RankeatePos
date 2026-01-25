@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection, isDevMode, importProvidersFrom } from '@angular/core';
 import {
     LucideAngularModule, Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star,
-    BarChart2, Settings, Grid, Users, ShoppingBag, FileText, Layers, Box, Truck,
+    BarChart2, Settings, Grid, Users, ShoppingBag, ShoppingCart, Package, FileText, Layers, Box, Truck,
     CreditCard, Calendar, Monitor, Smartphone, LayoutDashboard, ChevronRight,
     MoreVertical, Search, Bell, Menu, X, LogOut, User, Lock, Key
 } from 'lucide-angular';
@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
         }),
         importProvidersFrom(LucideAngularModule.pick({
             Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star,
-            BarChart2, Settings, Grid, Users, ShoppingBag, FileText, Layers, Box, Truck,
+            BarChart2, Settings, Grid, Users, ShoppingBag, ShoppingCart, Package, FileText, Layers, Box, Truck,
             CreditCard, Calendar, Monitor, Smartphone, LayoutDashboard, ChevronRight,
             MoreVertical, Search, Bell, Menu, X, LogOut, User, Lock, Key
         }))
