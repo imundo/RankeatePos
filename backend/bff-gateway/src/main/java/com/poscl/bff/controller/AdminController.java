@@ -24,6 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 @Tag(name = "Admin", description = "Admin Proxy Endpoints")
 public class AdminController {
 

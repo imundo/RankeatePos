@@ -20,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 @Tag(name = "Users Proxy", description = "Proxy for User Management endpoints")
 public class UserController {
 
