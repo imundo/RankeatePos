@@ -19,7 +19,7 @@ VALUES (
     '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjqLBcOhDK9ym7XAMCsxqkEpDvEZS.', -- demo123
     'Backup', 'Admin', '+56900000000', true, true, CURRENT_TIMESTAMP
 )
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (tenant_id, email) DO NOTHING;
 
 -- 3. Grant OWNER Role to Backup User
 INSERT INTO user_roles (user_id, role_id)
