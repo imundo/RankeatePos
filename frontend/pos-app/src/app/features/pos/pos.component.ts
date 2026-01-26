@@ -1073,7 +1073,15 @@ interface CartItem {
             <!-- COMPRAS -->
             <div class="menu-section">
               <span class="section-title">Compras</span>
-              <button *ngIf="canAccess('compras')" class="menu-item" routerLink="/compras" (click)="showMenu = false">
+              <button *ngIf="canAccess('suppliers')" class="menu-item" routerLink="/suppliers" (click)="showMenu = false">
+                <div class="item-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18M5 21V7l8-4 8 4v14M5 10a2 2 0 002-2V6a2 2 0 00-2-2m0 4h14m-14 4h14m-14 4h14"/>
+                  </svg>
+                </div>
+                <span class="item-text">Proveedores</span>
+              </button>
+              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/compras" (click)="showMenu = false">
                 <div class="item-icon blue">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -1082,16 +1090,50 @@ interface CartItem {
                 </div>
                 <span class="item-text">Órdenes de Compra</span>
               </button>
+              <button *ngIf="canAccess('purchase-requests')" class="menu-item" routerLink="/purchase-requests" (click)="showMenu = false">
+                <div class="item-icon teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+                  </svg>
+                </div>
+                <span class="item-text">Solicitudes</span>
+                <span class="item-badge new">NUEVO</span>
+              </button>
+              <button *ngIf="canAccess('reception')" class="menu-item" routerLink="/reception" (click)="showMenu = false">
+                <div class="item-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+                  </svg>
+                </div>
+                <span class="item-text">Recepción</span>
+              </button>
             </div>
 
             <!-- RRHH -->
             <div class="menu-section">
               <span class="section-title">RRHH</span>
-              <button *ngIf="canAccess('remuneraciones')" class="menu-item" routerLink="/remuneraciones" (click)="showMenu = false">
-                <div class="item-icon orange">
+              <button *ngIf="canAccess('staff')" class="menu-item" routerLink="/staff" (click)="showMenu = false">
+                <div class="item-icon gray">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                   <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <span class="item-text">Personal</span>
+              </button>
+              <button *ngIf="canAccess('attendance')" class="menu-item" routerLink="/attendance" (click)="showMenu = false">
+                <div class="item-icon cyan">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <span class="item-text">Asistencia</span>
+              </button>
+              <button *ngIf="canAccess('payroll')" class="menu-item" routerLink="/remuneraciones" (click)="showMenu = false">
+                <div class="item-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
                   </svg>
                 </div>
                 <span class="item-text">Remuneraciones</span>
