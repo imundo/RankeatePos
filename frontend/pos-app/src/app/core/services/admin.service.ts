@@ -175,8 +175,14 @@ export class AdminService {
 
             { key: 'inventory', label: '📦 Lista de Productos', category: 'Inventario' },
             { key: 'stock-movements', label: '🚚 Movimientos de Stock', category: 'Inventario' },
-            { key: 'suppliers', label: '🏭 Proveedores', category: 'Inventario' },
-            { key: 'purchases', label: '🛒 Órdenes de Compra', category: 'Inventario' },
+            { key: 'suppliers', label: '🏭 Proveedores', category: 'Compras' },
+            { key: 'purchases', label: '🛒 Órdenes de Compra', category: 'Compras' },
+            { key: 'purchase-requests', label: '📋 Solicitudes de Compra', category: 'Compras' },
+            { key: 'reception', label: '📦 Recepción de Mercadería', category: 'Compras' },
+
+            { key: 'staff', label: '📇 Gestión de Personal', category: 'RRHH' },
+            { key: 'attendance', label: '⏰ Control de Asistencia', category: 'RRHH' },
+            { key: 'payroll', label: '💰 Remuneraciones', category: 'RRHH' },
 
             { key: 'invoices', label: '📄 Facturas Emitidas', category: 'Finanzas' },
             { key: 'expenses', label: '💸 Gastos y Pagos', category: 'Finanzas' },
