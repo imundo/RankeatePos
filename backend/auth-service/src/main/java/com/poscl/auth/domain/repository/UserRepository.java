@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.email = :email AND u.tenant.id = :tenantId")
         Optional<User> findByEmailAndTenantIdWithRoles(String email, UUID tenantId);
 
-        @Query("SELECT u FROM User u LEFT JOIN FETCH u.tenant LEFT JOIN FETCH u.roles LEFT JOIN FETCH u.branches WHERE u.email = :email AND u.deletedAt IS NULL")
+        @Query("SELECT u FROM User u LEFT JOIN FETCH u.tenant LEFT JOIN FETCH u.roles LEFT JOIN FETCH u.branches WHERE LOWER(u.email) = LOWER(:email) AND u.deletedAt IS NULL")
         Optional<User> findByEmailWithRolesAndBranches(String email);
 
         Optional<User> findByEmailAndTenant_Id(String email, UUID tenantId);
