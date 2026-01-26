@@ -48,6 +48,4 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
         Page<User> findByEmailContainingIgnoreCaseOrNombreContainingIgnoreCase(String email, String nombre,
                         Pageable pageable);
-
-        Optional<User> findByEmail(String email);
 }
