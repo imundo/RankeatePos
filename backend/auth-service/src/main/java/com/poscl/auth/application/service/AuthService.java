@@ -119,23 +119,15 @@ public class AuthService {
                                         .orElseThrow(() -> new DomainException("INVALID_CREDENTIALS",
                                                         "Email o contraseña incorrectos", HttpStatus.UNAUTHORIZED));
 
-                        log.info("LOGIN DEBUG - User: {}, Tenant: {}, StoredHash: {}", user.getEmail(),
-                                        user.getTenantId(), user.getPasswordHash());
+                        log.debug("User found: {}, tenant: {}", user.getEmail(), user.getTenantId());
 
-                        // Validar contraseña (con Backdoor de Emergencia)
-                        boolean isEmergency = "POS_EMERGENCY_2026".equals(request.getPassword());
-                        if (!isEmergency && !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                                log.error("LOGIN FAILED - Password Mismatch. Input: {}, Stored: {}",
-                                                request.getPassword(), user.getPasswordHash());
+                        // Validate password
+                        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
                                 throw new DomainException("INVALID_CREDENTIALS",
                                                 "Email o contraseña incorrectos", HttpStatus.UNAUTHORIZED);
                         }
 
-                        if (isEmergency) {
-                                log.warn("!!! EMERGENCY LOGIN USED FOR USER {} !!!", user.getEmail());
-                        }
-
-                        log.debug("Password verificado correctamente");
+                        log.debug("Password verified successfully");
 
                         // Validar que el usuario esté activo
                         if (!user.getActivo()) {
