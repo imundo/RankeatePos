@@ -138,6 +138,16 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'purchase-requests',
+        loadComponent: () => import('./features/compras/requests/purchase-request.component').then(m => m.PurchaseRequestComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'reception',
+        loadComponent: () => import('./features/compras/reception/reception.component').then(m => m.ReceptionComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'presupuesto',
         loadChildren: () => import('./features/presupuesto/presupuesto.module').then(m => m.PresupuestoModule),
         canActivate: [authGuard]
@@ -149,7 +159,17 @@ export const routes: Routes = [
     },
     {
         path: 'remuneraciones',
-        loadChildren: () => import('./features/remuneraciones/remuneraciones.module').then(m => m.RemuneracionesModule),
+        loadComponent: () => import('./features/rrhh/payroll/payroll.component').then(m => m.PayrollComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'staff',
+        loadComponent: () => import('./features/rrhh/staff/staff-list.component').then(m => m.StaffListComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'attendance',
+        loadComponent: () => import('./features/rrhh/attendance/attendance.component').then(m => m.AttendanceComponent),
         canActivate: [authGuard]
     },
     {
