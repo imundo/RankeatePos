@@ -27,7 +27,6 @@ public class IntegrityCheckRunner implements CommandLineRunner {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
         log.info("========================================");
         log.info("🔍 STARTING DATABASE INTEGRITY CHECK...");
