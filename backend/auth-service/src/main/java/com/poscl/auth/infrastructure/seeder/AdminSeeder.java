@@ -164,11 +164,34 @@ public class AdminSeeder implements CommandLineRunner {
 
             if (globalAdmin.isPresent()) {
                 admin = globalAdmin.get();
-                log.info("Found detached admin@eltrigal.cl. Repairing linkage to tenant {}", tenant.getId());
-                admin.setTenant(tenant);
-                admin.setActivo(true);
-                admin.setDeletedAt(null);
-                admin = userRepository.save(admin);
+                // ONLY update tenant if the current tenant is clearly wrong (e.g. mismatched
+                // ID)
+                // AND we are sure 'tenant' passed here is the correct target (El Trigal).
+                // In this case, we prefer NOT to move the user if they are already assigned to
+                // a valid tenant.
+                // We only grant modules.
+                if (admin.getTenant() == null) {
+                    log.info("Found detached admin@eltrigal.cl. Repairing linkage to tenant {}", tenant.getId());
+                    admin.setTenant(tenant);
+                    admin.setActivo(true);
+                    admin.setDeletedAt(null);
+                    admin = userRepository.save(admin);
+                } else if (!admin.getTenant().getId().equals(tenant.getId())) {
+                    // If user is on a different tenant, LOG WARNING but DO NOT Force Move to avoid
+                    // flip-flopping
+                    // unless the current tenant is 'La Sazón del Dev (Ghost)'
+                    if (admin.getTenant().getNombreFantasia() != null
+                            && admin.getTenant().getNombreFantasia().contains("(Ghost)")) {
+                        log.info("Rescuing admin@eltrigal.cl from Ghost tenant to {}", tenant.getNombreFantasia());
+                        admin.setTenant(tenant);
+                        admin.setActivo(true);
+                        admin = userRepository.save(admin);
+                    } else {
+                        log.warn("admin@eltrigal.cl found on tenant '{}' ({}) - Skipping forced move to '{}'",
+                                admin.getTenant().getNombreFantasia(), admin.getTenant().getId(),
+                                tenant.getNombreFantasia());
+                    }
+                }
             }
         }
 
