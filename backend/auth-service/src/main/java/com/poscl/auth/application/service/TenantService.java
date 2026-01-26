@@ -33,53 +33,54 @@ public class TenantService {
 
     // ...
 
-    log.info("Updating modules for tenant {}. Input size: {}",tenantId,modulesMap.size());
+    public void updateModules(UUID tenantId, java.util.Map<String, Boolean> modulesMap) {
+        log.info("Updating modules for tenant {}. Input size: {}", tenantId, modulesMap.size());
 
-    long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
-    // Use withModules to avoid lazy loading N+1 or session issues
-    Tenant tenant = findByIdWithModules(tenantId);
+        // Use withModules to avoid lazy loading N+1 or session issues
+        Tenant tenant = findByIdWithModules(tenantId);
 
-    // Map existing modules by ID for O(1) access
-    java.util.Map<UUID, com.poscl.auth.domain.entity.TenantModule> existingModulesMap = tenant.getTenantModules()
-            .stream()
-            .collect(java.util.stream.Collectors.toMap(tm -> tm.getModule().getId(), tm -> tm));
+        // Map existing modules by ID for O(1) access
+        java.util.Map<UUID, com.poscl.auth.domain.entity.TenantModule> existingModulesMap = tenant.getTenantModules()
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(tm -> tm.getModule().getId(), tm -> tm));
 
-    // Optimization: Fetch all involved modules in ONE query instad of N
-    java.util.Map<String, Boolean> normalizedMap = new java.util.HashMap<>();modulesMap.forEach((k,v)->normalizedMap.put(k.toLowerCase(),v));
+        // Optimization: Fetch all involved modules in ONE query instad of N
+        java.util.Map<String, Boolean> normalizedMap = new java.util.HashMap<>();
+        modulesMap.forEach((k, v) -> normalizedMap.put(k.toLowerCase(), v));
 
-    java.util.List<String> codes = new java.util.ArrayList<>(normalizedMap.keySet());
-    java.util.List<com.poscl.auth.domain.entity.Module> modules = moduleRepository.findByCodeInIgnoreCase(codes);
+        java.util.List<String> codes = new java.util.ArrayList<>(normalizedMap.keySet());
+        java.util.List<com.poscl.auth.domain.entity.Module> modules = moduleRepository.findByCodeInIgnoreCase(codes);
 
-    log.debug("Found {} modules in DB matching codes",modules.size());
+        log.debug("Found {} modules in DB matching codes", modules.size());
 
-    int updates = 0;
-    int inserts = 0;
+        int updates = 0;
+        int inserts = 0;
 
-    for(
-    com.poscl.auth.domain.entity.Module module:modules)
-    {
-        // Case-insensitive lookup
-        Boolean isActive = normalizedMap.get(module.getCode().toLowerCase());
+        for (com.poscl.auth.domain.entity.Module module : modules) {
+            // Case-insensitive lookup
+            Boolean isActive = normalizedMap.get(module.getCode().toLowerCase());
 
-        if (existingModulesMap.containsKey(module.getId())) {
-            existingModulesMap.get(module.getId()).setActive(isActive);
-            updates++;
-        } else {
-            if (Boolean.TRUE.equals(isActive)) {
-                tenant.addModule(com.poscl.auth.domain.entity.TenantModule.builder()
-                        .tenant(tenant)
-                        .module(module)
-                        .active(true)
-                        .build());
-                inserts++;
+            if (existingModulesMap.containsKey(module.getId())) {
+                existingModulesMap.get(module.getId()).setActive(isActive);
+                updates++;
+            } else {
+                if (Boolean.TRUE.equals(isActive)) {
+                    tenant.addModule(com.poscl.auth.domain.entity.TenantModule.builder()
+                            .tenant(tenant)
+                            .module(module)
+                            .active(true)
+                            .build());
+                    inserts++;
+                }
             }
         }
-    }
 
-    tenantRepository.save(tenant);
-    long duration = System.currentTimeMillis()
-            - startTime;log.info("Tenant modules updated in {} ms. Updates: {}, Inserts: {}",duration,updates,inserts);
+        tenantRepository.save(tenant);
+        long duration = System.currentTimeMillis()
+                - startTime;
+        log.info("Tenant modules updated in {} ms. Updates: {}, Inserts: {}", duration, updates, inserts);
     }
 
     /**
