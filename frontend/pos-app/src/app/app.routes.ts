@@ -173,6 +173,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'attendance-admin',
+        loadComponent: () => import('./features/rrhh/attendance-admin/attendance-admin.component').then(m => m.AttendanceAdminComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'cotizaciones',
         loadChildren: () => import('./features/cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule),
         canActivate: [authGuard]

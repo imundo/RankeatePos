@@ -1,15 +1,17 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '@env/environment';
 
 @Component({
-    selector: 'app-attendance',
-    standalone: true,
-    imports: [CommonModule, ButtonModule, ToastModule],
-    providers: [MessageService],
-    template: `
+  selector: 'app-attendance',
+  standalone: true,
+  imports: [CommonModule, ButtonModule, ToastModule],
+  providers: [MessageService],
+  template: `
     <div class="attendance-container">
       <div class="clock-card glass-panel">
         <div class="time-display">
@@ -18,7 +20,7 @@ import { MessageService } from 'primeng/api';
         </div>
 
         <div class="pin-pad-section">
-          <h3>🔐 Ingresa tu PIN</h3>
+          <h3>🔐 Ingresa tu PIN de Asistencia</h3>
           
           <div class="pin-display">
             @for (dot of [1,2,3,4]; track dot) {
@@ -28,24 +30,28 @@ import { MessageService } from 'primeng/api';
 
           <div class="numpad">
             @for (num of [1,2,3,4,5,6,7,8,9]; track num) {
-              <button class="num-btn" (click)="addPin(num)">{{ num }}</button>
+              <button class="num-btn" (click)="addPin(num)" [disabled]="loading()">{{ num }}</button>
             }
-            <button class="num-btn action" (click)="clearPin()">C</button>
-            <button class="num-btn" (click)="addPin(0)">0</button>
-            <button class="num-btn action action-ok" (click)="submitPin()">
-              <i class="pi pi-check"></i>
+            <button class="num-btn action" (click)="clearPin()" [disabled]="loading()">C</button>
+            <button class="num-btn" (click)="addPin(0)" [disabled]="loading()">0</button>
+            <button class="num-btn action action-ok" (click)="submitPin()" [disabled]="loading()">
+              @if (loading()) {
+                <i class="pi pi-spin pi-spinner"></i>
+              } @else {
+                <i class="pi pi-check"></i>
+              }
             </button>
           </div>
         </div>
 
-        <div class="status-message" *ngIf="lastAction()">
-          ✅ {{ lastAction() }}
+        <div class="status-message" *ngIf="lastAction()" [class.error]="isError()">
+          {{ lastAction() }}
         </div>
       </div>
       <p-toast></p-toast>
     </div>
   `,
-    styles: [`
+  styles: [`
     .attendance-container {
       display: flex;
       justify-content: center;
@@ -140,38 +146,81 @@ import { MessageService } from 'primeng/api';
         color: #86efac;
         border-color: rgba(134, 239, 172, 0.3);
       }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .status-message {
+      margin-top: 1.5rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      font-weight: 500;
+      
+      &.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+      }
     }
   `]
 })
 export class AttendanceComponent {
-    currentTime = signal(new Date());
-    pin = signal('');
-    lastAction = signal<string | null>(null);
+  private http = inject(HttpClient);
 
-    constructor(private messageService: MessageService) {
-        setInterval(() => {
-            this.currentTime.set(new Date());
-        }, 1000);
+  currentTime = signal(new Date());
+  pin = signal('');
+  lastAction = signal<string | null>(null);
+  loading = signal(false);
+  isError = signal(false);
+
+  constructor(private messageService: MessageService) {
+    setInterval(() => {
+      this.currentTime.set(new Date());
+    }, 1000);
+  }
+
+  addPin(num: number) {
+    if (this.pin().length < 4) {
+      this.pin.update(p => p + num);
     }
+  }
 
-    addPin(num: number) {
-        if (this.pin().length < 4) {
-            this.pin.update(p => p + num);
-        }
-    }
+  clearPin() {
+    this.pin.set('');
+  }
 
-    clearPin() {
-        this.pin.set('');
-    }
+  submitPin() {
+    if (this.pin().length === 4) {
+      this.loading.set(true);
+      const pin = this.pin();
 
-    submitPin() {
-        if (this.pin().length === 4) {
-            // Mock API trigger
-            const pin = this.pin();
-            this.messageService.add({ severity: 'success', summary: 'Asistencia Registrada', detail: `Entrada correcta (PIN: ${pin})` });
-            this.lastAction.set(`Bienvenido, Empleado #${pin}`);
+      this.http.post<any>(`${environment.apiUrl}/operations/attendance/clock-in`, { pin })
+        .subscribe({
+          next: (res) => {
+            const status = res.status === 'PRESENT' ? 'Entrada' : 'Salida';
+            const msg = `✅ ${status} registrada para ${res.employee.firstName}`;
+
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: msg });
+            this.lastAction.set(msg);
+            this.isError.set(false);
             this.pin.set('');
+          },
+          error: (err) => {
+            const errorMsg = '❌ ' + (err.error?.message || 'Error de conexión');
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: errorMsg });
+            this.lastAction.set(errorMsg);
+            this.isError.set(true);
+            this.pin.set('');
+          },
+          complete: () => {
+            this.loading.set(false);
             setTimeout(() => this.lastAction.set(null), 3000);
-        }
+          }
+        });
     }
+  }
 }
