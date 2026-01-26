@@ -48,7 +48,7 @@ VALUES
     'admin@mentesana.cl',
     '$2a$10$5ljXdm1W4iDg/DTzKa35x.jbDFx/S7rWsTiDOqLsciitlq1vi8Ska',
     'Admin', 'Salud', true, true, CURRENT_TIMESTAMP
-) ON CONFLICT (email) DO NOTHING;
+) ON CONFLICT (tenant_id, email) DO NOTHING;
 
 -- 4. Assign OWNER_ADMIN Role
 INSERT INTO user_roles (user_id, role_id)
