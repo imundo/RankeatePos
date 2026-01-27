@@ -16,16 +16,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payroll {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(nullable = false)
-    private UUID tenantId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
+
+    @Column(nullable = false)
+    private UUID payrollRunId;
 
     @Column(nullable = false)
     private LocalDate periodStart;
@@ -34,17 +30,29 @@ public class Payroll {
     private LocalDate periodEnd;
 
     private BigDecimal baseSalary;
-    private BigDecimal bonuses;
-    private BigDecimal deductions; // AFP, Health, Advances
-    private BigDecimal totalPaid;
+    private BigDecimal taxableIncome; // Imponible
+    private BigDecimal totalBonuses;
+    private BigDecimal totalDiscounts; // Descuentos totales
+    private BigDecimal totalPaid; // Líquido
 
-    private String status; // DRAFT, PAID
+    private String status; // DRAFT, PAID, APPROVED
     private Instant paymentDate;
 
+    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<PayrollDetail> details = new java.util.ArrayList<>();
+
     private Instant createdAt;
+    private Instant updatedAt;
 
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 }
