@@ -72,4 +72,19 @@ export class AttendanceService {
     publicClock(token: string, pin: string): Observable<ClockResponse> {
         return this.http.post<ClockResponse>(`${this.publicUrl}/clock/${token}`, { pin });
     }
+
+    /**
+     * Generate a new public attendance link
+     */
+    generatePublicLink(): Observable<{ token: string, url: string }> {
+        // Mock implementation if backend not ready, but assuming endpoint structure
+        return this.http.post<{ token: string, url: string }>(`${this.baseUrl}/generate-link`, {});
+    }
+
+    /**
+     * Add justification for late arrival or absence
+     */
+    addJustification(recordId: string, justification: string): Observable<AttendanceRecord> {
+        return this.http.put<AttendanceRecord>(`${this.baseUrl}/${recordId}/justification`, { justification });
+    }
 }

@@ -198,9 +198,13 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
-        path: 'attendance-admin',
-        loadComponent: () => import('./features/rrhh/attendance-admin/attendance-admin.component').then(m => m.AttendanceAdminComponent),
+        path: 'rrhh/attendance-admin',
+        loadComponent: () => import('./features/rrhh/attendance/admin/attendance-admin.component').then(m => m.AttendanceAdminComponent),
         canActivate: [authGuard]
+    },
+    {
+        path: 'public/attendance/clock-in',
+        loadComponent: () => import('./features/public/attendance-clock-in/attendance-clock-in.component').then(m => m.AttendanceClockInComponent)
     },
     {
         path: 'rrhh/shifts',
