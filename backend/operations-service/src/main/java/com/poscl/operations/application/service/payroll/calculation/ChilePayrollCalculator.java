@@ -109,7 +109,6 @@ public class ChilePayrollCalculator implements PayrollCalculationStrategy {
         BigDecimal totalNoImponible = colacion.add(movilizacion);
 
         // 5. Totales
-        BigDecimal totalBonusesVal = BigDecimal.ZERO; // Calculated above if lists were processed
         BigDecimal totalDiscounts = totalPrevisional.add(impuesto);
         BigDecimal totalLiquido = totalImponible.subtract(totalDiscounts).add(totalNoImponible);
 

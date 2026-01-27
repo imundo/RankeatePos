@@ -20,12 +20,24 @@ export interface MonthlyAttendance {
     records: AttendanceRecord[];
 }
 
+export interface ClockResponse {
+    type: 'CLOCK_IN' | 'CLOCK_OUT';
+    employeeName: string;
+    timestamp: string;
+}
+
+export interface ValidateLinkResponse {
+    valid: boolean;
+    name?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
 export class AttendanceService {
     private http = inject(HttpClient);
     private baseUrl = `${environment.apiUrl}/operations/attendance`;
+    private publicUrl = `${environment.apiUrl}/public/attendance`; // Assuming public endpoint convention
 
     constructor() { }
 
@@ -41,10 +53,23 @@ export class AttendanceService {
     }
 
     /**
-     * Register clock-in via PIN
-     * Note: This might be used in a shared kiosk mode
+     * Register clock-in via PIN (Authenticated context)
      */
     clockIn(pin: string): Observable<AttendanceRecord> {
         return this.http.post<AttendanceRecord>(`${this.baseUrl}/clock-in`, { pin });
+    }
+
+    /**
+     * Validate public attendance link token
+     */
+    validateLink(token: string): Observable<ValidateLinkResponse> {
+        return this.http.get<ValidateLinkResponse>(`${this.publicUrl}/validate/${token}`);
+    }
+
+    /**
+     * Public clock-in via Token + PIN
+     */
+    publicClock(token: string, pin: string): Observable<ClockResponse> {
+        return this.http.post<ClockResponse>(`${this.publicUrl}/clock/${token}`, { pin });
     }
 }
