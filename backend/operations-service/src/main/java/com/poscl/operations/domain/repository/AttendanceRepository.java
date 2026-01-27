@@ -17,4 +17,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
     Optional<Attendance> findByTenantIdAndEmployeeIdAndClockOutTimeIsNull(UUID tenantId, UUID employeeId);
 
     List<Attendance> findByTenantIdAndClockInTimeBetween(UUID tenantId, Instant start, Instant end);
+
+    List<Attendance> findByEmployeeIdAndClockInTimeBetween(UUID employeeId, Instant start, Instant end);
 }

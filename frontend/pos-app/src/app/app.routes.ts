@@ -168,6 +168,21 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'rrhh/staff',
+        loadComponent: () => import('./features/rrhh/staff/staff-list.component').then(m => m.StaffListComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'rrhh/staff/:id',
+        loadComponent: () => import('./features/rrhh/staff/employee-detail.component').then(m => m.EmployeeDetailComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'rrhh/leaves',
+        loadComponent: () => import('./features/rrhh/leaves/leave-requests.component').then(m => m.LeaveRequestsComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'attendance',
         loadComponent: () => import('./features/rrhh/attendance/attendance.component').then(m => m.AttendanceComponent),
         canActivate: [authGuard]
@@ -176,6 +191,11 @@ export const routes: Routes = [
         path: 'attendance-admin',
         loadComponent: () => import('./features/rrhh/attendance-admin/attendance-admin.component').then(m => m.AttendanceAdminComponent),
         canActivate: [authGuard]
+    },
+    {
+        path: 'attendance/public/:token',
+        loadComponent: () => import('./features/rrhh/attendance/public-attendance.component').then(m => m.PublicAttendanceComponent)
+        // No authGuard - public route
     },
     {
         path: 'cotizaciones',
