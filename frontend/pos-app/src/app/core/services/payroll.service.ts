@@ -53,4 +53,12 @@ export class PayrollService {
     getHistory(): Observable<Payroll[]> {
         return this.http.get<Payroll[]>(`${this.baseUrl}/history`);
     }
+
+    markAsPaid(id: string): Observable<Payroll> {
+        return this.http.put<Payroll>(`${this.baseUrl}/${id}/pay`, {});
+    }
+
+    downloadPdf(id: string): Observable<Blob> {
+        return this.http.get(`${this.baseUrl}/${id}/pdf`, { responseType: 'blob' });
+    }
 }

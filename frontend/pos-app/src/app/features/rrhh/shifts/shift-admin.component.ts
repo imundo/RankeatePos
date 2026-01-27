@@ -115,6 +115,8 @@ import { DemoDataService } from '@app/core/services/demo-data.service';
             </div>
         </div>
         <ng-template pTemplate="footer">
+            <button pButton label="Eliminar" class="p-button-danger p-button-text mr-auto" icon="pi pi-trash" 
+                    *ngIf="editingShiftId" (click)="deleteShift()" [loading]="deleting"></button>
             <button pButton label="Cancelar" class="p-button-text" (click)="showDialog = false"></button>
             <button pButton label="Guardar" class="p-button-primary" (click)="saveShift()" [loading]="saving"></button>
         </ng-template>
@@ -294,6 +296,8 @@ export class ShiftAdminComponent implements OnInit {
 
     showDialog = false;
     saving = false;
+    deleting = false;
+    editingShiftId: string | null = null;
     selectedEmployee: any = null;
     selectedDate: Date | null = null;
 
@@ -396,6 +400,7 @@ export class ShiftAdminComponent implements OnInit {
     }
 
     onCellClick(emp: any, day: Date) {
+        this.editingShiftId = null; // New shift
         this.selectedEmployee = emp;
         this.selectedDate = day;
         this.form.type = 'MORNING';
@@ -404,11 +409,25 @@ export class ShiftAdminComponent implements OnInit {
     }
 
     editShift(shift: Shift) {
-        // Implementation for edit
+        this.editingShiftId = shift.id;
+        this.selectedEmployee = shift.employee; // Ensure employee object is compatible
+        // If employee is simplified (just id/name), might need to find full obj in this.employees()
+        const fullEmp = this.employees().find(e => e.id === shift.employee.id);
+        if (fullEmp) this.selectedEmployee = fullEmp;
+
+        this.selectedDate = new Date(shift.startTime);
+        this.form.type = shift.type;
+        this.form.startTime = new Date(shift.startTime);
+        this.form.endTime = new Date(shift.endTime);
+
+        this.showDialog = true;
     }
 
     openCreateModal() {
-        // Generic open without pre-selection
+        this.editingShiftId = null;
+        this.form.type = 'MORNING';
+        this.selectedDate = new Date(); // Default to today
+        this.onTypeChange();
         this.showDialog = true;
     }
 
@@ -452,21 +471,47 @@ export class ShiftAdminComponent implements OnInit {
         }
         end.setHours(this.form.endTime.getHours(), this.form.endTime.getMinutes());
 
-        this.shiftService.createShift({
+        const request = {
             employeeId: this.selectedEmployee.id,
             start: start.toISOString(),
             end: end.toISOString(),
             type: this.form.type
-        }).subscribe({
+        };
+
+        const obs$ = this.editingShiftId
+            ? this.shiftService.updateShift(this.editingShiftId, request)
+            : this.shiftService.createShift(request);
+
+        obs$.subscribe({
             next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Turno asignado' });
+                this.messageService.add({ severity: 'success', summary: 'Guardado', detail: this.editingShiftId ? 'Turno actualizado' : 'Turno asignado' });
                 this.showDialog = false;
                 this.loadShifts();
                 this.saving = false;
             },
             error: () => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar turno' });
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar el turno' });
                 this.saving = false;
+            }
+        });
+    }
+
+    deleteShift() {
+        if (!this.editingShiftId) return;
+
+        if (!confirm('¿Seguro que desea eliminar este turno?')) return;
+
+        this.deleting = true;
+        this.shiftService.deleteShift(this.editingShiftId).subscribe({
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Turno eliminado correctamente' });
+                this.showDialog = false;
+                this.loadShifts();
+                this.deleting = false;
+            },
+            error: () => {
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el turno' });
+                this.deleting = false;
             }
         });
     }

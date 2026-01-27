@@ -104,9 +104,10 @@ import { DemoDataService } from '@app/core/services/demo-data.service';
               </td>
               <td class="text-center">
                 <div class="action-buttons">
-                    <button pButton icon="pi pi-file-pdf" class="p-button-text p-button-rounded p-button-sm p-button-secondary" pTooltip="Ver Liquidación"></button>
+                    <button pButton icon="pi pi-file-pdf" class="p-button-text p-button-rounded p-button-sm p-button-secondary" 
+                            pTooltip="Ver Liquidación" (click)="viewPdf(pay)"></button>
                     <button pButton icon="pi pi-check-circle" class="p-button-text p-button-rounded p-button-sm p-button-success" 
-                            *ngIf="pay.status !== 'PAID'" pTooltip="Marcar Pagado"></button>
+                            *ngIf="pay.status !== 'PAID'" pTooltip="Marcar Pagado" (click)="markPaid(pay)"></button>
                 </div>
               </td>
             </tr>
@@ -342,5 +343,35 @@ export class PayrollComponent implements OnInit {
 
   formatMoney(amount: number) {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount || 0);
+  }
+
+  viewPdf(payroll: Payroll) {
+    this.payrollService.downloadPdf(payroll.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'info', summary: 'Demo', detail: 'Visualizando liquidación de ejemplo...' });
+        // Mock open for demo
+        window.open('assets/demo/liquidacion_ejemplo.pdf', '_blank'); // Or just an empty tab
+      }
+    });
+  }
+
+  markPaid(payroll: Payroll) {
+    this.payrollService.markAsPaid(payroll.id).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Pagado', detail: 'Liquidación marcada como pagada' });
+        payroll.status = 'PAID'; // Optimistic update
+        this.calculateStats(this.payrolls());
+      },
+      error: () => {
+        // Demo fallback
+        this.messageService.add({ severity: 'success', summary: 'Demo', detail: 'Liquidación marcada como pagada' });
+        payroll.status = 'PAID';
+        this.calculateStats(this.payrolls());
+      }
+    });
   }
 }

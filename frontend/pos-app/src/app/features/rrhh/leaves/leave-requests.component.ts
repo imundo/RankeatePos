@@ -231,6 +231,66 @@ import { DemoDataService } from '@app/core/services/demo-data.service';
           <button pButton label="Confirmar Rechazo" class="p-button-danger" (click)="confirmReject()"></button>
         </ng-template>
       </p-dialog>
+      
+      <!-- Detail Dialog -->
+      <p-dialog [(visible)]="showDetailModal" header="Detalle de Solicitud" [modal]="true" [style]="{width: '500px'}" styleClass="glass-dialog">
+        <div class="detail-content" *ngIf="viewRequest">
+            <div class="flex items-center gap-3 mb-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                <p-avatar [label]="getInitials(viewRequest.employeeName)" shape="circle" size="large"></p-avatar>
+                <div>
+                    <h3 class="m-0 text-white text-lg">{{ viewRequest.employeeName }}</h3>
+                    <span class="text-slate-400 text-sm">Solicitado el {{ formatDate(viewRequest.createdAt) }}</span>
+                </div>
+                <div class="ml-auto">
+                     <p-tag [value]="leaveService.getStatusLabel(viewRequest.status)" [severity]="leaveService.getStatusSeverity(viewRequest.status)"></p-tag>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="info-item p-3 rounded-xl bg-white/5">
+                    <label class="block text-slate-400 text-sm mb-1">Tipo</label>
+                    <div class="flex items-center gap-2 text-white font-medium">
+                        {{ getTypeIcon(viewRequest.type) }} {{ leaveService.getTypeLabel(viewRequest.type) }}
+                    </div>
+                </div>
+                <div class="info-item p-3 rounded-xl bg-white/5" *ngIf="viewRequest.daysRequested">
+                    <label class="block text-slate-400 text-sm mb-1">Duración</label>
+                    <div class="text-white font-medium">{{ viewRequest.daysRequested }} días</div>
+                </div>
+            </div>
+
+            <div class="info-item mb-4 p-3 rounded-xl bg-white/5" *ngIf="viewRequest.startDate">
+                <label class="block text-slate-400 text-sm mb-1">Periodo</label>
+                <div class="text-white font-mono">
+                    {{ formatDate(viewRequest.startDate) }} <span class="mx-2">⮕</span> {{ formatDate(viewRequest.endDate) }}
+                </div>
+            </div>
+
+            <div class="info-item mb-4 p-3 rounded-xl bg-white/5" *ngIf="viewRequest.amountRequested">
+                <label class="block text-slate-400 text-sm mb-1">Monto Solicitado</label>
+                <div class="text-emerald-400 font-bold text-lg">{{ formatMoney(viewRequest.amountRequested) }}</div>
+            </div>
+
+            <div class="info-item mb-4 p-3 rounded-xl bg-white/5">
+                <label class="block text-slate-400 text-sm mb-1">Motivo / Observación</label>
+                <p class="text-slate-300 m-0">{{ viewRequest.reason || 'Sin observaciones' }}</p>
+            </div>
+            
+             <div class="info-item mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20" *ngIf="viewRequest.rejectionReason">
+                <label class="block text-red-400 text-sm mb-1">Motivo de Rechazo</label>
+                <p class="text-red-200 m-0">{{ viewRequest.rejectionReason }}</p>
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <div class="flex justify-between w-full" *ngIf="viewRequest?.status === 'PENDING'">
+                <button pButton label="Rechazar" class="p-button-danger p-button-outlined" (click)="rejectRequest(viewRequest!); showDetailModal = false"></button>
+                <button pButton label="Aprobar" class="p-button-success" (click)="approveRequest(viewRequest!); showDetailModal = false"></button>
+            </div>
+            <div class="flex justify-end w-full" *ngIf="viewRequest?.status !== 'PENDING'">
+                 <button pButton label="Cerrar" class="p-button-secondary" (click)="showDetailModal = false"></button>
+            </div>
+        </ng-template>
+      </p-dialog>
     </div>
   `,
   styles: [`
@@ -469,8 +529,10 @@ export class LeaveRequestsComponent implements OnInit {
 
   showModal = false;
   showRejectModal = false;
+  showDetailModal = false;
   rejectReason = '';
   rejectingRequest: LeaveRequest | null = null;
+  viewRequest: LeaveRequest | null = null;
 
   formData: CreateLeaveRequest = this.getEmptyForm();
 
@@ -625,7 +687,8 @@ export class LeaveRequestsComponent implements OnInit {
   }
 
   viewDetails(request: LeaveRequest) {
-    // TODO: Open detail modal
+    this.viewRequest = request;
+    this.showDetailModal = true;
   }
 
   getTypeIcon(type: LeaveRequestType): string {

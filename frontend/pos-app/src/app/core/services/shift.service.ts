@@ -36,4 +36,12 @@ export class ShiftService {
     createShift(request: CreateShiftRequest): Observable<Shift> {
         return this.http.post<Shift>(this.baseUrl, request);
     }
+
+    updateShift(id: string, request: CreateShiftRequest): Observable<Shift> {
+        return this.http.put<Shift>(`${this.baseUrl}/${id}`, request);
+    }
+
+    deleteShift(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
 }
