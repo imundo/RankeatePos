@@ -147,9 +147,9 @@ export class LeaveService {
         return labels[status] || status;
     }
 
-    getStatusSeverity(status: LeaveRequestStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-        const severities: Record<LeaveRequestStatus, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
-            PENDING: 'warn',
+    getStatusSeverity(status: LeaveRequestStatus): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
+        const severities: Record<LeaveRequestStatus, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
+            PENDING: 'warning',
             APPROVED: 'success',
             REJECTED: 'danger',
             CANCELLED: 'secondary',
