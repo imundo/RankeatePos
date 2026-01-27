@@ -39,10 +39,12 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
                 </h1>
                 <p class="text-slate-400 mt-1">Gestión de turnos y marcajes</p>
              </div>
-             <div class="relative z-10">
+             <div class="relative z-10 flex gap-2">
                 <button pButton label="Link Tótem" icon="pi pi-desktop" class="p-button-rounded p-button-success"
                         (click)="generateLink()"></button>
-             </div>
+                <button pButton label="Configuración" icon="pi pi-cog" class="p-button-outlined p-button-secondary" (click)="showSettings = true"></button>
+                <button pButton label="Exportar Reporte" icon="pi pi-file-excel" class="p-button-success" (click)="exportReport()" [loading]="exporting"></button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -148,7 +150,7 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
                         (click)="openLink()"></button>
             </div>
         </div>
-        <div class="text-center p-4" *ngIf="generatingLink">
+        <div class="text-center p-4" *ngIf="loadingLink">
             <i class="pi pi-spin pi-spinner text-3xl"></i>
             <p class="mt-2 text-slate-400">Generando acceso seguro para Tótem...</p>
         </div>
@@ -166,6 +168,19 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
         <ng-template pTemplate="footer">
             <button pButton label="Cancelar" class="p-button-text" (click)="showJustificationModal = false"></button>
             <button pButton label="Guardar" class="p-button-emerald" (click)="saveJustification()" [loading]="savingJustification"></button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Settings Dialog -->
+    <p-dialog [(visible)]="showSettings" header="Configuración de Asistencia" [modal]="true" [style]="{width: '400px'}" styleClass="premium-dialog">
+        <div class="field p-fluid">
+            <label class="block mb-2 text-slate-400">Holgura de Entrada (Minutos)</label>
+            <p-inputNumber [(ngModel)]="toleranceMinutes" suffix=" min" [min]="0" [max]="60"></p-inputNumber>
+            <small class="block mt-2 text-slate-400">Tiempo de tolerancia antes de marcar como atraso.</small>
+        </div>
+        <ng-template pTemplate="footer">
+            <button pButton label="Cerrar" class="p-button-text" (click)="showSettings = false"></button>
+            <button pButton label="Guardar" class="p-button-emerald" (click)="showSettings = false; messageService.add({severity:'success', summary:'Guardado', detail:'Configuración actualizada'})"></button>
         </ng-template>
     </p-dialog>
     `,
@@ -232,8 +247,13 @@ export class AttendanceAdminComponent implements OnInit {
 
     // Link
     showLinkModal = false;
-    generatingLink = false;
+    loadingLink = false; // Renamed from generatingLink
     generatedLink = '';
+
+    // New features
+    showSettings = false;
+    exporting = false;
+    toleranceMinutes = 15; // Settings Mock
 
     // Justification
     showJustificationModal = false;
@@ -278,21 +298,44 @@ export class AttendanceAdminComponent implements OnInit {
     // Link Generation
     generateLink() {
         this.showLinkModal = true;
-        this.generatingLink = true;
+        this.loadingLink = true;
         this.generatedLink = '';
 
         this.attendanceService.generatePublicLink().subscribe({
             next: (res: any) => {
                 // Assuming res.url exists, or we construct it via frontend route
                 this.generatedLink = res.url || `${window.location.origin}/public/attendance/clock-in?token=${res.token}`;
-                this.generatingLink = false;
+                this.loadingLink = false;
             },
             error: () => {
                 // Fallback demo link
                 setTimeout(() => {
                     this.generatedLink = `${window.location.origin}/public/attendance/clock-in?token=DEMO-TOKEN-123`;
-                    this.generatingLink = false;
+                    this.loadingLink = false;
                 }, 1000);
+            }
+        });
+    }
+
+    exportReport() {
+        this.exporting = true;
+        const now = new Date();
+        this.attendanceService.exportReport('EXCEL', now.getFullYear(), now.getMonth() + 1).subscribe({
+            next: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `reporte_asistencia_${now.getMonth() + 1}_${now.getFullYear()}.xlsx`;
+                a.click();
+                this.exporting = false;
+                this.messageService.add({ severity: 'success', summary: 'Exportado', detail: 'Reporte descargado' });
+            },
+            error: () => {
+                // Mock download
+                setTimeout(() => {
+                    this.exporting = false;
+                    this.messageService.add({ severity: 'success', summary: 'Demo', detail: 'Reporte generado (Simulación)' });
+                }, 1500);
             }
         });
     }

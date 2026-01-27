@@ -87,4 +87,13 @@ export class AttendanceService {
     addJustification(recordId: string, justification: string): Observable<AttendanceRecord> {
         return this.http.put<AttendanceRecord>(`${this.baseUrl}/${recordId}/justification`, { justification });
     }
+
+    exportReport(format: 'EXCEL' | 'PDF', year: number, month: number): Observable<Blob> {
+        const params = new HttpParams()
+            .set('format', format)
+            .set('year', year.toString())
+            .set('month', month.toString());
+
+        return this.http.get(`${this.baseUrl}/report`, { params, responseType: 'blob' });
+    }
 }
