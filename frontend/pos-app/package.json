@@ -37,7 +37,8 @@
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.0"
+    "zone.js": "~0.14.0",
+    "chart.js": "^4.4.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.0.0",

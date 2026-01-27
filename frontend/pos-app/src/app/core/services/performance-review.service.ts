@@ -42,7 +42,7 @@ export class PerformanceReviewService {
     }
 
     // Helper para obtener label del score
-    getScoreLabel(score: number): { label: string, color: string } {
+    getScoreLabel(score: number): { label: string, color: 'success' | 'info' | 'warning' | 'danger' } {
         if (score >= 90) return { label: 'Sobresaliente', color: 'success' };
         if (score >= 70) return { label: 'Cumple Expectativas', color: 'info' };
         if (score >= 50) return { label: 'Necesita Mejora', color: 'warning' };
