@@ -6,20 +6,17 @@
 -- 0. Ensure all required columns exist and have proper defaults
 -- First add columns if they don't exist
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS pin_code VARCHAR(10);
-ALTER TABLE employees ADD COLUMN IF NOT EXISTS active BOOLEAN;
-ALTER TABLE employees ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;
-ALTER TABLE employees ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
 
--- Then set defaults for columns that may exist but lack defaults (critical for NOT NULL columns)
+-- Set defaults for existing columns (is_active is the actual column name in Railway)
 ALTER TABLE employees ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE employees ALTER COLUMN active SET DEFAULT true;
+ALTER TABLE employees ALTER COLUMN is_active SET DEFAULT true;
 
 -- Update any existing NULL values before inserting new data
 UPDATE employees SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL;
-UPDATE employees SET active = true WHERE active IS NULL;
+UPDATE employees SET is_active = true WHERE is_active IS NULL;
 
--- 1. Employees
-INSERT INTO employees (id, tenant_id, first_name, last_name, rut, email, position, pin_code, base_salary, hire_date, active, created_at) VALUES 
+-- 1. Employees (using is_active which is the actual column name in Railway)
+INSERT INTO employees (id, tenant_id, first_name, last_name, rut, email, position, pin_code, base_salary, hire_date, is_active, created_at) VALUES 
 ('e1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Juan', 'Pérez', '12.345.678-9', 'juan@eltrigal.cl', 'Panadero Jefe', '1234', 850000, '2023-01-15', true, CURRENT_TIMESTAMP),
 ('e1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Maria', 'Soto', '13.456.789-0', 'maria@eltrigal.cl', 'Cajera', '5678', 550000, '2023-06-01', true, CURRENT_TIMESTAMP),
 ('e1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'Pedro', 'Lagos', '14.567.890-1', 'pedro@eltrigal.cl', 'Repartidor', '9090', 500000, '2023-08-10', true, CURRENT_TIMESTAMP),
