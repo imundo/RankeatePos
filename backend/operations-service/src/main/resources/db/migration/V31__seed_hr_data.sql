@@ -3,20 +3,20 @@
 -- Demo data for El Trigal
 -- =====================================================
 
--- 0. Ensure pin_code column exists (for Railway compatibility)
+-- 0. Ensure all required columns exist (Railway schema compatibility)
+-- These columns may be missing depending on how V30 was originally created
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS pin_code VARCHAR(10);
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
 
--- 0.1 Ensure columns have defaults (Railway schema may differ)
-ALTER TABLE employees ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE employees ALTER COLUMN active SET DEFAULT true;
-
--- 1. Employees
-INSERT INTO employees (id, tenant_id, first_name, last_name, rut, email, position, pin_code, base_salary, hire_date, active, created_at) VALUES 
-('e1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Juan', 'Pérez', '12.345.678-9', 'juan@eltrigal.cl', 'Panadero Jefe', '1234', 850000, '2023-01-15', true, CURRENT_TIMESTAMP),
-('e1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Maria', 'Soto', '13.456.789-0', 'maria@eltrigal.cl', 'Cajera', '5678', 550000, '2023-06-01', true, CURRENT_TIMESTAMP),
-('e1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'Pedro', 'Lagos', '14.567.890-1', 'pedro@eltrigal.cl', 'Repartidor', '9090', 500000, '2023-08-10', true, CURRENT_TIMESTAMP),
-('e1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'Ana', 'Rojas', '15.678.901-2', 'ana@eltrigal.cl', 'Ayudante Cocina', '1111', 480000, '2023-11-20', true, CURRENT_TIMESTAMP),
-('e1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000001', 'Luis', 'Toro', '16.789.012-3', 'luis@eltrigal.cl', 'Supervisor', '2222', 950000, '2022-05-05', true, CURRENT_TIMESTAMP)
+-- 1. Employees (minimal insert with only guaranteed columns)
+INSERT INTO employees (id, tenant_id, first_name, last_name, rut, email, position, pin_code, base_salary, hire_date) VALUES 
+('e1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Juan', 'Pérez', '12.345.678-9', 'juan@eltrigal.cl', 'Panadero Jefe', '1234', 850000, '2023-01-15'),
+('e1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Maria', 'Soto', '13.456.789-0', 'maria@eltrigal.cl', 'Cajera', '5678', 550000, '2023-06-01'),
+('e1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'Pedro', 'Lagos', '14.567.890-1', 'pedro@eltrigal.cl', 'Repartidor', '9090', 500000, '2023-08-10'),
+('e1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'Ana', 'Rojas', '15.678.901-2', 'ana@eltrigal.cl', 'Ayudante Cocina', '1111', 480000, '2023-11-20'),
+('e1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000001', 'Luis', 'Toro', '16.789.012-3', 'luis@eltrigal.cl', 'Supervisor', '2222', 950000, '2022-05-05')
 ON CONFLICT DO NOTHING;
 
 -- 2. Attendance (Last 3 days)
