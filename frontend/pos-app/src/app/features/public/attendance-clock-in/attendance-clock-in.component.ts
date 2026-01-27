@@ -114,7 +114,7 @@ export class AttendanceClockInComponent implements OnInit {
     successMessage = '';
 
     ngOnInit() {
-        this.token = this.route.snapshot.paramMap.get('token') || '';
+        this.token = this.route.snapshot.queryParamMap.get('token') || '';
         this.validateToken();
 
         setInterval(() => {

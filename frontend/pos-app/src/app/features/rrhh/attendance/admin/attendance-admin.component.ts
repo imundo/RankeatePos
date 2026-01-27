@@ -284,7 +284,7 @@ export class AttendanceAdminComponent implements OnInit {
         this.attendanceService.generatePublicLink().subscribe({
             next: (res: any) => {
                 // Assuming res.url exists, or we construct it via frontend route
-                this.generatedLink = res.url || `${window.location.origin}/attendance/public/${res.token}`;
+                this.generatedLink = res.url || `${window.location.origin}/public/attendance/clock-in?token=${res.token}`;
                 this.generatingLink = false;
             },
             error: () => {
