@@ -178,6 +178,16 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'rrhh/dashboard',
+        loadComponent: () => import('./features/rrhh/dashboard/hr-dashboard.component').then(m => m.HrDashboardComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'rrhh/reviews',
+        loadComponent: () => import('./features/rrhh/reviews/performance-review.component').then(m => m.PerformanceReviewComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'rrhh/leaves',
         loadComponent: () => import('./features/rrhh/leaves/leave-requests.component').then(m => m.LeaveRequestsComponent),
         canActivate: [authGuard]

@@ -134,6 +134,44 @@ export class DemoDataService {
     }
 
     // ==================== TENANT-SPECIFIC DATA ====================
+    // ==================== RRHH MODULE ====================
+    employees = signal([
+        { id: '1', firstName: 'Juan', lastName: 'Pérez', rut: '12.345.678-9', email: 'juan.perez@eltrigal.cl', position: 'Panadero Jefe', active: true, baseSalary: 850000, hireDate: '2023-01-15', pinCode: '1234', initials: 'JP', vacationDaysRemaining: 15, documentsCount: 3, createdAt: '', updatedAt: '', countryCode: 'CL', tenantId: 'demo' },
+        { id: '2', firstName: 'Ana', lastName: 'Soto', rut: '13.456.789-0', email: 'ana.soto@eltrigal.cl', position: 'Vendedora', active: true, baseSalary: 550000, hireDate: '2023-03-20', pinCode: '5678', initials: 'AS', vacationDaysRemaining: 12, documentsCount: 2, createdAt: '', updatedAt: '', countryCode: 'CL', tenantId: 'demo' },
+        { id: '3', firstName: 'Carlos', lastName: 'Muñoz', rut: '14.567.890-1', email: 'carlos.munoz@eltrigal.cl', position: 'Pastelero', active: true, baseSalary: 700000, hireDate: '2023-06-10', pinCode: '9012', initials: 'CM', vacationDaysRemaining: 10, documentsCount: 2, createdAt: '', updatedAt: '', countryCode: 'CL', tenantId: 'demo' },
+        { id: '4', firstName: 'María', lastName: 'López', rut: '15.678.901-2', email: 'maria.lopez@eltrigal.cl', position: 'Cajera', active: true, baseSalary: 520000, hireDate: '2023-08-01', pinCode: '3456', initials: 'ML', vacationDaysRemaining: 8, documentsCount: 1, createdAt: '', updatedAt: '', countryCode: 'CL', tenantId: 'demo' },
+        { id: '5', firstName: 'Pedro', lastName: 'Ramírez', rut: '16.789.012-3', email: 'pedro.ramirez@eltrigal.cl', position: 'Ayudante', active: false, baseSalary: 450000, hireDate: '2023-11-15', pinCode: '7890', initials: 'PR', vacationDaysRemaining: 0, documentsCount: 5, createdAt: '', updatedAt: '', countryCode: 'CL', tenantId: 'demo' },
+    ]);
+
+    attendanceLogs = signal([
+        { id: '1', employeeId: '1', employeeName: 'Juan Pérez', type: 'CHECK_IN', timestamp: new Date(new Date().setHours(7, 30, 0)), verified: true },
+        { id: '2', employeeId: '2', employeeName: 'Ana Soto', type: 'CHECK_IN', timestamp: new Date(new Date().setHours(8, 0, 0)), verified: true },
+        { id: '3', employeeId: '3', employeeName: 'Carlos Muñoz', type: 'CHECK_IN', timestamp: new Date(new Date().setHours(8, 15, 0)), verified: true },
+        { id: '4', employeeId: '4', employeeName: 'María López', type: 'CHECK_IN', timestamp: new Date(new Date().setHours(8, 30, 0)), verified: true },
+    ]);
+
+    rrhhStats = signal({
+        totalEmployees: 5,
+        activeEmployees: 4,
+        pendingLeaveRequests: 2,
+        attendanceToday: '90%',
+        totalPayroll: 2620000
+    });
+
+    shifts = signal([
+        { id: '1', employee: { id: '1', firstName: 'Juan', lastName: 'Pérez' }, start: new Date(new Date().setHours(7, 0, 0)), end: new Date(new Date().setHours(15, 0, 0)), type: 'MORNING' },
+        { id: '2', employee: { id: '2', firstName: 'Ana', lastName: 'Soto' }, start: new Date(new Date().setHours(8, 0, 0)), end: new Date(new Date().setHours(16, 0, 0)), type: 'MORNING' },
+        { id: '3', employee: { id: '3', firstName: 'Carlos', lastName: 'Muñoz' }, start: new Date(new Date().setHours(14, 0, 0)), end: new Date(new Date().setHours(22, 0, 0)), type: 'AFTERNOON' },
+        { id: '4', employee: { id: '4', firstName: 'María', lastName: 'López' }, start: new Date(new Date().setHours(15, 0, 0)), end: new Date(new Date().setHours(23, 0, 0)), type: 'AFTERNOON' }
+    ]);
+
+    leaveRequests = signal([
+        { id: '1', employeeId: '1', employeeName: 'Juan Pérez', type: 'VACATION', startDate: '2025-02-01', endDate: '2025-02-15', daysRequested: 10, status: 'PENDING', createdAt: '2025-01-20', reason: 'Vacaciones familiares' },
+        { id: '2', employeeId: '2', employeeName: 'Ana Soto', type: 'MEDICAL_LEAVE', startDate: '2025-01-25', endDate: '2025-01-28', daysRequested: 3, status: 'APPROVED', createdAt: '2025-01-18', reason: 'Gripe' },
+        { id: '3', employeeId: '3', employeeName: 'Carlos Muñoz', type: 'SALARY_ADVANCE', amountRequested: 200000, status: 'PENDING', createdAt: '2025-01-22', reason: 'Reparación auto', daysRequested: 0 },
+        { id: '4', employeeId: '4', employeeName: 'María López', type: 'ADMINISTRATIVE_DAY', startDate: '2025-01-30', endDate: '2025-01-30', daysRequested: 1, status: 'APPROVED', createdAt: '2025-01-15', reason: 'Trámite personal' }
+    ]);
+
     getTenantDemoData(tenantId: string) {
         // Returns demo data customized for the tenant
         // For now, all tenants get the same El Trigal bakery data
@@ -157,6 +195,13 @@ export class DemoDataService {
             subscriptions: {
                 active: this.subscriptionsActive(),
                 deliveriesToday: this.subscriptionsDeliveriesToday()
+            },
+            rrhh: {
+                employees: this.employees(),
+                attendance: this.attendanceLogs(),
+                stats: this.rrhhStats(),
+                shifts: this.shifts(),
+                leaveRequests: this.leaveRequests()
             }
         };
     }

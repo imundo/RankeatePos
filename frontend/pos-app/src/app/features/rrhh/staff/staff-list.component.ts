@@ -17,6 +17,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { RouterLink } from '@angular/router';
 import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/services/staff.service';
+import { DemoDataService } from '@app/core/services/demo-data.service';
 
 @Component({
   selector: 'app-staff-list',
@@ -89,8 +90,8 @@ import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/service
 
       <!-- Employee Cards Grid -->
       <div class="employee-grid" *ngIf="!loading()">
-        @for (emp of employees(); track emp.id) {
-          <div class="employee-card glass-card" [class.inactive]="!emp.active">
+        @for (emp of employees(); track emp.id; let i = $index) {
+          <div class="employee-card glass-card fade-in-up" [class.inactive]="!emp.active" [style.animation-delay]="i * 0.1 + 's'">
             <div class="card-header">
               <p-avatar [label]="emp.initials" shape="circle" size="large" [style]="{'background': getAvatarColor(emp.id)}"></p-avatar>
               <div class="header-info">
@@ -428,13 +429,22 @@ import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/service
       i { margin-bottom: 1.5rem; color: #475569; }
       h3 { font-size: 1.5rem; color: white; margin-bottom: 0.5rem; }
     }
-
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.5s ease backwards;
+    }
   `]
 })
 export class StaffListComponent implements OnInit {
   private staffService = inject(StaffService);
   private messageService = inject(MessageService);
   private confirmService = inject(ConfirmationService);
+  private demoDataService = inject(DemoDataService);
 
   employees = signal<Employee[]>([]);
   stats = signal<{ totalEmployees: number; activeEmployees: number; pendingLeaveRequests: number } | null>(null);
@@ -466,21 +476,40 @@ export class StaffListComponent implements OnInit {
     this.loading.set(true);
     this.staffService.getAllActive().subscribe({
       next: (employees) => {
-        this.employees.set(employees);
-        this.loading.set(false);
+        if (employees.length === 0) {
+          this.loadDemoData();
+        } else {
+          this.employees.set(employees);
+          this.loading.set(false);
+        }
       },
-      error: (err) => {
-        console.error('Error loading employees', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los empleados' });
-        this.loading.set(false);
+      error: (err: any) => {
+        console.warn('Backend unavailable, loading demo data', err);
+        this.loadDemoData();
       }
     });
+  }
+
+  loadDemoData() {
+    // Fallback to demo data
+    const demoData = this.demoDataService.getTenantDemoData('demo');
+    // Map demo employees to match Employee interface if needed, or use as is if compatible
+    // The demo data has extra fields but should be compatible
+    this.employees.set(demoData.rrhh.employees as any[]);
+    this.loading.set(false);
+
+    // Also load demo stats
+    this.stats.set(demoData.rrhh.stats);
   }
 
   loadStats() {
     this.staffService.getStats().subscribe({
       next: (stats) => this.stats.set(stats),
-      error: (err) => console.error('Error loading stats', err)
+      error: (err: any) => {
+        console.warn('Stats unavailable, using demo stats');
+        const demoData = this.demoDataService.getTenantDemoData('demo');
+        this.stats.set(demoData.rrhh.stats);
+      }
     });
   }
 

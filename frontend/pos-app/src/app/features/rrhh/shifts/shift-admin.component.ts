@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ShiftService, Shift } from '@app/core/services/shift.service';
 import { StaffService, Employee } from '@app/core/services/staff.service';
+import { DemoDataService } from '@app/core/services/demo-data.service';
 
 @Component({
     selector: 'app-shift-admin',
@@ -125,6 +126,12 @@ import { StaffService, Employee } from '@app/core/services/staff.service';
         background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 40%),
                     radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.1), transparent 40%);
         min-height: 100vh;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .page-header {
@@ -279,6 +286,7 @@ export class ShiftAdminComponent implements OnInit {
     private shiftService = inject(ShiftService);
     private staffService = inject(StaffService);
     private messageService = inject(MessageService);
+    private demoDataService = inject(DemoDataService);
 
     currentWeekStart = signal(this.getStartOfWeek(new Date()));
     shifts = signal<Shift[]>([]);
@@ -324,9 +332,21 @@ export class ShiftAdminComponent implements OnInit {
     }
 
     loadEmployees() {
-        this.staffService.getAllActive().subscribe(emps => {
-            this.employees.set(emps);
+        this.staffService.getAllActive().subscribe({
+            next: (emps) => {
+                if (emps.length === 0) {
+                    this.loadDemoEmployees();
+                } else {
+                    this.employees.set(emps);
+                }
+            },
+            error: () => this.loadDemoEmployees()
         });
+    }
+
+    loadDemoEmployees() {
+        const demoData = this.demoDataService.getTenantDemoData('demo');
+        this.employees.set(demoData.rrhh.employees as any[]);
     }
 
     loadShifts() {
@@ -334,9 +354,22 @@ export class ShiftAdminComponent implements OnInit {
         const end = new Date(start);
         end.setDate(end.getDate() + 7);
 
-        this.shiftService.getShifts(start, end).subscribe(data => {
-            this.shifts.set(data);
+        this.shiftService.getShifts(start, end).subscribe({
+            next: (data) => {
+                this.shifts.set(data);
+                // Note: If data is empty we might want demo data, but maybe user just hasn't created shifts.
+                // However, for "Test Data" request, if empty, show demo.
+                if (data.length === 0) {
+                    this.loadDemoShifts();
+                }
+            },
+            error: () => this.loadDemoShifts()
         });
+    }
+
+    loadDemoShifts() {
+        const demoData = this.demoDataService.getTenantDemoData('demo');
+        this.shifts.set(demoData.rrhh.shifts as any[]);
     }
 
     prevWeek() {
