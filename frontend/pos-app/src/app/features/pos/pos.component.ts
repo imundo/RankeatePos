@@ -1142,6 +1142,18 @@ interface CartItem {
                 </div>
                 <span class="item-text">Asistencia</span>
               </button>
+              <button *ngIf="canAccess('attendance')" class="menu-item" routerLink="/rrhh/attendance-admin" (click)="showMenu = false">
+                <div class="item-icon teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                    <path d="M12 8v4"/><path d="M10 10h4"/>
+                  </svg>
+                </div>
+                <span class="item-text">Control Asistencia</span>
+                <span class="item-badge new">Admin</span>
+              </button>
               <button *ngIf="canAccess('payroll')" class="menu-item" routerLink="/remuneraciones" (click)="showMenu = false">
                 <div class="item-icon green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
