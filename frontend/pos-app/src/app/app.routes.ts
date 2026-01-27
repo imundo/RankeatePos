@@ -193,6 +193,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'rrhh/shifts',
+        loadComponent: () => import('./features/rrhh/shifts/shift-admin.component').then(m => m.ShiftAdminComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'attendance/public/:token',
         loadComponent: () => import('./features/rrhh/attendance/public-attendance.component').then(m => m.PublicAttendanceComponent)
         // No authGuard - public route
