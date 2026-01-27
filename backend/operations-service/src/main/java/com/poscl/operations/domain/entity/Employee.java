@@ -65,6 +65,7 @@ public class Employee {
     @Builder.Default
     private String countryCode = "CL";
 
+    @Column(name = "is_active")
     @Builder.Default
     private boolean active = true;
 

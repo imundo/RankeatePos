@@ -213,7 +213,8 @@ import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/service
   styles: [`
     .staff-container {
       padding: 2rem;
-      background: var(--surface-card);
+      background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.15), transparent 40%),
+                  radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.1), transparent 40%);
       min-height: 100vh;
     }
 
@@ -221,87 +222,127 @@ import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/service
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 1.5rem;
     }
 
     .header-content h1 {
       margin: 0;
-      font-size: 1.8rem;
-      background: linear-gradient(90deg, #6366F1, #8B5CF6);
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
     .subtitle {
-      color: var(--text-secondary-color);
+      color: #94A3B8;
       margin: 0.5rem 0 0;
+      font-size: 1.1rem;
+      font-weight: 400;
     }
 
     .header-actions {
       display: flex;
       gap: 1rem;
       align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
     }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
     }
 
     .stat-card {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1.5rem;
+      gap: 1.5rem;
+      padding: 1.75rem;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        z-index: 0;
+        pointer-events: none;
+      }
     }
 
     .stat-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      i { font-size: 1.5rem; color: white; }
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 1;
+      i { font-size: 1.75rem; color: white; }
+    }
+
+    .stat-info {
+      z-index: 1;
     }
 
     .stat-value {
-      font-size: 1.8rem;
-      font-weight: 700;
+      font-size: 2.25rem;
+      font-weight: 800;
       display: block;
+      line-height: 1.2;
+      background: linear-gradient(180deg, #fff, #e2e8f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .stat-label {
-      font-size: 0.85rem;
-      color: var(--text-secondary-color);
-    }
-
-    .employee-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
+      font-size: 0.9rem;
+      color: #94A3B8;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
       padding: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       
       &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        border-color: rgba(99, 102, 241, 0.3);
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        border-color: rgba(99, 102, 241, 0.4);
+        background: rgba(30, 41, 59, 0.6);
       }
 
       &.inactive {
-        opacity: 0.6;
+        opacity: 0.7;
+        filter: grayscale(0.8);
       }
+    }
+
+    .employee-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .card-header {
@@ -309,90 +350,85 @@ import { StaffService, Employee, CreateEmployeeRequest } from '@app/core/service
       align-items: center;
       gap: 1rem;
       margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .header-info {
       flex: 1;
       h3 {
-        margin: 0;
-        font-size: 1.1rem;
+        margin: 0 0 0.35rem 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
       }
+    }
+
+    .position-badge {
+      font-size: 0.8rem;
+      color: #bfdbfe;
+      background: rgba(59, 130, 246, 0.15);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     .card-actions {
       display: flex;
-      gap: 0.25rem;
-    }
-
-    .position-badge {
-      font-size: 0.85rem;
-      color: #94A3B8;
-      background: rgba(148, 163, 184, 0.1);
-      padding: 2px 8px;
-      border-radius: 12px;
+      gap: 0.5rem;
     }
 
     .info-row {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin-bottom: 0.75rem;
-      color: var(--text-secondary-color);
-      font-size: 0.9rem;
+      margin-bottom: 0.85rem;
+      color: #cbd5e1;
+      font-size: 0.95rem;
       
-      i { color: #6366F1; width: 16px; }
+      i { 
+        color: #818cf8; 
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+      }
       
       .pin-code {
-        font-family: monospace;
+        font-family: 'JetBrains Mono', monospace;
         background: rgba(99, 102, 241, 0.1);
-        padding: 2px 8px;
-        border-radius: 4px;
+        color: #a5b4fc;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        letter-spacing: 1px;
       }
     }
 
     .card-footer {
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .salary {
-      font-weight: 600;
-      font-size: 1.1rem;
-      color: #10B981;
-    }
-
-    .form-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      
-      label {
-        font-weight: 500;
-        font-size: 0.9rem;
-      }
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #34d399;
+      text-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
     }
 
     .loading-container, .empty-state {
       text-align: center;
-      padding: 4rem 2rem;
-      color: var(--text-secondary-color);
+      padding: 6rem 2rem;
+      color: #94a3b8;
+      
+      i { margin-bottom: 1.5rem; color: #475569; }
+      h3 { font-size: 1.5rem; color: white; margin-bottom: 0.5rem; }
     }
+
   `]
 })
 export class StaffListComponent implements OnInit {
