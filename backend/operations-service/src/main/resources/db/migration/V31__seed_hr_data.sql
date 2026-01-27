@@ -3,6 +3,9 @@
 -- Demo data for El Trigal
 -- =====================================================
 
+-- 0. Ensure pin_code column exists (for Railway compatibility)
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS pin_code VARCHAR(10);
+
 -- 1. Employees
 INSERT INTO employees (id, tenant_id, first_name, last_name, rut, email, position, pin_code, base_salary, hire_date) VALUES 
 ('e1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Juan', 'Pérez', '12.345.678-9', 'juan@eltrigal.cl', 'Panadero Jefe', '1234', 850000, '2023-01-15'),
