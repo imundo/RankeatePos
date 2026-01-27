@@ -26,6 +26,7 @@
     "@angular/router": "^18.0.0",
     "@angular/service-worker": "^18.0.0",
     "bwip-js": "^4.8.0",
+    "chart.js": "^4.5.1",
     "dexie": "^4.0.1",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
@@ -37,8 +38,7 @@
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.0",
-    "chart.js": "^4.4.1"
+    "zone.js": "~0.14.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.0.0",

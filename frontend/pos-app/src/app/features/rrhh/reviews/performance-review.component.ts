@@ -19,23 +19,23 @@ import { StaffService, Employee } from '@app/core/services/staff.service';
 import { DemoDataService } from '@app/core/services/demo-data.service';
 
 @Component({
-    selector: 'app-performance-review',
-    standalone: true,
-    imports: [
-        CommonModule,
-        FormsModule,
-        TableModule,
-        ButtonModule,
-        DialogModule,
-        RatingModule,
-        InputTextareaModule,
-        DropdownModule,
-        ToastModule,
-        TagModule,
-        AvatarModule
-    ],
-    providers: [MessageService],
-    template: `
+  selector: 'app-performance-review',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    DialogModule,
+    RatingModule,
+    InputTextareaModule,
+    DropdownModule,
+    ToastModule,
+    TagModule,
+    AvatarModule
+  ],
+  providers: [MessageService],
+  template: `
     <p-toast></p-toast>
     <div class="reviews-container fade-in">
       
@@ -177,7 +177,7 @@ import { DemoDataService } from '@app/core/services/demo-data.service';
 
     </div>
   `,
-    styles: [`
+  styles: [`
     .reviews-container {
       padding: 2rem;
       background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 40%),
@@ -262,146 +262,146 @@ import { DemoDataService } from '@app/core/services/demo-data.service';
   `]
 })
 export class PerformanceReviewComponent implements OnInit {
-    private reviewService = inject(PerformanceReviewService);
-    private staffService = inject(StaffService);
-    private demoDataService = inject(DemoDataService);
-    private messageService = inject(MessageService);
+  private reviewService = inject(PerformanceReviewService);
+  private staffService = inject(StaffService);
+  private demoDataService = inject(DemoDataService);
+  private messageService = inject(MessageService);
 
-    reviews = signal<PerformanceReview[]>([]);
-    employees = signal<Employee[]>([]);
-    loading = signal(true);
+  reviews = signal<PerformanceReview[]>([]);
+  employees = signal<Employee[]>([]);
+  loading = signal(true);
 
-    // Stats
-    averageScore = signal(0);
+  // Stats
+  averageScore = signal(0);
 
-    // Modal
-    showModal = false;
-    saving = signal(false);
-    ratingStars = 0;
+  // Modal
+  showModal = false;
+  saving = signal(false);
+  ratingStars = 0;
 
-    formData: CreateReviewDTO = {
-        employeeId: '',
-        period: '',
-        reviewer: 'Admin',
-        score: 0,
-        feedback: ''
-    };
+  formData: CreateReviewDTO = {
+    employeeId: '',
+    period: '',
+    reviewer: 'Admin',
+    score: 0,
+    feedback: ''
+  };
 
-    ngOnInit() {
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.loading.set(true);
+
+    // Load Employees
+    this.staffService.getAllActive().subscribe({
+      next: (emps) => {
+        if (emps.length === 0) this.loadDemoEmployees();
+        else this.employees.set(emps);
+      },
+      error: () => this.loadDemoEmployees()
+    });
+
+    // Load Reviews
+    // En un caso real filtrariamos por tenant, aqui simulamos obtener todas
+    this.reviewService.getByEmployee('all').subscribe({
+      next: (data) => {
+        this.handleReviewsLoaded(data);
+      },
+      error: () => this.loadDemoReviews()
+    });
+  }
+
+  loadDemoEmployees() {
+    const demoData = this.demoDataService.getTenantDemoData('demo');
+    this.employees.set(demoData.rrhh.employees as any[]);
+  }
+
+  loadDemoReviews() {
+    // Generate Mock Reviews based on employees
+    const emps = this.employees();
+    const mocks: any[] = emps.map(e => ({
+      id: Math.random().toString(36).substr(2, 9),
+      employee: e,
+      employeeName: e.firstName + ' ' + e.lastName,
+      period: '2024-Q4',
+      reviewDate: new Date().toISOString(),
+      reviewerName: 'Admin RRHH',
+      overallScore: 60 + Math.floor(Math.random() * 40), // 60-100
+      feedback: 'Buen desempeño general, demostró compromiso con el equipo.',
+      status: 'COMPLETED'
+    }));
+
+    this.handleReviewsLoaded(mocks);
+  }
+
+  handleReviewsLoaded(data: any[]) {
+    this.reviews.set(data);
+
+    const total = data.reduce((acc, curr) => acc + curr.overallScore, 0);
+    this.averageScore.set(data.length ? total / data.length : 0);
+
+    this.loading.set(false);
+  }
+
+  openCreateModal() {
+    this.formData = { employeeId: '', period: '2025-Q1', reviewer: 'Admin', score: 0, feedback: '' };
+    this.ratingStars = 0;
+    this.showModal = true;
+  }
+
+  onRate(event: any) {
+    this.formData.score = event.value * 20; // 5 stars -> 100 points
+  }
+
+  createReview() {
+    if (!this.formData.employeeId || !this.formData.score) {
+      this.messageService.add({ severity: 'warn', detail: 'Complete empleado y puntaje' });
+      return;
+    }
+
+    this.saving.set(true);
+    this.reviewService.create(this.formData).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Evaluación creada' });
+        this.showModal = false;
         this.loadData();
-    }
+        this.saving.set(false);
+      },
+      error: () => {
+        // Fallback demo
+        setTimeout(() => {
+          this.messageService.add({ severity: 'success', summary: 'Demo', detail: 'Evaluación simulada creada' });
 
-    loadData() {
-        this.loading.set(true);
-
-        // Load Employees
-        this.staffService.getAllActive().subscribe({
-            next: (emps) => {
-                if (emps.length === 0) this.loadDemoEmployees();
-                else this.employees.set(emps);
-            },
-            error: () => this.loadDemoEmployees()
-        });
-
-        // Load Reviews
-        // En un caso real filtrariamos por tenant, aqui simulamos obtener todas
-        this.reviewService.getByEmployee('all').subscribe({
-            next: (data) => {
-                this.handleReviewsLoaded(data);
-            },
-            error: () => this.loadDemoReviews()
-        });
-    }
-
-    loadDemoEmployees() {
-        const demoData = this.demoDataService.getTenantDemoData('demo');
-        this.employees.set(demoData.rrhh.employees as any[]);
-    }
-
-    loadDemoReviews() {
-        // Generate Mock Reviews based on employees
-        const emps = this.employees();
-        const mocks: any[] = emps.map(e => ({
-            id: Math.random().toString(36).substr(2, 9),
-            employee: e,
-            employeeName: e.firstName + ' ' + e.lastName,
-            period: '2024-Q4',
+          // Add simple local mock to list without reloading everything
+          const emp = this.employees().find(e => e.id === this.formData.employeeId);
+          const newReview = {
+            id: 'new-demo',
+            employee: emp,
+            employeeName: emp ? emp.firstName + ' ' + emp.lastName : 'N/A',
+            period: this.formData.period,
             reviewDate: new Date().toISOString(),
-            reviewerName: 'Admin RRHH',
-            overallScore: 60 + Math.floor(Math.random() * 40), // 60-100
-            feedback: 'Buen desempeño general, demostró compromiso con el equipo.',
+            reviewerName: this.formData.reviewer,
+            overallScore: this.formData.score,
+            feedback: this.formData.feedback,
             status: 'COMPLETED'
-        }));
+          };
 
-        this.handleReviewsLoaded(mocks);
-    }
+          this.reviews.update(prev => [newReview as any, ...prev]);
+          this.showModal = false;
+          this.saving.set(false);
+        }, 1000);
+      }
+    });
+  }
 
-    handleReviewsLoaded(data: any[]) {
-        this.reviews.set(data);
+  getScoreLabel(score: number): { label: string, color: 'success' | 'info' | 'warning' | 'danger' } {
+    return this.reviewService.getScoreLabel(score);
+  }
 
-        const total = data.reduce((acc, curr) => acc + curr.overallScore, 0);
-        this.averageScore.set(data.length ? total / data.length : 0);
-
-        this.loading.set(false);
-    }
-
-    openCreateModal() {
-        this.formData = { employeeId: '', period: '2025-Q1', reviewer: 'Admin', score: 0, feedback: '' };
-        this.ratingStars = 0;
-        this.showModal = true;
-    }
-
-    onRate(event: any) {
-        this.formData.score = event.value * 20; // 5 stars -> 100 points
-    }
-
-    createReview() {
-        if (!this.formData.employeeId || !this.formData.score) {
-            this.messageService.add({ severity: 'warn', detail: 'Complete empleado y puntaje' });
-            return;
-        }
-
-        this.saving.set(true);
-        this.reviewService.create(this.formData).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Evaluación creada' });
-                this.showModal = false;
-                this.loadData();
-                this.saving.set(false);
-            },
-            error: () => {
-                // Fallback demo
-                setTimeout(() => {
-                    this.messageService.add({ severity: 'success', summary: 'Demo', detail: 'Evaluación simulada creada' });
-
-                    // Add simple local mock to list without reloading everything
-                    const emp = this.employees().find(e => e.id === this.formData.employeeId);
-                    const newReview = {
-                        id: 'new-demo',
-                        employee: emp,
-                        employeeName: emp ? emp.firstName + ' ' + emp.lastName : 'N/A',
-                        period: this.formData.period,
-                        reviewDate: new Date().toISOString(),
-                        reviewerName: this.formData.reviewer,
-                        overallScore: this.formData.score,
-                        feedback: this.formData.feedback,
-                        status: 'COMPLETED'
-                    };
-
-                    this.reviews.update(prev => [newReview as any, ...prev]);
-                    this.showModal = false;
-                    this.saving.set(false);
-                }, 1000);
-            }
-        });
-    }
-
-    getScoreLabel(score: number) {
-        return this.reviewService.getScoreLabel(score);
-    }
-
-    getInitials(name: string): string {
-        if (!name) return '';
-        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    }
+  getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }
 }
