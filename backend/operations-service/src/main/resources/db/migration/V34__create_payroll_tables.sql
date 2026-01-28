@@ -37,6 +37,16 @@ CREATE TABLE IF NOT EXISTS payrolls (
     updated_at TIMESTAMP
 );
 
+-- Fix for existing legacy/zombie table (Prod Hotfix)
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS payroll_run_id UUID REFERENCES payroll_runs(id);
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS tenant_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+ALTER TABLE payrolls ALTER COLUMN tenant_id DROP DEFAULT;
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS taxable_income DECIMAL(19, 2) DEFAULT 0;
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS total_bonuses DECIMAL(19, 2) DEFAULT 0;
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS total_discounts DECIMAL(19, 2) DEFAULT 0;
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS base_salary DECIMAL(19, 2) DEFAULT 0;
+ALTER TABLE payrolls ADD COLUMN IF NOT EXISTS total_paid DECIMAL(19, 2) DEFAULT 0;
+
 -- 3. Payroll Details (Desglose línea a línea: AFP, Salud, Bono, etc.)
 CREATE TABLE IF NOT EXISTS payroll_details (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -51,6 +61,14 @@ CREATE TABLE IF NOT EXISTS payroll_details (
     
     sort_order INTEGER DEFAULT 0
 );
+
+-- Fix for existing legacy/zombie table (Prod Hotfix)
+ALTER TABLE payroll_details ADD COLUMN IF NOT EXISTS payroll_id UUID REFERENCES payrolls(id);
+ALTER TABLE payroll_details ADD COLUMN IF NOT EXISTS concept_code VARCHAR(50) DEFAULT 'UNKNOWN';
+ALTER TABLE payroll_details ALTER COLUMN concept_code DROP DEFAULT; -- Assuming we want it NOT NULL eventually, but hard to enforce on existing data without default
+ALTER TABLE payroll_details ADD COLUMN IF NOT EXISTS concept_name VARCHAR(100) DEFAULT 'Unknown';
+ALTER TABLE payroll_details ADD COLUMN IF NOT EXISTS concept_type VARCHAR(20) DEFAULT 'INFORMATION';
+ALTER TABLE payroll_details ADD COLUMN IF NOT EXISTS amount DECIMAL(19, 2) DEFAULT 0;
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_payroll_run_tenant ON payroll_runs(tenant_id);
