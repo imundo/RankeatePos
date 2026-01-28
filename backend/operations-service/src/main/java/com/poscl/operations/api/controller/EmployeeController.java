@@ -233,6 +233,26 @@ public class EmployeeController {
                 .build());
     }
 
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<EmployeeDetailStats> getEmployeeStats(@PathVariable UUID id) {
+        // TODO: Calculate real stats (Attendance Rate, Punctuality)
+        return ResponseEntity.ok(EmployeeDetailStats.builder()
+                .attendanceRate(100.0)
+                .punctualityRate(100.0)
+                .latenesses(0)
+                .absences(0)
+                .build());
+    }
+
+    @lombok.Builder
+    @lombok.Data
+    public static class EmployeeDetailStats {
+        private double attendanceRate;
+        private double punctualityRate;
+        private int latenesses; // Count
+        private int absences; // Count
+    }
+
     // ============ Mappers ============
 
     private EmployeeDto toDto(Employee e) {

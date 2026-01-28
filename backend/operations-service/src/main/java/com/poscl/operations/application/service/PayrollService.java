@@ -170,6 +170,10 @@ public class PayrollService {
                 return payrollRepository.findByTenantIdOrderByPeriodStartDesc(tenantId);
         }
 
+        public List<Payroll> getEmployeeHistory(UUID employeeId) {
+                return payrollRepository.findByEmployee_IdOrderByPeriodStartDesc(employeeId);
+        }
+
         private String getMonthName(int month) {
                 String[] months = { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto",
                                 "Septiembre",

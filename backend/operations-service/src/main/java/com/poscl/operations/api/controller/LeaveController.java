@@ -54,6 +54,14 @@ public class LeaveController {
         return ResponseEntity.ok(requests.map(this::toDto));
     }
 
+    @GetMapping("/employee/all")
+    public ResponseEntity<Page<LeaveRequestDto>> getByEmployeeLegacy(
+            @RequestParam UUID employeeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return getByEmployee(employeeId, page, size);
+    }
+
     @PostMapping
     public ResponseEntity<LeaveRequestDto> create(
             @RequestHeader("X-Tenant-ID") UUID tenantId,

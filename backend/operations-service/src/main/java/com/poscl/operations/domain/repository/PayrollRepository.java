@@ -9,4 +9,6 @@ public interface PayrollRepository extends JpaRepository<Payroll, UUID> {
     List<Payroll> findByPayrollRunId(UUID payrollRunId);
 
     List<Payroll> findByTenantIdOrderByPeriodStartDesc(UUID tenantId);
+
+    List<Payroll> findByEmployee_IdOrderByPeriodStartDesc(UUID employeeId);
 }

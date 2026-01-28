@@ -21,6 +21,9 @@ public class Payroll {
     private Employee employee;
 
     @Column(nullable = false)
+    private UUID tenantId;
+
+    @Column(nullable = false)
     private UUID payrollRunId;
 
     @Column(nullable = false)

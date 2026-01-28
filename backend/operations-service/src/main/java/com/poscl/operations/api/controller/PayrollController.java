@@ -26,7 +26,11 @@ public class PayrollController {
 
     @GetMapping("/history")
     public ResponseEntity<List<Payroll>> getHistory(
-            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(payrollService.getEmployeeHistory(employeeId));
+        }
         return ResponseEntity.ok(payrollService.getLastPayrolls(tenantId));
     }
 }
