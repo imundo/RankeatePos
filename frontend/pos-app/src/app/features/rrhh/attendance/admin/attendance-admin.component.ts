@@ -9,6 +9,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { AttendanceService, AttendanceRecord } from '@app/core/services/attendance.service';
 
 @Component({
@@ -23,7 +24,8 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
         DialogModule,
         InputTextareaModule,
         ToastModule,
-        TagModule
+        TagModule,
+        InputNumberModule
     ],
     providers: [MessageService],
     template: `
@@ -180,7 +182,7 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
         </div>
         <ng-template pTemplate="footer">
             <button pButton label="Cerrar" class="p-button-text" (click)="showSettings = false"></button>
-            <button pButton label="Guardar" class="p-button-emerald" (click)="showSettings = false; messageService.add({severity:'success', summary:'Guardado', detail:'Configuración actualizada'})"></button>
+            <button pButton label="Guardar" class="p-button-emerald" (click)="saveSettings()"></button>
         </ng-template>
     </p-dialog>
     `,
@@ -397,5 +399,10 @@ export class AttendanceAdminComponent implements OnInit {
             case 'ABSENT': return 'danger';
             default: return 'info';
         }
+    }
+
+    saveSettings() {
+        this.showSettings = false;
+        this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Configuración actualizada' });
     }
 }
