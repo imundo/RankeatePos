@@ -33,19 +33,19 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
     <div class="attendance-admin p-6 fade-in text-white min-h-screen bg-[#0f172a]">
         
         <!-- Header -->
-        <div class="glass-header mb-8 p-6 rounded-3xl flex justify-between items-center relative overflow-hidden">
+        <div class="glass-header mb-8 p-6 rounded-3xl flex flex-col lg:flex-row justify-between items-center gap-6 lg:gap-0 relative overflow-hidden">
              <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 z-0"></div>
-             <div class="relative z-10">
+             <div class="relative z-10 text-center lg:text-left">
                 <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-emerald-200 bg-clip-text text-transparent">
                     Control de Asistencia
                 </h1>
                 <p class="text-slate-400 mt-1">Gestión de turnos y marcajes</p>
              </div>
-             <div class="relative z-10 flex gap-2">
-                <button pButton label="Link Tótem" icon="pi pi-desktop" class="p-button-rounded p-button-success"
+             <div class="relative z-10 flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <button pButton label="Link Tótem" icon="pi pi-desktop" class="p-button-rounded p-button-success w-full sm:w-auto"
                         (click)="generateLink()"></button>
-                <button pButton label="Configuración" icon="pi pi-cog" class="p-button-outlined p-button-secondary" (click)="showSettings = true"></button>
-                <button pButton label="Exportar Reporte" icon="pi pi-file-excel" class="p-button-success" (click)="exportReport()" [loading]="exporting"></button>
+                <button pButton label="Configuración" icon="pi pi-cog" class="p-button-outlined p-button-secondary w-full sm:w-auto" (click)="showSettings = true"></button>
+                <button pButton label="Exportar Reporte" icon="pi pi-file-excel" class="p-button-success w-full sm:w-auto" (click)="exportReport()" [loading]="exporting"></button>
             </div>
         </div>
 
@@ -82,7 +82,7 @@ import { AttendanceService, AttendanceRecord } from '@app/core/services/attendan
                     <button pButton icon="pi pi-refresh" class="p-button-text p-button-rounded p-button-sm text-slate-400" (click)="loadDaily()"></button>
                  </h3>
 
-                 <p-table [value]="dailyRecords()" styleClass="premium-table" [loading]="loading()">
+                 <p-table [value]="dailyRecords()" styleClass="premium-table" [loading]="loading()" [scrollable]="true" scrollHeight="calc(100vh - 300px)">
                     <ng-template pTemplate="header">
                         <tr>
                             <th>Empleado</th>

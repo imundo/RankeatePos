@@ -289,8 +289,13 @@ export class AttendanceClockInComponent implements OnInit, OnDestroy {
         this.submitting = true;
         this.successMessage = '';
 
-        const handleSuccess = (empName: string, type: 'CLOCK_IN' | 'CLOCK_OUT') => {
-            this.successMessage = `${empName} - ${type === 'CLOCK_IN' ? 'Entrada Registrada' : 'Salida Registrada'}`;
+        const handleSuccess = (empName: string, type: 'CLOCK_IN' | 'CLOCK_OUT', status?: string) => {
+            if (status === 'LATE') {
+                this.successMessage = `${empName} - Entrada Registrada (Atraso)`;
+                // Optional: Change UI color for lateness? For now text is enough.
+            } else {
+                this.successMessage = `${empName} - ${type === 'CLOCK_IN' ? 'Entrada Registrada' : 'Salida Registrada'}`;
+            }
 
             // Reset sequence
             setTimeout(() => {
@@ -308,11 +313,18 @@ export class AttendanceClockInComponent implements OnInit, OnDestroy {
 
         this.attendanceService.publicClock(this.token, this.pin).subscribe({
             next: (res) => {
-                handleSuccess(res.employeeName, res.type);
+                handleSuccess(res.employeeName, res.type, res.status);
             },
             error: (err) => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'PIN incorrecto o empleado no encontrado' });
-                this.pin = ''; // Shake effect could be nice here
+                const msg = err.error?.message || '';
+                if (msg.includes('permiso activo')) {
+                    this.messageService.add({ severity: 'warn', summary: 'Vacaciones', detail: 'Disfrute sus vacaciones. No se permite marcar.' });
+                } else if (msg.includes('PIN inválido')) {
+                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'PIN incorrecto' });
+                } else {
+                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar' });
+                }
+                this.pin = '';
                 this.submitting = false;
             }
         });

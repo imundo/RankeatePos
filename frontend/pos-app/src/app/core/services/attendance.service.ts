@@ -24,6 +24,7 @@ export interface ClockResponse {
     type: 'CLOCK_IN' | 'CLOCK_OUT';
     employeeName: string;
     timestamp: string;
+    status?: string;
 }
 
 export interface ValidateLinkResponse {
