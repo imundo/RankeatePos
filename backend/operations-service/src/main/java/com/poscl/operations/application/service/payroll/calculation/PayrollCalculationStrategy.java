@@ -6,5 +6,6 @@ import java.time.LocalDate;
 public interface PayrollCalculationStrategy {
     boolean supports(String countryCode);
 
-    PayrollCalculationResult calculate(Employee employee, LocalDate periodStart, LocalDate periodEnd);
+    PayrollCalculationResult calculate(Employee employee, LocalDate periodStart, LocalDate periodEnd,
+            PayrollInputData inputData);
 }

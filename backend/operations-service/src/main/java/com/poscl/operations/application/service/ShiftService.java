@@ -36,4 +36,8 @@ public class ShiftService {
     public List<Shift> getShiftsByRange(UUID tenantId, LocalDateTime start, LocalDateTime end) {
         return shiftRepository.findByTenantIdAndStartTimeBetween(tenantId, start, end);
     }
+
+    public java.util.Optional<Shift> getActiveShift(UUID employeeId, LocalDateTime time) {
+        return shiftRepository.findActiveShift(employeeId, time);
+    }
 }

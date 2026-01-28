@@ -10,4 +10,7 @@ public interface ShiftRepository extends JpaRepository<Shift, UUID> {
     List<Shift> findByTenantIdAndStartTimeBetween(UUID tenantId, LocalDateTime start, LocalDateTime end);
 
     List<Shift> findByEmployeeIdAndStartTimeBetween(UUID employeeId, LocalDateTime start, LocalDateTime end);
+
+    @org.springframework.data.jpa.repository.Query("SELECT s FROM Shift s WHERE s.employee.id = :employeeId AND s.startTime <= :time AND s.endTime >= :time AND s.status != 'CANCELLED'")
+    java.util.Optional<Shift> findActiveShift(UUID employeeId, LocalDateTime time);
 }

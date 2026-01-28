@@ -27,17 +27,32 @@ public class ChilePayrollCalculator implements PayrollCalculationStrategy {
     }
 
     @Override
-    public PayrollCalculationResult calculate(Employee employee, LocalDate periodStart, LocalDate periodEnd) {
+    public PayrollCalculationResult calculate(Employee employee, LocalDate periodStart, LocalDate periodEnd,
+            PayrollInputData inputData) {
         EmployeePayrollConfig config = employee.getPayrollConfig();
         if (config == null) {
             throw new IllegalStateException("Employee " + employee.getFullName() + " has no payroll config");
         }
 
-        BigDecimal baseSalary = employee.getBaseSalary() != null ? employee.getBaseSalary() : BigDecimal.ZERO;
+        BigDecimal fullBaseSalary = employee.getBaseSalary() != null ? employee.getBaseSalary() : BigDecimal.ZERO;
         List<PayrollCalculationResult.CalculatedItem> items = new ArrayList<>();
 
+        // Logic: Proportional Salary
+        // Assume 30 days for standardized calculations
+        BigDecimal totalDays = new BigDecimal("30");
+        BigDecimal paidDays = inputData.getWorkedDays()
+                .add(inputData.getVacationDays())
+                .add(inputData.getSickLeaveDays());
+
+        // Cap at 30
+        if (paidDays.compareTo(totalDays) > 0)
+            paidDays = totalDays;
+
+        BigDecimal baseSalary = fullBaseSalary.multiply(paidDays)
+                .divide(totalDays, 0, RoundingMode.HALF_UP);
+
         // 1. Haberes Imponibles
-        addIncome(items, "SUELDO_BASE", "Sueldo Base", baseSalary);
+        addIncome(items, "SUELDO_BASE", "Sueldo Base (" + paidDays + " días)", baseSalary);
 
         // Gratificación
         BigDecimal gratification = BigDecimal.ZERO;

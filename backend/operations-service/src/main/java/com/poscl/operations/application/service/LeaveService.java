@@ -280,4 +280,17 @@ public class LeaveService {
             default -> BigDecimal.ZERO;
         };
     }
+
+    public Optional<LeaveRequest> getActiveLeave(UUID employeeId, LocalDate date) {
+        return leaveRequestRepository.findActiveLeave(employeeId, date);
+    }
+
+    public List<LeaveRequest> getLeavesByRange(UUID tenantId, LocalDate start, LocalDate end) {
+        // Fetch all approved leaves for tenant (using unpaged for MVP simplicity)
+        return leaveRequestRepository
+                .findByTenantIdAndStatus(tenantId, LeaveRequest.RequestStatus.APPROVED, Pageable.unpaged())
+                .stream()
+                .filter(l -> !l.getStartDate().isAfter(end) && !l.getEndDate().isBefore(start))
+                .toList();
+    }
 }
