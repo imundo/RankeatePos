@@ -69,6 +69,15 @@ public class StockController {
         return ResponseEntity.ok(stockService.adjustStock(tenantId, userId, request));
     }
 
+    @PostMapping("/adjust/batch")
+    @Operation(summary = "Ajuste masivo", description = "Registra múltiples movimientos de stock en una transacción")
+    public ResponseEntity<List<StockDto>> adjustStockBatch(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
+            @Valid @RequestBody List<StockAdjustmentRequest> requests) {
+        return ResponseEntity.ok(stockService.adjustStockBatch(tenantId, userId, requests));
+    }
+
     @GetMapping("/movements")
     @Operation(summary = "Historial de movimientos", description = "Lista movimientos de stock de una sucursal")
     public ResponseEntity<PageResponse<StockMovementDto>> getMovements(

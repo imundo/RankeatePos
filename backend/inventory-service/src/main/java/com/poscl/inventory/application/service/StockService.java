@@ -124,6 +124,13 @@ public class StockService {
         return toDto(stock);
     }
 
+    @Transactional
+    public List<StockDto> adjustStockBatch(UUID tenantId, UUID userId, List<StockAdjustmentRequest> requests) {
+        return requests.stream()
+                .map(req -> adjustStock(tenantId, userId, req))
+                .collect(Collectors.toList());
+    }
+
     public Page<StockMovementDto> getMovements(UUID tenantId, UUID branchId, Pageable pageable) {
         return movementRepository.findByTenantIdAndBranchIdOrderByCreatedAtDesc(tenantId, branchId, pageable)
                 .map(this::toMovementDto);
