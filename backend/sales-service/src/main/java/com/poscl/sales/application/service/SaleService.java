@@ -160,6 +160,15 @@ public class SaleService {
     }
 
     /**
+     * Lista todas las ventas del tenant (paginado)
+     */
+    @Transactional(readOnly = true)
+    public Page<SaleDto> findAll(UUID tenantId, Pageable pageable) {
+        return saleRepository.findByTenantId(tenantId, pageable)
+                .map(this::toDto);
+    }
+
+    /**
      * Genera número de venta único: V-YYYYMMDD-00001
      * El contador se reinicia diariamente
      */

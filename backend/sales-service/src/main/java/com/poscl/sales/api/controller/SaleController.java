@@ -40,6 +40,20 @@ public class SaleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(sale);
     }
 
+    @GetMapping
+    @Operation(summary = "Listar ventas", description = "Lista ventas con paginación")
+    public ResponseEntity<PageResponse<SaleDto>> findAll(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            Pageable pageable) {
+
+        Page<SaleDto> page = saleService.findAll(tenantId, pageable);
+        return ResponseEntity.ok(PageResponse.of(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements()));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Obtener venta", description = "Obtiene una venta por ID")
     public ResponseEntity<SaleDto> findById(
