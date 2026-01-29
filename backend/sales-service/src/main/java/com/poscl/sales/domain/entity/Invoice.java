@@ -51,7 +51,7 @@ public class Invoice {
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List(InvoiceItem) items = new ArrayList<>();
+    private List<InvoiceItem> items = new ArrayList<>();
 
     private BigDecimal netAmount;
     private BigDecimal taxAmount; // IVA 19%
