@@ -1,4 +1,4 @@
-﻿package com.poscl.sales.application.service;
+package com.poscl.sales.application.service;
 
 import com.poscl.sales.api.dto.*;
 import com.poscl.sales.domain.entity.*;
