@@ -10,7 +10,7 @@
 
 INSERT INTO config_facturacion (id, tenant_id, ambiente, auto_enviar_sii, auto_enviar_email, giro_default, acteco_default, resolucion_numero, resolucion_fecha)
 VALUES (
-    'cf000000-0000-0000-0000-000000000001',
+    'c0f00000-0000-0000-0000-000000000001',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'certificacion',
     true,
@@ -79,7 +79,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     receptor_rut, receptor_razon_social,
     monto_neto, tasa_iva, monto_iva, monto_total, estado, track_id, glosa_estado, fecha_envio, fecha_respuesta)
 VALUES (
-    'dte00000-0000-0000-0000-000000000001',
+    'd0e00000-0000-0000-0000-000000000001',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'BOLETA_ELECTRONICA',
@@ -108,7 +108,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     emisor_rut, emisor_razon_social, emisor_giro, emisor_direccion, emisor_comuna,
     monto_neto, tasa_iva, monto_iva, monto_total, estado, track_id)
 VALUES (
-    'dte00000-0000-0000-0000-000000000002',
+    'd0e00000-0000-0000-0000-000000000002',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'BOLETA_ELECTRONICA',
@@ -132,7 +132,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     emisor_rut, emisor_razon_social, emisor_giro, emisor_direccion, emisor_comuna,
     monto_neto, tasa_iva, monto_iva, monto_total, estado)
 VALUES (
-    'dte00000-0000-0000-0000-000000000003',
+    'd0e00000-0000-0000-0000-000000000003',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'BOLETA_ELECTRONICA',
@@ -155,7 +155,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     emisor_rut, emisor_razon_social, emisor_giro, emisor_direccion, emisor_comuna,
     monto_neto, tasa_iva, monto_iva, monto_total, estado)
 VALUES (
-    'dte00000-0000-0000-0000-000000000004',
+    'd0e00000-0000-0000-0000-000000000004',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'BOLETA_ELECTRONICA',
@@ -180,7 +180,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     receptor_rut, receptor_razon_social, receptor_giro, receptor_direccion, receptor_comuna, receptor_email,
     monto_neto, tasa_iva, monto_iva, monto_total, estado, track_id)
 VALUES (
-    'dte00000-0000-0000-0000-000000000010',
+    'd0e00000-0000-0000-0000-000000000010',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'FACTURA_ELECTRONICA',
@@ -211,7 +211,7 @@ INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision,
     receptor_rut, receptor_razon_social, receptor_giro, receptor_direccion, receptor_comuna,
     monto_neto, tasa_iva, monto_iva, monto_total, estado, track_id)
 VALUES (
-    'dte00000-0000-0000-0000-000000000011',
+    'd0e00000-0000-0000-0000-000000000011',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
     'FACTURA_ELECTRONICA',
@@ -240,26 +240,26 @@ VALUES (
 -- Detalle Boleta 1
 INSERT INTO dte_detalle (dte_id, numero_linea, nombre_item, cantidad, unidad_medida, precio_unitario, monto_item)
 VALUES 
-    ('dte00000-0000-0000-0000-000000000001', 1, 'Marraqueta 1kg', 2, 'UN', 1500, 3000),
-    ('dte00000-0000-0000-0000-000000000001', 2, 'Croissant Chocolate', 4, 'UN', 800, 3200),
-    ('dte00000-0000-0000-0000-000000000001', 3, 'Café con Leche Grande', 2, 'UN', 1900, 3800);
+    ('d0e00000-0000-0000-0000-000000000001', 1, 'Marraqueta 1kg', 2, 'UN', 1500, 3000),
+    ('d0e00000-0000-0000-0000-000000000001', 2, 'Croissant Chocolate', 4, 'UN', 800, 3200),
+    ('d0e00000-0000-0000-0000-000000000001', 3, 'Café con Leche Grande', 2, 'UN', 1900, 3800);
 
 -- Detalle Boleta 2
 INSERT INTO dte_detalle (dte_id, numero_linea, nombre_item, cantidad, unidad_medida, precio_unitario, monto_item)
 VALUES 
-    ('dte00000-0000-0000-0000-000000000002', 1, 'Torta Tres Leches Med.', 1, 'UN', 12000, 12000),
-    ('dte00000-0000-0000-0000-000000000002', 2, 'Velas Cumpleaños', 1, 'UN', 3000, 3000);
+    ('d0e00000-0000-0000-0000-000000000002', 1, 'Torta Tres Leches Med.', 1, 'UN', 12000, 12000),
+    ('d0e00000-0000-0000-0000-000000000002', 2, 'Velas Cumpleaños', 1, 'UN', 3000, 3000);
 
 -- Detalle Factura 1
 INSERT INTO dte_detalle (dte_id, numero_linea, nombre_item, cantidad, unidad_medida, precio_unitario, monto_item)
 VALUES 
-    ('dte00000-0000-0000-0000-000000000010', 1, 'Servicio de Coffee Break', 1, 'SV', 50000, 50000),
-    ('dte00000-0000-0000-0000-000000000010', 2, 'Pasteles Surtidos (30 un)', 1, 'PK', 30000, 30000),
-    ('dte00000-0000-0000-0000-000000000010', 3, 'Café Premium 1kg', 2, 'UN', 10000, 20000);
+    ('d0e00000-0000-0000-0000-000000000010', 1, 'Servicio de Coffee Break', 1, 'SV', 50000, 50000),
+    ('d0e00000-0000-0000-0000-000000000010', 2, 'Pasteles Surtidos (30 un)', 1, 'PK', 30000, 30000),
+    ('d0e00000-0000-0000-0000-000000000010', 3, 'Café Premium 1kg', 2, 'UN', 10000, 20000);
 
 -- Detalle Factura 2
 INSERT INTO dte_detalle (dte_id, numero_linea, nombre_item, cantidad, unidad_medida, precio_unitario, monto_item)
 VALUES 
-    ('dte00000-0000-0000-0000-000000000011', 1, 'Pan para Evento (500 un)', 1, 'PK', 100000, 100000),
-    ('dte00000-0000-0000-0000-000000000011', 2, 'Pasteles Premium (100 un)', 1, 'PK', 80000, 80000),
-    ('dte00000-0000-0000-0000-000000000011', 3, 'Servicio de Instalación', 1, 'SV', 20000, 20000);
+    ('d0e00000-0000-0000-0000-000000000011', 1, 'Pan para Evento (500 un)', 1, 'PK', 100000, 100000),
+    ('d0e00000-0000-0000-0000-000000000011', 2, 'Pasteles Premium (100 un)', 1, 'PK', 80000, 80000),
+    ('d0e00000-0000-0000-0000-000000000011', 3, 'Servicio de Instalación', 1, 'SV', 20000, 20000);
