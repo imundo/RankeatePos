@@ -118,7 +118,7 @@ public class Dte {
     @Builder.Default
     private EstadoDte estado = EstadoDte.BORRADOR;
 
-    @Column(name = "anu lacion_motivo", length = 200)
+    @Column(name = "anulacion_motivo", length = 200)
     private String anulacionMotivo;
 
     @Column(name = "anulada_at")
