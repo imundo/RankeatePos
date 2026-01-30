@@ -63,7 +63,7 @@ services:
         fromDatabase:
           name: pos-db
           property: connectionString
-      - key: INVENTORY_SERVICE_URL
+      - key: INVENTORY_SERVICE_HOST
         fromService:
           name: pos-inventory-service
           type: web
@@ -113,14 +113,26 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      - key: AUTH_SERVICE_URL
-        value: https://pos-auth-service.onrender.com
-      - key: CATALOG_SERVICE_URL
-        value: https://pos-catalog-service.onrender.com
-      - key: SALES_SERVICE_URL
-        value: https://pos-sales-service.onrender.com
-      - key: BILLING_SERVICE_URL
-        value: https://pos-billing-service.onrender.com
+      - key: AUTH_SERVICE_HOST
+        fromService:
+          name: pos-auth-service
+          type: web
+          property: host
+      - key: CATALOG_SERVICE_HOST
+        fromService:
+          name: pos-catalog-service
+          type: web
+          property: host
+      - key: SALES_SERVICE_HOST
+        fromService:
+          name: pos-sales-service
+          type: web
+          property: host
+      - key: BILLING_SERVICE_HOST
+        fromService:
+          name: pos-billing-service
+          type: web
+          property: host
 
   # Frontend
   - type: web

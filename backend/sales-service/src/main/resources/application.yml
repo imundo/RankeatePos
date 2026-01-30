@@ -20,9 +20,9 @@ spring:
   application:
     name: sales-service
 
-  services:
-    inventory:
-      url: ${INVENTORY_SERVICE_URL:http://inventory-service:8087}
+services:
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:inventory-service}:${INVENTORY_SERVICE_PORT:8087}}
   
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:railway}
