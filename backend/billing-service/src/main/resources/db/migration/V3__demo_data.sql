@@ -153,7 +153,7 @@ VALUES (
 -- Boleta 4 - Hoy
 INSERT INTO dte (id, tenant_id, branch_id, tipo_dte, folio, fecha_emision, 
     emisor_rut, emisor_razon_social, emisor_giro, emisor_direccion, emisor_comuna,
-    monto_neto, tasa_iva, monto_iva, monto_total, estado)
+    monto_neto, tasa_iva, monto_iva, monto_total, estado, track_id)
 VALUES (
     'd0e00000-0000-0000-0000-000000000004',
     'd290f1ee-6c54-4b01-90e6-d701748f0851',
