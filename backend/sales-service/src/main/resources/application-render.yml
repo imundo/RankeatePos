@@ -1,6 +1,10 @@
 # Render.com profile for sales-service
 # start.sh converts DATABASE_URL to SPRING_DATASOURCE_URL/USERNAME/PASSWORD
 
+services:
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://pos-inventory-service:10000}
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}

@@ -8,11 +8,17 @@ spring:
 # Service URLs - full HTTPS URLs for Render
 services:
   auth:
-    url: ${AUTH_SERVICE_URL:https://pos-auth-service.onrender.com}
+    url: ${AUTH_SERVICE_URL:http://pos-auth-service:10000}
   catalog:
-    url: ${CATALOG_SERVICE_URL:https://pos-catalog-service.onrender.com}
+    url: ${CATALOG_SERVICE_URL:http://pos-catalog-service:10000}
   sales:
-    url: ${SALES_SERVICE_URL:https://pos-sales-service.onrender.com}
+    url: ${SALES_SERVICE_URL:http://pos-sales-service:10000}
+  billing:
+    url: ${BILLING_SERVICE_URL:http://pos-billing-service:10000}
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://pos-inventory-service:10000}
+  operations:
+    url: ${OPERATIONS_SERVICE_URL:http://pos-operations-service:10000}
 
 server:
   port: ${PORT:8080}
