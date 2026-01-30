@@ -64,7 +64,10 @@ services:
           name: pos-db
           property: connectionString
       - key: INVENTORY_SERVICE_URL
-        value: https://pos-inventory-service.onrender.com
+        fromService:
+          name: pos-inventory-service
+          type: web
+          property: host
 
   # Inventory Service
   - type: web

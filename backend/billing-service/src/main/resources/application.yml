@@ -32,13 +32,17 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: billing
         format_sql: true
     show-sql: false
 
   flyway:
-    enabled: false  # Disabled for shared database - migrations managed by primary service
+    enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    schemas: billing
+    default-schema: billing
+    create-schemas: true
 
 springdoc:
   api-docs:
