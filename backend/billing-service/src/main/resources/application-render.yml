@@ -27,6 +27,7 @@ spring:
     schemas: billing
     default-schema: billing
     create-schemas: true
+    repair: true
 
 server:
   port: ${PORT:10000}

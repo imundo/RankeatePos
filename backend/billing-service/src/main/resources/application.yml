@@ -43,6 +43,7 @@ spring:
     schemas: billing
     default-schema: billing
     create-schemas: true
+    repair: true
 
 springdoc:
   api-docs:
