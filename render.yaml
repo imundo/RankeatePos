@@ -63,6 +63,23 @@ services:
         fromDatabase:
           name: pos-db
           property: connectionString
+      - key: INVENTORY_SERVICE_URL
+        value: https://pos-inventory-service.onrender.com
+
+  # Inventory Service
+  - type: web
+    name: pos-inventory-service
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./inventory-service/Dockerfile.render
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pos-db
+          property: connectionString
 
   # Billing Service (Electronic Invoicing)
   - type: web

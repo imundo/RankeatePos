@@ -138,6 +138,29 @@ services:
       - pos-network
 
   # ===========================================
+  # Inventory Service
+  # ===========================================
+  inventory-service:
+    build:
+      context: ../backend
+      dockerfile: inventory-service/Dockerfile
+    container_name: pos-inventory-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: inventory_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pos-network
+
+  # ===========================================
   # Frontend Angular
   # ===========================================
   frontend:

@@ -1,0 +1,50 @@
+# Render.com profile for inventory-service
+# start.sh converts DATABASE_URL to SPRING_DATASOURCE_URL/USERNAME/PASSWORD
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: inventory
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: inventory
+    default-schema: inventory
+    create-schemas: true
+
+server:
+  port: ${PORT:10000}
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    db:
+      enabled: false
+
+logging:
+  level:
+    com.poscl: INFO
+    org.flywaydb: INFO
