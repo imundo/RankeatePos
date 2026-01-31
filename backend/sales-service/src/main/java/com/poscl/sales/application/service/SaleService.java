@@ -40,6 +40,9 @@ public class SaleService {
     @Value("${services.billing.url:http://billing-service:8084}")
     private String billingServiceUrl;
 
+    @Value("${services.inventory.url}")
+    private String inventoryServiceUrl;
+
     /**
      * Crea una venta (idempotente por commandId)
      */
