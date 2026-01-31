@@ -9,6 +9,10 @@ import com.poscl.billing.domain.enums.EstadoDte;
 import com.poscl.billing.domain.enums.TipoDte;
 import com.poscl.billing.domain.repository.CafRepository;
 import com.poscl.billing.domain.repository.DteRepository;
+import com.poscl.billing.domain.repository.BillingConfigRepository;
+import com.poscl.billing.domain.factory.BillingProviderFactory;
+import com.poscl.billing.domain.entity.BillingConfig;
+import com.poscl.billing.domain.port.BillingProvider;
 import com.poscl.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +39,8 @@ public class DteService {
 
     private final DteRepository dteRepository;
     private final CafRepository cafRepository;
+    private final BillingConfigRepository configRepository;
+    private final BillingProviderFactory providerFactory;
     // private final XmlBuilderService xmlBuilderService; // TODO: Implementar
     // private final SignerService signerService; // TODO: Implementar
     // private final SiiService siiService; // TODO: Implementar
@@ -130,26 +136,20 @@ public class DteService {
             dte.addDetalle(detalle);
         });
 
-        // 5. Guardar DTE
+        // 5. Guardar DTE inicial
         Dte saved = dteRepository.save(dte);
-        log.info("DTE creado: tipo={}, folio={}, id={}", saved.getTipoDte(), saved.getFolio(), saved.getId());
+        log.info("DTE guardado internamente: tipo={}, folio={}, id={}", saved.getTipoDte(), saved.getFolio(),
+                saved.getId());
 
-        // TODO: 6. Generar XML
-        // String xml = xmlBuilderService.buildDte(saved);
-        // saved.setXmlContent(xml);
+        // 6. Procesar con Proveedor (Estrategia)
+        BillingConfig config = configRepository.findByTenantId(tenantId).orElse(null);
+        BillingProvider provider = providerFactory.getProvider(config);
 
-        // TODO: 7. Firmar XML
-        // String xmlFirmado = signerService.sign(xml, tenantId);
-        // saved.setXmlFirmado(xmlFirmado);
+        log.info("Usando proveedor de facturación: {}", provider.getCountry());
+        saved = provider.emitir(saved, config);
 
-        // TODO: 8. Generar PDF con timbre
-        // String pdfUrl = pdfService.generatePdf(saved);
-        // saved.setPdfUrl(pdfUrl);
-
-        // TODO: 9. Enviar al SII si está configurado
-        // if (Boolean.TRUE.equals(request.getEnviarSii())) {
-        // siiService.enviar(saved);
-        // }
+        // 7. Actualizar DTE con resultado del proveedor
+        saved = dteRepository.save(saved);
 
         return toResponse(saved);
     }

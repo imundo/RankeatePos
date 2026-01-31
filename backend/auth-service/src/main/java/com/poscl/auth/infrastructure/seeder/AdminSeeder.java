@@ -38,9 +38,12 @@ public class AdminSeeder implements CommandLineRunner {
     }
 
     private void seedModules() {
-        if (moduleRepository.count() > 0)
+        if (moduleRepository.count() > 0) {
+            log.info("Modules already seeded, skipping.");
             return;
+        }
 
+        log.info("Creating modules...");
         List<Module> modules = Arrays.asList(
                 createModule("pos", "Punto de Venta", "Operación de caja y ventas", "pos", "ventas", 1),
                 createModule("inventory", "Inventario", "Gestión de stock y almacenes", "inventory", "operaciones", 2),
@@ -66,6 +69,7 @@ public class AdminSeeder implements CommandLineRunner {
     }
 
     private void seedDemoTenant() {
+        log.info("Seeding Demo Tenant...");
         java.util.Optional<Tenant> existingTenantOpt = tenantRepository.findByRut("76.123.456-7");
         if (existingTenantOpt.isPresent()) {
             repairTenantModules(existingTenantOpt.get());
@@ -118,6 +122,7 @@ public class AdminSeeder implements CommandLineRunner {
         tenantRepository.save(tenant);
         log.info("Seeded Demo Tenant: La Sazón del Dev");
         repairUserModuleAccess(tenant);
+        log.info("Demo Tenant seeding finished.");
     }
 
     private void repairTenantModules(Tenant tenant) {

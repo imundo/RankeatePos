@@ -120,12 +120,9 @@ public class SaleService {
         sale = saleRepository.save(sale);
         log.info("Venta creada: {} - Total: ${}", sale.getNumero(), sale.getTotal());
 
-        // Descontar stock inmediatamente si la venta nace completada (ej: POS directo)
-        try {
-            deductStock(tenantId, userId, sale);
-        } catch (Exception e) {
-            log.error("Failed to deduct stock for sale {}: {}", sale.getNumero(), e.getMessage());
-        }
+        // Descontar stock inmediatamente
+        // Propagamos la excepción para hacer rollback si falla el inventario
+        deductStock(tenantId, userId, sale);
 
         // Emitir Boleta ElectrÃ³nica (IntegraciÃ³n Billing)
         try {

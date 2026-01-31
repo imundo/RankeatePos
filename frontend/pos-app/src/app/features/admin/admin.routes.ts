@@ -58,6 +58,10 @@ export const ADMIN_ROUTES: Routes = [
     {
         path: 'branches',
         loadComponent: () => import('./branches.component').then(m => m.BranchesComponent)
+    },
+    {
+        path: 'billing',
+        loadComponent: () => import('../settings/billing-config/billing-config.component').then(m => m.BillingConfigComponent)
     }
 ];
 
