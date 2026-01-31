@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
  * Factory para obtener el BillingProvider correcto según el país
  */
 @Slf4j
-@Component
-public class BillingProviderFactory {
+@Component("infrastructureBillingProviderFactory")
+public class InfrastructureBillingProviderFactory {
 
     private final Map<Pais, BillingProvider> providersByPais;
 
-    public BillingProviderFactory(List<BillingProvider> providers) {
+    public InfrastructureBillingProviderFactory(List<BillingProvider> providers) {
         this.providersByPais = providers.stream()
                 .collect(Collectors.toMap(
                         BillingProvider::getPais,
