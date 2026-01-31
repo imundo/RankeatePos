@@ -1,5 +1,6 @@
 package com.poscl.billing.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.poscl.billing.domain.enums.TipoDte;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -21,7 +22,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EmitirDteRequest {
 
-    @NotNull(message = "El tipo de DTE es requerido")
+    // TipoDte es opcional en el request porque se infiere del endpoint
+    // (boleta/factura)
     private TipoDte tipoDte;
 
     // --- Fecha emisión ---
@@ -92,14 +94,12 @@ public class EmitirDteRequest {
 
         @NotBlank(message = "El nombre del item es requerido")
         @Size(max = 80, message = "Nombre del item no puede exceder 80 caracteres (Res. SII N°36)")
+        @JsonAlias("nombre")
         private String nombreItem;
 
-        private String nombre; // Alias for nombreItem
-
         @Size(max = 1000)
+        @JsonAlias("descripcion")
         private String descripcionItem;
-
-        private String descripcion; // Alias for descripcionItem
 
         @NotNull(message = "La cantidad es requerida")
         @Positive(message = "La cantidad debe ser positiva")

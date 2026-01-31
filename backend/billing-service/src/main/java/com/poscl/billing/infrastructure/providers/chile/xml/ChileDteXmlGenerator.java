@@ -214,12 +214,12 @@ public class ChileDteXmlGenerator {
         detalle.appendChild(nroLinDet);
 
         Element nmbItem = doc.createElement("NmbItem");
-        nmbItem.setTextContent(item.getNombre());
+        nmbItem.setTextContent(item.getNombreItem());
         detalle.appendChild(nmbItem);
 
-        if (item.getDescripcion() != null && !item.getDescripcion().isEmpty()) {
+        if (item.getDescripcionItem() != null && !item.getDescripcionItem().isEmpty()) {
             Element dscItem = doc.createElement("DscItem");
-            dscItem.setTextContent(item.getDescripcion());
+            dscItem.setTextContent(item.getDescripcionItem());
             detalle.appendChild(dscItem);
         }
 

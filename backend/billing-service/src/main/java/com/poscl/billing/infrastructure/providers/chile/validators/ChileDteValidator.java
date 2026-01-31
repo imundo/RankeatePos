@@ -116,9 +116,9 @@ public class ChileDteValidator {
             String prefix = "Item " + (i + 1) + ": ";
 
             // Nombre requerido
-            if (item.getNombre() == null || item.getNombre().trim().isEmpty()) {
+            if (item.getNombreItem() == null || item.getNombreItem().trim().isEmpty()) {
                 errors.add(prefix + "Nombre es requerido");
-            } else if (item.getNombre().length() > MAX_DESCRIPCION_LENGTH) {
+            } else if (item.getNombreItem().length() > MAX_DESCRIPCION_LENGTH) {
                 errors.add(prefix + "Nombre no puede exceder " + MAX_DESCRIPCION_LENGTH + " caracteres");
             }
 

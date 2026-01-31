@@ -114,9 +114,13 @@ public class ChileBillingProvider implements BillingProvider {
                         DteDetalle detalle = new DteDetalle();
                         detalle.setId(UUID.randomUUID());
                         detalle.setDte(dte);
-                        detalle.setNombre(item.getNombreItem() != null ? item.getNombreItem() : item.getNombre());
+                        detalle.setNombre(item.getNombreItem() != null ? item.getNombreItem() : item.getNombreItem()); // Redundant
+                                                                                                                       // null
+                                                                                                                       // check
+                                                                                                                       // simplified
                         detalle.setDescripcion(
-                                item.getDescripcionItem() != null ? item.getDescripcionItem() : item.getDescripcion());
+                                item.getDescripcionItem() != null ? item.getDescripcionItem()
+                                        : item.getDescripcionItem());
                         detalle.setCantidad(BigDecimal.valueOf(item.getCantidad() != null ? item.getCantidad() : 1));
                         detalle.setPrecioUnitario(item.getPrecioUnitario());
                         detalle.setMontoTotal(
