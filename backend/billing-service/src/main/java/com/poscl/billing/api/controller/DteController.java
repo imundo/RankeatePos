@@ -79,6 +79,8 @@ public class DteController {
                 return ResponseEntity.ok().build();
         }
 
+        @PostMapping("/boleta")
+        @Operation(summary = "Emitir Boleta Electrónica")
         public ResponseEntity<DteResponse> emitirBoleta(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
                         @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,

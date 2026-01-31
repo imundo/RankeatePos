@@ -133,25 +133,25 @@ export class BillingService {
     // ========== EMISION ==========
 
     emitirBoleta(request: EmitirDteRequest): Observable<Dte> {
-        return this.http.post<Dte>(`${this.baseUrl}/billing/boleta`, request, {
+        return this.http.post<Dte>(`${this.baseUrl}/billing/dte/boleta`, request, {
             headers: this.getEmisorHeaders()
         });
     }
 
     emitirFactura(request: EmitirDteRequest): Observable<Dte> {
-        return this.http.post<Dte>(`${this.baseUrl}/billing/factura`, request, {
+        return this.http.post<Dte>(`${this.baseUrl}/billing/dte/factura`, request, {
             headers: this.getEmisorHeaders()
         });
     }
 
     emitirNotaCredito(request: EmitirDteRequest): Observable<Dte> {
-        return this.http.post<Dte>(`${this.baseUrl}/billing/nota-credito`, request, {
+        return this.http.post<Dte>(`${this.baseUrl}/billing/dte/nota-credito`, request, {
             headers: this.getEmisorHeaders()
         });
     }
 
     emitirNotaDebito(request: EmitirDteRequest): Observable<Dte> {
-        return this.http.post<Dte>(`${this.baseUrl}/billing/nota-debito`, request, {
+        return this.http.post<Dte>(`${this.baseUrl}/billing/dte/nota-debito`, request, {
             headers: this.getEmisorHeaders()
         });
     }
