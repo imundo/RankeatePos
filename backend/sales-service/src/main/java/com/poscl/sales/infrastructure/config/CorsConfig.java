@@ -15,40 +15,40 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
+        @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,http://127.0.0.1:4200}")
+        private String corsAllowedOrigins;
 
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://localhost:3000",
-                "http://127.0.0.1:4200"));
+        @Bean
+        public CorsFilter corsFilter() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowCredentials(true);
+                config.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
 
-        config.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+                config.setAllowedOriginPatterns(List.of("*"));
+                config.setAllowCredentials(true);
 
-        config.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Tenant-Id",
-                "X-User-Id",
-                "X-Branch-Id",
-                "X-Requested-With",
-                "Accept",
-                "Origin"));
+                config.setAllowedMethods(Arrays.asList(
+                                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
-        config.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "X-Total-Count"));
+                config.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "X-Tenant-Id",
+                                "X-User-Id",
+                                "X-Branch-Id",
+                                "X-Requested-With",
+                                "Accept",
+                                "Origin"));
 
-        config.setMaxAge(3600L);
+                config.setExposedHeaders(Arrays.asList(
+                                "Authorization",
+                                "X-Total-Count"));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+                config.setMaxAge(3600L);
 
-        return new CorsFilter(source);
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+
+                return new CorsFilter(source);
+        }
 }

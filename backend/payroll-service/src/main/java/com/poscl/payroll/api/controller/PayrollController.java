@@ -170,23 +170,28 @@ public class PayrollController {
     @GetMapping("/payslips/{payslipId}/pdf")
     public ResponseEntity<byte[]> getPayslipPdf(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @PathVariable String payslipId,
-            @RequestParam(defaultValue = "2025") int year,
-            @RequestParam(defaultValue = "12") int month) {
+            @PathVariable UUID payslipId) {
 
-        // For now, use demo data - would fetch from DB in full implementation
-        Map<String, Object> payslipData = new HashMap<>();
-        payslipData.put("employeeName", "Demo Employee");
-        payslipData.put("employeeRut", "12.345.678-9");
-        payslipData.put("baseSalary", 2000000);
-        payslipData.put("grossSalary", 2000000);
-        payslipData.put("afpAmount", 205000);
-        payslipData.put("healthAmount", 140000);
-        payslipData.put("unemploymentAmount", 12000);
-        payslipData.put("taxAmount", 0);
-        payslipData.put("totalDeductions", 357000);
-        payslipData.put("netSalary", 1643000);
-        payslipData.put("daysWorked", 30);
+        UUID tid = parseTenantId(tenantId);
+
+        Payslip payslip = periodService.getPayslip(tid, payslipId)
+                .orElseThrow(() -> new RuntimeException("Payslip not found or access denied"));
+
+        Map<String, Object> payslipData = mapPayslip(payslip);
+
+        // Enrich with employee and period data for PDF
+        if (payslip.getEmployee() != null) {
+            payslipData.put("employeeName", payslip.getEmployee().getFullName());
+            payslipData.put("employeeRut", payslip.getEmployee().getRut());
+        }
+
+        int year = 2025;
+        int month = 1;
+
+        if (payslip.getPayrollPeriod() != null) {
+            year = payslip.getPayrollPeriod().getPeriodYear();
+            month = payslip.getPayrollPeriod().getPeriodMonth();
+        }
 
         byte[] content = payslipPdfService.generatePayslip(payslipData, year, month);
 
@@ -203,8 +208,7 @@ public class PayrollController {
         try {
             return UUID.fromString(tenantId);
         } catch (Exception e) {
-            // Default demo tenant
-            return UUID.fromString("00000000-0000-0000-0000-000000000001");
+            throw new IllegalArgumentException("Invalid Tenant ID format: " + tenantId);
         }
     }
 

@@ -158,4 +158,10 @@ public class PayrollPeriodService {
         result.put("employeeCount", payslipRepository.countByPayrollPeriodId(periodId));
         return result;
     }
+
+    @Transactional(readOnly = true)
+    public Optional<Payslip> getPayslip(UUID tenantId, UUID payslipId) {
+        return payslipRepository.findById(payslipId)
+                .filter(p -> p.getPayrollPeriod().getTenantId().equals(tenantId));
+    }
 }
