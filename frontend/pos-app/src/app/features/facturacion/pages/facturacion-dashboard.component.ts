@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { BillingService, CafInfo, Dte } from '../../../../core/services/billing.service';
+import { BillingService, CafInfo, Dte } from '../../../core/services/billing.service';
 
 @Component({
   selector: 'app-facturacion-dashboard',
@@ -477,8 +477,8 @@ export class FacturacionDashboardComponent implements OnInit {
 
   private loadData() {
     this.billingService.getCafs().subscribe({
-      next: cafs => this.cafs.set(cafs),
-      error: err => console.error('Error cargando CAFs', err)
+      next: (cafs: CafInfo[]) => this.cafs.set(cafs),
+      error: (err: any) => console.error('Error cargando CAFs', err)
     });
     this.billingService.getDtes(undefined, undefined, 0, 5).subscribe({
       next: (response: any) => {
@@ -488,7 +488,7 @@ export class FacturacionDashboardComponent implements OnInit {
           this.documentos.set(docs);
         }
       },
-      error: err => console.error('Error cargando documentos', err)
+      error: (err: any) => console.error('Error cargando documentos', err)
     });
   }
 

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { BillingService, CafInfo } from '../../../../core/services/billing.service';
+import { BillingService, CafInfo } from '../../../core/services/billing.service';
 
 @Component({
   selector: 'app-gestion-caf',
@@ -665,11 +665,11 @@ export class GestionCafComponent implements OnInit {
 
   cargarCafs() {
     this.billingService.getCafs().subscribe({
-      next: (cafs) => {
+      next: (cafs: CafInfo[]) => {
         this.cafs.set(cafs);
         this.cafsBajos.set(cafs.filter(c => c.porcentajeUso > 80 && !c.vencido && !c.agotado));
       },
-      error: (err) => console.error('Error cargando CAFs', err)
+      error: (err: any) => console.error('Error cargando CAFs', err)
     });
   }
 
@@ -716,7 +716,7 @@ export class GestionCafComponent implements OnInit {
         this.cargarCafs();
         alert('CAF subido exitosamente');
       },
-      error: (err) => {
+      error: (err: any) => {
         this.uploading.set(false);
         console.error('Error subiendo CAF', err);
         alert('Error al subir CAF: ' + (err.error?.message || err.message));
@@ -731,7 +731,7 @@ export class GestionCafComponent implements OnInit {
           this.cargarCafs();
           alert('CAF desactivado');
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('Error desactivando CAF', err);
           alert('Error al desactivar CAF');
         }
