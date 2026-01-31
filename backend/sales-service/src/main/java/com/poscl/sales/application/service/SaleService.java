@@ -37,8 +37,8 @@ public class SaleService {
     private final CashSessionRepository sessionRepository;
     private final CashRegisterRepository registerRepository;
 
-    @Value("${services.inventory.url:http://inventory-service:8084}")
-    private String inventoryServiceUrl;
+    @Value("${services.billing.url:http://billing-service:8084}")
+    private String billingServiceUrl;
 
     /**
      * Crea una venta (idempotente por commandId)
@@ -121,9 +121,16 @@ public class SaleService {
         try {
             deductStock(tenantId, userId, sale);
         } catch (Exception e) {
-            // If stock fails, we log it but don't fail the sale entirely in this context
-            // In a stricter system, we might want to rollback.
             log.error("Failed to deduct stock for sale {}: {}", sale.getNumero(), e.getMessage());
+        }
+
+        // Emitir Boleta ElectrÃ³nica (IntegraciÃ³n Billing)
+        try {
+            emitirBoleta(tenantId, userId, sale);
+        } catch (Exception e) {
+            log.error("Failed to emit DTE for sale {}: {}", sale.getNumero(), e.getMessage());
+            // No fallamos la venta si falla la boleta, pero lo dejamos en log
+            // TODO: PodrÃ­amos marcar un flag en la venta "dte_pending" = true
         }
 
         // TODO: Publicar evento SaleCreated para inventory-service
@@ -303,10 +310,17 @@ public class SaleService {
 
         log.info("Venta {} aprobada. Total: ${}", sale.getNumero(), sale.getTotal());
 
+        // Emitir Boleta ElectrÃ³nica (IntegraciÃ³n Billing)
+        try {
+            emitirBoleta(tenantId, userId, sale);
+        } catch (Exception e) {
+            log.error("Failed to emit DTE for sale {}: {}", sale.getNumero(), e.getMessage());
+        }
+
         return toDto(sale);
     }
 
-    // ====== INTEGRACIÃ“N INVENTARIO ======
+    // ====== INTEGRACIÃ“N INVENTARIO & BILLING ======
 
     private void deductStock(UUID tenantId, UUID userId, Sale sale) {
         if (sale.getItems() == null || sale.getItems().isEmpty())
@@ -346,6 +360,76 @@ public class SaleService {
             log.error("Error al descontar stock para venta {}: {}", sale.getNumero(), e.getMessage());
             throw new BusinessConflictException("INVENTORY_ERROR",
                     "No se pudo actualizar el inventario: " + e.getMessage());
+        }
+    }
+
+    private void emitirBoleta(UUID tenantId, UUID userId, Sale sale) {
+        log.info("Iniciando emisiÃ³n automÃ¡tica de boleta para venta {}", sale.getNumero());
+
+        try {
+            // Construir payload
+            Map<String, Object> request = new HashMap<>();
+
+            // Receptor (Cliente o GenÃ©rico)
+            if (sale.getCustomerId() != null) {
+                // TODO: Obtener datos reales cliente si es necesario
+                // Por ahora usamos datos bÃ¡sicos si no tenemos el objeto cliente completo
+                request.put("receptorRut", "66.666.666-6");
+                request.put("receptorRazonSocial",
+                        sale.getCustomerNombre() != null ? sale.getCustomerNombre() : "Cliente Ocasional");
+            } else {
+                request.put("receptorRut", "66.666.666-6");
+                request.put("receptorRazonSocial", "Cliente Ocasional");
+            }
+            request.put("receptorDireccion", "Sin Direccion");
+            request.put("receptorComuna", "Santiago");
+            request.put("receptorCiudad", "Santiago");
+
+            // Items
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (SaleItem item : sale.getItems()) {
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("codigo", item.getProductSku());
+                itemMap.put("nombreItem", item.getProductNombre());
+                itemMap.put("cantidad", item.getCantidad());
+                itemMap.put("precioUnitario", item.getPrecioUnitario());
+                if (item.getDescuento() > 0) {
+                    itemMap.put("descuentoMonto", item.getDescuento());
+                }
+                // Boleta siempre es afecta (exento=false) por defecto en retail simple, salvo
+                // items especÃ­ficos
+                // Aqui asumimos que si impuesto_porcentaje es 0, es exento
+                itemMap.put("exento", item.getImpuestoPorcentaje().compareTo(BigDecimal.ZERO) == 0);
+
+                items.add(itemMap);
+            }
+            request.put("items", items);
+
+            // Referencia a venta POS
+            request.put("ventaId", sale.getId());
+            request.put("tipoDte", "BOLETA_ELECTRONICA"); // Enum name mapping
+
+            // Llamada HTTP
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("X-Tenant-Id", tenantId.toString());
+            headers.set("X-User-Id", userId != null ? userId.toString() : null);
+            UUID branchId = sale.getSession().getRegister().getBranchId();
+            headers.set("X-Branch-Id", branchId != null ? branchId.toString() : tenantId.toString());
+
+            org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(
+                    request, headers);
+
+            String url = billingServiceUrl + "/api/billing/dte/boleta";
+            restTemplate.postForObject(url, entity, Object.class);
+
+            log.info("Boleta emitida exitosamente para venta {}", sale.getNumero());
+
+        } catch (Exception e) {
+            log.error("Error emitiendo boleta para venta {}: {}", sale.getNumero(), e.getMessage());
+            // No propagamos la excepciÃ³n para no romper la venta, ya que es un proceso
+            // post-venta
         }
     }
 
