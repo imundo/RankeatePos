@@ -10,7 +10,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.poscl.billing.domain.model.Dte;
+import com.poscl.billing.domain.entity.Dte;
 import com.poscl.billing.domain.repository.DteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +19,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -66,9 +67,12 @@ public class ReportService {
                 row.createCell(3).setCellValue(dte.getReceptorRut() != null ? dte.getReceptorRut() : "—");
                 row.createCell(4)
                         .setCellValue(dte.getReceptorRazonSocial() != null ? dte.getReceptorRazonSocial() : "—");
-                row.createCell(5).setCellValue(dte.getMontoNeto() != null ? dte.getMontoNeto() : 0);
-                row.createCell(6).setCellValue(dte.getMontoIva() != null ? dte.getMontoIva() : 0);
-                row.createCell(7).setCellValue(dte.getMontoTotal());
+
+                // Handle BigDecimals for Excel (double)
+                row.createCell(5).setCellValue(dte.getMontoNeto() != null ? dte.getMontoNeto().doubleValue() : 0.0);
+                row.createCell(6).setCellValue(dte.getMontoIva() != null ? dte.getMontoIva().doubleValue() : 0.0);
+                row.createCell(7).setCellValue(dte.getMontoTotal() != null ? dte.getMontoTotal().doubleValue() : 0.0);
+
                 row.createCell(8).setCellValue(dte.getEstado().name());
             }
 
@@ -120,41 +124,43 @@ public class ReportService {
             }
 
             // Data
-            long totalNeto = 0;
-            long totalIva = 0;
-            long totalGral = 0;
+            BigDecimal totalNeto = BigDecimal.ZERO;
+            BigDecimal totalIva = BigDecimal.ZERO;
+            BigDecimal totalGral = BigDecimal.ZERO;
 
             for (Dte dte : dtes) {
-                table.addCell(new Paragraph(dte.getTipoDte().getCodigo()).setFontSize(8));
-                table.addCell(new Paragraph(String.valueOf(dte.getFolio())).setFontSize(8));
+                table.addCell(new Paragraph(String.valueOf(dte.getTipoDte().getCodigo())).setFontSize(8));
+                table.addCell(new Paragraph(String.valueOf(dte.getFolio())).setFontSize(8)); // Fixed:
+                                                                                             // String.valueOf(int)
                 table.addCell(new Paragraph(dte.getFechaEmision().format(DATE_FMT)).setFontSize(8));
                 table.addCell(new Paragraph(dte.getReceptorRut() != null ? dte.getReceptorRut() : "—").setFontSize(8));
                 table.addCell(new Paragraph(dte.getReceptorRazonSocial() != null ? dte.getReceptorRazonSocial() : "—")
                         .setFontSize(8));
 
-                long neto = dte.getMontoNeto() != null ? dte.getMontoNeto() : 0;
-                long iva = dte.getMontoIva() != null ? dte.getMontoIva() : 0;
+                BigDecimal neto = dte.getMontoNeto() != null ? dte.getMontoNeto() : BigDecimal.ZERO;
+                BigDecimal iva = dte.getMontoIva() != null ? dte.getMontoIva() : BigDecimal.ZERO;
+                BigDecimal total = dte.getMontoTotal() != null ? dte.getMontoTotal() : BigDecimal.ZERO;
 
-                table.addCell(new Paragraph(String.valueOf(neto)).setFontSize(8).setTextAlignment(TextAlignment.RIGHT));
-                table.addCell(new Paragraph(String.valueOf(iva)).setFontSize(8).setTextAlignment(TextAlignment.RIGHT));
-                table.addCell(new Paragraph(String.valueOf(dte.getMontoTotal())).setFontSize(8)
-                        .setTextAlignment(TextAlignment.RIGHT));
+                table.addCell(new Paragraph(formatCurrency(neto)).setFontSize(8).setTextAlignment(TextAlignment.RIGHT));
+                table.addCell(new Paragraph(formatCurrency(iva)).setFontSize(8).setTextAlignment(TextAlignment.RIGHT));
+                table.addCell(
+                        new Paragraph(formatCurrency(total)).setFontSize(8).setTextAlignment(TextAlignment.RIGHT));
                 table.addCell(new Paragraph(dte.getEstado().name()).setFontSize(8));
 
-                totalNeto += neto;
-                totalIva += iva;
-                totalGral += dte.getMontoTotal();
+                totalNeto = totalNeto.add(neto);
+                totalIva = totalIva.add(iva);
+                totalGral = totalGral.add(total);
             }
 
             // Totals Row
             table.addCell(
                     new Cell(1, 4).add(new Paragraph("TOTALES").setBold()).setTextAlignment(TextAlignment.CENTER));
             table.addCell(new Paragraph("").setBold()); // Empty for Razon Social
-            table.addCell(new Paragraph(String.valueOf(totalNeto)).setBold().setFontSize(8)
+            table.addCell(new Paragraph(formatCurrency(totalNeto)).setBold().setFontSize(8)
                     .setTextAlignment(TextAlignment.RIGHT));
-            table.addCell(new Paragraph(String.valueOf(totalIva)).setBold().setFontSize(8)
+            table.addCell(new Paragraph(formatCurrency(totalIva)).setBold().setFontSize(8)
                     .setTextAlignment(TextAlignment.RIGHT));
-            table.addCell(new Paragraph(String.valueOf(totalGral)).setBold().setFontSize(8)
+            table.addCell(new Paragraph(formatCurrency(totalGral)).setBold().setFontSize(8)
                     .setTextAlignment(TextAlignment.RIGHT));
             table.addCell("");
 
@@ -166,5 +172,9 @@ public class ReportService {
             log.error("Error generating PDF report", e);
             throw new RuntimeException("Error generating PDF report", e);
         }
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        return "$ " + amount.longValue(); // Simple formatting for now
     }
 }
