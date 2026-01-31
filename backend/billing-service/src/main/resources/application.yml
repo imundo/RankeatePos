@@ -20,13 +20,8 @@ spring:
   application:
     name: billing-service
 
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:billing_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     properties:
@@ -35,6 +30,18 @@ spring:
         default_schema: billing
         format_sql: true
     show-sql: false
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:billing_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: BillingPool
+      minimum-idle: 2
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
 
   flyway:
     enabled: true

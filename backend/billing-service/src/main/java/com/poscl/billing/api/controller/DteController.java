@@ -253,4 +253,10 @@ public class DteController {
                 List<DteResponse> dtes = dteService.getLibroVentas(tenantId, desde, hasta, tipoDte);
                 return ResponseEntity.ok(dtes);
         }
+
+        @GetMapping("/ping")
+        @Operation(summary = "Health Check Simple")
+        public ResponseEntity<String> ping() {
+                return ResponseEntity.ok("pong");
+        }
 }
