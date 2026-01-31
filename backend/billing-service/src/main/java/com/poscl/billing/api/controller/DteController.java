@@ -33,9 +33,52 @@ import java.util.UUID;
 public class DteController {
 
         private final DteService dteService;
+        private final com.poscl.billing.application.service.PdfService pdfService;
+        private final com.poscl.billing.application.service.EmailService emailService;
 
-        @PostMapping("/boleta")
-        @Operation(summary = "Emitir Boleta Electrónica")
+        // ... (existing emit methods) ...
+
+        @GetMapping("/{id}/pdf")
+        @Operation(summary = "Descargar PDF del DTE")
+        public ResponseEntity<byte[]> getPdf(
+                        @RequestHeader("X-Tenant-Id") UUID tenantId,
+                        @PathVariable UUID id) {
+
+                log.info("GET /api/billing/dte/{}/pdf - Tenant: {}", id, tenantId);
+                DteResponse dte = dteService.getDte(tenantId, id);
+
+                byte[] pdfContent = pdfService.generateDtePdf(dte);
+
+                return ResponseEntity.ok()
+                                .header("Content-Type", "application/pdf")
+                                .header("Content-Disposition",
+                                                "attachment; filename=\"dte_" + dte.getTipoDte().getCodigo() + "_"
+                                                                + dte.getFolio() + ".pdf\"")
+                                .body(pdfContent);
+        }
+
+        @PostMapping("/{id}/email")
+        @Operation(summary = "Enviar DTE por email")
+        public ResponseEntity<Void> sendEmail(
+                        @RequestHeader("X-Tenant-Id") UUID tenantId,
+                        @PathVariable UUID id,
+                        @RequestBody EmailRequest emailRequest) {
+
+                log.info("POST /api/billing/dte/{}/email - Tenant: {}, Email: {}", id, tenantId,
+                                emailRequest.getEmail());
+
+                DteResponse dte = dteService.getDte(tenantId, id);
+                byte[] pdfContent = pdfService.generateDtePdf(dte);
+                String filename = "dte_" + dte.getTipoDte().getCodigo() + "_" + dte.getFolio() + ".pdf";
+
+                String subject = "Documento Tributario Electrónico - " + dte.getEmisorRazonSocial();
+                String body = "<h1>Documento Tributario</h1><p>Adjunto encontrará su documento electrónico.</p>";
+
+                emailService.sendDteEmail(emailRequest.getEmail(), subject, body, pdfContent, filename);
+
+                return ResponseEntity.ok().build();
+        }
+
         public ResponseEntity<DteResponse> emitirBoleta(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
                         @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
@@ -180,6 +223,18 @@ public class DteController {
                                                 "attachment; filename=\"dte_" + dte.getTipoDte().getCodigo() + "_"
                                                                 + dte.getFolio() + ".xml\"")
                                 .body("<?xml version=\"1.0\"?><DTE><!-- TODO: XML content --></DTE>");
+        }
+
+        public static class EmailRequest {
+                private String email;
+
+                public String getEmail() {
+                        return email;
+                }
+
+                public void setEmail(String email) {
+                        this.email = email;
+                }
         }
 
         @GetMapping("/libro-ventas")

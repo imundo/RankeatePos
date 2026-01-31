@@ -1,8 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { FacturacionService, EmitirDteRequest, EmitirDteItem, TipoDte } from '../services/facturacion.service';
+import { BillingService, EmitirDteRequest, EmitirDteItemRequest } from '../../../core/services/billing.service';
 
 type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
 
@@ -195,8 +195,8 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
                     <div class="col-producto">
                       <input 
                         type="text" 
-                        [value]="item.nombreItem"
-                        (input)="updateItem($index, 'nombreItem', $event)"
+                        [value]="item.nombre"
+                        (input)="updateItem($index, 'nombre', $event)"
                         placeholder="Nombre del producto">
                     </div>
                     <div class="col-cantidad">
@@ -282,7 +282,7 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
                 <h3>{{ items().length }} Producto(s)</h3>
                 @for (item of items(); track $index) {
                   <div class="resumen-item">
-                    <span>{{ item.nombreItem }}</span>
+                    <span>{{ item.nombre }}</span>
                     <span>{{ item.cantidad }} x {{ formatCurrency(item.precioUnitario) }}</span>
                   </div>
                 }
@@ -672,17 +672,17 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       width: 100%;
       padding: 0.75rem;
       margin-top: 0.5rem;
-      border: 2px dashed var(--border-color);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
       border-radius: 8px;
       background: none;
-      color: var(--primary-color);
+      color: #6366F1;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-add-item:hover {
-      border-color: var(--primary-color);
+      border-color: #6366F1;
       background: rgba(99,102,241,0.05);
     }
 
@@ -801,89 +801,69 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.2s;
-    }
-
-    .checkbox-option:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .checkbox-option input {
-      width: 18px;
-      height: 18px;
-      accent-color: #6366F1;
-    }
-
-    .checkbox-option span {
       color: rgba(255, 255, 255, 0.8);
     }
 
     /* Navigation */
     .step-navigation {
+      margin-top: auto;
       display: flex;
       justify-content: space-between;
-      padding: 1.5rem 0;
-      margin-top: 1rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .btn-secondary, .btn-primary, .btn-success {
-      padding: 0.875rem 2rem;
+    .btn-primary, .btn-secondary, .btn-success {
+      padding: 0.875rem 1.5rem;
       border-radius: 10px;
-      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      font-size: 1rem;
     }
 
     .btn-primary {
       background: linear-gradient(135deg, #6366F1, #8B5CF6);
-      border: none;
       color: white;
+    }
+    .btn-primary:not(:disabled):hover {
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-secondary:not(:disabled):hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .btn-success {
       background: linear-gradient(135deg, #10B981, #059669);
-      border: none;
       color: white;
     }
-
-    .btn-primary:hover, .btn-success:hover {
+    .btn-success:not(:disabled):hover {
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(99,102,241,0.4);
     }
 
-    .btn-secondary:disabled, .btn-primary:disabled, .btn-success:disabled {
-      opacity: 0.4;
+    button:disabled {
+      opacity: 0.5;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
     .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
+      background: transparent;
+      border-radius: 50%;
       border: 2px solid rgba(255,255,255,0.3);
       border-top-color: white;
-      border-radius: 50%;
+      width: 1rem;
+      height: 1rem;
+      display: inline-block;
       animation: spin 1s linear infinite;
     }
 
@@ -892,26 +872,30 @@ type TipoDocumento = 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
     }
 
     @media (max-width: 768px) {
+      .emitir-container {
+        padding: 1rem;
+      }
       .tipo-grid {
         grid-template-columns: 1fr;
       }
-
       .form-row {
         grid-template-columns: 1fr;
       }
-
-      .table-header, .item-row {
-        grid-template-columns: 1fr;
-        gap: 0.25rem;
+      .item-row {
+        grid-template-columns: 1fr 80px;
+        gap: 0.75rem;
       }
+      .col-producto { grid-column: 1 / -1; }
+      .col-precio, .col-total, .col-actions { display: none; }
     }
   `]
 })
 export class EmitirDocumentoComponent {
-  private fb = inject(FormBuilder);
+  private billingService = inject(BillingService);
   private router = inject(Router);
-  private facturacionService = inject(FacturacionService);
+  private fb = inject(FormBuilder);
 
+  paso = signal(1);
   pasos = [
     { num: 1, label: 'Tipo' },
     { num: 2, label: 'Receptor' },
@@ -919,50 +903,84 @@ export class EmitirDocumentoComponent {
     { num: 4, label: 'Confirmar' }
   ];
 
-  paso = signal(1);
-  tipoSeleccionado = signal<TipoDocumento | null>(null);
+  tipoSeleccionado = signal<TipoDocumento>('BOLETA');
+  items = signal<EmitirDteItemRequest[]>([
+    { nombre: '', cantidad: 1, precioUnitario: 0 }
+  ]);
+
   loading = signal(false);
-  enviarSii = true;
-  enviarEmail = false;
+  enviarSii = signal(true);
+  enviarEmail = signal(true);
 
   receptorForm: FormGroup = this.fb.group({
     rut: [''],
     razonSocial: [''],
     giro: [''],
-    email: ['', Validators.email],
+    email: ['', [Validators.email]],
     direccion: [''],
     comuna: [''],
     ciudad: ['']
   });
 
-  items = signal<EmitirDteItem[]>([
-    { nombreItem: '', cantidad: 1, precioUnitario: 0 }
-  ]);
-
   subtotal = computed(() =>
     this.items().reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0)
   );
 
-  neto = computed(() => Math.round(this.subtotal() / 1.19));
+  neto = computed(() => {
+    // Si es boleta, el valor ingresado es bruto. Si es factura, suele ser neto. 
+    // Para simplificar, asumiremos que los precios son BRUTOS (con IVA) para todos.
+    return Math.round(this.subtotal() / 1.19);
+  });
+
   iva = computed(() => this.subtotal() - this.neto());
   total = computed(() => this.subtotal());
 
   seleccionarTipo(tipo: TipoDocumento) {
     this.tipoSeleccionado.set(tipo);
+    this.siguiente();
   }
 
-  puedeAvanzar(): boolean {
-    switch (this.paso()) {
-      case 1: return this.tipoSeleccionado() !== null;
-      case 2: return this.tipoSeleccionado() === 'BOLETA' ||
-        (!!this.receptorForm.value.rut && !!this.receptorForm.value.razonSocial);
-      case 3: return this.items().some(i => i.nombreItem && i.cantidad > 0 && i.precioUnitario > 0);
-      default: return true;
+  formatRut() {
+    const rut = this.receptorForm.get('rut')?.value;
+    if (rut) {
+      this.receptorForm.patchValue({
+        rut: this.billingService.formatRut(rut)
+      });
     }
   }
 
+  addItem() {
+    this.items.update(curr => [
+      ...curr,
+      { nombre: '', cantidad: 1, precioUnitario: 0 }
+    ]);
+  }
+
+  removeItem(index: number) {
+    if (this.items().length > 1) {
+      this.items.update(curr => curr.filter((_, i) => i !== index));
+    }
+  }
+
+  updateItem(index: number, field: keyof EmitirDteItemRequest, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.items.update(curr => {
+      const items = [...curr];
+      const item = { ...items[index] };
+
+      if (field === 'cantidad' || field === 'precioUnitario') {
+        (item as any)[field] = Number(value);
+      } else {
+        (item as any)[field] = value;
+      }
+
+      items[index] = item;
+      return items;
+    });
+  }
+
   siguiente() {
-    if (this.puedeAvanzar() && this.paso() < 4) {
+    if (this.paso() < 4) {
       this.paso.update(p => p + 1);
     }
   }
@@ -973,78 +991,68 @@ export class EmitirDocumentoComponent {
     }
   }
 
-  addItem() {
-    this.items.update(items => [...items, { nombreItem: '', cantidad: 1, precioUnitario: 0 }]);
-  }
-
-  removeItem(index: number) {
-    if (this.items().length > 1) {
-      this.items.update(items => items.filter((_, i) => i !== index));
-    }
-  }
-
-  updateItem(index: number, field: keyof EmitirDteItem, event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.items.update(items => {
-      const updated = [...items];
-      if (field === 'cantidad' || field === 'precioUnitario') {
-        (updated[index] as any)[field] = parseFloat(value) || 0;
-      } else {
-        (updated[index] as any)[field] = value;
+  puedeAvanzar(): boolean {
+    if (this.paso() === 2) {
+      // Validar receptor si es factura
+      if (this.tipoSeleccionado() === 'FACTURA') {
+        const val = this.receptorForm.value;
+        return !!(val.rut && val.razonSocial && val.direccion);
       }
-      return updated;
-    });
-  }
-
-  formatRut() {
-    const rut = this.receptorForm.value.rut;
-    if (rut) {
-      this.receptorForm.patchValue({ rut: this.facturacionService.formatRut(rut) });
+      return true;
     }
+    if (this.paso() === 3) {
+      // Validar items
+      return this.items().every(i => i.nombre && i.cantidad > 0 && i.precioUnitario > 0);
+    }
+    return true;
   }
 
-  formatCurrency(value: number): string {
-    return this.facturacionService.formatCurrency(value);
-  }
-
-  async emitir() {
+  emitir() {
+    if (this.loading()) return;
     this.loading.set(true);
 
     const request: EmitirDteRequest = {
+      items: this.items(),
+      // Mapear datos receptor
       receptorRut: this.receptorForm.value.rut || undefined,
       receptorRazonSocial: this.receptorForm.value.razonSocial || undefined,
       receptorGiro: this.receptorForm.value.giro || undefined,
       receptorDireccion: this.receptorForm.value.direccion || undefined,
       receptorComuna: this.receptorForm.value.comuna || undefined,
       receptorEmail: this.receptorForm.value.email || undefined,
-      items: this.items().map(item => ({
-        nombreItem: item.nombreItem,
-        cantidad: item.cantidad,
-        precioUnitario: item.precioUnitario
-      })),
-      enviarSii: this.enviarSii,
-      enviarEmail: this.enviarEmail
     };
 
-    const emitFn = this.tipoSeleccionado() === 'BOLETA'
-      ? this.facturacionService.emitirBoleta(request)
-      : this.tipoSeleccionado() === 'FACTURA'
-        ? this.facturacionService.emitirFactura(request)
-        : this.tipoSeleccionado() === 'NOTA_CREDITO'
-          ? this.facturacionService.emitirNotaCredito(request)
-          : this.facturacionService.emitirNotaDebito(request);
+    let obs;
+    switch (this.tipoSeleccionado()) {
+      case 'BOLETA':
+        obs = this.billingService.emitirBoleta(request);
+        break;
+      case 'FACTURA':
+        obs = this.billingService.emitirFactura(request);
+        break;
+      case 'NOTA_CREDITO':
+        obs = this.billingService.emitirNotaCredito(request);
+        break;
+      case 'NOTA_DEBITO':
+        obs = this.billingService.emitirNotaDebito(request);
+        break;
+    }
 
-    emitFn.subscribe({
+    obs?.subscribe({
       next: (dte) => {
+        alert('Documento emitido exitosamente. Folio: ' + dte.folio);
         this.loading.set(false);
-        // Navegar a detalle del documento
-        this.router.navigate(['/facturacion/documentos', dte.id]);
+        this.router.navigate(['/facturacion/dashboard']);
       },
       error: (err) => {
-        this.loading.set(false);
         console.error('Error emitiendo documento', err);
         alert('Error al emitir documento: ' + (err.error?.message || err.message));
+        this.loading.set(false);
       }
     });
+  }
+
+  formatCurrency(val: number): string {
+    return this.billingService.formatCurrency(val);
   }
 }

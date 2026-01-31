@@ -17,13 +17,16 @@ import { AuthService } from '@core/auth/auth.service';
 import { OfflineService, CachedProduct, CachedVariant } from '@core/offline/offline.service';
 import { IndustryMockDataService } from '@core/services/industry-mock.service';
 import { DemoDataService } from '@core/services/demo-data.service';
-import { FacturacionService } from '../facturacion/services/facturacion.service';
+import { BillingService } from '../../core/services/billing.service';
 import { SalesEventService } from '@core/services/sales-event.service';
 import { StockService } from '@core/services/stock.service';
 import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
+import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
+import { ClientSearchModalComponent, Client } from '@shared/components/modals/client-search-modal.component';
+
 
 interface CartItem {
   variantId: string;
@@ -51,7 +54,9 @@ interface CartItem {
     BadgeModule,
     InputNumberModule,
     BranchSwitcherComponent,
-    BottomNavComponent
+    BottomNavComponent,
+    WeightInputModalComponent,
+    ClientSearchModalComponent
   ],
   providers: [MessageService],
   template: `
@@ -378,6 +383,20 @@ interface CartItem {
           }
         </section>
       </div>
+
+      <!-- Modals -->
+      <app-weight-input-modal
+        [visible]="showWeightModal"
+        [productName]="weightModalProduct"
+        (onConfirm)="onWeightConfirmed($event)"
+        (onCancel)="showWeightModal = false">
+      </app-weight-input-modal>
+
+      <app-client-search-modal
+        [visible]="showClientModal"
+        (onSelect)="onClientSelected($event)"
+        (onCancel)="showClientModal = false">
+      </app-client-search-modal>
 
       <!-- Premium Payment Dialog -->
       <p-dialog 
@@ -3299,7 +3318,7 @@ export class PosComponent implements OnInit {
   private stockService = inject(StockService); // Injected for Restock Modal
   private messageService = inject(MessageService);
   private industryService = inject(IndustryMockDataService);
-  private facturacionService = inject(FacturacionService);
+  private billingService = inject(BillingService);
   private demoDataService = inject(DemoDataService);
   private barcodeService = inject(BarcodeService);
   private salesEventService = inject(SalesEventService);
@@ -3370,6 +3389,81 @@ export class PosComponent implements OnInit {
   ]);
 
   hasUrgentDocs = () => this.expiringDocs().some(d => d.daysLeft <= 7);
+
+  // Modal States
+  showWeightModal = false;
+  weightModalProduct = '';
+  pendingWeightItem: any = null;
+  showClientModal = false;
+
+  // Placeholder methods
+  openWeightInput() {
+    this.weightModalProduct = 'Producto Manual';
+    this.showWeightModal = true;
+  }
+
+  onWeightConfirmed(weight: number) {
+    if (weight > 0) {
+      // Logic to add weighted item
+      this.messageService.add({ severity: 'success', summary: 'Peso Agregado', detail: `${weight} kg` });
+      this.showWeightModal = false;
+      // TODO: Add actual item logic here
+    }
+  }
+
+  openClientSearch() {
+    this.showClientModal = true;
+  }
+
+  onClientSelected(client: Client) {
+    this.clienteRut = client.rut;
+    this.clienteRazonSocial = client.razonSocial;
+    this.clienteGiro = client.giro || '';
+    this.clienteEmail = client.email || '';
+    this.showClientModal = false;
+    this.messageService.add({ severity: 'success', summary: 'Cliente Seleccionado', detail: client.razonSocial });
+
+    // Auto-select Factura if company
+    if (client.giro && client.giro !== 'Particular') {
+      this.tipoDocumento = 'FACTURA';
+    }
+  }
+
+  openSpecialOrder() {
+    this.messageService.add({ severity: 'info', summary: 'Próximamente', detail: 'Gestión de pedidos especiales' });
+  }
+
+  applyPromotion() {
+    this.messageService.add({ severity: 'info', summary: 'Próximamente', detail: 'Gestión de promociones' });
+  }
+
+  savePending() {
+    if (this.cartItems().length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Carrito vacío',
+        detail: 'Agrega productos antes de guardar'
+      });
+      return;
+    }
+    // Save to pending
+    const pending = {
+      id: crypto.randomUUID(),
+      items: this.cartItems(),
+      total: this.total(),
+      createdAt: new Date().toISOString()
+    };
+    const stored = localStorage.getItem('pending_sales') || '[]';
+    const pendingList = JSON.parse(stored);
+    pendingList.push(pending);
+    localStorage.setItem('pending_sales', JSON.stringify(pendingList));
+    this.clearCart();
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Guardado',
+      detail: 'Venta guardada como pendiente'
+    });
+  }
 
   // ============================================
   // MOBILE-FIRST PROPERTIES
@@ -3546,70 +3640,9 @@ export class PosComponent implements OnInit {
     this.generatePreviewBarcodes();
   }
 
-  // Quick action methods - Industry adaptive
-  openWeightInput(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Pesaje',
-      detail: 'Ingresa el peso del producto en la balanza'
-    });
-    // TODO: Open weight input modal
-  }
 
-  openSpecialOrder(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Pedido Especial',
-      detail: 'Crear orden de pedido especial'
-    });
-    // TODO: Open special order modal
-  }
 
-  applyPromotion(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Promociones',
-      detail: 'Aplicar descuento o promoción al carrito'
-    });
-    // TODO: Open promotions modal
-  }
 
-  openClientSearch(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Buscar Cliente',
-      detail: 'Asociar cliente a esta venta'
-    });
-    // TODO: Open client search modal
-  }
-
-  savePending(): void {
-    if (this.cartItems().length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Carrito vacío',
-        detail: 'Agrega productos antes de guardar'
-      });
-      return;
-    }
-    // Save to pending
-    const pending = {
-      id: crypto.randomUUID(),
-      items: this.cartItems(),
-      total: this.total(),
-      createdAt: new Date().toISOString()
-    };
-    const stored = localStorage.getItem('pending_sales') || '[]';
-    const pendingList = JSON.parse(stored);
-    pendingList.push(pending);
-    localStorage.setItem('pending_sales', JSON.stringify(pendingList));
-    this.clearCart();
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Guardado',
-      detail: 'Venta guardada como pendiente'
-    });
-  }
 
   subtotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.subtotal, 0)
@@ -4101,7 +4134,7 @@ export class PosComponent implements OnInit {
       return;
     }
 
-    this.facturacionService.getPdf(this.lastSaleDocumento.id).subscribe({
+    this.billingService.getDtePdf(this.lastSaleDocumento.id).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const printWindow = window.open(url);
@@ -4170,7 +4203,7 @@ export class PosComponent implements OnInit {
       return;
     }
 
-    this.facturacionService.enviarEmail(this.lastSaleDocumento.id, email).subscribe({
+    this.billingService.enviarPorEmail(this.lastSaleDocumento.id, email).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FacturacionService, Caf } from '../services/facturacion.service';
+import { BillingService, CafInfo } from '../../../../core/services/billing.service';
 
 @Component({
   selector: 'app-gestion-caf',
@@ -649,22 +649,22 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
   `]
 })
 export class GestionCafComponent implements OnInit {
-  private facturacionService = inject(FacturacionService);
+  private billingService = inject(BillingService);
 
-  cafs = signal<Caf[]>([]);
+  cafs = signal<CafInfo[]>([]);
   showUpload = signal(false);
   selectedFile = signal<File | null>(null);
   uploading = signal(false);
   isDragover = false;
 
-  cafsBajos = signal<Caf[]>([]);
+  cafsBajos = signal<CafInfo[]>([]);
 
   ngOnInit() {
     this.cargarCafs();
   }
 
   cargarCafs() {
-    this.facturacionService.listarCafs().subscribe({
+    this.billingService.getCafs().subscribe({
       next: (cafs) => {
         this.cafs.set(cafs);
         this.cafsBajos.set(cafs.filter(c => c.porcentajeUso > 80 && !c.vencido && !c.agotado));
@@ -709,7 +709,7 @@ export class GestionCafComponent implements OnInit {
     if (!file) return;
 
     this.uploading.set(true);
-    this.facturacionService.subirCaf(file).subscribe({
+    this.billingService.subirCaf(file).subscribe({
       next: () => {
         this.uploading.set(false);
         this.cerrarUpload();
@@ -724,9 +724,9 @@ export class GestionCafComponent implements OnInit {
     });
   }
 
-  desactivar(caf: Caf) {
+  desactivar(caf: CafInfo) {
     if (confirm(`¿Seguro que deseas desactivar este CAF? Los folios restantes ya no podrán usarse.`)) {
-      this.facturacionService.desactivarCaf(caf.id).subscribe({
+      this.billingService.desactivarCaf(caf.id).subscribe({
         next: () => {
           this.cargarCafs();
           alert('CAF desactivado');

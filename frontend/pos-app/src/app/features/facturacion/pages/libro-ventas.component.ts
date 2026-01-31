@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { FacturacionService, Dte } from '../services/facturacion.service';
+import { BillingService, Dte } from '../../../core/services/billing.service';
 
 @Component({
   selector: 'app-libro-ventas',
@@ -510,7 +510,7 @@ import { FacturacionService, Dte } from '../services/facturacion.service';
   `]
 })
 export class LibroVentasComponent implements OnInit {
-  private facturacionService = inject(FacturacionService);
+  private billingService = inject(BillingService);
 
   documentos = signal<Dte[]>([]);
   loading = signal(false);
@@ -562,7 +562,7 @@ export class LibroVentasComponent implements OnInit {
     if (!this.fechaDesde || !this.fechaHasta) return;
 
     this.loading.set(true);
-    this.facturacionService.getLibroVentas(this.fechaDesde, this.fechaHasta).subscribe({
+    this.billingService.getLibroVentas(this.fechaDesde, this.fechaHasta).subscribe({
       next: (docs) => {
         this.documentos.set(docs);
         this.calcularTotales(docs);
@@ -612,9 +612,9 @@ export class LibroVentasComponent implements OnInit {
   generarDatosMock() {
     // Generar datos de ejemplo
     const mockDocs: Dte[] = [
-      { id: '1', tipoDte: 'BOLETA_ELECTRONICA', tipoDteDescripcion: 'Boleta', folio: 1001, fechaEmision: '2024-01-15', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', montoNeto: 84034, montoIva: 15966, montoTotal: 100000, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado', createdAt: '2024-01-15T10:00:00' },
-      { id: '2', tipoDte: 'FACTURA_ELECTRONICA', tipoDteDescripcion: 'Factura', folio: 501, fechaEmision: '2024-01-16', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', receptorRut: '98.765.432-1', receptorRazonSocial: 'Cliente SA', montoNeto: 420168, montoIva: 79832, montoTotal: 500000, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado', createdAt: '2024-01-16T14:30:00' },
-      { id: '3', tipoDte: 'BOLETA_ELECTRONICA', tipoDteDescripcion: 'Boleta', folio: 1002, fechaEmision: '2024-01-17', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', montoNeto: 25210, montoIva: 4790, montoTotal: 30000, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado', createdAt: '2024-01-17T09:15:00' },
+      { id: '1', tipoDte: 'BOLETA_ELECTRONICA', tipoDteDescripcion: 'Boleta', folio: 1001, fechaEmision: '2024-01-15', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', montoNeto: 84034, montoIva: 15966, montoTotal: 100000, tasaIva: 19, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado' },
+      { id: '2', tipoDte: 'FACTURA_ELECTRONICA', tipoDteDescripcion: 'Factura', folio: 501, fechaEmision: '2024-01-16', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', receptorRut: '98.765.432-1', receptorRazonSocial: 'Cliente SA', montoNeto: 420168, montoIva: 79832, montoTotal: 500000, tasaIva: 19, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado' },
+      { id: '3', tipoDte: 'BOLETA_ELECTRONICA', tipoDteDescripcion: 'Boleta', folio: 1002, fechaEmision: '2024-01-17', emisorRut: '12.345.678-9', emisorRazonSocial: 'Mi Empresa', montoNeto: 25210, montoIva: 4790, montoTotal: 30000, tasaIva: 19, estado: 'ACEPTADO', estadoDescripcion: 'Aceptado' },
     ];
     this.documentos.set(mockDocs);
     this.calcularTotales(mockDocs);
@@ -629,7 +629,7 @@ export class LibroVentasComponent implements OnInit {
   }
 
   formatCurrency(value: number): string {
-    return this.facturacionService.formatCurrency(value);
+    return this.billingService.formatCurrency(value);
   }
 
   exportarExcel() {

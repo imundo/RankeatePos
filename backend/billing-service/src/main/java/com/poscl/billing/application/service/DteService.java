@@ -181,7 +181,38 @@ public class DteService {
             dtes = dteRepository.findByTenantId(tenantId, pageable);
         }
 
-        return dtes.map(this::toResponse);
+        return dtes.map(this::toSummaryResponse);
+    }
+
+    private DteResponse toSummaryResponse(Dte dte) {
+        return DteResponse.builder()
+                .id(dte.getId())
+                .tipoDte(dte.getTipoDte())
+                .tipoDteDescripcion(dte.getTipoDte().getDescripcion())
+                .folio(dte.getFolio())
+                .fechaEmision(dte.getFechaEmision())
+                .emisorRut(dte.getEmisorRut())
+                .emisorRazonSocial(dte.getEmisorRazonSocial())
+                .receptorRut(dte.getReceptorRut())
+                .receptorRazonSocial(dte.getReceptorRazonSocial())
+                .receptorEmail(dte.getReceptorEmail())
+                .montoNeto(dte.getMontoNeto())
+                .montoExento(dte.getMontoExento())
+                .montoIva(dte.getMontoIva())
+                .montoTotal(dte.getMontoTotal())
+                .estado(dte.getEstado())
+                .estadoDescripcion(dte.getEstado().getNombre())
+                .trackId(dte.getTrackId())
+                .glosaEstado(dte.getGlosaEstado())
+                .fechaEnvio(dte.getFechaEnvio())
+                .fechaRespuesta(dte.getFechaRespuesta())
+                .pdfUrl(dte.getPdfUrl())
+                .xmlUrl("/api/billing/dte/" + dte.getId() + "/xml")
+                // No details for summary
+                .ventaId(dte.getVentaId())
+                .dteReferenciaId(dte.getDteReferenciaId())
+                .createdAt(dte.getCreatedAt())
+                .build();
     }
 
     /**
@@ -291,6 +322,10 @@ public class DteService {
                 .fechaEmision(dte.getFechaEmision())
                 .emisorRut(dte.getEmisorRut())
                 .emisorRazonSocial(dte.getEmisorRazonSocial())
+                .emisorGiro(dte.getEmisorGiro())
+                .emisorDireccion(dte.getEmisorDireccion())
+                .emisorComuna(dte.getEmisorComuna())
+                .emisorLogoUrl(dte.getEmisorLogoUrl())
                 .receptorRut(dte.getReceptorRut())
                 .receptorRazonSocial(dte.getReceptorRazonSocial())
                 .receptorEmail(dte.getReceptorEmail())

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FacturacionService, Caf } from '../services/facturacion.service';
+import { BillingService, CafInfo, Dte } from '../../../../core/services/billing.service';
 
 @Component({
   selector: 'app-facturacion-dashboard',
@@ -186,14 +186,14 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
             @for (doc of documentos(); track doc.id; let i = $index) {
               <div class="doc-row" [style.animation-delay]="i * 0.05 + 's'">
                 <div class="doc-info">
-                  <span class="doc-type">{{ doc.tipoDteDescripcion }}</span>
+                  <span class="doc-type">{{ doc.tipoDteDescripcion || doc.tipoDte }}</span>
                   <span class="doc-folio">N° {{ doc.folio }}</span>
                 </div>
                 <div class="doc-receptor">
                   {{ doc.receptorRazonSocial || 'Consumidor Final' }}
                 </div>
                 <div class="doc-amount">
-                  {{ facturacionService.formatCurrency(doc.montoTotal) }}
+                  {{ billingService.formatCurrency(doc.montoTotal) }}
                 </div>
                 <div class="doc-status">
                   <span class="status-badge" [class]="doc.estado.toLowerCase()">
@@ -204,7 +204,7 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
                     } @else if (doc.estado === 'RECHAZADO') {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                     }
-                    {{ doc.estadoDescripcion }}
+                    {{ doc.estadoDescripcion || doc.estado }}
                   </span>
                 </div>
               </div>
@@ -469,19 +469,25 @@ import { FacturacionService, Caf } from '../services/facturacion.service';
   `]
 })
 export class FacturacionDashboardComponent implements OnInit {
-  readonly facturacionService = inject(FacturacionService);
-  readonly cafs = signal<Caf[]>([]);
-  readonly documentos = signal<any[]>([]);
+  readonly billingService = inject(BillingService);
+  readonly cafs = signal<CafInfo[]>([]);
+  readonly documentos = signal<Dte[]>([]);
 
   ngOnInit() { this.loadData(); }
 
   private loadData() {
-    this.facturacionService.listarCafs().subscribe({
+    this.billingService.getCafs().subscribe({
       next: cafs => this.cafs.set(cafs),
       error: err => console.error('Error cargando CAFs', err)
     });
-    this.facturacionService.listarDtes(0, 5).subscribe({
-      next: response => this.documentos.set(response.content),
+    this.billingService.getDtes(undefined, undefined, 0, 5).subscribe({
+      next: (response: any) => {
+        // Handle both simple list and page response
+        const docs = response.content || response;
+        if (Array.isArray(docs)) {
+          this.documentos.set(docs);
+        }
+      },
       error: err => console.error('Error cargando documentos', err)
     });
   }
@@ -490,6 +496,6 @@ export class FacturacionDashboardComponent implements OnInit {
   getPendientes(): number { return this.documentos().filter(d => d.estado === 'PENDIENTE').length; }
   getTotalVentas(): string {
     const total = this.documentos().reduce((sum, d) => sum + (d.montoTotal || 0), 0);
-    return this.facturacionService.formatCurrency(total);
+    return this.billingService.formatCurrency(total);
   }
 }

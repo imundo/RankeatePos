@@ -21,6 +21,7 @@ export interface DteItem {
 export interface Dte {
     id: string;
     tipoDte: string;
+    tipoDteDescripcion?: string;
     folio: number;
     fechaEmision: string;
     fechaVencimiento?: string;
@@ -49,6 +50,7 @@ export interface Dte {
 
     // Estado
     estado: 'BORRADOR' | 'PENDIENTE' | 'ENVIADO' | 'ACEPTADO' | 'RECHAZADO' | 'ANULADO';
+    estadoDescripcion?: string;
     trackId?: string;
     glosaEstado?: string;
 
@@ -78,11 +80,15 @@ export interface EmitirDteItemRequest {
 export interface CafInfo {
     id: string;
     tipoDte: string;
+    tipoDteDescripcion?: string;
     folioDesde: number;
     folioHasta: number;
     folioActual: number;
+    foliosDisponibles: number;
+    porcentajeUso: number;
     fechaAutorizacion: string;
     fechaVencimiento?: string;
+    vencido?: boolean;
     activo: boolean;
     agotado: boolean;
 }
@@ -186,6 +192,12 @@ export class BillingService {
         });
     }
 
+    enviarPorEmail(id: string, email: string): Observable<void> {
+        return this.http.post<void>(`${this.baseUrl}/billing/dte/${id}/email`, { email }, {
+            headers: this.getHeaders()
+        });
+    }
+
     // ========== CAF ==========
 
     getCafs(): Observable<CafInfo[]> {
@@ -202,6 +214,24 @@ export class BillingService {
 
     // ========== LIBRO VENTAS ==========
 
+    // ========== CAF MANAGEMENT ==========
+
+    subirCaf(file: File): Observable<CafInfo> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<CafInfo>(`${this.baseUrl}/billing/caf`, formData, {
+            headers: this.getHeaders() // Headers needed for auth
+        });
+    }
+
+    desactivarCaf(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/billing/caf/${id}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // ========== LIBRO VENTAS ==========
+
     getLibroVentas(desde: string, hasta: string, tipoDte?: string): Observable<Dte[]> {
         let params = new HttpParams()
             .set('desde', desde)
@@ -209,9 +239,52 @@ export class BillingService {
 
         if (tipoDte) params = params.set('tipoDte', tipoDte);
 
-        return this.http.get<Dte[]>(`${this.baseUrl}/billing/libro-ventas`, {
+        return this.http.get<Dte[]>(`${this.baseUrl}/billing/dte/libro-ventas`, {
             headers: this.getHeaders(),
             params
         });
+    }
+
+    // ========== HELPERS & DICTIONARIES ==========
+
+    getTiposDte(pais: 'CL' | 'PE' | 'VE' = 'CL'): { codigo: number, nombre: string }[] {
+        const tipos = {
+            CL: [
+                { codigo: 33, nombre: 'Factura Electrónica' },
+                { codigo: 39, nombre: 'Boleta Electrónica' },
+                { codigo: 61, nombre: 'Nota de Crédito Electrónica' },
+                { codigo: 56, nombre: 'Nota de Débito Electrónica' },
+                { codigo: 52, nombre: 'Guía de Despacho Electrónica' }
+            ],
+            PE: [
+                { codigo: 1, nombre: 'Factura' },
+                { codigo: 3, nombre: 'Boleta de Venta' },
+                { codigo: 7, nombre: 'Nota de Crédito' },
+                { codigo: 8, nombre: 'Nota de Débito' }
+            ],
+            VE: [
+                { codigo: 1, nombre: 'Factura Digital' },
+                { codigo: 2, nombre: 'Nota de Crédito' },
+                { codigo: 3, nombre: 'Nota de Débito' }
+            ]
+        };
+        return tipos[pais] || tipos['CL'];
+    }
+
+    formatRut(rut: string): string {
+        if (!rut) return '';
+        const clean = rut.replace(/[^0-9kK]/g, '');
+        if (clean.length < 2) return clean;
+        const body = clean.slice(0, -1);
+        const dv = clean.slice(-1).toUpperCase();
+        return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+    }
+
+    formatCurrency(value: number): string {
+        return new Intl.NumberFormat('es-CL', {
+            style: 'currency',
+            currency: 'CLP',
+            minimumFractionDigits: 0
+        }).format(value);
     }
 }

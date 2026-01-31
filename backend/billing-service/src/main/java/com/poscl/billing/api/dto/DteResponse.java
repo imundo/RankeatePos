@@ -31,6 +31,10 @@ public class DteResponse {
     // Emisor
     private String emisorRut;
     private String emisorRazonSocial;
+    private String emisorGiro;
+    private String emisorDireccion;
+    private String emisorComuna;
+    private String emisorLogoUrl;
 
     // Receptor
     private String receptorRut;
