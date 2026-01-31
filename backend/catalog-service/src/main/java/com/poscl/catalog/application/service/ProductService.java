@@ -35,6 +35,7 @@ public class ProductService {
     private final UnitRepository unitRepository;
     private final TaxRepository taxRepository;
     private final WebClient inventoryWebClient;
+    private final WebClient authWebClient;
 
     public ProductService(
             ProductRepository productRepository,
@@ -42,13 +43,15 @@ public class ProductService {
             CategoryRepository categoryRepository,
             UnitRepository unitRepository,
             TaxRepository taxRepository,
-            @Qualifier("inventoryWebClient") WebClient inventoryWebClient) {
+            @Qualifier("inventoryWebClient") WebClient inventoryWebClient,
+            @Qualifier("authWebClient") WebClient authWebClient) {
         this.productRepository = productRepository;
         this.variantRepository = variantRepository;
         this.categoryRepository = categoryRepository;
         this.unitRepository = unitRepository;
         this.taxRepository = taxRepository;
         this.inventoryWebClient = inventoryWebClient;
+        this.authWebClient = authWebClient;
     }
 
     /**
@@ -229,23 +232,25 @@ public class ProductService {
      * Fetch stock from inventory-service for all variants across all branches
      * Aggregates stock from multiple branches
      */
+    /**
+     * Fetch stock from inventory-service for all variants across all active
+     * branches
+     */
     private Map<UUID, Integer> fetchStockFromInventory(UUID tenantId) {
         try {
             log.info("Fetching stock from inventory-service for tenant: {}", tenantId);
 
-            // List of known branch IDs (from actual database data)
-            String[] branchIds = {
-                    "a2000000-0000-0000-0000-000000000001", // Branch where stock is actually stored
-                    "b1000000-0000-0000-0000-000000000001",
-                    "b1000000-0000-0000-0000-000000000002",
-                    "b2000000-0000-0000-0000-000000000001",
-                    "b2000000-0000-0000-0000-000000000002",
-                    "b3000000-0000-0000-0000-000000000001"
-            };
-
             Map<UUID, Integer> stockMap = new HashMap<>();
 
-            // Fetch stock for each branch and aggregate
+            // 1. Fetch active branches from auth-service
+            List<String> branchIds = fetchActiveBranchIds(tenantId);
+
+            if (branchIds.isEmpty()) {
+                log.warn("No active branches found for tenant {}", tenantId);
+                return stockMap;
+            }
+
+            // 2. Fetch stock for each branch and aggregate
             for (String branchId : branchIds) {
                 try {
                     log.debug("Fetching stock for branch: {}", branchId);
@@ -288,13 +293,51 @@ public class ProductService {
                 }
             }
 
-            log.info("Aggregated stock for {} variants from inventory-service", stockMap.size());
+            log.info("Aggregated stock for {} variants from {} branches", stockMap.size(), branchIds.size());
             return stockMap;
 
         } catch (Exception e) {
             log.error("Failed to fetch stock from inventory-service", e);
             return new HashMap<>();
         }
+    }
+
+    private List<String> fetchActiveBranchIds(UUID tenantId) {
+        try {
+            // Assuming auth-service has an endpoint /api/branches/internal or similar for
+            // service-to-service
+            // Or use the public one /api/branches if accessible
+            // We need a WebClient for auth-service. Assuming one is injected or we reuse
+            // inventoryWebClient if base URL is dynamic
+            // But better to inject a specific authWebClient.
+
+            // Note: Since we need to inject authWebClient, make sure it is added to the
+            // constructor.
+            // For now, I will assume it is available as a field.
+            if (inventoryWebClient == null)
+                return new ArrayList<>(); // Safety check
+
+            // Using authWebClient to fetch branches
+            List<Map<String, Object>> branches = authWebClient
+                    .get()
+                    .uri("/api/branches") // standard endpoint
+                    .header("X-Tenant-Id", tenantId.toString())
+                    .retrieve()
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
+                    .collectList()
+                    .block();
+
+            if (branches != null) {
+                return branches.stream()
+                        .filter(b -> Boolean.TRUE.equals(b.get("activo"))) // Filter active only
+                        .map(b -> (String) b.get("id"))
+                        .collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            log.error("Error fetching branches from auth-service: {}", e.getMessage());
+        }
+        return new ArrayList<>();
     }
 
     /**

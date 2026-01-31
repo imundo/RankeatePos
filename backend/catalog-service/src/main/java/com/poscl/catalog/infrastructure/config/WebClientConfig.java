@@ -14,10 +14,22 @@ public class WebClientConfig {
     private String inventoryServiceUrl;
 
     @Bean
+    @Value("${services.auth.url:http://localhost:8081}")
+    private String authServiceUrl;
+
+    @Bean
     public WebClient inventoryWebClient() {
         log.info("Creating WebClient for inventory-service at URL: {}", inventoryServiceUrl);
         return WebClient.builder()
                 .baseUrl(inventoryServiceUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient authWebClient() {
+        log.info("Creating WebClient for auth-service at URL: {}", authServiceUrl);
+        return WebClient.builder()
+                .baseUrl(authServiceUrl)
                 .build();
     }
 }
