@@ -1,33 +1,31 @@
-# Render.com profile for bff-gateway
-# Uses environment variables from Render service connections
-
 spring:
-  application:
-    name: bff-gateway
+  config:
+    activate:
+      on-profile: render
 
-# Service URLs - full HTTPS URLs for Render
 services:
   auth:
-    url: ${AUTH_SERVICE_URL:http://pos-auth-service:10000}
+    url: ${AUTH_SERVICE_URL:http://pos-auth-service:8081}
   catalog:
-    url: ${CATALOG_SERVICE_URL:http://pos-catalog-service:10000}
+    url: ${CATALOG_SERVICE_URL:http://pos-catalog-service:8082}
   sales:
-    url: ${SALES_SERVICE_URL:http://pos-sales-service:10000}
+    url: ${SALES_SERVICE_URL:http://pos-sales-service:8083}
   billing:
-    url: ${BILLING_SERVICE_URL:http://pos-billing-service:10000}
+    url: ${BILLING_SERVICE_URL:http://pos-billing-service:8084}
   inventory:
-    url: ${INVENTORY_SERVICE_URL:http://pos-inventory-service:10000}
+    url: ${INVENTORY_SERVICE_URL:http://pos-inventory-service:8087}
   operations:
-    url: ${OPERATIONS_SERVICE_URL:http://pos-operations-service:10000}
+    url: ${OPERATIONS_SERVICE_URL:http://pos-operations-service:8086}
+  accounting:
+    url: ${ACCOUNTING_SERVICE_URL:http://pos-accounting-service:8088}
+  payments:
+    url: ${PAYMENTS_SERVICE_URL:http://pos-payments-service:8089}
+  purchases:
+    url: ${PURCHASES_SERVICE_URL:http://pos-purchases-service:8090}
+  payroll:
+    url: ${PAYROLL_SERVICE_URL:http://pos-payroll-service:8091}
+  marketing:
+    url: ${MARKETING_SERVICE_URL:http://pos-marketing-service:8092}
 
-server:
-  port: ${PORT:8080}
-
-# CORS configuration - allow frontend requests
 cors:
-  allowed-origins: https://pos-frontend-nqfq.onrender.com,https://pos-frontend.onrender.com,http://localhost:4200
-
-logging:
-  level:
-    com.poscl: DEBUG
-    org.springframework.web.reactive: DEBUG
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://pos-frontend-production-36ac.up.railway.app}
