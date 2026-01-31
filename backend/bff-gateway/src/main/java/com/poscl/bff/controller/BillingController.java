@@ -109,6 +109,12 @@ public class BillingController {
 
     // ==================== CONSULTA DE DTEs ====================
 
+    @GetMapping("/dte/ping")
+    public ResponseEntity<String> ping() {
+        String url = billingServiceUrl + "/api/billing/dte/ping";
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     @GetMapping("/dte")
     public ResponseEntity<?> listarDtes(
             @RequestHeader("Authorization") String authHeader,
