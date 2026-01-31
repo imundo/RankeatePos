@@ -4,6 +4,7 @@
 -- =====================================================
 
 CREATE SCHEMA IF NOT EXISTS billing;
+SET search_path TO billing;
 
 -- Tabla principal de Documentos Tributarios Electrónicos
 CREATE TABLE dte (
