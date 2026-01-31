@@ -3,6 +3,8 @@
 -- Facturación Electrónica SII Chile
 -- =====================================================
 
+CREATE SCHEMA IF NOT EXISTS billing;
+
 -- Tabla principal de Documentos Tributarios Electrónicos
 CREATE TABLE dte (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
