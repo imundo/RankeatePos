@@ -34,14 +34,14 @@ public class ReportService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public byte[] generateLibroVentasExcel(UUID tenantId, LocalDate from, LocalDate to) {
-        List<Dte> dtes = dteRepository.findByTenantIdAndFechaEmisionBetween(tenantId, from, to);
+        List<Dte> dtes = dteRepository.findAllByTenantIdAndFechaEmisionBetween(tenantId, from, to);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Libro de Ventas");
 
             // Header Style
             CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
@@ -52,7 +52,7 @@ public class ReportService {
             String[] headers = { "Tipo Doc", "Folio", "Fecha", "RUT Receptor", "Razón Social", "Monto Neto",
                     "Monto IVA", "Monto Total", "Estado" };
             for (int i = 0; i < headers.length; i++) {
-                Cell cell = header.createCell(i);
+                org.apache.poi.ss.usermodel.Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(headerStyle);
             }
@@ -90,7 +90,7 @@ public class ReportService {
     }
 
     public byte[] generateLibroVentasPdf(UUID tenantId, LocalDate from, LocalDate to) {
-        List<Dte> dtes = dteRepository.findByTenantIdAndFechaEmisionBetween(tenantId, from, to);
+        List<Dte> dtes = dteRepository.findAllByTenantIdAndFechaEmisionBetween(tenantId, from, to);
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(out);

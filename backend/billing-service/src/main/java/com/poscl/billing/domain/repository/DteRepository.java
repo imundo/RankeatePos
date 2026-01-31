@@ -30,6 +30,9 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
     @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta")
     Page<Dte> findByTenantIdAndFechaEmisionBetween(UUID tenantId, LocalDate desde, LocalDate hasta, Pageable pageable);
 
+    @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta")
+    List<Dte> findAllByTenantIdAndFechaEmisionBetween(UUID tenantId, LocalDate desde, LocalDate hasta);
+
     @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.tipoDte = :tipoDte")
     List<Dte> findForLibroVentas(UUID tenantId, LocalDate desde, LocalDate hasta, TipoDte tipoDte);
 
