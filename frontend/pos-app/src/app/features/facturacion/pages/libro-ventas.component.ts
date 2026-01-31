@@ -633,12 +633,40 @@ export class LibroVentasComponent implements OnInit {
   }
 
   exportarExcel() {
-    // TODO: Implementar exportación a Excel
-    alert('Exportando a Excel...');
+    if (!this.fechaDesde || !this.fechaHasta) {
+      alert('Seleccione un período');
+      return;
+    }
+
+    this.billingService.downloadLibroVentasExcel(this.fechaDesde, this.fechaHasta).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `libro_ventas_${this.fechaDesde}_${this.fechaHasta}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error exportando Excel', err)
+    });
   }
 
   generarPdf() {
-    // TODO: Implementar generación de PDF
-    alert('Generando PDF del libro de ventas...');
+    if (!this.fechaDesde || !this.fechaHasta) {
+      alert('Seleccione un período');
+      return;
+    }
+
+    this.billingService.downloadLibroVentasPdf(this.fechaDesde, this.fechaHasta).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `libro_ventas_${this.fechaDesde}_${this.fechaHasta}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => console.error('Error generando PDF', err)
+    });
   }
 }

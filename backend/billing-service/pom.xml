@@ -99,6 +99,13 @@
             <type>pom</type>
         </dependency>
 
+        <!-- Excel Generation -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+
         <!-- HTTP Client for SII -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -287,4 +287,29 @@ export class BillingService {
             minimumFractionDigits: 0
         }).format(value);
     }
+    // ========== REPORTES ==========
+
+    downloadLibroVentasExcel(from: string, to: string): Observable<Blob> {
+        let params = new HttpParams()
+            .set('from', from)
+            .set('to', to);
+
+        return this.http.get(`${this.baseUrl}/billing/reports/sales-book/excel`, {
+            headers: this.getHeaders(),
+            params,
+            responseType: 'blob'
+        });
+    }
+
+    downloadLibroVentasPdf(from: string, to: string): Observable<Blob> {
+        let params = new HttpParams()
+            .set('from', from)
+            .set('to', to);
+
+        return this.http.get(`${this.baseUrl}/billing/reports/sales-book/pdf`, {
+            headers: this.getHeaders(),
+            params,
+            responseType: 'blob'
+        });
+    }
 }
