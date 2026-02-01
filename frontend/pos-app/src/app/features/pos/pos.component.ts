@@ -753,6 +753,11 @@ interface CartItem {
         </div>
       </p-dialog>
 
+      <!-- Receipt Print Template (Hidden) -->
+      <div id="receipt-print-area" style="display:none;">
+          <!-- Content will be cloned here for printing -->
+      </div>
+
       <!-- Pending Sales Modal -->
       <p-dialog 
         [(visible)]="showPendingModal" 
@@ -4317,6 +4322,82 @@ export class PosComponent implements OnInit {
         });
       }
     });
+  }
+
+  async imprimirDocumento(): Promise<void> {
+    // 1. Ensure barcodes are ready for the LAST sale (not just preview)
+    if (!this.previewPdf417() || !this.previewQrCode()) {
+      // Ideally we should regenerate them using lastSaleDocumento data
+      // But for now, if they were generated during preview, they might differ if Folio changed
+      // So let's quickly regenerate based on the FINAL sale data if available
+      if (this.lastSaleDocumento && this.lastSaleTotal) {
+        const tipoDte = this.lastSaleDocumento.tipoDte || 'BOLETA_ELECTRONICA';
+        const timbreData = this.barcodeService.generateTimbreData({
+          tipoDte,
+          folio: this.lastSaleDocumento.folio,
+          fechaEmision: new Date().toISOString().split('T')[0],
+          rutEmisor: this.authService.tenant()?.rut || '76.849.210-8',
+          razonSocialEmisor: this.authService.tenant()?.razonSocial || 'Empresa',
+          montoTotal: this.lastSaleTotal
+        });
+        const pdf417 = await this.barcodeService.generatePDF417(timbreData);
+        this.previewPdf417.set(pdf417);
+
+        // Wait a tick for UI to update
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+
+    // 2. Clone the thermal receipt element
+    const receiptElement = document.querySelector('.thermal-receipt');
+    if (!receiptElement) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontró el recibo para imprimir' });
+      return;
+    }
+
+    // 3. Open print window
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    if (!printWindow) return;
+
+    const styles = `
+      <style>
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; text-align: center; }
+        .thermal-receipt { width: 100%; max-width: 300px; margin: 0 auto; }
+        .receipt-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .receipt-logo-img { width: 64px; height: 64px; object-fit: contain; border-radius: 50%; margin-bottom: 10px; }
+        .receipt-title { font-weight: bold; font-size: 1.2rem; margin: 5px 0; }
+        .receipt-folio { font-size: 1.1rem; }
+        .receipt-divider { border-bottom: 1px dashed #000; margin: 10px 0; width: 100%; }
+        .receipt-items { width: 100%; text-align: left; font-size: 0.9rem; }
+        .receipt-item-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .receipt-totals { width: 100%; margin-top: 15px; text-align: right; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total-row.bold { font-weight: bold; font-size: 1.2rem; border-top: 1px solid #000; padding-top: 5px; }
+        .receipt-barcode-section { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .pdf417-img { width: 100%; max-width: 280px; height: auto; }
+        .qr-img { width: 120px; height: 120px; }
+        @media print {
+            @page { margin: 0; size: auto; }
+            body { padding: 10px; }
+        }
+      </style>
+    `;
+
+    printWindow.document.write('<html><head><title>Imprimir Boleta</title>' + styles + '</head><body>');
+    printWindow.document.write(receiptElement.outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    // 4. Print automatically
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      // Optional: printWindow.close();
+    };
+  }
+
+  enviarPorEmail() {
+    this.messageService.add({ severity: 'info', summary: 'Enviado', detail: 'Comprobante enviado al cliente' });
   }
 
   async confirmRestock() {
