@@ -613,7 +613,7 @@ interface CartItem {
                     <div class="receipt-logo">{{ industryConfig().icon }}</div>
                   }
                   <div class="receipt-title">{{ tipoDocumento === 'BOLETA' ? 'BOLETA ELECTRÓNICA' : tipoDocumento === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA' }}</div>
-                  <div class="receipt-folio">N° 000{{ Math.floor(Math.random() * 1000) + 1 }}</div>
+                  <div class="receipt-folio">N° {{ lastSaleDocumento?.folio || '000PREVIEW' }}</div>
                   <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
                 </div>
 
