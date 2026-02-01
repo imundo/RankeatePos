@@ -22,6 +22,7 @@ public class DteDetalle {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dte_id", nullable = false)
     private Dte dte;
