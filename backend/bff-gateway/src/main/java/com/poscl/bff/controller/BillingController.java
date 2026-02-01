@@ -117,8 +117,8 @@ public class BillingController {
         return restTemplate.getForEntity(url, String.class);
     }
 
-    @GetMapping("/dte")
-    public ResponseEntity<?> listarDtes(
+    @GetMapping(value = "/dte", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> listarDtes(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(required = false) String tipoDte,
@@ -137,19 +137,19 @@ public class BillingController {
 
         log.info("BFF: Listar DTEs calling {} with type={}, estado={}", urlBuilder.toString(), tipoDte, estado);
         try {
-            ResponseEntity<Object> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
-                    new HttpEntity<>(headers), Object.class);
+            ResponseEntity<String> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
+                    new HttpEntity<>(headers), String.class);
             log.info("BFF: Listar DTEs response status: {}", response.getStatusCode());
             return response;
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error calling Billing Service", "details", e.getMessage()));
+                    .body("{\"error\": \"Error calling Billing Service\", \"details\": \"" + e.getMessage() + "\"}");
         }
     }
 
-    @GetMapping("/dte/{id}")
-    public ResponseEntity<?> getDte(
+    @GetMapping(value = "/dte/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getDte(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -157,11 +157,11 @@ public class BillingController {
         String url = billingServiceUrl + "/api/billing/dte/" + id;
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
 
-    @GetMapping("/dte/{id}/xml")
-    public ResponseEntity<?> getDteXml(
+    @GetMapping(value = "/dte/{id}/xml", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<String> getDteXml(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
@@ -169,7 +169,7 @@ public class BillingController {
         String url = billingServiceUrl + "/api/billing/dte/" + id + "/xml";
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
 
     @GetMapping("/dte/{id}/pdf")
@@ -186,26 +186,26 @@ public class BillingController {
 
     // ==================== CAF (Folios) ====================
 
-    @GetMapping("/caf")
-    public ResponseEntity<?> listarCafs(
+    @GetMapping(value = "/caf", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> listarCafs(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
         String url = billingServiceUrl + "/api/billing/caf";
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
 
-    @GetMapping("/caf/disponibles")
-    public ResponseEntity<?> foliosDisponibles(
+    @GetMapping(value = "/caf/disponibles", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> foliosDisponibles(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
         String url = billingServiceUrl + "/api/billing/caf/disponibles";
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
 
     @PostMapping("/caf")
