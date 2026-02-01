@@ -30,7 +30,7 @@ public class BillingController {
     // ==================== EMISION DE DTEs ====================
 
     @PostMapping("/boleta")
-    public ResponseEntity<?> emitirBoleta(
+    public ResponseEntity<String> emitirBoleta(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
@@ -46,7 +46,20 @@ public class BillingController {
         HttpHeaders headers = createBillingHeaders(authHeader, tenantId, branchId,
                 emisorRut, emisorRazonSocial, emisorGiro, emisorDireccion, emisorComuna, emisorLogoUrl);
 
-        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST,
+                    new HttpEntity<>(request, headers), String.class);
+            String body = response.getBody();
+            int length = body != null ? body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length : 0;
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(length))
+                    .body(body);
+        } catch (Exception e) {
+            log.error("BFF: Error emitting Boleta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error calling Billing Service\", \"details\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @PostMapping("/factura")
