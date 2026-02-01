@@ -1,21 +1,8 @@
+# Server configuration
 server:
   port: ${PORT:8084}
-
-# Actuator configuration for health checks
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-server:
   error:
     include-stacktrace: always
-  server:
-    port: ${PORT:8084}
 
 spring:
   application:
