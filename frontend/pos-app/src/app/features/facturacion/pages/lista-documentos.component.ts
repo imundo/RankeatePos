@@ -145,15 +145,57 @@ export class ListaDocumentosComponent {
     const page = event ? Math.floor(event.first / event.rows) : 0;
     const size = event ? event.rows : 10;
 
+    console.log(`Frontend: Requesting DTEs page=${page} size=${size}`);
+
     this.billingService.getDtes(undefined, undefined, page, size).subscribe({
       next: (response: any) => {
-        const content = response.content || [];
+        console.log('Frontend: DTEs loaded successfully', response);
+        // Handle both raw string (if backend sent string) and object
+        let content = [];
+        let total = 0;
+
+        if (typeof response === 'string') {
+          try {
+            const parsed = JSON.parse(response);
+            content = parsed.content || [];
+            total = parsed.totalElements || 0;
+          } catch (e) {
+            console.error('Frontend: Failed to parse string response', e);
+            // If it's a raw string list (unlikely based on backend code but possible)
+          }
+        } else {
+          content = response.content || [];
+          total = response.totalElements || content.length;
+        }
+
         this.documents.set(content);
-        this.totalRecords.set(response.totalElements || content.length);
+        this.totalRecords.set(total);
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('Error loading documents:', error);
+        console.error('Frontend: Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          message: error.message,
+          error: error.error
+        });
+
+        // If status is 200 but we ended up here, it's a parsing error usually
+        if (error.status === 200) {
+          console.warn('Frontend: Received 200 OK but handled as error. Parsing issue?');
+          // Try to salvage if body is present in error.error.text
+          if (error.error && typeof error.error.text === 'string') {
+            try {
+              const parsed = JSON.parse(error.error.text);
+              this.documents.set(parsed.content || []);
+              this.totalRecords.set(parsed.totalElements || 0);
+              this.loading.set(false);
+              return; // Salvaged!
+            } catch (e) { }
+          }
+        }
+
         this.loading.set(false);
       }
     });
