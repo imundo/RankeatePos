@@ -11,8 +11,9 @@ management:
   endpoint:
     health:
       show-details: always
-      probes:
-        enabled: true
+server:
+  error:
+    include-stacktrace: always
   server:
     port: ${PORT:8084}
 

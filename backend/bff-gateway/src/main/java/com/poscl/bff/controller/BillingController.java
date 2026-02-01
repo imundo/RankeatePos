@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import java.util.Map;
  * BFF Controller for Billing Service (Facturación Electrónica SII)
  * Proxies requests to the billing-service microservice
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/billing")
 public class BillingController {
@@ -133,7 +135,17 @@ public class BillingController {
 
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        log.info("BFF: Listar DTEs calling {} with type={}, estado={}", urlBuilder.toString(), tipoDte, estado);
+        try {
+            ResponseEntity<Object> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
+                    new HttpEntity<>(headers), Object.class);
+            log.info("BFF: Listar DTEs response status: {}", response.getStatusCode());
+            return response;
+        } catch (Exception e) {
+            log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error calling Billing Service", "details", e.getMessage()));
+        }
     }
 
     @GetMapping("/dte/{id}")
