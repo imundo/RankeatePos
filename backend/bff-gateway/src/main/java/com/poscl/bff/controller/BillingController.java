@@ -25,6 +25,11 @@ public class BillingController {
             @Value("${services.billing.url}") String billingServiceUrl) {
         this.restTemplate = restTemplate;
         this.billingServiceUrl = billingServiceUrl;
+
+        // Ensure RestTemplate uses UTF-8 to avoid encoding issues with JSON
+        this.restTemplate.getMessageConverters().add(0,
+                new org.springframework.http.converter.StringHttpMessageConverter(
+                        java.nio.charset.StandardCharsets.UTF_8));
     }
 
     // ==================== EMISION DE DTEs ====================
