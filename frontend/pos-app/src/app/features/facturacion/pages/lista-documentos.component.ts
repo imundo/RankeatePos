@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
+import { BillingService, Dte } from '../../../core/services/billing.service';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -50,20 +51,20 @@ import { FormsModule } from '@angular/forms';
             <tr>
               <td class="font-bold">#{{ doc.folio }}</td>
               <td>
-                <span class="doc-type-badge" [class.boleta]="doc.type === 'BOLETA'" [class.factura]="doc.type === 'FACTURA'">
-                  {{ doc.type }}
+                <span class="doc-type-badge" [class.boleta]="doc.tipoDte === 'BOLETA_ELECTRONICA'" [class.factura]="doc.tipoDte === 'FACTURA_ELECTRONICA'">
+                  {{ doc.tipoDteDescripcion || doc.tipoDte }}
                 </span>
               </td>
-              <td>{{ doc.date | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ doc.fechaEmision | date:'dd/MM/yyyy' }}</td>
               <td>
                 <div class="receptor-info">
-                  <span class="name">{{ doc.clientName }}</span>
-                  <span class="rut text-xs text-gray-400">{{ doc.clientRut }}</span>
+                  <span class="name">{{ doc.receptorRazonSocial || 'Consumidor Final' }}</span>
+                  <span class="rut text-xs text-gray-400">{{ doc.receptorRut }}</span>
                 </div>
               </td>
-              <td class="font-bold text-lg text-right">{{ formatMoney(doc.total) }}</td>
+              <td class="font-bold text-lg text-right">{{ formatMoney(doc.montoTotal) }}</td>
               <td>
-                <p-tag [value]="doc.status" [severity]="doc.status === 'ACEPTADO' ? 'success' : 'warning'"></p-tag>
+                <p-tag [value]="doc.estado" [severity]="doc.estado === 'ACEPTADO' ? 'success' : 'warning'"></p-tag>
               </td>
               <td class="text-right">
                 <button pButton icon="pi pi-eye" class="p-button-text p-button-rounded"></button>
@@ -124,13 +125,41 @@ import { FormsModule } from '@angular/forms';
   `]
 })
 export class ListaDocumentosComponent {
-  documents = signal([
-    { folio: 1001, type: 'BOLETA', date: new Date(), clientName: 'Cliente Boleta', clientRut: '66.666.666-6', total: 5000, status: 'ACEPTADO' },
-    { folio: 2505, type: 'FACTURA', date: new Date(Date.now() - 86400000), clientName: 'Empresa Cliente SpA', clientRut: '77.777.777-7', total: 150000, status: 'ACEPTADO' },
-    { folio: 2506, type: 'FACTURA', date: new Date(Date.now() - 172800000), clientName: 'Constructora S.A.', clientRut: '88.888.888-8', total: 2300000, status: 'PENDIENTE' },
-  ]);
+  private billingService = inject(BillingService);
+
+  // State
+  documents = signal<Dte[]>([]);
+  loading = signal(false);
+  totalRecords = signal(0);
+
+  // Filters
+  folioFilter = signal('');
+  dateRange = signal<Date[] | null>(null);
+
+  ngOnInit() {
+    this.loadDocuments();
+  }
+
+  loadDocuments(event?: any) {
+    this.loading.set(true);
+    const page = event ? Math.floor(event.first / event.rows) : 0;
+    const size = event ? event.rows : 10;
+
+    this.billingService.getDtes(undefined, undefined, page, size).subscribe({
+      next: (response: any) => {
+        const content = response.content || [];
+        this.documents.set(content);
+        this.totalRecords.set(response.totalElements || content.length);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading documents:', error);
+        this.loading.set(false);
+      }
+    });
+  }
 
   formatMoney(amount: number) {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
+    return this.billingService.formatCurrency(amount);
   }
 }
