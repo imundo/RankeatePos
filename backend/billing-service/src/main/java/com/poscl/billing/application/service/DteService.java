@@ -175,7 +175,9 @@ public class DteService {
                 saved.getId());
 
         // 6. Procesar con Proveedor (Estrategia)
-        BillingConfig config = configRepository.findByTenantId(tenantId).orElse(null);
+        // BillingConfig config =
+        // configRepository.findByTenantId(tenantId).orElse(null); // Already loaded in
+        // step 1
         BillingProvider provider = providerFactory.getProvider(config);
 
         log.info("Usando proveedor de facturación: {}", provider.getCountry());
