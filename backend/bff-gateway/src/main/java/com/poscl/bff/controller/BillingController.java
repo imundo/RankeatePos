@@ -140,20 +140,34 @@ public class BillingController {
             ResponseEntity<String> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
                     new HttpEntity<>(headers), String.class);
             String body = response.getBody();
-            int length = body != null ? body.length() : 0;
+            int length = body != null ? body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length : 0;
             String preview = body != null && body.length() > 100 ? body.substring(0, 100) : body;
 
             log.info("BFF: Listar DTEs response status: {}, Body Length: {}, Preview: {}", response.getStatusCode(),
                     length, preview);
 
+            // Force Content-Length to avoid Chunked Transfer Encoding which might confuse
+            // some proxies/routers
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(length))
                     .body(body);
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("{\"error\": \"Error calling Billing Service\", \"details\": \"" + e.getMessage() + "\"}");
         }
+    }
+
+    // Manual OPTIONS handler to ensure CORS works even if Spring Security blocks
+    // something
+    @RequestMapping(value = "/dte", method = RequestMethod.OPTIONS)
+    public ResponseEntity<?> handleOptions() {
+        return ResponseEntity.ok()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "*")
+                .build();
     }
 
     @GetMapping(value = "/dte/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
