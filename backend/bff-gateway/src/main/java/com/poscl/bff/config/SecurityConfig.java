@@ -63,6 +63,8 @@ public class SecurityConfig {
                 "X-Tenant-Id",
                 "X-User-Id",
                 "Cache-Control", // Added Cache-Control
+                "Pragma", // Added Pragma for legacy clients/devtools
+                "Expires",
                 "X-Branch-Id",
                 "Accept",
                 "Origin"));
