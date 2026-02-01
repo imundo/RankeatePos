@@ -340,13 +340,13 @@ export class InventoryComponent implements OnInit {
     this.loadData();
   }
 
-  async loadData() {
+  async loadData(forceApi = false) {
     this.loading.set(true);
     const branchId = this.authService.tenant()?.id || '';
 
     try {
-      // 1. Try Cache First (Matches POS)
-      const cached = await this.offlineService.getCachedProducts();
+      // 1. Try Cache First (Matches POS), unless forced
+      const cached = !forceApi ? await this.offlineService.getCachedProducts() : [];
 
       if (cached && cached.length > 0) {
         const mapped: StockDto[] = cached.flatMap(p => p.variants.map(v => ({
@@ -463,9 +463,25 @@ export class InventoryComponent implements OnInit {
 
     this.loading.set(true);
     try {
-      await this.stockService.adjustStock(req).toPromise();
+      const updatedStock = await this.stockService.adjustStock(req).toPromise();
+
+      // Update local cache manually to reflect changes immediately
+      if (updatedStock) {
+        // Convert StockDto to CachedProduct format partially or just invalidate cache
+        // Better: invalidate cache for this tenant so next load fetches from API or updates cache
+        // OR: Update specific item in cache. For now, let's clear cache to force refresh or update it.
+
+        // Strategy: We will reload data from API to be sure, avoiding cache for this read
+        await this.offlineService.clearCache();
+
+        // Alternatively, update the specific item in the list signal directly for immediate UI feedback
+        this.stock.update(items => items.map(i => i.id === updatedStock.id ? updatedStock : i));
+
+        // Also update selected item if still open (though we close modal)
+      }
+
       this.closeAdjustModal();
-      this.loadData(); // Reload all to refresh stats
+      this.loadData(true); // reload with forceApi = true
     } catch (e) { console.error(e); alert('Error al ajustar stock'); }
     finally { this.loading.set(false); }
   }
