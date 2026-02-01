@@ -732,8 +732,8 @@ interface CartItem {
           
           @if (lastSaleDocumento) {
             <div class="document-info">
-              <span class="doc-badge">{{ lastSaleDocumento.tipo }}</span>
-              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio }}</span>
+              <span class="doc-badge">{{ lastSaleDocumento?.tipo || 'Documento' }}</span>
+              <span class="doc-folio">Folio N° {{ lastSaleDocumento?.folio || '---' }}</span>
             </div>
           }
           
