@@ -167,6 +167,7 @@ public class Dte {
     private String razonReferencia;
 
     // --- Detalle de items ---
+    @ToString.Exclude
     @OneToMany(mappedBy = "dte", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<DteDetalle> detalles = new ArrayList<>();

@@ -23,6 +23,7 @@ public class DteDetalle {
     private UUID id;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dte_id", nullable = false)
     private Dte dte;

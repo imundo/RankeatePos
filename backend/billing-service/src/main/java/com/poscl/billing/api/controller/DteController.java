@@ -196,6 +196,7 @@ public class DteController {
                 log.info("GET /api/billing/dte - Tenant: {}, Tipo: {}, Estado: {}", tenantId, tipoDte, estado);
 
                 Page<DteResponse> dtes = dteService.listarDtes(tenantId, tipoDte, estado, pageable);
+                log.info("Retrieved {} DTEs for tenant {}", dtes.getTotalElements(), tenantId);
                 return ResponseEntity.ok(dtes);
         }
 
