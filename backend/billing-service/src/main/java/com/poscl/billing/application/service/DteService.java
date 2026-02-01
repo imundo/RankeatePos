@@ -57,13 +57,46 @@ public class DteService {
             String emisorDireccion, String emisorComuna, String emisorLogoUrl, UUID userId) {
         log.info("Emitiendo DTE tipo {} para tenant {}", request.getTipoDte(), tenantId);
 
-        // 1. Obtener folio del CAF
+        // 1. Obtener configuración del tenant (para emisor fallback)
+        BillingConfig config = configRepository.findByTenantId(tenantId).orElse(null);
+
+        // Fill missing emisor details from config
+        if (config != null) {
+            if (emisorRut == null)
+                emisorRut = config.getEmisorRut();
+            if (emisorRazonSocial == null)
+                emisorRazonSocial = config.getEmisorRazonSocial();
+            if (emisorGiro == null)
+                emisorGiro = config.getEmisorGiro();
+            if (emisorDireccion == null)
+                emisorDireccion = config.getEmisorDireccion();
+            if (emisorComuna == null)
+                emisorComuna = config.getEmisorComuna();
+            if (emisorLogoUrl == null)
+                emisorLogoUrl = config.getEmisorLogoUrl();
+        }
+
+        if (emisorRut == null || emisorRazonSocial == null) {
+            // If still null, we have a problem. But for "Sanitation" we make sure it
+            // doesn't crash 500.
+            // We can throw meaningful exception or use a "GENERICO" fallback if absolutely
+            // needed.
+            // Better to throw so user knows they need to configure the BillingConfig.
+            log.warn("Missing emitter details for tenant {}, and no config found. DTE might fail or look incomplete.",
+                    tenantId);
+            if (emisorRut == null)
+                emisorRut = "66.666.666-6"; // Default Mock
+            if (emisorRazonSocial == null)
+                emisorRazonSocial = "EMPRESA SIN CONFIGURAR";
+        }
+
+        // 2. Obtener folio del CAF
         Integer folio = obtenerSiguienteFolio(tenantId, request.getTipoDte());
 
-        // 2. Calcular montos
+        // 3. Calcular montos
         MontosDte montos = calcularMontos(request.getItems(), request.getTipoDte());
 
-        // 3. Crear DTE
+        // 4. Crear DTE
         Dte dte = Dte.builder()
                 .tenantId(tenantId)
                 .branchId(branchId)

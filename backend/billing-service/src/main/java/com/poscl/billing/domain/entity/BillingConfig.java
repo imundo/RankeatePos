@@ -43,6 +43,31 @@ public class BillingConfig {
     @Column(name = "certificate_storage_path")
     private String certificateStoragePath;
 
+    // Emisor Info (Fallback/Default)
+    @Column(name = "emisor_rut", length = 20)
+    private String emisorRut;
+
+    @Column(name = "emisor_razon_social", length = 200)
+    private String emisorRazonSocial;
+
+    @Column(name = "emisor_giro", length = 200)
+    private String emisorGiro;
+
+    @Column(name = "emisor_direccion", length = 200)
+    private String emisorDireccion;
+
+    @Column(name = "emisor_comuna", length = 100)
+    private String emisorComuna;
+
+    @Column(name = "emisor_ciudad", length = 100)
+    private String emisorCiudad;
+
+    @Column(name = "emisor_logo_url", length = 500)
+    private String emisorLogoUrl;
+
+    @Column(name = "emisor_actividad_economica")
+    private Integer emisorActividadEconomica;
+
     @Column(name = "is_active")
     @Builder.Default
     private boolean active = true;

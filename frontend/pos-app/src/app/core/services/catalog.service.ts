@@ -90,7 +90,10 @@ export class CatalogService {
     private getHeaders() {
         return {
             'X-Tenant-Id': this.authService.getTenantId() || '',
-            'X-User-Id': this.authService.getUserId() || ''
+            'X-User-Id': this.authService.getUserId() || '',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
         };
     }
 
