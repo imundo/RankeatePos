@@ -55,6 +55,7 @@ public class DteService {
     public DteResponse emitirDte(UUID tenantId, UUID branchId, EmitirDteRequest request,
             String emisorRut, String emisorRazonSocial, String emisorGiro,
             String emisorDireccion, String emisorComuna, String emisorLogoUrl, UUID userId) {
+        long startTime = System.currentTimeMillis();
         log.info("Emitiendo DTE tipo {} para tenant {}", request.getTipoDte(), tenantId);
 
         // 1. Obtener configuración del tenant (para emisor fallback)
@@ -90,8 +91,13 @@ public class DteService {
                 emisorRazonSocial = "EMPRESA SIN CONFIGURAR";
         }
 
+        long step1 = System.currentTimeMillis();
+        log.info("Step 1 (Config): {}ms", step1 - startTime);
+
         // 2. Obtener folio del CAF
         Integer folio = obtenerSiguienteFolio(tenantId, request.getTipoDte());
+        long step2 = System.currentTimeMillis();
+        log.info("Step 2 (Folio): {}ms", step2 - step1);
 
         // 3. Calcular montos
         MontosDte montos = calcularMontos(request.getItems(), request.getTipoDte());
@@ -169,8 +175,14 @@ public class DteService {
             dte.addDetalle(detalle);
         });
 
+        long step4 = System.currentTimeMillis();
+        log.info("Step 4 (Build DTE): {}ms", step4 - step2);
+
         // 5. Guardar DTE inicial
         Dte saved = dteRepository.save(dte);
+        long step5 = System.currentTimeMillis();
+        log.info("Step 5 (Save DB): {}ms", step5 - step4);
+
         log.info("DTE guardado internamente: tipo={}, folio={}, id={}", saved.getTipoDte(), saved.getFolio(),
                 saved.getId());
 
@@ -181,10 +193,15 @@ public class DteService {
         BillingProvider provider = providerFactory.getProvider(config);
 
         log.info("Usando proveedor de facturación: {}", provider.getCountry());
+        long step6 = System.currentTimeMillis();
         saved = provider.emitir(saved, config);
+        long step7 = System.currentTimeMillis();
+        log.info("Step 6 (Provider Emitir): {}ms", step7 - step6);
 
         // 7. Actualizar DTE con resultado del proveedor
         saved = dteRepository.save(saved);
+        long step8 = System.currentTimeMillis();
+        log.info("Step 7 (Final Save): {}ms", step8 - step7);
 
         return toResponse(saved);
     }
