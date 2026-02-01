@@ -1,4 +1,4 @@
-ALTER TABLE billing_configs
+ALTER TABLE config_facturacion
 ADD COLUMN emisor_rut VARCHAR(20),
 ADD COLUMN emisor_razon_social VARCHAR(200),
 ADD COLUMN emisor_giro VARCHAR(200),
