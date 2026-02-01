@@ -23,27 +23,27 @@ spring:
 # Service URLs (configurable for Railway)
 services:
   auth:
-    url: ${AUTH_SERVICE_URL:http://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_PORT:8081}}
+    url: ${AUTH_SERVICE_URL:http://${AUTH_SERVICE_HOST:pos-auth-service.railway.internal}:${AUTH_SERVICE_PORT:8081}}
   catalog:
-    url: ${CATALOG_SERVICE_URL:http://${CATALOG_SERVICE_HOST:localhost}:${CATALOG_SERVICE_PORT:8082}}
+    url: ${CATALOG_SERVICE_URL:http://${CATALOG_SERVICE_HOST:pos-catalog-service.railway.internal}:${CATALOG_SERVICE_PORT:8082}}
   sales:
-    url: ${SALES_SERVICE_URL:http://${SALES_SERVICE_HOST:localhost}:${SALES_SERVICE_PORT:8083}}
+    url: ${SALES_SERVICE_URL:http://${SALES_SERVICE_HOST:pos-sales-service.railway.internal}:${SALES_SERVICE_PORT:8083}}
   billing:
-    url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:localhost}:${BILLING_SERVICE_PORT:8084}}
+    url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:pos-billing-service.railway.internal}:${BILLING_SERVICE_PORT:8084}}
   inventory:
-    url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:localhost}:${INVENTORY_SERVICE_PORT:8087}}
+    url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:pos-inventory-service.railway.internal}:${INVENTORY_SERVICE_PORT:8087}}
   operations:
-    url: ${OPERATIONS_SERVICE_URL:http://${OPERATIONS_SERVICE_HOST:localhost}:${OPERATIONS_SERVICE_PORT:8086}}
+    url: ${OPERATIONS_SERVICE_URL:http://${OPERATIONS_SERVICE_HOST:pos-operations-service.railway.internal}:${OPERATIONS_SERVICE_PORT:8086}}
   accounting:
-    url: ${ACCOUNTING_SERVICE_URL:http://${ACCOUNTING_SERVICE_HOST:localhost}:${ACCOUNTING_SERVICE_PORT:8088}}
+    url: ${ACCOUNTING_SERVICE_URL:http://${ACCOUNTING_SERVICE_HOST:pos-accounting-service.railway.internal}:${ACCOUNTING_SERVICE_PORT:8088}}
   payments:
-    url: ${PAYMENTS_SERVICE_URL:http://${PAYMENTS_SERVICE_HOST:localhost}:${PAYMENTS_SERVICE_PORT:8089}}
+    url: ${PAYMENTS_SERVICE_URL:http://${PAYMENTS_SERVICE_HOST:pos-payments-service.railway.internal}:${PAYMENTS_SERVICE_PORT:8089}}
   purchases:
-    url: ${PURCHASES_SERVICE_URL:http://${PURCHASES_SERVICE_HOST:localhost}:${PURCHASES_SERVICE_PORT:8090}}
+    url: ${PURCHASES_SERVICE_URL:http://${PURCHASES_SERVICE_HOST:pos-purchases-service.railway.internal}:${PURCHASES_SERVICE_PORT:8090}}
   payroll:
-    url: ${PAYROLL_SERVICE_URL:http://${PAYROLL_SERVICE_HOST:localhost}:${PAYROLL_SERVICE_PORT:8091}}
+    url: ${PAYROLL_SERVICE_URL:http://${PAYROLL_SERVICE_HOST:pos-payroll-service.railway.internal}:${PAYROLL_SERVICE_PORT:8091}}
   marketing:
-    url: ${MARKETING_SERVICE_URL:http://${MARKETING_SERVICE_HOST:localhost}:${MARKETING_SERVICE_PORT:8092}}
+    url: ${MARKETING_SERVICE_URL:http://${MARKETING_SERVICE_HOST:pos-marketing-service.railway.internal}:${MARKETING_SERVICE_PORT:8092}}
 
 # JWT Config (same as auth-service)
 jwt:
