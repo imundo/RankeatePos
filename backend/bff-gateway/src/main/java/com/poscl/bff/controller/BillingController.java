@@ -139,8 +139,16 @@ public class BillingController {
         try {
             ResponseEntity<String> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
                     new HttpEntity<>(headers), String.class);
-            log.info("BFF: Listar DTEs response status: {}", response.getStatusCode());
-            return response;
+            String body = response.getBody();
+            int length = body != null ? body.length() : 0;
+            String preview = body != null && body.length() > 100 ? body.substring(0, 100) : body;
+
+            log.info("BFF: Listar DTEs response status: {}, Body Length: {}, Preview: {}", response.getStatusCode(),
+                    length, preview);
+
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(body);
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

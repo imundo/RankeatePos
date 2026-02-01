@@ -18,9 +18,9 @@ management:
 
 services:
   inventory:
-    url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:inventory-service}:${INVENTORY_SERVICE_PORT:8087}}
+    url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:pos-inventory-service.railway.internal}:${INVENTORY_SERVICE_PORT:8087}}
   billing:
-    url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:billing-service}:${BILLING_SERVICE_PORT:8084}}
+    url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:pos-billing-service.railway.internal}:${BILLING_SERVICE_PORT:8084}}
 
 spring:
   application:
