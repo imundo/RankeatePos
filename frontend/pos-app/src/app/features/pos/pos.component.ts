@@ -753,9 +753,69 @@ interface CartItem {
         </div>
       </p-dialog>
 
-      <!-- Receipt Print Template (Hidden) -->
-      <div id="receipt-print-area" style="display:none;">
-          <!-- Content will be cloned here for printing -->
+      <!-- Receipt Print Template (Hidden but rendered for querySelector) -->
+      <div id="receipt-print-area" style="position: absolute; top: -9999px; left: -9999px;">
+          @if (showSuccessModal && lastSaleDocumento) {
+            <div class="thermal-receipt">
+               <div class="receipt-header">
+                 <img [src]="tenantLogo()" alt="Logo" class="receipt-logo-img" />
+                 <div class="receipt-title">BOLETA ELECTRÓNICA</div>
+                 <div class="receipt-folio">N° {{ lastSaleDocumento?.folio }}</div>
+                 <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
+                 
+                 <div class="receipt-divider"></div>
+                 
+                 <div class="receipt-company">
+                   <div>{{ tenantName() }}</div>
+                   <div>RUT: {{ tenantRut() }}</div>
+                   <div>{{ tenantDireccion() }}</div>
+                 </div>
+               </div>
+ 
+               <div class="receipt-divider"></div>
+ 
+               <div class="receipt-items">
+                 @for (item of lastSaleItems(); track item.variantId) {
+                   <div class="receipt-item-row">
+                     <span class="item-qty">{{ item.cantidad }}x</span>
+                     <span class="item-name">{{ item.productNombre }}</span>
+                     <span class="item-price">{{ formatPrice(item.precioUnitario * item.cantidad) }}</span>
+                   </div>
+                 }
+               </div>
+ 
+               <div class="receipt-divider"></div>
+ 
+               <div class="receipt-totals">
+                 <div class="total-row">
+                   <span>Neto:</span>
+                   <span>{{ formatPrice(Math.round(lastSaleTotal / 1.19)) }}</span>
+                 </div>
+                 <div class="total-row">
+                   <span>IVA (19%):</span>
+                   <span>{{ formatPrice(lastSaleTotal - Math.round(lastSaleTotal / 1.19)) }}</span>
+                 </div>
+                 <div class="total-row bold">
+                   <span>TOTAL:</span>
+                   <span>{{ formatPrice(lastSaleTotal) }}</span>
+                 </div>
+               </div>
+ 
+               <div class="receipt-barcode-section">
+                 <div class="pdf417-container">
+                   @if (previewPdf417()) {
+                     <img [src]="previewPdf417()" class="pdf417-img" style="width:100%; max-width:250px" />
+                   }
+                   <div class="barcode-label" style="font-size:10px; margin-top:2px;">Timbre Electrónico SII</div>
+                 </div>
+                 <div class="qr-container" style="margin-top:10px;">
+                   @if (previewQrCode()) {
+                     <img [src]="previewQrCode()" class="qr-img" style="width:100px; height:100px;" />
+                   }
+                 </div>
+               </div>
+            </div>
+          }
       </div>
 
       <!-- Pending Sales Modal -->
@@ -3358,6 +3418,7 @@ export class PosComponent implements OnInit {
   showSuccessModal = false;
   lastSaleTotal = 0;
   lastSaleDocumento: { id?: string; tipo: string; tipoDte?: string; folio: number } | null = null;
+  lastSaleItems = signal<CartItem[]>([]);
 
   // Barcode preview signals for DTE
   previewFolio = signal<number>(Math.floor(Math.random() * 9000) + 1000);
@@ -4022,6 +4083,9 @@ export class PosComponent implements OnInit {
           type: 'VENTA'
         });
       }
+
+      // Guardar items para impresión
+      this.lastSaleItems.set(this.cartItems());
 
       // Limpiar carrito y cerrar modal de pago
       this.clearCart();
