@@ -732,8 +732,8 @@ interface CartItem {
           
           @if (lastSaleDocumento) {
             <div class="document-info">
-              <span class="doc-badge">{{ lastSaleDocumento?.tipo || 'Documento' }}</span>
-              <span class="doc-folio">Folio N° {{ lastSaleDocumento?.folio || '---' }}</span>
+              <span class="doc-badge">{{ lastSaleDocumento.tipo || 'Documento' }}</span>
+              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio || '---' }}</span>
             </div>
           }
           
@@ -4116,118 +4116,8 @@ export class PosComponent implements OnInit {
     this.lastSaleTotal = 0;
   }
 
-  imprimirDocumento() {
-    if (!this.lastSaleDocumento) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin documento',
-        detail: 'No hay documento para imprimir',
-        life: 2000
-      });
-      return;
-    }
 
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Generando PDF...',
-      detail: 'Preparando documento para impresión',
-      life: 2000
-    });
 
-    if (!this.lastSaleDocumento.id) {
-      window.print();
-      return;
-    }
-
-    this.billingService.getDtePdf(this.lastSaleDocumento.id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const printWindow = window.open(url);
-        if (printWindow) {
-          printWindow.onload = () => {
-            printWindow.print();
-          };
-        } else {
-          // Si bloqueado popup, descargar directamente
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${this.lastSaleDocumento?.tipoDte}-${this.lastSaleDocumento?.folio}.pdf`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-        }
-      },
-      error: (err) => {
-        console.error('Error obteniendo PDF:', err);
-        // Fallback a window.print()
-        window.print();
-      }
-    });
-  }
-
-  enviarPorEmail() {
-    let email = this.clienteEmail;
-
-    if (!email) {
-      const inputEmail = prompt('Email del cliente:');
-      if (!inputEmail || !inputEmail.includes('@')) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Email requerido',
-          detail: 'Ingrese un email válido',
-          life: 2000
-        });
-        return;
-      }
-      email = inputEmail;
-    }
-
-    if (!this.lastSaleDocumento) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin documento',
-        detail: 'No hay documento para enviar',
-        life: 2000
-      });
-      return;
-    }
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Enviando...',
-      detail: `Enviando documento a ${email}`,
-      life: 2000
-    });
-
-    if (!this.lastSaleDocumento.id) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin ID',
-        detail: 'Documento no tiene ID para enviar',
-        life: 2000
-      });
-      return;
-    }
-
-    this.billingService.enviarPorEmail(this.lastSaleDocumento.id, email).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Email enviado',
-          detail: `Documento enviado a ${email}`,
-          life: 3000
-        });
-      },
-      error: (err) => {
-        console.error('Error enviando email:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo enviar el email',
-          life: 3000
-        });
-      }
-    });
-  }
 
 
   formatPrice(amount: number): string {
