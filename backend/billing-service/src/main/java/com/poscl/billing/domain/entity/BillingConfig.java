@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "billing_configs")
+@Table(name = "config_facturacion")
 @Getter
 @Setter
 @Builder
@@ -24,11 +24,11 @@ public class BillingConfig {
     private UUID tenantId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "pais", nullable = false)
     private Country country;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "ambiente", nullable = false)
     private Environment environment; // CERTIFICATION, PRODUCTION
 
     @Column(name = "api_key")

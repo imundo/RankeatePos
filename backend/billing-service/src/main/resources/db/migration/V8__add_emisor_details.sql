@@ -8,4 +8,7 @@ ADD COLUMN emisor_ciudad VARCHAR(100),
 ADD COLUMN emisor_email VARCHAR(100),
 ADD COLUMN emisor_telefono VARCHAR(50),
 ADD COLUMN emisor_logo_url VARCHAR(500),
-ADD COLUMN emisor_actividad_economica INTEGER;
+ADD COLUMN emisor_actividad_economica INTEGER,
+ADD COLUMN api_key VARCHAR(500),
+ADD COLUMN certificate_password VARCHAR(200),
+ADD COLUMN certificate_storage_path VARCHAR(500);
