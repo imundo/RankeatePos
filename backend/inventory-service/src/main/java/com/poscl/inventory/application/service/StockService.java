@@ -61,6 +61,8 @@ public class StockService {
 
     @Transactional
     public StockDto adjustStock(UUID tenantId, UUID userId, StockAdjustmentRequest request) {
+        long startTime = System.currentTimeMillis();
+
         Stock stock = stockRepository
                 .findByTenantIdAndVariantIdAndBranchId(tenantId, request.getVariantId(), request.getBranchId())
                 .orElseGet(() -> {
@@ -73,6 +75,9 @@ public class StockService {
                             .branchId(request.getBranchId())
                             .build();
                 });
+
+        long fetchTime = System.currentTimeMillis();
+        log.info("Stock fetched/created in {} ms", fetchTime - startTime);
 
         // Update logic
         int cantidad = request.getCantidad();
@@ -101,6 +106,9 @@ public class StockService {
         stock.setCantidadActual(nuevaCantidad);
         stock = stockRepository.save(stock);
 
+        long saveStockTime = System.currentTimeMillis();
+        log.info("Stock saved in {} ms", saveStockTime - fetchTime);
+
         // Record Movement
         StockMovement movement = StockMovement.builder()
                 .tenantId(tenantId)
@@ -117,6 +125,10 @@ public class StockService {
                 .build();
 
         movementRepository.save(movement);
+
+        long saveMovementTime = System.currentTimeMillis();
+        log.info("Movement saved in {} ms. Total time: {} ms", saveMovementTime - saveStockTime,
+                saveMovementTime - startTime);
 
         log.info("Stock ajustado: variantId={}, tipo={}, cantidad={}, nuevo_stock={}",
                 request.getVariantId(), request.getTipo(), request.getCantidad(), nuevaCantidad);
