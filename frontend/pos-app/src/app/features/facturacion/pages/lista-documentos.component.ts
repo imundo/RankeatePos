@@ -154,18 +154,21 @@ export class ListaDocumentosComponent {
         let content = [];
         let total = 0;
 
-        if (typeof response === 'string') {
-          try {
-            const parsed = JSON.parse(response);
-            content = parsed.content || [];
-            total = parsed.totalElements || 0;
-          } catch (e) {
-            console.error('Frontend: Failed to parse string response', e);
-            // If it's a raw string list (unlikely based on backend code but possible)
+        if (response) {
+          if (typeof response === 'string') {
+            try {
+              const parsed = JSON.parse(response);
+              content = parsed?.content || [];
+              total = parsed?.totalElements || 0;
+            } catch (e) {
+              console.error('Frontend: Failed to parse string response', e);
+            }
+          } else {
+            content = response.content || [];
+            total = response.totalElements || content.length;
           }
         } else {
-          content = response.content || [];
-          total = response.totalElements || content.length;
+          console.warn('Frontend: Response was null or undefined');
         }
 
         this.documents.set(content);
