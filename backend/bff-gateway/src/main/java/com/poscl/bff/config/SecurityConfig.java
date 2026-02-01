@@ -62,6 +62,7 @@ public class SecurityConfig {
                 "Content-Type",
                 "X-Tenant-Id",
                 "X-User-Id",
+                "Cache-Control", // Added Cache-Control
                 "X-Branch-Id",
                 "Accept",
                 "Origin"));
