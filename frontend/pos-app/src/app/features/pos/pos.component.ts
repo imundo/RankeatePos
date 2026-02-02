@@ -731,22 +731,24 @@ interface CartItem {
           <div class="success-icon">✅</div>
           <div class="success-amount">{{ formatPrice(lastSaleTotal) }}</div>
           
-          @if (lastSaleDocumento) {
-            <div class="document-info">
-              <span class="doc-badge">{{ lastSaleDocumento.tipo || 'Documento' }}</span>
-              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio || '---' }}</span>
-            </div>
-          }
+          <div class="document-info">
+            @if (lastSaleDocumento) {
+              <span class="doc-badge">{{ lastSaleDocumento.tipo }}</span>
+              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio }}</span>
+            } @else {
+              <span class="doc-badge warning">DTE En Proceso</span>
+              <span class="doc-folio">Generando documento...</span>
+            }
+          </div>
           
           <div class="success-actions">
-            @if (lastSaleDocumento) {
-              <button class="btn btn-outline" (click)="imprimirDocumento()">
-                🖨️ Imprimir
-              </button>
-              <button class="btn btn-outline" (click)="enviarPorEmail()">
-                📧 Enviar Email
-              </button>
-            }
+            <!-- Buttons always visible now -->
+            <button class="btn btn-outline" (click)="imprimirDocumento()">
+              🖨️ Imprimir
+            </button>
+            <button class="btn btn-outline" (click)="enviarPorEmail()">
+              📧 Enviar Email
+            </button>
             <button class="btn btn-primary" (click)="showSuccessModal = false">
               Nueva Venta
             </button>
@@ -756,13 +758,13 @@ interface CartItem {
 
       <!-- Receipt Print Template (Hidden but rendered for querySelector) -->
       <div id="receipt-print-area" style="position: absolute; top: -9999px; left: -9999px;">
-          @if (showSuccessModal && lastSaleDocumento) {
-            <div class="thermal-receipt">
-               <div class="receipt-header">
-                 <img [src]="tenantLogo()" alt="Logo" class="receipt-logo-img" />
-                 <div class="receipt-title">BOLETA ELECTRÓNICA</div>
-                 <div class="receipt-folio">N° {{ lastSaleDocumento?.folio }}</div>
-                 <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
+          @if (showSuccessModal) {
+             <div class="thermal-receipt">
+                <div class="receipt-header">
+                  <img [src]="tenantLogo()" alt="Logo" class="receipt-logo-img" />
+                  <div class="receipt-title">{{ lastSaleDocumento ? 'BOLETA ELECTRÓNICA' : 'COMPROBANTE DE VENTA' }}</div>
+                  <div class="receipt-folio">N° {{ lastSaleDocumento?.folio || 'PENDIENTE' }}</div>
+                  <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
                  
                  <div class="receipt-divider"></div>
                  
@@ -4286,25 +4288,36 @@ export class PosComponent implements OnInit {
     this.messageService.add({ severity: 'info', summary: 'Imprimiendo...', detail: 'Preparando documento...' });
 
     // 1. Ensure barcodes are ready for the LAST sale (not just preview)
+    // 1. Ensure barcodes are ready for the LAST sale (not just preview)
     if (!this.previewPdf417() || !this.previewQrCode()) {
-      if (this.lastSaleDocumento && this.lastSaleTotal) {
-        try {
-          const tipoDte = this.lastSaleDocumento.tipoDte || 'BOLETA_ELECTRONICA';
+      // Use existing doc OR create provisional data
+      const folio = this.lastSaleDocumento?.folio || 0;
+      const total = this.lastSaleTotal || this.total();
+
+      try {
+        const tipoDte = this.lastSaleDocumento?.tipoDte || 'BOLETA_ELECTRONICA';
+
+        // Generate barcodes (or placeholders if no folio yet)
+        if (folio > 0) {
           const timbreData = this.barcodeService.generateTimbreData({
             tipoDte,
-            folio: this.lastSaleDocumento.folio,
+            folio: folio,
             fechaEmision: new Date().toISOString().split('T')[0],
             rutEmisor: this.authService.tenant()?.rut || '76.849.210-8',
             razonSocialEmisor: this.authService.tenant()?.razonSocial || 'Empresa',
-            montoTotal: this.lastSaleTotal
+            montoTotal: total
           });
           const pdf417 = await this.barcodeService.generatePDF417(timbreData);
           this.previewPdf417.set(pdf417);
+        } else {
+          // No folio yet - clear barcodes or set placeholder
+          this.previewPdf417.set('');
+          // We can still print without barcode as "Comprobante"
+        }
 
-          // Wait a tick for UI to update
-          await new Promise(r => setTimeout(r, 100));
-        } catch (e) { console.error('Error generating barcodes for print:', e); }
-      }
+        // Wait a tick for UI to update
+        await new Promise(r => setTimeout(r, 100));
+      } catch (e) { console.error('Error generating barcodes for print:', e); }
     }
 
     // 2. Clone the thermal receipt element
