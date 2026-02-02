@@ -189,13 +189,15 @@ public class DteController {
         @Operation(summary = "Listar DTEs")
         public ResponseEntity<Page<DteResponse>> listarDtes(
                         @RequestHeader("X-Tenant-Id") UUID tenantId,
+                        @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestParam(required = false) TipoDte tipoDte,
                         @RequestParam(required = false) EstadoDte estado,
                         @PageableDefault(size = 20) Pageable pageable) {
 
-                log.info("GET /api/billing/dte - Tenant: {}, Tipo: {}, Estado: {}", tenantId, tipoDte, estado);
+                log.info("GET /api/billing/dte - Tenant: {}, Branch: {}, Tipo: {}, Estado: {}", tenantId, branchId,
+                                tipoDte, estado);
 
-                Page<DteResponse> dtes = dteService.listarDtes(tenantId, tipoDte, estado, pageable);
+                Page<DteResponse> dtes = dteService.listarDtes(tenantId, branchId, tipoDte, estado, pageable);
                 log.info("Retrieved {} DTEs for tenant {}", dtes.getTotalElements(), tenantId);
                 return ResponseEntity.ok(dtes);
         }

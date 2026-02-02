@@ -220,10 +220,13 @@ public class DteService {
      * Listar DTEs con paginación
      */
     @Transactional(readOnly = true)
-    public Page<DteResponse> listarDtes(UUID tenantId, TipoDte tipoDte, EstadoDte estado, Pageable pageable) {
+    public Page<DteResponse> listarDtes(UUID tenantId, UUID branchId, TipoDte tipoDte, EstadoDte estado,
+            Pageable pageable) {
         Page<Dte> dtes;
 
-        if (tipoDte != null && estado != null) {
+        if (branchId != null) {
+            dtes = dteRepository.findByTenantIdAndBranchId(tenantId, branchId, pageable);
+        } else if (tipoDte != null && estado != null) {
             dtes = dteRepository.findByTenantIdAndTipoDte(tenantId, tipoDte, pageable);
         } else if (tipoDte != null) {
             dtes = dteRepository.findByTenantIdAndTipoDte(tenantId, tipoDte, pageable);

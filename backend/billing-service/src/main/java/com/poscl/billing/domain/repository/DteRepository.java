@@ -25,6 +25,8 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
 
     Page<Dte> findByTenantIdAndTipoDte(UUID tenantId, TipoDte tipoDte, Pageable pageable);
 
+    Page<Dte> findByTenantIdAndBranchId(UUID tenantId, UUID branchId, Pageable pageable);
+
     Page<Dte> findByTenantIdAndEstado(UUID tenantId, EstadoDte estado, Pageable pageable);
 
     @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta")
