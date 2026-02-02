@@ -32,7 +32,6 @@ public class SiiBillingProvider implements BillingProvider {
         dte.setGlosaEstado("Pendiente de implementación de firma digital");
 
         return dte;
-        return dte;
     }
 
     @Override
