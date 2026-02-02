@@ -36,10 +36,12 @@ public class WebClientConfig {
     @Value("${services.inventory.url}")
     private String inventoryServiceUrl;
 
-    // Longer timeout for Render free tier cold starts (up to 120 seconds)
-    private static final int CONNECTION_TIMEOUT_MS = 120000;
-    private static final int READ_TIMEOUT_SECONDS = 120;
-    private static final int WRITE_TIMEOUT_SECONDS = 60;
+    // Timeout should be shorter than Gateway/Load Balancer timeout (usually 30s or
+    // 60s)
+    // to allow fallback logic to execute.
+    private static final int CONNECTION_TIMEOUT_MS = 25000;
+    private static final int READ_TIMEOUT_SECONDS = 25;
+    private static final int WRITE_TIMEOUT_SECONDS = 25;
 
     private HttpClient createHttpClient() {
         return HttpClient.create()
