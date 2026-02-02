@@ -93,6 +93,8 @@ export interface CafInfo {
     agotado: boolean;
 }
 
+import { BranchContextService } from '@core/services/branch-context.service';
+
 @Injectable({
     providedIn: 'root'
 })
@@ -101,13 +103,14 @@ export class BillingService {
 
     constructor(
         private http: HttpClient,
-        private authService: AuthService
+        private authService: AuthService,
+        private branchContext: BranchContextService
     ) { }
 
     private getHeaders() {
         return {
             'X-Tenant-ID': this.authService.getTenantId() || '',
-            'X-Branch-ID': this.authService.getBranchId() || '',
+            'X-Branch-ID': this.branchContext.activeBranchId() || this.authService.getBranchId() || '',
             'Authorization': `Bearer ${this.authService.getToken()}`
         };
     }

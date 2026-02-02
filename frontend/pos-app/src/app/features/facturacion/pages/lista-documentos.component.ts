@@ -7,11 +7,12 @@ import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { FormsModule } from '@angular/forms';
+import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 @Component({
   selector: 'app-lista-documentos',
   standalone: true,
-  imports: [CommonModule, TableModule, ButtonModule, TagModule, InputTextModule, CalendarModule, FormsModule],
+  imports: [CommonModule, TableModule, ButtonModule, TagModule, InputTextModule, CalendarModule, FormsModule, BranchSwitcherComponent],
   template: `
     <div class="billing-container fade-in">
       <div class="page-header">
@@ -19,8 +20,12 @@ import { FormsModule } from '@angular/forms';
           <h1>📑 Documentos Emitidos</h1>
           <p class="subtitle">Historial de Boletas y Facturas Electrónicas</p>
         </div>
-        <div class="header-actions">
-           <button pButton label="Exportar Libro" icon="pi pi-file-excel" class="p-button-outlined p-button-success"></button>
+        
+        <div class="flex items-center gap-4">
+             <app-branch-switcher [autoReload]="false" (branchChanged)="onBranchChanged($event)"></app-branch-switcher>
+             <div class="header-actions">
+                <button pButton label="Exportar Libro" icon="pi pi-file-excel" class="p-button-outlined p-button-success"></button>
+             </div>
         </div>
       </div>
 
@@ -137,6 +142,12 @@ export class ListaDocumentosComponent {
   dateRange = signal<Date[] | null>(null);
 
   ngOnInit() {
+    this.loadDocuments();
+  }
+
+  onBranchChanged(branch: any) {
+    console.log('Facturacion: Branch changed to', branch.nombre);
+    // Reload documents (service will pick up new ID from BranchContext)
     this.loadDocuments();
   }
 
