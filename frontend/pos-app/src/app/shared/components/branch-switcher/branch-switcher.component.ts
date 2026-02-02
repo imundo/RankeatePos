@@ -1,6 +1,7 @@
-import { Component, inject, signal, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, inject, signal, OnInit, EventEmitter, Output, Input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BranchService, Branch } from '@core/services/branches.service'; // Adjust import if needed, using alias
+import { BranchService, Branch } from '@core/services/branches.service';
+import { BranchContextService } from '@core/services/branch-context.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -11,7 +12,7 @@ import { FormsModule } from '@angular/forms';
     <div class="branch-switcher relative" *ngIf="branches().length > 1">
       <button 
         type="button" 
-        (click)="isOpen.set(!isOpen())"
+        (click)="toggleDropdown()"
         class="switcher-btn group"
         [class.active]="isOpen()">
         
@@ -71,205 +72,58 @@ import { FormsModule } from '@angular/forms';
     </div>
   `,
   styles: [`
-    .branch-switcher {
-      font-family: 'Inter', sans-serif;
-    }
-    
+    .branch-switcher { font-family: 'Inter', sans-serif; position: relative; }
     .switcher-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.5rem 0.75rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      width: 240px;
-      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 0.5rem 0.75rem; background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+      cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 240px; backdrop-filter: blur(8px);
     }
-    
-    .switcher-btn:hover, .switcher-btn.active {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-    
-    .btn-content {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-align: left;
-    }
-    
+    .switcher-btn:hover, .switcher-btn.active { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+    .btn-content { display: flex; align-items: center; gap: 0.75rem; text-align: left; }
     .icon-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      background: rgba(99, 102, 241, 0.1);
-      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;
     }
-    
-    .text-info {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-    
-    .label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255, 255, 255, 0.5);
-      font-weight: 600;
-    }
-    
-    .value {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: white;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 130px;
-    }
-    
-    .chevron-wrapper {
-      color: rgba(255, 255, 255, 0.4);
-      transition: transform 0.3s ease;
-    }
-    
-    .chevron-wrapper.rotate {
-      transform: rotate(180deg);
-      color: white;
-    }
+    .text-info { display: flex; flex-direction: column; line-height: 1.2; }
+    .label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255, 255, 255, 0.5); font-weight: 600; }
+    .value { font-size: 0.85rem; font-weight: 500; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .chevron-wrapper { color: rgba(255, 255, 255, 0.4); transition: transform 0.3s ease; }
+    .chevron-wrapper.rotate { transform: rotate(180deg); color: white; }
     
     /* Dropdown */
     .dropdown-menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      width: 280px;
-      background: #1a1b26;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-      z-index: 50;
-      overflow: hidden;
-      animation: slideDown 0.2s ease-out;
+      position: absolute; top: calc(100% + 8px); right: 0; width: 280px;
+      background: #1a1b26; border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+      z-index: 50; overflow: hidden; animation: slideDown 0.2s ease-out;
     }
-    
     .dropdown-header {
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      background: rgba(0, 0, 0, 0.2);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.2); display: flex; justify-content: space-between; align-items: center;
     }
-    
-    .header-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.6);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .header-badge {
-      background: rgba(99, 102, 241, 0.2);
-      color: #818cf8;
-      font-size: 0.7rem;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-    
-    .dropdown-content {
-      padding: 0.5rem;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
+    .header-title { font-size: 0.75rem; font-weight: 600; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 1px; }
+    .header-badge { background: rgba(99, 102, 241, 0.2); color: #818cf8; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .dropdown-content { padding: 0.5rem; max-height: 300px; overflow-y: auto; }
     .branch-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 10px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s ease;
+      display: flex; align-items: center; gap: 0.75rem; width: 100%;
+      padding: 0.75rem; border-radius: 10px; background: transparent;
+      border: none; cursor: pointer; text-align: left; transition: all 0.2s ease;
     }
-    
-    .branch-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-    
-    .branch-item.selected {
-      background: rgba(99, 102, 241, 0.1);
-    }
-    
-    .item-visuals {
-      position: relative;
-    }
-    
+    .branch-item:hover { background: rgba(255, 255, 255, 0.05); }
+    .branch-item.selected { background: rgba(99, 102, 241, 0.1); }
     .item-icon {
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255, 255, 255, 0.6);
-      transition: all 0.2s;
+      width: 36px; height: 36px; background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      color: rgba(255, 255, 255, 0.6); transition: all 0.2s;
     }
-    
-    .branch-item.selected .item-icon {
-      background: #4f46e5;
-      color: white;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    }
-    
-    .item-info {
-      flex: 1;
-      overflow: hidden;
-    }
-    
-    .item-name {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .branch-item.selected .item-name {
-      color: white;
-    }
-    
-    .item-meta {
-      display: flex;
-      gap: 4px;
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 0.75rem;
-    }
-    
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #4f46e5;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #4f46e5;
-    }
+    .branch-item.selected .item-icon { background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+    .item-info { flex: 1; overflow: hidden; }
+    .item-name { color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .branch-item.selected .item-name { color: white; }
+    .item-meta { display: flex; gap: 4px; color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; }
+    .status-dot { width: 8px; height: 8px; background: #4f46e5; border-radius: 50%; box-shadow: 0 0 8px #4f46e5; }
     
     @keyframes slideDown {
       from { opacity: 0; transform: translateY(-10px); }
@@ -279,12 +133,20 @@ import { FormsModule } from '@angular/forms';
 })
 export class BranchSwitcherComponent implements OnInit {
   private branchService = inject(BranchService);
+  private branchContext = inject(BranchContextService);
+
+  @Input() autoReload = true; // Default to old behavior for backward compatibility
+  @Output() branchChanged = new EventEmitter<Branch>();
 
   branches = signal<Branch[]>([]);
-  currentBranch = signal<Branch | null>(null);
+  // Use computed to sync with context, but for local dropdown logic we might want a local signal if needed.
+  // Actually, let's sync local signal with context.
+  currentBranch = this.branchContext.activeBranch;
   isOpen = signal(false);
 
-  @Output() branchChanged = new EventEmitter<Branch>();
+  constructor() {
+    // No need to manually subscribe to context changes here as we use the signal directly
+  }
 
   ngOnInit() {
     this.loadBranches();
@@ -292,42 +154,52 @@ export class BranchSwitcherComponent implements OnInit {
 
   loadBranches() {
     this.branchService.getBranches().subscribe(branches => {
-      this.branches.set(branches.filter(b => b.activa));
-      this.restoreSelection();
+      const activeBranches = branches.filter(b => b.activa);
+      this.branches.set(activeBranches);
+
+      // If context is empty but we have branches, try to sync from localStorage or default
+      if (!this.currentBranch()) {
+        this.restoreSelection(activeBranches);
+      }
     });
   }
 
-  restoreSelection() {
-    const savedId = localStorage.getItem('selected_branch_id');
-    const branches = this.branches();
+  toggleDropdown() {
+    this.isOpen.update(v => !v);
+  }
 
-    let selected: Branch | undefined;
+  restoreSelection(branches: Branch[]) {
+    // Check if context service already did the job? 
+    // BranchContextService loads from localStorage on init.
+    // If it's still null, it means no previous selection.
 
-    if (savedId) {
-      selected = branches.find(b => b.id === savedId);
-    }
+    // Fallback: If context is null, try to match by ID from legacy storage if exists (unlikely if service works)
+    // Or default to principal
+    const currentId = this.branchContext.activeBranchId();
+    if (currentId) return; // Already set
 
-    if (!selected && branches.length > 0) {
-      // Default to principal or first
-      selected = branches.find(b => b.esPrincipal) || branches[0];
-    }
-
+    let selected = branches.find(b => b.esPrincipal) || branches[0];
     if (selected) {
-      this.setBranch(selected, false);
+      this.selectBranch(selected, false); // Initialize without emitting/reloading
     }
   }
 
-  selectBranch(branch: Branch) {
-    this.setBranch(branch, true);
-    this.isOpen.set(false);
-  }
+  selectBranch(branch: Branch, emit = true) {
+    // Update Context (Core Truth)
+    this.branchContext.setActiveBranch({
+      id: branch.id,
+      nombre: branch.nombre,
+      codigo: branch.codigo
+    });
 
-  private setBranch(branch: Branch, emit: boolean) {
-    this.currentBranch.set(branch);
-    localStorage.setItem('selected_branch_id', branch.id);
+    this.isOpen.set(false);
+
     if (emit) {
       this.branchChanged.emit(branch);
-      window.location.reload(); // Simple context switch
+
+      if (this.autoReload) {
+        window.location.reload();
+      }
     }
   }
 }
