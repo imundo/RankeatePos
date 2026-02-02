@@ -21,13 +21,13 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
 
     Optional<Dte> findByTenantIdAndTipoDteAndFolio(UUID tenantId, TipoDte tipoDte, Integer folio);
 
-    Page<Dte> findByTenantId(UUID tenantId, Pageable pageable);
+    Page<DteSummary> findByTenantId(UUID tenantId, Pageable pageable);
 
-    Page<Dte> findByTenantIdAndTipoDte(UUID tenantId, TipoDte tipoDte, Pageable pageable);
+    Page<DteSummary> findByTenantIdAndTipoDte(UUID tenantId, TipoDte tipoDte, Pageable pageable);
 
-    Page<Dte> findByTenantIdAndBranchId(UUID tenantId, UUID branchId, Pageable pageable);
+    Page<DteSummary> findByTenantIdAndBranchId(UUID tenantId, UUID branchId, Pageable pageable);
 
-    Page<Dte> findByTenantIdAndEstado(UUID tenantId, EstadoDte estado, Pageable pageable);
+    Page<DteSummary> findByTenantIdAndEstado(UUID tenantId, EstadoDte estado, Pageable pageable);
 
     @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta")
     Page<Dte> findByTenantIdAndFechaEmisionBetween(UUID tenantId, LocalDate desde, LocalDate hasta, Pageable pageable);
