@@ -147,7 +147,7 @@ public class BillingController {
     }
 
     @GetMapping(value = "/dte", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> listarDtes(
+    public ResponseEntity<Object> listarDtes(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
@@ -171,27 +171,18 @@ public class BillingController {
         log.info("BFF: Listar DTEs calling {} with type={}, estado={}, branch={}", urlBuilder.toString(), tipoDte,
                 estado, branchId);
         try {
-            ResponseEntity<String> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
-                    new HttpEntity<>(headers), String.class);
-            String body = response.getBody();
-            int length = body != null ? body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length : 0;
-            String preview = body != null && body.length() > 100 ? body.substring(0, 100) : body;
+            // Use Object.class to let Jackson parse the response, ensuring valid JSON
+            // structure
+            ResponseEntity<Object> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
+                    new HttpEntity<>(headers), Object.class);
 
-            log.info("BFF: Listar DTEs response status: {}, Body Length: {}, Preview: {}", response.getStatusCode(),
-                    length, preview);
-
-            // Force Content-Length to avoid Chunked Transfer Encoding which might confuse
-            // some proxies/routers
-            // UPDATE: Removing manual Content-Length as it might conflict with Spring's own
-            // handling or compression
-            // Spring Boot should handle this automatically.
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
-                    .body(body);
+                    .body(response.getBody());
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"Error calling Billing Service\", \"details\": \"" + e.getMessage() + "\"}");
+                    .body(Map.of("error", "Error calling Billing Service", "details", e.getMessage()));
         }
     }
 
