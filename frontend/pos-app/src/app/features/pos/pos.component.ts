@@ -4038,34 +4038,25 @@ export class PosComponent implements OnInit {
         ).toPromise();
 
         // 2. Emitir documento tributario si corresponde
+        // UPDATE: Ya no llamamos al backend síncronamente aquí.
+        // El backend `sales-service` encola la venta y el scheduler la procesa.
+        // Nosotros solo mostramos "En Proceso" en la UI.
+
         if (this.tipoDocumento !== 'SIN_DOCUMENTO') {
-          try {
-            const dteRequest = this.buildDteRequest(saleResult);
-            const endpoint = this.tipoDocumento === 'BOLETA'
-              ? `${environment.billingUrl}/billing/boleta`
-              : `${environment.billingUrl}/billing/factura`;
+          // Mock pending document for UI feedback
+          this.lastSaleDocumento = {
+            id: undefined,
+            tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
+            tipoDte: this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA',
+            folio: 0 // Template renders 0 as 'PENDIENTE'
+          };
 
-            // Timeout after 5s to prevent UI freeze
-            const dteResult = await this.http.post<any>(endpoint, dteRequest)
-              .pipe(timeout(5000))
-              .toPromise();
-
-            this.lastSaleDocumento = {
-              id: dteResult?.id,
-              tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
-              tipoDte: dteResult?.tipoDte || (this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA'),
-              folio: dteResult?.folio || Math.floor(Math.random() * 10000) + 1
-            };
-          } catch (billingError) {
-            console.error('Error emitiendo documento:', billingError);
-            // No fallamos la venta, solo avisamos
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'Documento pendiente',
-              detail: 'La venta se registró pero el documento se emitirá después',
-              life: 4000
-            });
-          }
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Documento en cola',
+            detail: 'El documento se está generando en segundo plano',
+            life: 3000
+          });
         }
       }
 
