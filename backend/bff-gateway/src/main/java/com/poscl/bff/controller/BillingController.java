@@ -181,8 +181,15 @@ public class BillingController {
                     .body(response.getBody());
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error calling Billing Service", "details", e.getMessage()));
+
+            // Fallback: Return empty page to prevent frontend 504 blocking
+            Map<String, Object> emptyPage = Map.of(
+                    "content", java.util.Collections.emptyList(),
+                    "totalElements", 0,
+                    "totalPages", 0,
+                    "size", size,
+                    "number", page);
+            return ResponseEntity.ok(emptyPage);
         }
     }
 
@@ -236,14 +243,29 @@ public class BillingController {
     // ==================== CAF (Folios) ====================
 
     @GetMapping(value = "/caf", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> listarCafs(
+    public ResponseEntity<Object> listarCafs(
             @RequestHeader("Authorization") String authHeader,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String tipoDte) {
 
         String url = billingServiceUrl + "/api/billing/caf";
+        if (tipoDte != null) {
+            url += "?tipoDte=" + tipoDte;
+        }
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        try {
+            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(headers), Object.class);
+
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(response.getBody());
+        } catch (Exception e) {
+            log.error("BFF: Error fetching CAFs: {}", e.getMessage());
+            // Fallback: Empty list
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
     }
 
     @GetMapping(value = "/caf/disponibles", produces = MediaType.APPLICATION_JSON_VALUE)
