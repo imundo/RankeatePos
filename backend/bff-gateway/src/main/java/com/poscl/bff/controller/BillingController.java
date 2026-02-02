@@ -176,7 +176,6 @@ public class BillingController {
             ResponseEntity<Object> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
                     new HttpEntity<>(headers), Object.class);
 
-            return ResponseEntity.status(response.getStatusCode())
             // Do NOT propagate headers blindly (Content-Length mismatch risk)
             return ResponseEntity.status(response.getStatusCode())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -261,7 +260,6 @@ public class BillingController {
             ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET,
                     new HttpEntity<>(headers), Object.class);
 
-            return ResponseEntity.status(response.getStatusCode())
             // Do NOT propagate headers blindly
             return ResponseEntity.status(response.getStatusCode())
                     .contentType(MediaType.APPLICATION_JSON)
