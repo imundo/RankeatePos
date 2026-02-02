@@ -13,6 +13,9 @@ import java.util.UUID;
 @Repository
 public interface CafRepository extends JpaRepository<Caf, UUID> {
 
+       // Original method returning full entities (used by ChileSiiProvider)
+       List<Caf> findByTenantIdAndActivoTrue(UUID tenantId);
+
        // Projections for optimized reading - Explicit JPQL to ensure LOBs (xmlCaf) are
        // excluded
        @Query("SELECT c.id as id, c.tenantId as tenantId, c.tipoDte as tipoDte, " +
