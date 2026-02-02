@@ -21,7 +21,7 @@ public class BillingController {
     private final String billingServiceUrl;
 
     public BillingController(
-            RestTemplate restTemplate,
+            @org.springframework.beans.factory.annotation.Qualifier("billingRestTemplate") RestTemplate restTemplate,
             @Value("${services.billing.url}") String billingServiceUrl) {
         this.restTemplate = restTemplate;
         this.billingServiceUrl = billingServiceUrl;
@@ -195,7 +195,8 @@ public class BillingController {
 
     // Manual OPTIONS handler to ensure CORS works even if Spring Security blocks
     // something
-    @RequestMapping(value = "/dte", method = RequestMethod.OPTIONS)
+    // Manual OPTIONS handler to ensure CORS works
+    @RequestMapping(value = { "/dte", "/caf" }, method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
         return ResponseEntity.ok()
                 .header("Access-Control-Allow-Origin", "*")

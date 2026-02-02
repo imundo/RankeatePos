@@ -114,12 +114,16 @@ public class WebClientConfig {
      * RestTemplate bean for ERP services (Payroll, Accounting, Purchases, Payments)
      * Used by proxy controllers for synchronous HTTP calls
      */
+    /**
+     * RestTemplate bean for ERP services (Billing, Payroll, Accounting, etc.)
+     * Configured with short timeout to trigger fallback before Gateway Timeout
+     */
     @Bean
-    public org.springframework.web.client.RestTemplate restTemplate() {
-        log.info("Creating RestTemplate for ERP services");
+    public org.springframework.web.client.RestTemplate billingRestTemplate() {
+        log.info("Creating billingRestTemplate with short timeouts");
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(CONNECTION_TIMEOUT_MS);
-        factory.setReadTimeout(READ_TIMEOUT_SECONDS * 1000);
+        factory.setConnectTimeout(8000); // 8 seconds
+        factory.setReadTimeout(8000); // 8 seconds
         return new org.springframework.web.client.RestTemplate(factory);
     }
 }
