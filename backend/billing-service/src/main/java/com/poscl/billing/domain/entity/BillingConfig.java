@@ -72,6 +72,11 @@ public class BillingConfig {
     @Builder.Default
     private boolean active = true;
 
+    // Configuración de proceso batch (segundos)
+    @Column(name = "dte_processing_interval_seconds")
+    @Builder.Default
+    private Integer dteProcessingIntervalSeconds = 60; // Default 1 minuto
+
     @Column(name = "updated_at")
     private Instant updatedAt;
 

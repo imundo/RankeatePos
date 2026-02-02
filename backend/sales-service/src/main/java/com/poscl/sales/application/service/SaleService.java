@@ -660,20 +660,33 @@ public class SaleService {
      * mins.
      * Usamos 30s para que usuario vea resultado rápido, luego se puede subir a 5m.
      */
-    @Scheduled(fixedDelay = 30000) // 30 segundos loop
+    // Cache simple para configuración (TenantID -> {timestamp, interval})
+    private final Map<UUID, TenantConfigCache> configCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record TenantConfigCache(long timestamp, int intervalSeconds) {
+    }
+
+    @Scheduled(fixedDelay = 30000) // Run frequently to check buffers
     @Transactional
     public void processPendingDtes() {
-        // Buscar ventas pendientes globalmente (sin filtro tenant)
         List<Sale> pendingSales = saleRepository.findTop50ByDteStatus(Sale.DteStatus.PENDING, Pageable.ofSize(50));
 
         if (!pendingSales.isEmpty()) {
-            log.info("Scheduler: Procesando {} ventas pendientes de DTE...", pendingSales.size());
+            log.debug("Scheduler: Analizando {} ventas pendientes...", pendingSales.size());
 
             for (Sale sale : pendingSales) {
                 try {
                     UUID tenantId = sale.getTenantId();
-                    UUID userId = sale.getCreatedBy();
 
+                    // Check batching interval
+                    int interval = getTenantInterval(tenantId);
+
+                    // If sale is newer than interval, skip (buffer it)
+                    if (sale.getCreatedAt().plusSeconds(interval).isAfter(java.time.Instant.now())) {
+                        continue;
+                    }
+
+                    UUID userId = sale.getCreatedBy();
                     emitirBoleta(tenantId, userId, sale);
 
                     sale.setDteStatus(Sale.DteStatus.SENT);
@@ -681,13 +694,49 @@ public class SaleService {
                     saleRepository.save(sale);
 
                 } catch (Exception e) {
-                    log.error("Error procesando DTE batch para venta {}: {}", sale.getNumero(), e.getMessage());
+                    log.error("Error batch DTE venta {}: {}", sale.getNumero(), e.getMessage());
                     sale.setDteStatus(Sale.DteStatus.ERROR);
                     sale.setDteError(e.getMessage());
                     saleRepository.save(sale);
                 }
             }
         }
+    }
+
+    private int getTenantInterval(UUID tenantId) {
+        long now = System.currentTimeMillis();
+        TenantConfigCache cached = configCache.get(tenantId);
+
+        // Refresh cache every 2 minutes
+        if (cached == null || (now - cached.timestamp) > 120000) {
+            try {
+                org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                headers.set("X-Tenant-Id", tenantId.toString());
+
+                org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+                String url = billingServiceUrl + "/api/billing/config";
+
+                // Need a DTO or just Map. Using Map to avoid coupling.
+                Map resp = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class)
+                        .getBody();
+
+                int interval = 60;
+                if (resp != null && resp.get("dteProcessingIntervalSeconds") != null) {
+                    interval = (Integer) resp.get("dteProcessingIntervalSeconds");
+                }
+
+                configCache.put(tenantId, new TenantConfigCache(now, interval));
+                return interval;
+
+            } catch (Exception e) {
+                log.warn("Could not fetch billing config for tenant {}, using default 60s. Error: {}", tenantId,
+                        e.getMessage());
+                return 60; // Default fallback
+            }
+        }
+
+        return cached.intervalSeconds();
     }
 
     public void processPendingDtesForTenant(UUID tenantId) {

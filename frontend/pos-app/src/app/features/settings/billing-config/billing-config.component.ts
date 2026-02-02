@@ -109,6 +109,14 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
                              </div>
                         </div>
 
+
+                        <!-- Intervalo de Proceso Batch -->
+                        <div class="col-12 md:col-6 field">
+                            <label class="font-medium text-900">Intervalo de Envío (Segundos)</label>
+                            <input pInputText type="number" formControlName="dteProcessingIntervalSeconds" class="w-full" placeholder="60">
+                            <small class="text-500">Tiempo de espera para agrupar boletas (Default: 60s)</small>
+                        </div>
+
                         <!-- Active Toggle -->
                         <div class="col-12 flex align-items-center justify-content-between mt-4">
                             <div class="flex align-items-center">
@@ -170,6 +178,7 @@ export class BillingConfigComponent implements OnInit {
             environment: ['CERTIFICATION', Validators.required],
             apiKey: [''],
             certificatePassword: [''],
+            dteProcessingIntervalSeconds: [60, [Validators.required, Validators.min(10)]],
             active: [true]
         });
     }

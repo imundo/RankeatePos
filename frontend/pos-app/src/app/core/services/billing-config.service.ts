@@ -11,6 +11,7 @@ export interface BillingConfig {
     apiKey?: string;
     certificatePassword?: string;
     active: boolean;
+    dteProcessingIntervalSeconds?: number;
     updatedAt?: string;
 }
 
