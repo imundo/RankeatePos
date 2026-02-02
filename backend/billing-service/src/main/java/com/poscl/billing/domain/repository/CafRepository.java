@@ -13,13 +13,20 @@ import java.util.UUID;
 @Repository
 public interface CafRepository extends JpaRepository<Caf, UUID> {
 
-       List<Caf> findByTenantIdAndActivoTrue(UUID tenantId);
-
-       // Projections for optimized reading
+       // Projections for optimized reading - Explicit JPQL to ensure LOBs (xmlCaf) are
+       // excluded
+       @Query("SELECT c.id as id, c.tenantId as tenantId, c.tipoDte as tipoDte, " +
+                     "c.folioDesde as folioDesde, c.folioHasta as folioHasta, c.folioActual as folioActual, " +
+                     "c.fechaAutorizacion as fechaAutorizacion, c.fechaVencimiento as fechaVencimiento, " +
+                     "c.activo as activo, c.agotado as agotado " +
+                     "FROM Caf c WHERE c.tenantId = :tenantId AND c.activo = true")
        List<CafSummary> findProjectedByTenantIdAndActivoTrue(UUID tenantId);
 
-       List<Caf> findByTenantIdAndTipoDteAndActivoTrue(UUID tenantId, TipoDte tipoDte);
-
+       @Query("SELECT c.id as id, c.tenantId as tenantId, c.tipoDte as tipoDte, " +
+                     "c.folioDesde as folioDesde, c.folioHasta as folioHasta, c.folioActual as folioActual, " +
+                     "c.fechaAutorizacion as fechaAutorizacion, c.fechaVencimiento as fechaVencimiento, " +
+                     "c.activo as activo, c.agotado as agotado " +
+                     "FROM Caf c WHERE c.tenantId = :tenantId AND c.tipoDte = :tipoDte AND c.activo = true")
        List<CafSummary> findProjectedByTenantIdAndTipoDteAndActivoTrue(UUID tenantId, TipoDte tipoDte);
 
        @Query("SELECT c FROM Caf c WHERE c.tenantId = :tenantId AND c.tipoDte = :tipoDte " +

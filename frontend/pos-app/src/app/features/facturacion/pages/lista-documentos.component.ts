@@ -197,11 +197,19 @@ export class ListaDocumentosComponent {
               console.error('Frontend: Failed to parse string response', e);
             }
           } else {
-            content = response.content || [];
-            total = response.totalElements || content.length;
+            // Check if it's Pagination object (content) or Array
+            if (Array.isArray(response)) {
+              content = response;
+              total = response.length;
+            } else {
+              content = response.content || [];
+              total = response.totalElements || content.length;
+            }
           }
         } else {
-          console.warn('Frontend: Response was null or undefined');
+          console.warn('Frontend: Response was null or undefined, using empty list');
+          content = [];
+          total = 0;
         }
 
         this.documents.set(content);
