@@ -161,7 +161,7 @@ export class BillingService {
 
     // ========== CONSULTA ==========
 
-    getDtes(tipoDte?: string, estado?: string, page = 0, size = 20): Observable<any> {
+    getDtes(tipoDte?: string, estado?: string, page = 0, size = 20, branchId?: string): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
@@ -169,8 +169,34 @@ export class BillingService {
         if (tipoDte) params = params.set('tipoDte', tipoDte);
         if (estado) params = params.set('estado', estado);
 
+        const headers = this.getHeaders();
+        // If specific branch requested, override header
+        if (branchId) {
+            // We can pass it in header 'X-Branch-ID' which getHeaders already does if active,
+            // but let's ensure we use the explicit one if passed
+            // Actually, getHeaders() uses branchContext.activeBranchId(). 
+            // If the component passes a branchId, it likely matches, but to be sure:
+            // We won't override header here because the component should ideally set Context,
+            // BUT for listing, we might filter by a *different* branch than active?
+            // Usually filters align with active branch context.
+            // Let's rely on the header being set correctly in the component via Context or argument.
+            // Wait, the requirement is "The component was NOT passing branchId". 
+            // The service uses `this.branchContext.activeBranchId()`.
+            // So if the component simply calls getDtes(), it should use the active branch.
+            // FAILURE ANALYSIS: "el listado no estaba enviando el ID de la sucursal".
+            // If `branchContext.activeBranchId()` is not set, that's the issue.
+            // OR if the BACKEND requires it as a param? The backend accepts Header.
+            // Let's ADD it to the params just in case explicitly or rely on header override.
+        }
+
+        // Safer approach: Override header if branchId is explicit
+        let reqHeaders = this.getHeaders();
+        if (branchId) {
+            reqHeaders = { ...reqHeaders, 'X-Branch-ID': branchId };
+        }
+
         return this.http.get<any>(`${this.baseUrl}/billing/dte`, {
-            headers: this.getHeaders(),
+            headers: reqHeaders,
             params
         });
     }
