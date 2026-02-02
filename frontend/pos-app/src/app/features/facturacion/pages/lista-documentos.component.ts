@@ -24,6 +24,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
         <div class="flex items-center gap-4">
              <app-branch-switcher [autoReload]="false" (branchChanged)="onBranchChanged($event)"></app-branch-switcher>
              <div class="header-actions">
+                <button pButton label="Enviar Pendientes a SII" icon="pi pi-send" class="p-button-outlined p-button-warning" (click)="enviarPendientes()" [loading]="sendingPending()"></button>
                 <button pButton label="Exportar Libro" icon="pi pi-file-excel" class="p-button-outlined p-button-success"></button>
              </div>
         </div>
@@ -149,6 +150,27 @@ export class ListaDocumentosComponent {
     console.log('Facturacion: Branch changed to', branch.nombre);
     // Reload documents (service will pick up new ID from BranchContext)
     this.loadDocuments();
+  }
+
+  sendingPending = signal(false);
+
+  enviarPendientes() {
+    if (!confirm('¿Estás seguro de enviar todos los documentos pendientes al SII?')) return;
+
+    this.sendingPending.set(true);
+    this.billingService.enviarPendientes().subscribe({
+      next: (res) => {
+        console.log('Envío masivo completado', res);
+        alert(`Proceso finalizado. Enviados: ${res.sentCount || 0}`);
+        this.loadDocuments();
+        this.sendingPending.set(false);
+      },
+      error: (err) => {
+        console.error('Error enviando pendientes', err);
+        alert('Error al enviar pendientes');
+        this.sendingPending.set(false);
+      }
+    });
   }
 
   loadDocuments(event?: any) {

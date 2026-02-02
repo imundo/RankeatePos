@@ -127,6 +127,18 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
 
+    @PostMapping("/send-pending")
+    public ResponseEntity<?> enviarPendientes(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String url = billingServiceUrl + "/api/billing/dte/send-pending";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+
+        // We expect a Map response
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(null, headers), Object.class);
+    }
+
     // ==================== CONSULTA DE DTEs ====================
 
     @GetMapping("/dte/ping")

@@ -201,6 +201,12 @@ export class BillingService {
         });
     }
 
+    enviarPendientes(): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/billing/dte/send-pending`, {}, {
+            headers: this.getHeaders()
+        });
+    }
+
     // ========== CAF ==========
 
     getCafs(): Observable<CafInfo[]> {

@@ -32,6 +32,17 @@ public class SiiBillingProvider implements BillingProvider {
         dte.setGlosaEstado("Pendiente de implementación de firma digital");
 
         return dte;
+        return dte;
+    }
+
+    @Override
+    public Dte firmar(Dte dte, BillingConfig config) {
+        log.warn("SII PROVIDER: Firmando DTE (Simulado/Pendiente de Implementación)");
+        // TODO: Use SignerService to sign XML
+        // For now, assume it's done or placeholder
+        dte.setXmlContent("<xml>Placeholder Sii Content</xml>");
+        dte.setXmlFirmado("<xml>Placeholder Sii Signed</xml>");
+        return dte;
     }
 
     @Override
