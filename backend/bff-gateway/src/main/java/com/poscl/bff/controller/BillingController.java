@@ -58,7 +58,6 @@ public class BillingController {
             int length = body != null ? body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length : 0;
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(length))
                     .body(body);
         } catch (Exception e) {
             log.error("BFF: Error emitting Boleta: {}", e.getMessage(), e);
@@ -183,9 +182,11 @@ public class BillingController {
 
             // Force Content-Length to avoid Chunked Transfer Encoding which might confuse
             // some proxies/routers
+            // UPDATE: Removing manual Content-Length as it might conflict with Spring's own
+            // handling or compression
+            // Spring Boot should handle this automatically.
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(length))
                     .body(body);
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
