@@ -187,23 +187,65 @@ public class DteService {
                 saved.getId());
 
         // 6. Procesar con Proveedor (Estrategia)
-        // BillingConfig config =
-        // configRepository.findByTenantId(tenantId).orElse(null); // Already loaded in
-        // step 1
         BillingProvider provider = providerFactory.getProvider(config);
 
         log.info("Usando proveedor de facturación: {}", provider.getCountry());
         long step6 = System.currentTimeMillis();
-        saved = provider.emitir(saved, config);
-        long step7 = System.currentTimeMillis();
-        log.info("Step 6 (Provider Emitir): {}ms", step7 - step6);
 
-        // 7. Actualizar DTE con resultado del proveedor
+        // CAMBIO CRÍTICO: Desacoplar envío. Solo firmamos y guardamos localmente.
+        // El envío se hará por proceso batch o botón manual.
+        saved = provider.firmar(saved, config);
+        saved.setEstado(EstadoDte.PENDIENTE); // Listo para envío
+
+        long step7 = System.currentTimeMillis();
+        log.info("Step 6 (Provider Firmar): {}ms", step7 - step6);
+
+        // 7. Actualizar DTE con resultado del proveedor (Firma)
         saved = dteRepository.save(saved);
         long step8 = System.currentTimeMillis();
         log.info("Step 7 (Final Save): {}ms", step8 - step7);
 
         return toResponse(saved);
+    }
+
+    /**
+     * Enviar DTEs pendientes al SII (Batch/Manual)
+     */
+    @Transactional
+    public int enviarDtesPendientes(UUID tenantId) {
+        // Buscar pendientes que ya estén firmados (o firmar al vuelo)
+        // Asumimos que si están en PENDIENTE creada por emitirDte ya tienen XML
+        // (gracias a firmar)
+        // Pero Filtramos por estado PENDIENTE
+        List<Dte> pendientes = dteRepository.findAllByTenantIdAndFechaEmisionBetween(
+                tenantId, LocalDate.now().minusDays(30), LocalDate.now().plusDays(1));
+        // TODO: Mejorar repositorio para buscar por estado PENDIENTE especificamente
+
+        // Filtrar en memoria por ahora si el repo no tiene método específico (o usar el
+        // que existe)
+        List<Dte> realmentePendientes = dteRepository.findByTenantIdAndEstadoAndFechaEnvioIsNull(tenantId,
+                EstadoDte.PENDIENTE);
+
+        if (realmentePendientes.isEmpty()) {
+            return 0;
+        }
+
+        BillingConfig config = configRepository.findByTenantId(tenantId).orElse(null);
+        BillingProvider provider = providerFactory.getProvider(config);
+
+        int count = 0;
+        for (Dte dte : realmentePendientes) {
+            try {
+                log.info("Enviando DTE pendiente folios {} tipo {}", dte.getFolio(), dte.getTipoDte());
+                Dte result = provider.emitir(dte, config);
+                dteRepository.save(result);
+                count++;
+            } catch (Exception e) {
+                log.error("Error enviando DTE pendiente {}: {}", dte.getId(), e.getMessage());
+            }
+        }
+
+        return count;
     }
 
     /**

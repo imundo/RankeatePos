@@ -11,5 +11,11 @@ public interface BillingProvider {
      */
     Dte emitir(Dte dte, BillingConfig config);
 
+    /**
+     * Genera el XML y firma el DTE sin enviarlo al ente fiscalizador.
+     * Retorna el DTE con el XML y firma (estado GENERADO/FIRMADO).
+     */
+    Dte firmar(Dte dte, BillingConfig config);
+
     BillingConfig.Country getCountry();
 }
