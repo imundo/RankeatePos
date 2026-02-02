@@ -27,6 +27,10 @@ public class Sale {
         PENDIENTE, COMPLETADA, ANULADA
     }
 
+    public enum DteStatus {
+        NONE, PENDING, SENT, ERROR
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -93,6 +97,15 @@ public class Sale {
 
     @Column(name = "aprobada_por")
     private UUID aprobadaPor;
+
+    // Billing Integration (Queue)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dte_status", length = 20)
+    @Builder.Default
+    private DteStatus dteStatus = DteStatus.NONE;
+
+    @Column(name = "dte_error", columnDefinition = "TEXT")
+    private String dteError;
 
     // Items y pagos
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)

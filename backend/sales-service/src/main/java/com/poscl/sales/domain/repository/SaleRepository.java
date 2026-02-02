@@ -51,4 +51,13 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
     // Contar por estado
     long countByTenantIdAndEstado(UUID tenantId, Sale.Estado estado);
+
+    // Billing Queue
+    @Query("SELECT s FROM Sale s LEFT JOIN FETCH s.items WHERE s.tenantId = :tenantId AND s.dteStatus = :status")
+    List<Sale> findByTenantIdAndDteStatus(UUID tenantId, Sale.DteStatus status);
+
+    // Global batch fetch (ignore tenant filter implies admin usage or background
+    // job)
+    @Query("SELECT s FROM Sale s LEFT JOIN FETCH s.items LEFT JOIN FETCH s.session.register WHERE s.dteStatus = :status ORDER BY s.createdAt ASC")
+    List<Sale> findTop50ByDteStatus(Sale.DteStatus status, Pageable pageable);
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -124,14 +125,15 @@ public class SaleService {
         // Propagamos la excepción para hacer rollback si falla el inventario
         deductStock(tenantId, userId, sale);
 
-        // Emitir Boleta ElectrÃ³nica (IntegraciÃ³n Billing)
-        try {
-            emitirBoleta(tenantId, userId, sale);
-        } catch (Exception e) {
-            log.error("Failed to emit DTE for sale {}: {}", sale.getNumero(), e.getMessage());
-            // No fallamos la venta si falla la boleta, pero lo dejamos en log
-            // TODO: PodrÃ­amos marcar un flag en la venta "dte_pending" = true
-        }
+        // Marcar para envío diferido de boleta/factura
+        // Por defecto para retail asumimos que todas las ventas completadas requieren
+        // boleta
+        // A menos que sea "Sin Documento" (que podría modelarse con DteStatus.NONE)
+        sale.setDteStatus(Sale.DteStatus.PENDING);
+        sale = saleRepository.save(sale); // Update status
+
+        // NO emitimos boleta síncronamente aquí. El Scheduler se encarga.
+        log.info("Venta {} guardada. Encolada para facturación (DteStatus=PENDING)", sale.getNumero());
 
         // TODO: Publicar evento SaleCreated para inventory-service
 
@@ -649,6 +651,67 @@ public class SaleService {
         }
 
         return stats;
+    }
+
+    // ====== SCHEDULER (Batch Billing) ======
+
+    /**
+     * Procesa ventas pendientes de facturación cada 30 segundos (para pruebas) o 5
+     * mins.
+     * Usamos 30s para que usuario vea resultado rápido, luego se puede subir a 5m.
+     */
+    @Scheduled(fixedDelay = 30000) // 30 segundos loop
+    @Transactional
+    public void processPendingDtes() {
+        // Buscar ventas pendientes globalmente (sin filtro tenant)
+        List<Sale> pendingSales = saleRepository.findTop50ByDteStatus(Sale.DteStatus.PENDING, Pageable.ofSize(50));
+
+        if (!pendingSales.isEmpty()) {
+            log.info("Scheduler: Procesando {} ventas pendientes de DTE...", pendingSales.size());
+
+            for (Sale sale : pendingSales) {
+                try {
+                    UUID tenantId = sale.getTenantId();
+                    UUID userId = sale.getCreatedBy();
+
+                    emitirBoleta(tenantId, userId, sale);
+
+                    sale.setDteStatus(Sale.DteStatus.SENT);
+                    sale.setDteError(null);
+                    saleRepository.save(sale);
+
+                } catch (Exception e) {
+                    log.error("Error procesando DTE batch para venta {}: {}", sale.getNumero(), e.getMessage());
+                    sale.setDteStatus(Sale.DteStatus.ERROR);
+                    sale.setDteError(e.getMessage());
+                    saleRepository.save(sale);
+                }
+            }
+        }
+    }
+
+    public void processPendingDtesForTenant(UUID tenantId) {
+        List<Sale> pending = saleRepository.findByTenantIdAndDteStatus(tenantId, Sale.DteStatus.PENDING);
+        if (pending.isEmpty())
+            return;
+
+        log.info("Procesando {} ventas pendientes para tenant {}", pending.size(), tenantId);
+
+        for (Sale sale : pending) {
+            try {
+                emitirBoleta(tenantId, sale.getCreatedBy(), sale);
+                // Si emitirBoleta no lanza excepcion, asumimos éxito (o al menos enviado)
+                // emitirBoleta usa RestTemplate simple. Si falla, cae al catch.
+
+                sale.setDteStatus(Sale.DteStatus.SENT);
+                sale.setDteError(null);
+            } catch (Exception e) {
+                log.error("Error batch DTE venta {}: {}", sale.getNumero(), e.getMessage());
+                sale.setDteStatus(Sale.DteStatus.ERROR);
+                sale.setDteError(e.getMessage());
+            }
+            saleRepository.save(sale);
+        }
     }
 
     private SaleDto toDto(Sale sale) {
