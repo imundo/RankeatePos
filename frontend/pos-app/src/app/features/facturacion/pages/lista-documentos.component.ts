@@ -29,63 +29,77 @@ import { AuthService } from '@core/auth/auth.service';
         <div class="flex items-center gap-4">
              <app-branch-switcher [autoReload]="false" (branchChanged)="onBranchChanged($event)"></app-branch-switcher>
              <div class="header-actions">
-                <button pButton label="Enviar Pendientes" icon="pi pi-send" class="action-btn warning" (click)="enviarPendientes()" [loading]="sendingPending()"></button>
-                <button pButton label="Exportar" icon="pi pi-file-excel" class="action-btn success"></button>
+                <button pButton label="Enviar Pendientes" icon="pi pi-send" class="premium-btn btn-warning" (click)="enviarPendientes()" [loading]="sendingPending()"></button>
+                <button pButton label="Exportar Excel" icon="pi pi-file-excel" class="premium-btn btn-success" (click)="exportarLibro()" [loading]="exporting()"></button>
              </div>
         </div>
       </div>
 
       <div class="filters-bar glass-panel mb-4">
         <span class="p-input-icon-left search-wrapper">
-          <i class="pi pi-search"></i>
-          <input pInputText placeholder="Buscar Folio o RUT..." class="search-input" [(ngModel)]="folioFilter" (keyup.enter)="loadDocuments()" />
+          <i class="pi pi-search text-gray-400"></i>
+          <input pInputText placeholder="Buscar Folio o RUT..." class="premium-input w-full" [(ngModel)]="folioFilter" (keyup.enter)="loadDocuments()" />
         </span>
         
         <div class="date-filters">
-           <p-calendar [(ngModel)]="dateRange" selectionMode="range" placeholder="Rango de Fechas" [showIcon]="true" class="input-dark"></p-calendar>
+           <p-calendar 
+             [(ngModel)]="dateRange" 
+             selectionMode="range" 
+             placeholder="Rango de Fechas" 
+             [showIcon]="true" 
+             styleClass="premium-calendar"
+             inputStyleClass="premium-input"
+             [appendTo]="'body'"
+             [baseZIndex]="9999">
+           </p-calendar>
         </div>
         
-        <button pButton icon="pi pi-search" class="p-button-rounded p-button-text" (click)="loadDocuments()"></button>
+        <button pButton icon="pi pi-search" class="search-btn" (click)="loadDocuments()"></button>
       </div>
 
       <div class="glass-panel table-wrapper">
-        <p-table [value]="documents()" styleClass="p-datatable-lg" [paginator]="true" [rows]="10" [loading]="loading()">
+        <p-table [value]="documents()" styleClass="premium-table p-datatable-lg" [paginator]="true" [rows]="10" [loading]="loading()">
           <ng-template pTemplate="header">
             <tr>
-              <th>Folio</th>
+              <th class="rounded-l-lg">Folio</th>
               <th>Tipo</th>
               <th>Emisión</th>
               <th>Receptor</th>
               <th>Monto Total</th>
               <th>Estado SII</th>
-              <th class="text-center">Acciones</th>
+              <th class="text-center rounded-r-lg">Acciones</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-doc>
             <tr class="hover-row">
-              <td class="font-bold">#{{ doc.folio }}</td>
+              <td class="font-bold text-lg">#{{ doc.folio }}</td>
               <td>
                 <span class="doc-type-badge" [class.boleta]="doc.tipoDte === 'BOLETA_ELECTRONICA'" [class.factura]="doc.tipoDte === 'FACTURA_ELECTRONICA'">
                   {{ doc.tipoDte === 'BOLETA_ELECTRONICA' ? 'Boleta' : 'Factura' }}
                 </span>
               </td>
               <!-- Fix: Use UTC to prevent date shift -->
-              <td>{{ doc.fechaEmision | date:'dd/MM/yyyy':'UTC' }}</td>
               <td>
-                <div class="receptor-info">
-                  <span class="name text-sm font-medium">{{ doc.receptorRazonSocial || 'Consumidor Final' }}</span>
-                  <span class="rut text-xs text-gray-400">{{ doc.receptorRut }}</span>
+                <div class="date-badge">
+                    <i class="pi pi-calendar mr-1 text-xs"></i>
+                    {{ doc.fechaEmision | date:'dd/MM/yyyy':'UTC' }}
                 </div>
               </td>
-              <td class="font-bold text-lg text-right">{{ formatMoney(doc.montoTotal) }}</td>
               <td>
-                <p-tag [value]="doc.estado" [severity]="getSeverity(doc.estado)"></p-tag>
+                <div class="receptor-info">
+                  <span class="name text-sm font-bold text-white">{{ doc.receptorRazonSocial || 'Consumidor Final' }}</span>
+                  <span class="rut text-xs text-secondary">{{ doc.receptorRut }}</span>
+                </div>
+              </td>
+              <td class="font-bold text-xl text-right text-green-400">{{ formatMoney(doc.montoTotal) }}</td>
+              <td>
+                <p-tag [value]="doc.estado" [severity]="getSeverity(doc.estado)" styleClass="premium-tag"></p-tag>
               </td>
               <td class="text-center">
                 <div class="action-buttons">
-                    <button pButton icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" pTooltip="Ver Detalle" (click)="viewDte(doc)"></button>
-                    <button pButton icon="pi pi-print" class="p-button-text p-button-rounded p-button-secondary" pTooltip="Imprimir" (click)="printDte(doc)"></button>
-                    <button pButton icon="pi pi-envelope" class="p-button-text p-button-rounded p-button-help" pTooltip="Enviar Email" (click)="emailDte(doc)"></button>
+                    <button pButton icon="pi pi-eye" class="action-icon-btn info" pTooltip="Ver Detalle" tooltipPosition="top" (click)="viewDte(doc)"></button>
+                    <button pButton icon="pi pi-print" class="action-icon-btn secondary" pTooltip="Imprimir" tooltipPosition="top" (click)="printDte(doc)"></button>
+                    <button pButton icon="pi pi-envelope" class="action-icon-btn help" pTooltip="Enviar Email" tooltipPosition="top" (click)="emailDte(doc)"></button>
                 </div>
               </td>
             </tr>
@@ -93,8 +107,11 @@ import { AuthService } from '@core/auth/auth.service';
           <ng-template pTemplate="emptymessage">
             <tr>
                 <td colspan="7" class="text-center p-8 text-gray-400">
-                    <i class="pi pi-info-circle text-2xl mb-2"></i>
-                    <p>No se encontraron documentos para esta sucursal.</p>
+                    <div class="empty-state">
+                        <i class="pi pi-folder-open text-6xl mb-4 text-gray-600"></i>
+                        <h3>Sin Documentos</h3>
+                        <p>No se encontraron documentos en este rango.</p>
+                    </div>
                 </td>
             </tr>
           </ng-template>
@@ -106,56 +123,49 @@ import { AuthService } from '@core/auth/auth.service';
         [(visible)]="showDetailModal" 
         [modal]="true" 
         [style]="{width: '100%', maxWidth: '450px'}" 
-        [resizable]="false"
+        [resizable]="false" 
         [draggable]="false"
         styleClass="premium-modal"
         [dismissableMask]="true"
-        [showHeader]="false">
+        [showHeader]="false"
+        [baseZIndex]="10000">
         
         <div class="modal-content" *ngIf="selectedDoc">
             <div class="modal-header">
-                <h2>Detalle de Documento</h2>
+                <h2>🧾 Detalle de Venta</h2>
                 <button class="close-btn" (click)="showDetailModal = false">✕</button>
             </div>
             
             <div class="receipt-preview-container">
                 <div class="thermal-receipt" id="modal-receipt">
                     <div class="receipt-header">
-                        <div class="receipt-logo" *ngIf="!tenantLogo()">🧾</div>
+                        <div class="receipt-logo" *ngIf="!tenantLogo()">💎</div>
                         <img [src]="tenantLogo()" *ngIf="tenantLogo()" class="receipt-logo-img"/>
                         
                         <div class="receipt-title">{{ selectedDoc.tipoDte === 'BOLETA_ELECTRONICA' ? 'BOLETA ELECTRÓNICA' : 'FACTURA ELECTRÓNICA' }}</div>
-                        <div class="receipt-folio">N° {{ selectedDoc.folio }}</div>
+                        <div class="receipt-folio">Folio N° {{ selectedDoc.folio }}</div>
                         <div class="receipt-date">{{ selectedDoc.fechaEmision | date:'dd/MM/yyyy HH:mm':'UTC' }}</div>
                     </div>
 
                     <div class="receipt-divider"></div>
 
                     <div class="receipt-company">
-                        <div>{{ selectedDoc.emisorRazonSocial }}</div>
-                        <div>RUT: {{ selectedDoc.emisorRut }}</div>
+                        <div class="font-bold">{{ selectedDoc.emisorRazonSocial }}</div>
+                        <div>{{ selectedDoc.emisorRut }}</div>
                         <div>{{ selectedDoc.emisorDireccion }}</div>
                     </div>
 
                     <div class="receipt-divider"></div>
 
-                    <!-- Receptor (si es factura o tiene datos) -->
-                    <div class="receipt-customer" *ngIf="selectedDoc.receptorRut">
-                        <div>Receptor: {{ selectedDoc.receptorRazonSocial }}</div>
-                        <div>RUT: {{ selectedDoc.receptorRut }}</div>
-                    </div>
-                     <div class="receipt-divider" *ngIf="selectedDoc.receptorRut"></div>
-
                     <div class="receipt-items">
                         <div class="receipt-item-row" *ngFor="let item of selectedDoc.items">
-                            <span class="item-qty">{{ item.cantidad }}x</span>
+                            <span class="item-qty">{{ item.cantidad }}</span>
                             <span class="item-name">{{ item.nombreItem }}</span>
                             <span class="item-price">{{ formatMoney(item.montoItem) }}</span>
                         </div>
-                        <!-- Fallback si no hay items detallados -->
-                         <div class="receipt-item-row" *ngIf="!selectedDoc.items?.length">
-                            <span class="item-qty">1x</span>
-                            <span class="item-name">Detalle no disponible</span>
+                         <div class="receipt-item-row text-gray-500 italic" *ngIf="!selectedDoc.items?.length">
+                            <span class="item-qty">1</span>
+                            <span class="item-name">Detalle general</span>
                             <span class="item-price">{{ formatMoney(selectedDoc.montoTotal) }}</span>
                         </div>
                     </div>
@@ -164,15 +174,15 @@ import { AuthService } from '@core/auth/auth.service';
 
                     <div class="receipt-totals">
                        <div class="total-row" *ngIf="selectedDoc.montoNeto">
-                            <span>Neto:</span>
+                            <span>Neto</span>
                             <span>{{ formatMoney(selectedDoc.montoNeto) }}</span>
                         </div>
                         <div class="total-row" *ngIf="selectedDoc.montoIva">
-                            <span>IVA (19%):</span>
+                            <span>IVA (19%)</span>
                             <span>{{ formatMoney(selectedDoc.montoIva) }}</span>
                         </div>
-                        <div class="total-row bold">
-                            <span>TOTAL:</span>
+                        <div class="total-row bold text-xl mt-2">
+                            <span>TOTAL</span>
                             <span>{{ formatMoney(selectedDoc.montoTotal) }}</span>
                         </div>
                     </div>
@@ -182,21 +192,17 @@ import { AuthService } from '@core/auth/auth.service';
                             <img [src]="previewPdf417()" class="pdf417-img" />
                             <div class="barcode-label">Timbre Electrónico SII</div>
                          </div>
-                         <div class="qr-container" *ngIf="previewQrCode()">
-                             <img [src]="previewQrCode()" class="qr-img" />
-                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="modal-actions">
-                <button pButton label="Imprimir" icon="pi pi-print" class="p-button-outlined p-button-secondary w-full" (click)="printDte(selectedDoc)"></button>
-                <button pButton label="Enviar Email" icon="pi pi-envelope" class="p-button-primary w-full" (click)="emailDte(selectedDoc)"></button>
+                <button pButton label="Imprimir" icon="pi pi-print" class="p-button-outlined p-button-secondary flex-1" (click)="printDte(selectedDoc)"></button>
+                <button pButton label="Enviar Email" icon="pi pi-envelope" class="premium-btn btn-primary flex-1" (click)="emailDte(selectedDoc)"></button>
             </div>
         </div>
       </p-dialog>
       
-      <!-- Hidden Iframe for Printing -->
       <iframe id="print-frame" style="display:none"></iframe>
     </div>
   `,
@@ -204,117 +210,204 @@ import { AuthService } from '@core/auth/auth.service';
     .billing-container {
       padding: 2rem;
       min-height: 100vh;
-      background: var(--surface-card);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
     }
     
     .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       
       h1 {
         margin: 0;
-        font-size: 1.8rem;
-        background: linear-gradient(90deg, #34D399, #10B981);
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #4ade80, #3b82f6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
       }
-      .subtitle { color: #9CA3AF; margin-top: 0.5rem; }
+      .subtitle { color: #94a3b8; font-size: 0.95rem; margin-top: 0.25rem; }
     }
 
+    /* Glass Panels */
     .glass-panel {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
-
+    
+    /* Filters Bar */
     .filters-bar {
       display: flex;
-      gap: 1rem;
+      gap: 1.25rem;
       align-items: center;
-      padding: 1.5rem;
+      padding: 1.25rem 2rem;
       flex-wrap: wrap;
+      margin-bottom: 2rem;
     }
     
-    .search-wrapper { flex: 1; min-width: 250px; }
-    .search-input { width: 100%; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); }
+    .search-wrapper { 
+        flex: 1; 
+        min-width: 250px; 
+        position: relative;
+    }
     
+    .premium-input {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 1rem 0.75rem 2.5rem !important;
+        transition: all 0.3s ease;
+    }
+    
+    .premium-input:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+    
+    .search-btn {
+        background: rgba(59, 130, 246, 0.1) !important;
+        color: #60a5fa !important;
+        border: 1px solid rgba(59, 130, 246, 0.2) !important;
+        border-radius: 12px !important;
+        width: 48px;
+        height: 48px;
+    }
+
+    /* Premium Buttons */
+    .premium-btn {
+        border-radius: 12px !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 600 !important;
+        border: none !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .premium-btn:active { transform: translateY(1px); }
+    .premium-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+    }
+
+    /* Table Styles */
     .table-wrapper { padding: 0.5rem; overflow: hidden; }
     
-    .doc-type-badge {
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      &.boleta { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
-      &.factura { background: rgba(16, 185, 129, 0.15); color: #34D399; }
+    :host ::ng-deep .premium-table .p-datatable-header,
+    :host ::ng-deep .premium-table .p-datatable-thead > tr > th {
+        background: #1e293b !important;
+        color: #94a3b8 !important;
+        border: none !important;
+        padding: 1rem !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
     }
     
-    .action-btn { 
-        border-radius: 8px; 
-        &.warning { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-        &.success { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    :host ::ng-deep .premium-table .p-datatable-tbody > tr {
+        background: transparent !important;
+        color: #e2e8f0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+        transition: background 0.2s;
     }
     
-    .hover-row:hover { background: rgba(255,255,255,0.03); }
-    .action-buttons { display: flex; gap: 0.5rem; justify-content: center; }
-
-    /* PREMIUM MODAL STYLES */
-    :host ::ng-deep .premium-modal .p-dialog-content {
-        padding: 0;
-        background: #111827;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.1);
+    :host ::ng-deep .premium-table .p-datatable-tbody > tr:hover {
+        background: rgba(59, 130, 246, 0.05) !important;
     }
-
-    .modal-content { padding: 1.5rem; color: white; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
-    .close-btn { background: none; border: none; color: #9CA3AF; font-size: 1.5rem; cursor: pointer; }
     
-    .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .date-badge {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #cbd5e1;
+    }
+    
+    .text-secondary { color: #94a3b8; }
 
-    /* RECEIPT STYLES (Copied & Adapted) */
+    /* Action Icon Buttons */
+    .action-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .action-icon-btn {
+        width: 2.5rem !important; 
+        height: 2.5rem !important;
+        border-radius: 10px !important;
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        margin: 0 0.25rem;
+        transition: all 0.2s !important;
+    }
+    
+    .action-icon-btn:hover { transform: scale(1.1); }
+    .action-icon-btn.info:hover { background: rgba(59, 130, 246, 0.2) !important; color: #60a5fa !important; border-color: #60a5fa !important; }
+    .action-icon-btn.secondary:hover { background: rgba(255, 255, 255, 0.2) !important; color: white !important; border-color: white !important; }
+    .action-icon-btn.help:hover { background: rgba(168, 85, 247, 0.2) !important; color: #c084fc !important; border-color: #c084fc !important; }
+
+    /* Modal & Receipt */
+    .modal-content {
+        padding: 1.5rem;
+        background: #0f172a;
+        color: white;
+    }
+    
     .receipt-preview-container {
-        background: #fff;
-        color: #000;
-        padding: 1rem;
-        border-radius: 8px;
-        max-height: 400px;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px; 
+        padding: 20px;
+        background: #ffffff; /* Thermal paper white */
+        color: #1a1a1a;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        max-height: 500px;
         overflow-y: auto;
     }
     
-    .thermal-receipt { 
-        font-family: 'Courier New', Courier, monospace; 
-        font-size: 12px; 
-        line-height: 1.4;
+    .thermal-receipt { color: #000; } /* Ensure text is black on white paper */
+    .receipt-logo-img { width: 64px; border-radius: 50%; border: 3px solid #eee; }
+
+    /* Fix Primeng Z-Index issues */
+    :host ::ng-deep .p-datepicker {
+        background: #1e293b !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+        z-index: 99999 !important; /* Force top */
     }
     
-    .receipt-header { text-align: center; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; }
-    .receipt-logo { font-size: 2rem; margin-bottom: 0.5rem; }
-    .receipt-logo-img { width: 64px; height: 64px; object-fit: contain; border-radius: 50%; margin-bottom: 5px; }
-    .receipt-title { font-weight: bold; font-size: 14px; margin: 5px 0; }
-    .receipt-folio { font-size: 13px; margin-bottom: 5px; }
-    .receipt-date { font-size: 11px; color: #555; }
-    
-    .receipt-divider { border-bottom: 1px dashed #000; margin: 10px 0; width: 100%; }
-    
-    .receipt-company, .receipt-customer { text-align: center; font-size: 11px; }
-    
-    .receipt-items { margin: 10px 0; }
-    .receipt-item-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .item-name { flex: 1; margin: 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    .receipt-totals { text-align: right; margin-top: 10px; }
-    .total-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-    .total-row.bold { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 5px; margin-top: 5px; }
-    
-    .receipt-barcode-section { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .pdf417-img { width: 100%; max-width: 200px; height: auto; display: block; }
-    .qr-img { width: 100px; height: 100px; display: block; }
-    .barcode-label { font-size: 9px; margin-top: 2px; }
+    :host ::ng-deep .p-datepicker table td > span { color: #e2e8f0; }
+    :host ::ng-deep .p-datepicker table td > span:hover { background: #3b82f6 !important; }
   `]
 })
 export class ListaDocumentosComponent {
@@ -335,12 +428,12 @@ export class ListaDocumentosComponent {
   previewPdf417 = signal<string>('');
   previewQrCode = signal<string>('');
 
-  // Filters
   folioFilter = signal('');
   dateRange = signal<Date[] | null>(null);
-
-  // Helpers
   tenantLogo = signal('');
+
+  sendingPending = signal(false);
+  exporting = signal(false); // New state
 
   ngOnInit() {
     this.tenantLogo.set(this.authService.tenant()?.logoUrl || '');
@@ -348,17 +441,46 @@ export class ListaDocumentosComponent {
   }
 
   onBranchChanged(branch: any) {
-    console.log('Facturacion: Branch changed to', branch.nombre);
-    // CRITICAL FIX: Store branch ID to filter by it
     this.currentBranchId = branch.id;
     this.loadDocuments();
   }
 
-  sendingPending = signal(false);
+  // LOGIC FOR EXPORT
+  exportarLibro() {
+    this.exporting.set(true);
+
+    const now = new Date();
+    // Default: Current Month
+    let from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    let to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    // If dates selected in filter, use them
+    if (this.dateRange() && this.dateRange()!.length > 0) {
+      if (this.dateRange()![0]) from = this.dateRange()![0].toISOString().split('T')[0];
+      if (this.dateRange()![1]) to = this.dateRange()![1].toISOString().split('T')[0];
+    }
+
+    this.billingService.downloadLibroVentasExcel(from, to).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Libro_Ventas_${from}_${to}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.messageService.add({ severity: 'success', summary: 'Exportado', detail: 'Libro de ventas descargado' });
+        this.exporting.set(false);
+      },
+      error: (err) => {
+        console.error('Export error', err);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo exportar el libro' });
+        this.exporting.set(false);
+      }
+    });
+  }
 
   enviarPendientes() {
     if (!confirm('¿Estás seguro de enviar todos los documentos pendientes al SII?')) return;
-
     this.sendingPending.set(true);
     this.billingService.enviarPendientes().subscribe({
       next: (res) => {
@@ -378,19 +500,12 @@ export class ListaDocumentosComponent {
     this.loading.set(true);
     const page = event ? Math.floor(event.first / event.rows) : 0;
     const size = event ? event.rows : 10;
-    const branchId = this.currentBranchId; // Use current selected branch
-
-    // Date Filters
-    // TODO: Pass dates to service if filters are set
-
-    console.log(`Frontend: Requesting DTEs page=${page} branch=${branchId}`);
+    const branchId = this.currentBranchId;
 
     this.billingService.getDtes(undefined, undefined, page, size, branchId).subscribe({
       next: (response: any) => {
         let content = [];
         let total = 0;
-
-        // ... Parsing Logic (same as before) ...
         if (response) {
           if (response.content) {
             content = response.content;
@@ -406,7 +521,6 @@ export class ListaDocumentosComponent {
             } catch (e) { }
           }
         }
-
         this.documents.set(content);
         this.totalRecords.set(total);
         this.loading.set(false);
@@ -432,15 +546,11 @@ export class ListaDocumentosComponent {
     return this.billingService.formatCurrency(amount);
   }
 
-  // ACTIONS
-
   async viewDte(doc: Dte) {
     this.selectedDoc = doc;
     this.showDetailModal = true;
     this.previewPdf417.set('');
     this.previewQrCode.set('');
-
-    // Generate barcodes for cached view
     try {
       const timbreData = this.barcodeService.generateTimbreData({
         tipoDte: doc.tipoDte,
@@ -450,48 +560,32 @@ export class ListaDocumentosComponent {
         razonSocialEmisor: doc.emisorRazonSocial,
         montoTotal: doc.montoTotal
       });
-
       const pdf417 = await this.barcodeService.generatePDF417(timbreData);
       this.previewPdf417.set(pdf417);
-
-      // QR Code (URL to public view or just basic data)
-      const qr = await this.barcodeService.generateQRCode(`https://sii.cl/${doc.folio}`); // Placeholder URL
+      const qr = await this.barcodeService.generateQRCode(`https://sii.cl/${doc.folio}`);
       this.previewQrCode.set(qr);
-
     } catch (e) {
       console.error('Error generating barcodes', e);
     }
   }
 
   printDte(doc: Dte) {
-    // If not already viewing, set it so we can grab the element (trick)
-    // Actually best to create a dedicated print window/iframe string
-    this.selectedDoc = doc; // Ensure data is present
-
-    // We reuse the 'modal-receipt' HTML if visible, or generate it.
-    // If modal is not open, we might need to open it hidden or use a pure string template.
-    // Simpler: Just generate the printing string directly.
-
+    this.selectedDoc = doc;
     const receiptHtml = document.querySelector('.thermal-receipt')?.innerHTML || '';
     if (!receiptHtml && !this.showDetailModal) {
-      // If modal not open, open it quickly or force render?
-      // Let's just open the modal for the user to see what they are printing is better UX
       this.viewDte(doc);
-      setTimeout(() => this.executePrint(), 500); // Wait for render
+      setTimeout(() => this.executePrint(), 500);
       return;
     }
-
     this.executePrint();
   }
 
   executePrint() {
     const receiptElement = document.querySelector('.thermal-receipt');
     if (!receiptElement) return;
-
     const iframe = document.getElementById('print-frame') as HTMLIFrameElement;
     const doc = iframe.contentWindow?.document;
     if (!doc) return;
-
     doc.open();
     doc.write(`
         <html>
@@ -506,6 +600,8 @@ export class ListaDocumentosComponent {
                 .receipt-item-row, .total-row { display: flex; justify-content: space-between; font-size: 11px; }
                 .receipt-logo-img { width: 50px; border-radius: 50%; display: block; margin: 0 auto; }
                 .pdf417-img { width: 100%; max-width: 250px; }
+                .font-bold { font-weight: bold; }
+                .text-xl { font-size: 14px; }
             </style>
         </head>
         <body>
@@ -520,7 +616,6 @@ export class ListaDocumentosComponent {
   emailDte(doc: Dte) {
     const email = prompt('Ingrese el correo electrónico del destinatario:', doc.receptorEmail);
     if (!email) return;
-
     this.messageService.add({ severity: 'info', summary: 'Enviando...', detail: 'Enviando documento por correo...' });
     this.billingService.enviarPorEmail(doc.id, email).subscribe({
       next: () => this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Correo enviado correctamente' }),
