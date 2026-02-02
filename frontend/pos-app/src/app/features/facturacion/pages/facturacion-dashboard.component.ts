@@ -477,18 +477,27 @@ export class FacturacionDashboardComponent implements OnInit {
 
   private loadData() {
     this.billingService.getCafs().subscribe({
-      next: (cafs: CafInfo[]) => this.cafs.set(cafs),
-      error: (err: any) => console.error('Error cargando CAFs', err)
+      next: (cafs: CafInfo[]) => this.cafs.set(cafs || []),
+      error: (err: any) => {
+        console.error('Error cargando CAFs', err);
+        this.cafs.set([]); // Fallback empty
+      }
     });
+
     this.billingService.getDtes(undefined, undefined, 0, 5).subscribe({
       next: (response: any) => {
-        // Handle both simple list and page response
-        const docs = response.content || response;
-        if (Array.isArray(docs)) {
-          this.documentos.set(docs);
+        if (!response) {
+          this.documentos.set([]);
+          return;
         }
+        // Handle both simple list and page response
+        const docs = response.content || (Array.isArray(response) ? response : []);
+        this.documentos.set(docs);
       },
-      error: (err: any) => console.error('Error cargando documentos', err)
+      error: (err: any) => {
+        console.error('Error cargando documentos', err);
+        this.documentos.set([]); // Fallback empty
+      }
     });
   }
 
