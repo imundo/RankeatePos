@@ -25,4 +25,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
     CMD wget -q --spider http://localhost:${PORT:-8084}/health || exit 1
 
 EXPOSE 8084
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
