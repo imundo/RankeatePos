@@ -263,7 +263,6 @@ public class DteService {
      * Listar DTEs con paginación
      */
     @Transactional(readOnly = true)
-    @Transactional(readOnly = true)
     public Page<DteResponse> listarDtes(UUID tenantId, UUID branchId, TipoDte tipoDte, EstadoDte estado,
             Pageable pageable) {
         Page<DteSummary> dtes;
