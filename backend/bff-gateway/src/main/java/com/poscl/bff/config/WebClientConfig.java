@@ -122,8 +122,8 @@ public class WebClientConfig {
     public org.springframework.web.client.RestTemplate billingRestTemplate() {
         log.info("Creating billingRestTemplate with short timeouts");
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(8000); // 8 seconds
-        factory.setReadTimeout(8000); // 8 seconds
+        factory.setConnectTimeout(30000); // 30 seconds
+        factory.setReadTimeout(30000); // 30 seconds
         return new org.springframework.web.client.RestTemplate(factory);
     }
 }
