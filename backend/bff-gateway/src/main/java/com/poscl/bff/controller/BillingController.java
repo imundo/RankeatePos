@@ -177,7 +177,9 @@ public class BillingController {
                     new HttpEntity<>(headers), Object.class);
 
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+            // Do NOT propagate headers blindly (Content-Length mismatch risk)
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(response.getBody());
         } catch (Exception e) {
             log.error("BFF: Error calling Billing Service List DTEs: {}", e.getMessage(), e);
@@ -260,7 +262,9 @@ public class BillingController {
                     new HttpEntity<>(headers), Object.class);
 
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+            // Do NOT propagate headers blindly
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(response.getBody());
         } catch (Exception e) {
             log.error("BFF: Error fetching CAFs: {}", e.getMessage());
