@@ -51,21 +51,33 @@ public class Caf {
     private LocalDate fechaVencimiento;
 
     // --- Datos del CAF encriptados ---
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "xml_caf", nullable = false, columnDefinition = "TEXT")
     private String xmlCaf;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "rsa_private_key", columnDefinition = "TEXT")
     private String rsaPrivateKey;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "rsa_public_key", columnDefinition = "TEXT")
     private String rsaPublicKey;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "rsa_modulus", columnDefinition = "TEXT")
     private String rsaModulus;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "rsa_exponent", columnDefinition = "TEXT")
     private String rsaExponent;
 
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "signature", columnDefinition = "TEXT")
     private String signature;
 

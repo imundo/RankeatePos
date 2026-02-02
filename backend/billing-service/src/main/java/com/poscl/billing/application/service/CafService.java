@@ -73,7 +73,7 @@ public class CafService {
                 .build();
 
         Caf saved = cafRepository.save(caf);
-        log.info("CAF guardado: tipo={}, folios {}-{}, id={}", 
+        log.info("CAF guardado: tipo={}, folios {}-{}, id={}",
                 saved.getTipoDte(), saved.getFolioDesde(), saved.getFolioHasta(), saved.getId());
 
         return toResponse(saved);
@@ -107,12 +107,12 @@ public class CafService {
     @Transactional(readOnly = true)
     public Map<TipoDte, Integer> getFoliosDisponibles(UUID tenantId) {
         Map<TipoDte, Integer> folios = new HashMap<>();
-        
+
         for (TipoDte tipo : TipoDte.values()) {
             Integer count = cafRepository.countFoliosDisponibles(tenantId, tipo).orElse(0);
             folios.put(tipo, count);
         }
-        
+
         return folios;
     }
 
@@ -145,7 +145,7 @@ public class CafService {
             }
 
             Element da = (Element) autorizacion.getElementsByTagName("DA").item(0);
-            
+
             // Tipo DTE
             int tipoCodigo = Integer.parseInt(getElementText(da, "TD"));
             TipoDte tipoDte = TipoDte.fromCodigo(tipoCodigo);
@@ -213,10 +213,12 @@ public class CafService {
             String rsaPrivateKey,
             String rsaPublicKey,
             String rsaModulus,
-            String rsaExponent
-    ) {}
+            String rsaExponent) {
+    }
 
     private CafResponse toResponse(Caf caf) {
+        // Note: Do not access lazy-loaded fields here (xmlCaf, keys) to prevent
+        // fetching them
         return CafResponse.builder()
                 .id(caf.getId())
                 .tipoDte(caf.getTipoDte())

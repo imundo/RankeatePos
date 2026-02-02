@@ -139,6 +139,7 @@ public class BillingController {
     public ResponseEntity<String> listarDtes(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(value = "X-Branch-ID", required = false) String branchId,
             @RequestParam(required = false) String tipoDte,
             @RequestParam(required = false) String estado,
             @RequestParam(defaultValue = "0") int page,
@@ -152,8 +153,12 @@ public class BillingController {
             urlBuilder.append("&estado=").append(estado);
 
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+        if (branchId != null) {
+            headers.set("X-Branch-ID", branchId);
+        }
 
-        log.info("BFF: Listar DTEs calling {} with type={}, estado={}", urlBuilder.toString(), tipoDte, estado);
+        log.info("BFF: Listar DTEs calling {} with type={}, estado={}, branch={}", urlBuilder.toString(), tipoDte,
+                estado, branchId);
         try {
             ResponseEntity<String> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET,
                     new HttpEntity<>(headers), String.class);
