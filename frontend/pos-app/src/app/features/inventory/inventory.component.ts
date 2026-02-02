@@ -467,22 +467,21 @@ export class InventoryComponent implements OnInit {
 
       // Update local cache manually to reflect changes immediately
       if (updatedStock) {
-        // Convert StockDto to CachedProduct format partially or just invalidate cache
-        // Better: invalidate cache for this tenant so next load fetches from API or updates cache
-        // OR: Update specific item in cache. For now, let's clear cache to force refresh or update it.
+        console.log('Adjustment success, updating UI for variant:', updatedStock.variantId);
 
         // Strategy: We will reload data from API to be sure, avoiding cache for this read
+        console.log('Clearing local cache to force refresh...');
         await this.offlineService.clearCache();
 
-        // Alternatively, update the specific item in the list signal directly for immediate UI feedback
-        this.stock.update(items => items.map(i => i.id === updatedStock.id ? updatedStock : i));
+        // Update the specific item in the list signal directly for immediate UI feedback (using variantId for safety)
+        this.stock.update(items => items.map(i => i.variantId === updatedStock.variantId ? updatedStock : i));
 
         // Also update selected item if still open (though we close modal)
       }
 
       this.closeAdjustModal();
       this.loadData(true); // reload with forceApi = true
-    } catch (e) { console.error(e); alert('Error al ajustar stock'); }
+    } catch (e) { console.error('Error submitting adjustment:', e); alert('Error al ajustar stock'); }
     finally { this.loading.set(false); }
   }
 
