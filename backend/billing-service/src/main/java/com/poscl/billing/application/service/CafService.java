@@ -80,22 +80,22 @@ public class CafService {
     }
 
     /**
-     * Listar CAFs activos por tenant
+     * Listar CAFs activos por tenant (Optimizado con Projection)
      */
     @Transactional(readOnly = true)
     public List<CafResponse> listarCafs(UUID tenantId) {
-        return cafRepository.findByTenantIdAndActivoTrue(tenantId)
+        return cafRepository.findProjectedByTenantIdAndActivoTrue(tenantId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Listar CAFs por tipo de DTE
+     * Listar CAFs por tipo de DTE (Optimizado con Projection)
      */
     @Transactional(readOnly = true)
     public List<CafResponse> listarCafsPorTipo(UUID tenantId, TipoDte tipoDte) {
-        return cafRepository.findByTenantIdAndTipoDteAndActivoTrue(tenantId, tipoDte)
+        return cafRepository.findProjectedByTenantIdAndTipoDteAndActivoTrue(tenantId, tipoDte)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -233,6 +233,28 @@ public class CafService {
                 .vencido(caf.isVencido())
                 .activo(caf.getActivo())
                 .agotado(caf.getAgotado())
+                .build();
+    }
+
+    private CafResponse toResponse(com.poscl.billing.domain.repository.CafSummary summary) {
+        return CafResponse.builder()
+                .id(summary.getId())
+                .tipoDte(summary.getTipoDte())
+                .tipoDteDescripcion(summary.getTipoDte().getDescripcion())
+                .folioDesde(summary.getFolioDesde())
+                .folioHasta(summary.getFolioHasta())
+                .folioActual(summary.getFolioActual())
+                // .foliosDisponibles() - calculated
+                .foliosDisponibles(summary.getFolioHasta() - summary.getFolioActual() + 1)
+                // .porcentajeUso() - calculated
+                .porcentajeUso((double) (summary.getFolioActual() - summary.getFolioDesde())
+                        / (summary.getFolioHasta() - summary.getFolioDesde() + 1) * 100)
+                .fechaAutorizacion(summary.getFechaAutorizacion())
+                .fechaVencimiento(summary.getFechaVencimiento())
+                .vencido(
+                        summary.getFechaVencimiento() != null && LocalDate.now().isAfter(summary.getFechaVencimiento()))
+                .activo(summary.getActivo())
+                .agotado(summary.getAgotado())
                 .build();
     }
 }

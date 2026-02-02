@@ -15,7 +15,12 @@ public interface CafRepository extends JpaRepository<Caf, UUID> {
 
        List<Caf> findByTenantIdAndActivoTrue(UUID tenantId);
 
+       // Projections for optimized reading
+       List<CafSummary> findProjectedByTenantIdAndActivoTrue(UUID tenantId);
+
        List<Caf> findByTenantIdAndTipoDteAndActivoTrue(UUID tenantId, TipoDte tipoDte);
+
+       List<CafSummary> findProjectedByTenantIdAndTipoDteAndActivoTrue(UUID tenantId, TipoDte tipoDte);
 
        @Query("SELECT c FROM Caf c WHERE c.tenantId = :tenantId AND c.tipoDte = :tipoDte " +
                      "AND c.activo = true AND c.agotado = false " +
