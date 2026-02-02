@@ -7,11 +7,12 @@ import { StockService, StockDto, StockMovementDto, TipoMovimiento, StockAdjustme
 import { OfflineService, CachedProduct } from '@core/offline/offline.service';
 import { BranchContextService } from '@core/services/branch-context.service';
 import { BranchService } from '@core/services/branches.service';
+import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BranchSwitcherComponent],
   template: `
     <div class="inventory-container">
       <!-- Header -->
@@ -25,11 +26,10 @@ import { BranchService } from '@core/services/branches.service';
           <div class="header-info">
             <h1>Inventario</h1>
             <span class="subtitle">Gestión de Stock Premium</span>
-            @if (currentBranchName()) {
-              <span class="branch-badge">{{ currentBranchName() }}</span>
-            }
           </div>
         </div>
+        
+        <app-branch-switcher [autoReload]="false" (branchChanged)="onBranchChanged($event)"></app-branch-switcher>
         
         <div class="header-actions">
            <button class="btn-scan" [class.active]="scanningMode" (click)="toggleScanMode()">
@@ -475,6 +475,12 @@ export class InventoryComponent implements OnInit {
   selectProduct(item: StockDto) {
     this.selectedStockItem = item;
     this.searchedProducts.set([]);
+  }
+
+  onBranchChanged(branch: any) {
+    console.log('Branch changed manually to:', branch.nombre);
+    // Force reload from API to get fresh stock for this branch
+    this.loadData(true);
   }
 
   async submitAdjustment() {
