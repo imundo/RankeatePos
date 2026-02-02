@@ -58,6 +58,7 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
     // Global batch fetch (ignore tenant filter implies admin usage or background
     // job)
-    @Query("SELECT s FROM Sale s LEFT JOIN FETCH s.items LEFT JOIN FETCH s.session.register WHERE s.dteStatus = :status ORDER BY s.createdAt ASC")
+    // Global batch fetch
+    @Query("SELECT s FROM Sale s LEFT JOIN FETCH s.items LEFT JOIN FETCH s.payments WHERE s.dteStatus = :status ORDER BY s.createdAt ASC")
     List<Sale> findTop50ByDteStatus(Sale.DteStatus status, Pageable pageable);
 }
