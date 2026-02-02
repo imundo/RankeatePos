@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { timeout } from 'rxjs/operators';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -4042,7 +4043,10 @@ export class PosComponent implements OnInit {
               ? `${environment.billingUrl}/billing/boleta`
               : `${environment.billingUrl}/billing/factura`;
 
-            const dteResult = await this.http.post<any>(endpoint, dteRequest).toPromise();
+            // Timeout after 5s to prevent UI freeze
+            const dteResult = await this.http.post<any>(endpoint, dteRequest)
+              .pipe(timeout(5000))
+              .toPromise();
 
             this.lastSaleDocumento = {
               id: dteResult?.id,
