@@ -197,7 +197,7 @@ import { AuthService } from '@core/auth/auth.service';
             </div>
             
             <div class="modal-actions">
-                <button pButton label="Imprimir" icon="pi pi-print" class="p-button-outlined p-button-secondary flex-1" (click)="printDte(selectedDoc)"></button>
+                <button pButton label="Imprimir" icon="pi pi-print" class="p-button-outlined p-button-secondary flex-1 border-gray-600 text-gray-300 hover:bg-gray-800" (click)="printDte(selectedDoc)"></button>
                 <button pButton label="Enviar Email" icon="pi pi-envelope" class="premium-btn btn-primary flex-1" (click)="emailDte(selectedDoc)"></button>
             </div>
         </div>
@@ -377,35 +377,127 @@ import { AuthService } from '@core/auth/auth.service';
     .action-icon-btn.secondary:hover { background: rgba(255, 255, 255, 0.2) !important; color: white !important; border-color: white !important; }
     .action-icon-btn.help:hover { background: rgba(168, 85, 247, 0.2) !important; color: #c084fc !important; border-color: #c084fc !important; }
 
-    /* Modal & Receipt */
-    .modal-content {
-        padding: 1.5rem;
-        background: #0f172a;
-        color: white;
+    /* Modal & Receipt Premium Styles */
+    :host ::ng-deep .premium-modal .p-dialog-content {
+        padding: 0 !important;
+        background: transparent !important;
+        border-radius: 20px;
     }
+
+    .modal-content {
+        background: #0f172a;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 85vh;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+        background: #1e293b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 700; color: white; }
+    .close-btn { background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
+    .close-btn:hover { color: white; }
     
     .receipt-preview-container {
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 12px; 
-        padding: 20px;
-        background: #ffffff; /* Thermal paper white */
-        color: #1a1a1a;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-        max-height: 500px;
+        padding: 2rem;
+        background: #0f172a; /* Dark background behind paper */
         overflow-y: auto;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        /* Custom Scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: #334155 #0f172a;
     }
     
-    .thermal-receipt { color: #000; } /* Ensure text is black on white paper */
-    .receipt-logo-img { width: 64px; border-radius: 50%; border: 3px solid #eee; }
+    .thermal-receipt {
+        background: #fff;
+        color: #000;
+        width: 100%;
+        max-width: 380px; /* Typical thermal width constraint */
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        font-family: 'Courier New', Courier, monospace; /* Thermal printer font */
+        font-size: 13px;
+        line-height: 1.4;
+        align-self: flex-start; /* Allow growing */
+        position: relative;
+    }
+    
+    /* Paper effect */
+    .thermal-receipt::before {
+        content: '';
+        position: absolute;
+        top: -5px; left: 0; right: 0; height: 5px;
+        background: linear-gradient(135deg, white 5px, transparent 0) 0 5px,
+                    linear-gradient(-135deg, white 5px, transparent 0) 0 5px;
+        background-color: #0f172a;
+        background-position: left bottom;
+        background-repeat: repeat-x;
+        background-size: 10px 10px;
+    }
+    
+    .thermal-receipt::after {
+        content: '';
+        position: absolute;
+        bottom: -5px; left: 0; right: 0; height: 5px;
+        background: linear-gradient(45deg, white 5px, transparent 0) 0 -5px,
+                    linear-gradient(-45deg, white 5px, transparent 0) 0 -5px;
+        background-color: #0f172a;
+        background-position: left top;
+        background-repeat: repeat-x;
+        background-size: 10px 10px;
+    }
 
-    /* Fix Primeng Z-Index issues */
+    .receipt-header, .receipt-company, .receipt-totals { text-align: center; }
+    .receipt-logo-img { width: 60px; height: 60px; object-fit: contain; margin: 0 auto; display: block; filter: grayscale(100%); mix-blend-mode: multiply; }
+    .receipt-title { font-weight: 900; font-size: 16px; margin: 10px 0 5px; text-transform: uppercase; }
+    .receipt-folio { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+    .receipt-date { font-size: 11px; color: #555; }
+    
+    .receipt-divider { 
+        border-bottom: 2px dashed #000; 
+        margin: 15px 0; 
+        opacity: 0.3;
+    }
+    
+    .receipt-item-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .item-qty { width: 30px; }
+    .item-name { flex: 1; text-align: left; padding-right: 10px; }
+    .item-price { font-weight: bold; }
+    
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .total-row.bold { font-weight: 900; font-size: 1.1rem; border-top: 2px solid #000; padding-top: 10px; margin-top: 5px; }
+    
+    .receipt-barcode-section { margin-top: 20px; text-align: center; }
+    .pdf417-img { max-width: 100%; height: auto; mix-blend-mode: multiply; }
+    .barcode-label { font-size: 10px; text-transform: uppercase; margin-top: 5px; }
+
+    .modal-actions {
+        padding: 1.5rem;
+        background: #1e293b;
+        display: flex;
+        gap: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    /* Common Helpers */
     :host ::ng-deep .p-datepicker {
         background: #1e293b !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
-        z-index: 99999 !important; /* Force top */
+        z-index: 99999 !important;
     }
-    
     :host ::ng-deep .p-datepicker table td > span { color: #e2e8f0; }
     :host ::ng-deep .p-datepicker table td > span:hover { background: #3b82f6 !important; }
   `]
