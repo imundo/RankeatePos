@@ -327,6 +327,21 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
     }
 
+    // ==================== REPORTES ====================
+
+    @GetMapping("/reports/sales-book/excel")
+    public ResponseEntity<?> downloadSalesBookExcel(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String from,
+            @RequestParam String to) {
+
+        String url = billingServiceUrl + "/api/billing/reports/sales-book/excel?from=" + from + "&to=" + to;
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+    }
+
     // ==================== HELPER ====================
 
     /**
