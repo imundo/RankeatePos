@@ -192,6 +192,10 @@ import { AuthService } from '@core/auth/auth.service';
                             <img [src]="previewPdf417()" class="pdf417-img" />
                             <div class="barcode-label">Timbre Electrónico SII</div>
                          </div>
+                         <div class="qr-container mt-4" *ngIf="previewQrCode()">
+                            <img [src]="previewQrCode()" class="qr-img mx-auto" style="width: 100px; height: 100px;" />
+                            <div class="barcode-label">Verificar en SII</div>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -481,6 +485,7 @@ import { AuthService } from '@core/auth/auth.service';
     
     .receipt-barcode-section { margin-top: 20px; text-align: center; }
     .pdf417-img { max-width: 100%; height: auto; mix-blend-mode: multiply; }
+    .qr-img { mix-blend-mode: multiply; display: block; }
     .barcode-label { font-size: 10px; text-transform: uppercase; margin-top: 5px; }
 
     .modal-actions {
