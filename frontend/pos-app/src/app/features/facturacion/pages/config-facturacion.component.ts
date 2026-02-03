@@ -226,6 +226,24 @@ interface ConfigEmpresa {
           }
         </section>
 
+        </section>
+        
+        <!-- Preferencias de Sistema -->
+        <section class="card system-section">
+          <h2>⚙️ Preferencias de Sistema</h2>
+          
+          <div class="preference-item">
+            <div class="pref-info">
+              <span class="pref-title">Modo Offline / Caché (Service Worker)</span>
+              <span class="pref-desc">Permite entrar a la app sin internet, pero puede retrasar actualizaciones. Recomendado: Desactivado si tienes buena conexión.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [checked]="swEnabled()" (change)="toggleSw($event)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </section>
+
         <!-- Acceso rápido -->
         <section class="card quick-links">
           <h2>🔗 Accesos Rápidos</h2>
@@ -679,6 +697,49 @@ interface ConfigEmpresa {
         grid-template-columns: 1fr;
       }
     }
+
+    /* Switch Style */
+    .preference-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .pref-title { display: block; font-weight: 500; margin-bottom: 0.25rem; }
+    .pref-desc { font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+    }
+    input:checked + .slider { background-color: #6366F1; }
+    input:focus + .slider { box-shadow: 0 0 1px #6366F1; }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .slider.round { border-radius: 34px; }
+    .slider.round:before { border-radius: 50%; }
   `]
 })
 export class ConfigFacturacionComponent implements OnInit {
@@ -789,5 +850,30 @@ export class ConfigFacturacionComponent implements OnInit {
   cambiarAmbiente(ambiente: 'certificacion' | 'produccion') {
     if (ambiente === 'produccion' && !this.puedeProduccion()) return;
     this.ambiente.set(ambiente);
+  }
+
+  swEnabled = signal(localStorage.getItem('POS_SETTINGS_SW_ENABLED') === 'true');
+
+  toggleSw(event: Event) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    localStorage.setItem('POS_SETTINGS_SW_ENABLED', String(isChecked));
+    this.swEnabled.set(isChecked);
+
+    if (!isChecked) {
+      // Unregister existing SW if any
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+          window.location.reload();
+        });
+      } else {
+        window.location.reload();
+      }
+    } else {
+      // Reload to let app.config.ts register it (requires page reload)
+      window.location.reload();
+    }
   }
 }
