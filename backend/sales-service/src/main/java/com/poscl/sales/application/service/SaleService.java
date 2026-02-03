@@ -669,24 +669,35 @@ public class SaleService {
     @Scheduled(fixedDelay = 30000) // Run frequently to check buffers
     @Transactional
     public void processPendingDtes() {
-        List<Sale> pendingSales = saleRepository.findTop50ByDteStatus(Sale.DteStatus.PENDING, Pageable.ofSize(50));
+        // 1. Process new pending sales
+        processDteBatch(Sale.DteStatus.PENDING);
 
-        if (!pendingSales.isEmpty()) {
-            log.debug("Scheduler: Analizando {} ventas pendientes...", pendingSales.size());
+        // 2. Retry failed sales (Dead Letter Queue recovery)
+        processDteBatch(Sale.DteStatus.ERROR);
+    }
 
-            for (Sale sale : pendingSales) {
+    private void processDteBatch(Sale.DteStatus status) {
+        List<Sale> batch = saleRepository.findTop50ByDteStatus(status, Pageable.ofSize(50));
+
+        if (!batch.isEmpty()) {
+            log.debug("Scheduler: Processing {} sales with status {}...", batch.size(), status);
+
+            for (Sale sale : batch) {
                 try {
                     UUID tenantId = sale.getTenantId();
 
-                    // Check batching interval
-                    int interval = getTenantInterval(tenantId);
-
-                    // If sale is newer than interval, skip (buffer it)
-                    if (sale.getCreatedAt().plusSeconds(interval).isAfter(java.time.Instant.now())) {
-                        continue;
+                    // Check batching interval (only for new PENDING ones to respect buffer)
+                    if (status == Sale.DteStatus.PENDING) {
+                        int interval = getTenantInterval(tenantId);
+                        if (sale.getCreatedAt().plusSeconds(interval).isAfter(java.time.Instant.now())) {
+                            continue;
+                        }
                     }
 
                     UUID userId = sale.getCreatedBy();
+                    log.info("Processing DTE for sale {} (Retry: {})", sale.getNumero(),
+                            status == Sale.DteStatus.ERROR);
+
                     emitirBoleta(tenantId, userId, sale);
 
                     sale.setDteStatus(Sale.DteStatus.SENT);
@@ -694,7 +705,7 @@ public class SaleService {
                     saleRepository.save(sale);
 
                 } catch (Exception e) {
-                    log.error("Error batch DTE venta {}: {}", sale.getNumero(), e.getMessage());
+                    log.error("Error processing DTE for sale {}: {}", sale.getNumero(), e.getMessage());
                     sale.setDteStatus(Sale.DteStatus.ERROR);
                     sale.setDteError(e.getMessage());
                     saleRepository.save(sale);
