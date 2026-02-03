@@ -963,6 +963,24 @@ interface CartItem {
                 <span class="item-text">POS Inteligente</span>
                 <span class="item-badge new">Nuevo</span>
               </button>
+              <button *ngIf="canAccess('sales-history')" class="menu-item" routerLink="/sales-history" (click)="showMenu = false">
+                <div class="item-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <span class="item-text">Historial Ventas</span>
+              </button>
+              <button *ngIf="canAccess('cash-close')" class="menu-item" routerLink="/earnings" (click)="showMenu = false">
+                <div class="item-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
+                </div>
+                <span class="item-text">Ganancias Diarias</span>
+                <span class="item-badge new">Cierre</span>
+              </button>
               <button *ngIf="canAccess('catalog')" class="menu-item" routerLink="/catalog" (click)="showMenu = false">
                 <div class="item-icon orange">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1030,15 +1048,6 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">Dashboard</span>
-              </button>
-              <button *ngIf="canAccess('earnings')" class="menu-item" routerLink="/earnings" (click)="showMenu = false">
-                <div class="item-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-                  </svg>
-                </div>
-                <span class="item-text">Ganancias</span>
               </button>
               <button *ngIf="canAccess('cobros-pagos')" class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
                 <div class="item-icon blue">
