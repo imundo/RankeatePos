@@ -226,7 +226,7 @@ interface ConfigEmpresa {
           }
         </section>
 
-        </section>
+
         
         <!-- Preferencias de Sistema -->
         <section class="card system-section">
