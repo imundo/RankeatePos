@@ -23,10 +23,10 @@ export const appConfig: ApplicationConfig = {
             withInterceptors([authInterceptor, branchContextInterceptor, errorInterceptor])
         ),
         provideAnimations(),
-        provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-        }),
+        // provideServiceWorker('ngsw-worker.js', {
+        //     enabled: !isDevMode(),
+        //     registrationStrategy: 'registerWhenStable:30000'
+        // }),
         importProvidersFrom(LucideAngularModule.pick({
             Building2, MapPin, Phone, Mail, Plus, Edit2, Trash2, CheckCircle2, Star,
             BarChart2, Settings, Grid, Users, ShoppingBag, ShoppingCart, Package, FileText, Layers, Box, Truck,
