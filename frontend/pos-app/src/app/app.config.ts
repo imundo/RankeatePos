@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
         ),
         provideAnimations(),
         provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode() && localStorage.getItem('POS_SETTINGS_SW_ENABLED') === 'true',
+            enabled: !isDevMode() && (typeof localStorage !== 'undefined' ? localStorage.getItem('POS_SETTINGS_SW_ENABLED') === 'true' : false),
             registrationStrategy: 'registerWhenStable:30000'
         }),
         importProvidersFrom(LucideAngularModule.pick({
