@@ -95,8 +95,14 @@ export class AdminService {
     }
 
     // System Health
+    // System Health
     getSystemHealth(): Observable<Record<string, string>> {
         return this.http.get<Record<string, string>>(`${this.apiUrl}/health`);
+    }
+
+    // System Connectivity (Detailed status of all microservices)
+    getSystemConnectivity(): Observable<any> {
+        return this.http.get<any>(`${environment.apiUrl}/system/connectivity`);
     }
 
     // Tenants

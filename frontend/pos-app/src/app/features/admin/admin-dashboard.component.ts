@@ -131,21 +131,19 @@ interface QuickAction {
       <!-- System Status -->
       <section class="status-section">
         <div class="status-grid">
-          <div class="status-card healthy">
-            <span class="status-indicator"></span>
-            <span class="status-label">Auth Service</span>
-            <span class="status-value">Operativo</span>
-          </div>
-          <div class="status-card healthy">
-            <span class="status-indicator"></span>
-            <span class="status-label">Operations</span>
-            <span class="status-value">Operativo</span>
-          </div>
-          <div class="status-card healthy">
-            <span class="status-indicator"></span>
-            <span class="status-label">Database</span>
-            <span class="status-value">Conectado</span>
-          </div>
+          @for (service of connectionStatuses(); track service.name) {
+            <div class="status-card" [class.healthy]="service.status === 'UP'" [class.unhealthy]="service.status !== 'UP'">
+              <span class="status-indicator"></span>
+              <span class="status-label">{{ service.name }}</span>
+              <span class="status-value">{{ service.status === 'UP' ? 'Operativo' : 'Caído' }}</span>
+            </div>
+          }
+          @if (connectionStatuses().length === 0) {
+            <div class="status-card">
+              <span class="status-indicator" style="background: gray; animation: none;"></span>
+              <span class="status-label">Verificando conexión...</span>
+            </div>
+          }
         </div>
       </section>
     </div>
@@ -552,6 +550,15 @@ interface QuickAction {
       box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
     }
 
+    .status-card.unhealthy .status-indicator {
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    .status-card.unhealthy .status-value {
+      color: #ef4444;
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
@@ -651,6 +658,7 @@ export class AdminDashboardComponent implements OnInit {
   isAnimating = signal(false);
   recentTenants = signal<AdminTenant[]>([]);
   loading = signal(true);
+  connectionStatuses = signal<{ name: string; status: string; details: string; }[]>([]);
 
   quickActions: QuickAction[] = [
     { label: 'Ver Clientes', description: 'Gestionar todos los clientes', icon: '🏢', route: '/admin/tenants', color: '#6366f1' },
@@ -693,8 +701,40 @@ export class AdminDashboardComponent implements OnInit {
       }
     });
 
-    // Load System Health (Optional, currently mocked in UI but let's try to fetch if we had it)
-    // For now we keep the UI as is or we can wire it if we added getSystemHealth to admin.service
+    // Load System Health
+    this.adminService.getSystemConnectivity().subscribe({
+      next: (data) => {
+        const statuses = [];
+
+        // Add BFF
+        if (data && data['bff-gateway']) {
+          statuses.push({
+            name: 'BFF Gateway',
+            status: data['bff-gateway'].status,
+            details: data['bff-gateway'].message || 'OK'
+          });
+        }
+
+        // Add Connected Services
+        if (data && data.services) {
+          Object.keys(data.services).forEach(key => {
+            const service = data.services[key];
+            statuses.push({
+              name: this.formatServiceName(key),
+              status: service.status,
+              details: service.error || 'OK'
+            });
+          });
+        }
+
+        this.connectionStatuses.set(statuses);
+      },
+      error: (err) => console.error('Error loading connectivity:', err)
+    });
+  }
+
+  formatServiceName(key: string): string {
+    return key.replace('-service', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
   animateCounters(stats: StatCard[]) {
