@@ -12,7 +12,7 @@ public interface AutomationLogRepository extends JpaRepository<AutomationLog, UU
 
     List<AutomationLog> findByAutomationIdOrderBySentAtDesc(UUID automationId);
 
-    List<AutomationLog> findByReservationId(UUID reservationId);
+    List<AutomationLog> findByReservationIdOrderBySentAtDesc(UUID reservationId);
 
     // Helper to check if a specific message was already sent (prevent duplicates)
     boolean existsByAutomationIdAndReservationIdAndStatus(UUID automationId, UUID reservationId, String status);

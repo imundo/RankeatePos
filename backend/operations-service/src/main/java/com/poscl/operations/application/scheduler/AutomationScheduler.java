@@ -124,9 +124,6 @@ public class AutomationScheduler {
      * Check if a reminder was recently sent to avoid duplicates
      */
     private boolean hasRecentReminder(Reservation reservation, String eventType) {
-        // In production, check AutomationLog for recent entries
-        // For now, return false to always send
-        // TODO: Implement check against AutomationLog
-        return false;
+        return automationService.hasLogForReservation(reservation.getId(), eventType);
     }
 }

@@ -66,19 +66,18 @@ public class AutomationController {
 
     @PostMapping("/config")
     @Operation(summary = "Guardar configuración global (MP, Twilio, SendGrid)")
-    public ResponseEntity<Map<String, String>> saveConfig(
+    public ResponseEntity<com.poscl.operations.domain.entity.AutomationConfig> saveConfig(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestBody Map<String, Object> config) {
-        // In a real app, save to TenantConfiguration entity
-        // For prototype, we just log it and return success
-        return ResponseEntity.ok(Map.of("status", "success", "message", "Configuración guardada"));
+            @RequestBody com.poscl.operations.domain.entity.AutomationConfig config) {
+        config.setTenantId(tenantId);
+        return ResponseEntity.ok(automationService.saveAutomationConfig(config));
     }
 
     @GetMapping("/config")
     @Operation(summary = "Obtener configuración global")
-    public ResponseEntity<Map<String, Object>> getConfig(@RequestHeader("X-Tenant-ID") UUID tenantId) {
-        // Return mock config or read from DB
-        return ResponseEntity.ok(Map.of());
+    public ResponseEntity<com.poscl.operations.domain.entity.AutomationConfig> getConfig(
+            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+        return ResponseEntity.ok(automationService.getAutomationConfig(tenantId));
     }
 
     @PostMapping("/test/email")

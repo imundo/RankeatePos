@@ -43,6 +43,13 @@
             <artifactId>shared-lib</artifactId>
         </dependency>
 
+        <!-- Mercado Pago -->
+        <dependency>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.1.26</version>
+        </dependency>
+
         <!-- PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>

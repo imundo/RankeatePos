@@ -30,9 +30,9 @@ public class MercadoPagoService {
     /**
      * Generate a payment link for a reservation
      */
-    public String generatePaymentLink(BigDecimal amount, String description, UUID reservationId) {
+    public String generatePaymentLink(String accessToken, BigDecimal amount, String description, UUID reservationId) {
         if (accessToken == null || accessToken.isEmpty()) {
-            log.warn("MercadoPago not configured, returning simulation link");
+            log.warn("MercadoPago token not provided, returning simulation link");
             return "https://link.mercadopago.cl/sim-" + reservationId.toString().substring(0, 8);
         }
 
