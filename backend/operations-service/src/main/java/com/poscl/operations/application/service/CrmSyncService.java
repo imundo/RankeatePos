@@ -18,8 +18,17 @@ import java.util.UUID;
 @Slf4j
 public class CrmSyncService {
 
-    @Value("${marketing.service.url:http://marketing-service:8080}")
+    @Value("${spring.marketing.service.url:http://localhost:9999}")
     private String marketingServiceUrl;
+
+    public CrmSyncService(@Value("${spring.marketing.service.url:http://localhost:9999}") String marketingServiceUrl) {
+        this.marketingServiceUrl = marketingServiceUrl;
+    }
+
+    private boolean isServiceEnabled() {
+        return marketingServiceUrl != null && !marketingServiceUrl.contains("localhost:9999")
+                && !marketingServiceUrl.contains("marketing-service");
+    }
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -29,6 +38,8 @@ public class CrmSyncService {
      */
     public void syncReservationCustomer(UUID tenantId, String customerName, String phone, String email,
             UUID reservationId) {
+        if (!isServiceEnabled())
+            return;
         try {
             // First, find or create customer
             String customerId = findOrCreateCustomer(tenantId, customerName, phone, email);
@@ -49,6 +60,8 @@ public class CrmSyncService {
      * Record when a reservation is completed (for visit tracking)
      */
     public void recordCompletedVisit(UUID tenantId, String phone, String customerName, UUID reservationId) {
+        if (!isServiceEnabled())
+            return;
         try {
             String customerId = findCustomerByPhone(tenantId, phone);
             if (customerId != null) {
@@ -65,6 +78,8 @@ public class CrmSyncService {
      * Record when a reservation is cancelled
      */
     public void recordCancellation(UUID tenantId, String phone, UUID reservationId) {
+        if (!isServiceEnabled())
+            return;
         try {
             String customerId = findCustomerByPhone(tenantId, phone);
             if (customerId != null) {
