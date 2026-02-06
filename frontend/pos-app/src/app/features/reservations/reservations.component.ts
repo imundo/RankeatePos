@@ -2999,9 +2999,11 @@ export class ReservationsComponent implements OnInit {
   private loadCustomers() {
     this.reservationsService.getCustomers().subscribe({
       next: (data) => {
-        // Map backend customer to frontend Customer interface if needed
-        // Assuming backend returns similar structure or we map it
-        // For now, mapping blindly or providing defaults
+        console.log('[ReservationsComponent] Customers loaded:', data);
+        if (!Array.isArray(data)) {
+          console.error('[ReservationsComponent] Expected array of customers, got:', data);
+          return;
+        }
         const mapped = data.map((c: any) => ({
           id: c.id,
           nombre: c.nombre || c.name || 'Cliente',
@@ -3014,7 +3016,9 @@ export class ReservationsComponent implements OnInit {
         } as Customer));
         this.customers.set(mapped);
       },
-      error: (err) => console.error('Error loading customers', err)
+      error: (err) => {
+        console.error('[ReservationsComponent] Error loading customers', err);
+      }
     });
   }
 
@@ -3175,7 +3179,7 @@ export class ReservationsComponent implements OnInit {
 
   timeSlots = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
 
-  formData = this.getEmptyForm();
+
 
   // Demo reservations
   reservations = signal<Reservation[]>([
@@ -3213,6 +3217,8 @@ export class ReservationsComponent implements OnInit {
 
   // Computed - Premium features
   selectedServiceType = computed(() => this.serviceTypes.find(s => s.id === this.selectedServiceTypeId()) || null);
+
+  formData = this.getEmptyForm();
   availableResourcesCount = computed(() => this.resources().filter(r => r.estado === 'disponible').length);
 
   estimatedRevenue = computed(() => {
@@ -3339,6 +3345,7 @@ export class ReservationsComponent implements OnInit {
   });
 
   ngOnInit() {
+    console.log('[ReservationsComponent] Initializing...');
     this.goToToday();
     this.loadAutomations();
     this.simulateLoading();
