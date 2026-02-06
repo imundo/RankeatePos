@@ -163,6 +163,9 @@ export class AuthService {
     }
 
     hasPermission(permission: string): boolean {
+        if (this.hasRole('SAAS_ADMIN') || this.hasRole('ADMIN')) {
+            return true;
+        }
         const permissions = this.userSignal()?.permissions?.map(p => p.toLowerCase()) ?? [];
         return permissions.includes(permission.toLowerCase());
     }
