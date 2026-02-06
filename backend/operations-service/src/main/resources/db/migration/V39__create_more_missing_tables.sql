@@ -1,4 +1,4 @@
-CREATE TABLE automation_configs (
+CREATE TABLE IF NOT EXISTS automation_configs (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL UNIQUE,
     whatsapp_config TEXT,
@@ -10,9 +10,9 @@ CREATE TABLE automation_configs (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_automation_configs_tenant_id ON automation_configs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_automation_configs_tenant_id ON automation_configs(tenant_id);
 
-CREATE TABLE loyalty_customers (
+CREATE TABLE IF NOT EXISTS loyalty_customers (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     nombre VARCHAR(100) NOT NULL,
@@ -28,4 +28,4 @@ CREATE TABLE loyalty_customers (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_loyalty_customers_tenant_id ON loyalty_customers(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_loyalty_customers_tenant_id ON loyalty_customers(tenant_id);
