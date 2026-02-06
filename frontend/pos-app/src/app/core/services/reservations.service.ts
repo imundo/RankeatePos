@@ -150,8 +150,17 @@ export class ReservationsService {
         });
     }
 
+    getCustomers(search?: string): Observable<any[]> {
+        let params = new HttpParams();
+        if (search) params = params.set('q', search);
+        return this.http.get<any[]>(`${this.baseUrl}/loyalty/customers${search ? '/search' : ''}`, {
+            headers: this.getHeaders(),
+            params
+        });
+    }
+
     toggleAutomation(id: string): Observable<any> {
-        return this.http.put<any>(`${this.baseUrl}/automations/${id}/toggle`, {}, {
+        return this.http.post<any>(`${this.baseUrl}/automations/${id}/toggle`, {}, {
             headers: this.getHeaders()
         });
     }

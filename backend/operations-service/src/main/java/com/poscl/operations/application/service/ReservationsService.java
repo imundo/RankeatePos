@@ -68,10 +68,18 @@ public class ReservationsService {
         Reservation saved = reservationRepository.save(reservation);
 
         // Trigger "Nueva Reserva" automation
-        automationService.triggerAutomations(tenantId, "nueva-reserva", saved);
+        try {
+            automationService.triggerAutomations(tenantId, "nueva-reserva", saved);
+        } catch (Exception e) {
+            log.error("Failed to trigger automation for reservation {}", saved.getId(), e);
+        }
 
         // Sync customer with CRM
-        crmSyncService.syncReservationCustomer(tenantId, clienteNombre, clienteTelefono, null, saved.getId());
+        try {
+            crmSyncService.syncReservationCustomer(tenantId, clienteNombre, clienteTelefono, null, saved.getId());
+        } catch (Exception e) {
+            log.error("Failed to sync CRM for reservation {}", saved.getId(), e);
+        }
 
         return saved;
     }
@@ -97,16 +105,20 @@ public class ReservationsService {
 
         // Trigger status-based automations
         if (!oldStatus.equalsIgnoreCase(newStatus)) {
-            if ("CONFIRMADA".equalsIgnoreCase(newStatus)) {
-                automationService.triggerAutomations(reservation.getTenantId(), "confirmacion", saved);
-            } else if ("CANCELADA".equalsIgnoreCase(newStatus)) {
-                automationService.triggerAutomations(reservation.getTenantId(), "cancelacion", saved);
-                crmSyncService.recordCancellation(reservation.getTenantId(), reservation.getClienteTelefono(),
-                        saved.getId());
-            } else if ("COMPLETADA".equalsIgnoreCase(newStatus)) {
-                automationService.triggerAutomations(reservation.getTenantId(), "completada", saved);
-                crmSyncService.recordCompletedVisit(reservation.getTenantId(), reservation.getClienteTelefono(),
-                        reservation.getClienteNombre(), saved.getId());
+            try {
+                if ("CONFIRMADA".equalsIgnoreCase(newStatus)) {
+                    automationService.triggerAutomations(reservation.getTenantId(), "confirmacion", saved);
+                } else if ("CANCELADA".equalsIgnoreCase(newStatus)) {
+                    automationService.triggerAutomations(reservation.getTenantId(), "cancelacion", saved);
+                    crmSyncService.recordCancellation(reservation.getTenantId(), reservation.getClienteTelefono(),
+                            saved.getId());
+                } else if ("COMPLETADA".equalsIgnoreCase(newStatus)) {
+                    automationService.triggerAutomations(reservation.getTenantId(), "completada", saved);
+                    crmSyncService.recordCompletedVisit(reservation.getTenantId(), reservation.getClienteTelefono(),
+                            reservation.getClienteNombre(), saved.getId());
+                }
+            } catch (Exception e) {
+                log.error("Failed to trigger automation/CRM for status update on reservation {}", saved.getId(), e);
             }
         }
 

@@ -455,20 +455,62 @@ interface AutomationConfig {
             <form (ngSubmit)="saveReservation()" class="modal-form">
               <div class="form-section">
                 <h4>👤 Datos del Cliente</h4>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" [(ngModel)]="formData.cliente" name="cliente" placeholder="Nombre completo" required>
+                
+                <div class="customer-type-toggle">
+                  <button type="button" class="type-btn" [class.active]="isNewCustomer()" (click)="isNewCustomer.set(true)">
+                    <span>🆕 Nuevo</span>
+                  </button>
+                  <button type="button" class="type-btn" [class.active]="!isNewCustomer()" (click)="isNewCustomer.set(false)">
+                    <span>🔍 Existente</span>
+                  </button>
+                </div>
+
+                @if (!isNewCustomer()) {
+                  <div class="customer-autocomplete">
+                     <input 
+                      type="text" 
+                      class="search-input"
+                      placeholder="Buscar cliente por nombre o teléfono..."
+                      [ngModel]="customerSearchQuery()" 
+                      (ngModelChange)="customerSearchQuery.set($event)"
+                      name="customerSearch"
+                    >
+                    @if (customerSearchQuery().length > 1) {
+                      <div class="autocomplete-results">
+                        @for (c of filteredCustomers().slice(0, 3); track c.id) {
+                          <div class="autocomplete-item" (click)="selectCustomer(c); isNewCustomer.set(true)">
+                            <div class="item-avatar">{{ c.nombre.charAt(0) }}</div>
+                            <div class="item-info">
+                              <span class="item-name">{{ c.nombre }}</span>
+                              <span class="item-phone">{{ c.telefono }}</span>
+                            </div>
+                            <span class="item-tier" [class]="c.tier">{{ getTierLabel(c.tier) }}</span>
+                          </div>
+                        }
+                        @if (filteredCustomers().length === 0) {
+                          <div class="no-results">No se encontraron clientes</div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (isNewCustomer() || formData.cliente) {
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Nombre *</label>
+                      <input type="text" [(ngModel)]="formData.cliente" name="cliente" placeholder="Nombre completo" required [readonly]="!isNewCustomer() && selectedCustomer()">
+                    </div>
+                    <div class="form-group">
+                      <label>Teléfono *</label>
+                      <input type="tel" [(ngModel)]="formData.telefono" name="telefono" placeholder="+56 9 1234 5678" required [readonly]="!isNewCustomer() && selectedCustomer()">
+                    </div>
                   </div>
                   <div class="form-group">
-                    <label>Teléfono *</label>
-                    <input type="tel" [(ngModel)]="formData.telefono" name="telefono" placeholder="+56 9 1234 5678" required>
+                    <label>Email (opcional)</label>
+                    <input type="email" [(ngModel)]="formData.email" name="email" placeholder="cliente@email.com" [readonly]="!isNewCustomer() && selectedCustomer()">
                   </div>
-                </div>
-                <div class="form-group">
-                  <label>Email (opcional)</label>
-                  <input type="email" [(ngModel)]="formData.email" name="email" placeholder="cliente@email.com">
-                </div>
+                }
               </div>
 
               <div class="form-section">
@@ -719,6 +761,9 @@ interface AutomationConfig {
                     </div>
                     <!-- Marketing Quick Actions -->
                     <div class="customer-actions">
+                      <button class="action-mini-btn info" (click)="showCustomerDetails.set(customer); $event.stopPropagation()" title="Ver Detalles">
+                        👁️
+                      </button>
                       <button class="action-mini-btn email" (click)="sendEmailTo(customer); $event.stopPropagation()" title="Enviar Email">
                         📧
                       </button>
@@ -733,6 +778,70 @@ interface AutomationConfig {
                   <button class="select-customer-btn" (click)="selectCustomer(customer)">Seleccionar</button>
                 </div>
               }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Customer Details Modal -->
+      @if (showCustomerDetails()) {
+        <div class="modal-overlay" (click)="showCustomerDetails.set(null)">
+          <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+            <div class="view-res-header">
+              <span class="view-res-status">👤 Perfil de Cliente</span>
+              <button class="modal-close" (click)="showCustomerDetails.set(null)">✕</button>
+            </div>
+            <div class="view-res-body">
+              <div class="customer-profile-header">
+                <div class="big-avatar">{{ showCustomerDetails()!.nombre.charAt(0) }}</div>
+                <div class="profile-info">
+                  <h2>{{ showCustomerDetails()!.nombre }}</h2>
+                  <span class="customer-tier" [class]="showCustomerDetails()!.tier">
+                    {{ getTierIcon(showCustomerDetails()!.tier) }} {{ getTierLabel(showCustomerDetails()!.tier) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="view-res-info-grid">
+                <div class="info-item">
+                  <span class="info-icon">📞</span>
+                  <span>{{ showCustomerDetails()!.telefono }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">📧</span>
+                  <span>{{ showCustomerDetails()!.email || 'No registrado' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">📅</span>
+                  <span>{{ showCustomerDetails()!.visitas }} Visitas</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">💰</span>
+                  <span>{{ formatRevenue(showCustomerDetails()!.gastoTotal) }} Gastado</span>
+                </div>
+                <div class="info-item">
+                   <span class="info-icon">🕒</span>
+                   <span>Última: {{ showCustomerDetails()!.ultimaVisita || 'N/A' }}</span>
+                </div>
+              </div>
+
+              <div class="marketing-actions-row" style="margin-top: 1.5rem;">
+                <button class="marketing-btn email" (click)="sendEmailTo(showCustomerDetails()!)">
+                  📧 Email
+                </button>
+                <button class="marketing-btn whatsapp" (click)="sendWhatsAppTo(showCustomerDetails()!)">
+                  💬 WhatsApp
+                </button>
+                <button class="marketing-btn phone" (click)="callCustomer(showCustomerDetails()!)">
+                  📱 Llamar
+                </button>
+              </div>
+
+               <div class="view-res-actions">
+                 <button class="action-btn success" (click)="selectCustomer(showCustomerDetails()!); showCustomerDetails.set(null)">
+                   📅 Agendar Cita
+                 </button>
+               </div>
             </div>
           </div>
         </div>
@@ -2544,6 +2653,70 @@ interface AutomationConfig {
     .log-date { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
     .no-logs { text-align: center; padding: 2rem; color: rgba(255,255,255,0.4); }
 
+    /* Customer Toggle & Autocomplete */
+    .customer-type-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      background: rgba(255,255,255,0.05);
+      padding: 0.35rem;
+      border-radius: 12px;
+    }
+    .type-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .type-btn.active {
+      background: #6366F1;
+      color: white;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    }
+    
+    .customer-autocomplete { position: relative; margin-bottom: 1rem; }
+    .search-input { width: 100%; padding: 0.85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: white; }
+    .search-input:focus { outline: none; border-color: #6366F1; }
+    
+    .autocomplete-results {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: #1e1e2d; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      margin-top: 0.5rem; overflow: hidden;
+    }
+    .autocomplete-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: rgba(99, 102, 241, 0.1); }
+    .item-avatar { width: 32px; height: 32px; border-radius: 50%; background: #6366F1; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+    .item-info { flex: 1; overflow: hidden; }
+    .item-name { display: block; font-weight: 500; font-size: 0.9rem; }
+    .item-phone { display: block; font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+    .item-tier { font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 6px; background: rgba(255,255,255,0.1); }
+    .no-results { padding: 1rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+    /* Customer Profile Header (Modal) */
+    .customer-profile-header {
+      display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .big-avatar {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: linear-gradient(135deg, #EC4899, #DB2777);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 700; color: white;
+      box-shadow: 0 5px 20px rgba(236, 72, 153, 0.4);
+    }
+    .profile-info h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+
     /* Config Section */
     .config-section { display: flex; flex-direction: column; gap: 1.5rem; }
     .config-group {
@@ -2734,13 +2907,7 @@ export class ReservationsComponent implements OnInit {
   ];
 
   // Demo customers with loyalty tiers
-  customers = signal<Customer[]>([
-    { id: '1', nombre: 'María González', telefono: '+56912345678', email: 'maria@email.com', tier: 'vip', visitas: 24, gastoTotal: 450000, ultimaVisita: '2026-01-15' },
-    { id: '2', nombre: 'Juan Pérez', telefono: '+56987654321', email: 'juan@email.com', tier: 'gold', visitas: 15, gastoTotal: 280000, ultimaVisita: '2026-01-18' },
-    { id: '3', nombre: 'Ana Martínez', telefono: '+56911223344', tier: 'silver', visitas: 8, gastoTotal: 120000, ultimaVisita: '2026-01-10' },
-    { id: '4', nombre: 'Carlos López', telefono: '+56955667788', tier: 'bronze', visitas: 3, gastoTotal: 45000 },
-    { id: '5', nombre: 'Patricia Díaz', telefono: '+56944556677', email: 'paty@email.com', tier: 'gold', visitas: 12, gastoTotal: 220000 },
-  ]);
+  customers = signal<Customer[]>([]);
 
   // State signals
   selectedServiceTypeId = signal<string>('1');
@@ -2749,11 +2916,16 @@ export class ReservationsComponent implements OnInit {
   selectedCustomer = signal<Customer | null>(null);
   customerFilter = signal<'todos' | 'vip' | 'frecuentes'>('todos');
 
+
   // Marketing signals
   marketingCollapsed = signal(true);
   emailsSentToday = signal(12);
   whatsappSentToday = signal(8);
   marketingOpenRate = signal(78);
+
+  // UX Signals
+  isNewCustomer = signal(true);
+  showCustomerDetails = signal<Customer | null>(null);
 
   // Automation System signals
   showAutomationModal = signal(false);
@@ -2821,6 +2993,29 @@ export class ReservationsComponent implements OnInit {
 
   constructor() {
     this.loadAutomationData();
+    this.loadCustomers();
+  }
+
+  private loadCustomers() {
+    this.reservationsService.getCustomers().subscribe({
+      next: (data) => {
+        // Map backend customer to frontend Customer interface if needed
+        // Assuming backend returns similar structure or we map it
+        // For now, mapping blindly or providing defaults
+        const mapped = data.map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre || c.name || 'Cliente',
+          telefono: c.telefono || c.phone || '',
+          email: c.email,
+          tier: c.tier || 'nuevo',
+          visitas: c.visitas || 0,
+          gastoTotal: c.gastoTotal || 0,
+          ultimaVisita: c.ultimaVisita
+        } as Customer));
+        this.customers.set(mapped);
+      },
+      error: (err) => console.error('Error loading customers', err)
+    });
   }
 
   private loadAutomationData() {
@@ -3227,20 +3422,7 @@ export class ReservationsComponent implements OnInit {
     return tomorrow.toISOString().split('T')[0];
   }
 
-  private getEmptyForm() {
-    return {
-      cliente: '',
-      telefono: '',
-      email: '',
-      fecha: this.getTodayStr(),
-      hora: '19:00',
-      duracion: 90,
-      personas: 2,
-      tipoServicio: '',
-      recurso: '',
-      notas: ''
-    };
-  }
+
 
   selectDate(date: Date) {
     this.selectedDate.set(date);
@@ -3289,27 +3471,57 @@ export class ReservationsComponent implements OnInit {
   }
 
   openNewReservation() {
-    this.editingReservation.set(null);
     this.formData = {
-      ...this.getEmptyForm(),
-      fecha: this.selectedDate().toISOString().split('T')[0]
+      cliente: '', telefono: '', email: '',
+      fecha: new Date().toISOString().split('T')[0],
+      hora: '19:00', personas: 2, duracion: 90, notas: '',
+      tipoServicio: this.selectedServiceType()?.codigo || 'MESA',
+      recurso: '' // Auto-assign
     };
+    this.selectedCustomer.set(null);
+    this.editingReservation.set(null);
+    this.isNewCustomer.set(true); // Default to new
     this.showModal.set(true);
   }
 
   openNewReservationAtTime(time: string) {
-    this.editingReservation.set(null);
     this.formData = {
-      ...this.getEmptyForm(),
-      fecha: this.selectedDate().toISOString().split('T')[0],
-      hora: time
+      cliente: '', telefono: '', email: '',
+      fecha: new Date().toISOString().split('T')[0],
+      hora: time, personas: 2, duracion: 90, notas: '',
+      tipoServicio: this.selectedServiceType()?.codigo || 'MESA',
+      recurso: ''
     };
+    this.selectedCustomer.set(null);
+    this.editingReservation.set(null);
     this.showModal.set(true);
   }
 
   closeModal() {
     this.showModal.set(false);
     this.editingReservation.set(null);
+    this.selectedCustomer.set(null);
+    this.formData = this.getEmptyForm();
+  }
+
+  getTierLabel(tier?: string): string {
+    switch (tier) {
+      case 'vip': return '🌟 VIP';
+      case 'gold': return '🥇 Gold';
+      case 'silver': return '🥈 Silver';
+      case 'bronze': return '🥉 Bronze';
+      default: return '👤 Nuevo';
+    }
+  }
+
+  private getEmptyForm() {
+    return {
+      cliente: '', telefono: '', email: '',
+      fecha: new Date().toISOString().split('T')[0],
+      hora: '19:00', personas: 2, duracion: 90, notas: '',
+      tipoServicio: this.selectedServiceType()?.codigo || 'MESA',
+      recurso: ''
+    };
   }
 
   viewReservation(res: Reservation) {
@@ -3511,16 +3723,7 @@ export class ReservationsComponent implements OnInit {
     return icons[tier] || '';
   }
 
-  getTierLabel(tier: Customer['tier']): string {
-    const labels: Record<string, string> = {
-      'vip': 'VIP',
-      'gold': 'Gold',
-      'silver': 'Silver',
-      'bronze': 'Bronze',
-      'nuevo': 'Nuevo'
-    };
-    return labels[tier] || tier;
-  }
+
 
   // Marketing computed
 

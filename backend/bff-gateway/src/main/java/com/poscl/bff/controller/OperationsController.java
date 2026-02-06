@@ -282,6 +282,66 @@ public class OperationsController {
         return restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(request, headers), Object.class);
     }
 
+    // ==================== AUTOMATIONS ====================
+
+    @GetMapping("/automations")
+    public ResponseEntity<?> getAutomations(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String url = operationsServiceUrl + "/api/automations";
+        HttpHeaders headers = createHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+    }
+
+    @PostMapping("/automations/{id}/toggle")
+    public ResponseEntity<?> toggleAutomation(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String id) {
+
+        String url = operationsServiceUrl + "/api/automations/" + id + "/toggle";
+        HttpHeaders headers = createHeaders(authHeader, null);
+
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers), Object.class);
+    }
+
+    @GetMapping("/automations/config")
+    public ResponseEntity<?> getAutomationConfig(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String url = operationsServiceUrl + "/api/automations/config";
+        HttpHeaders headers = createHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+    }
+
+    @PostMapping("/automations/config")
+    public ResponseEntity<?> saveAutomationConfig(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody Map<String, Object> request) {
+
+        String url = operationsServiceUrl + "/api/automations/config";
+        HttpHeaders headers = createHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
+    }
+
+    @GetMapping("/automations/logs")
+    public ResponseEntity<?> getAutomationLogs(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String automationId) {
+
+        String url = operationsServiceUrl + "/api/automations/logs"
+                + (automationId != null ? "?automationId=" + automationId : "");
+        HttpHeaders headers = createHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+    }
+
     // ==================== HELPER ====================
 
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
