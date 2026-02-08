@@ -35,10 +35,13 @@ public class OperationsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        String url = operationsServiceUrl + "/api/loyalty/customers?page=" + page + "&size=" + size;
-        HttpHeaders headers = createHeaders(authHeader, tenantId);
-
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        try {
+            String url = operationsServiceUrl + "/api/loyalty/customers?page=" + page + "&size=" + size;
+            HttpHeaders headers = createHeaders(authHeader, tenantId);
+            return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body("BFF Error getting loyalty customers: " + e.getMessage());
+        }
     }
 
     @GetMapping("/loyalty/customers/search")
@@ -47,10 +50,13 @@ public class OperationsController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String q) {
 
-        String url = operationsServiceUrl + "/api/loyalty/customers/search?q=" + q;
-        HttpHeaders headers = createHeaders(authHeader, tenantId);
-
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        try {
+            String url = operationsServiceUrl + "/api/loyalty/customers/search?q=" + q;
+            HttpHeaders headers = createHeaders(authHeader, tenantId);
+            return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body("BFF Error searching loyalty customers: " + e.getMessage());
+        }
     }
 
     @GetMapping("/loyalty/customers/{id}")
@@ -187,16 +193,29 @@ public class OperationsController {
 
     // ==================== RESERVATIONS ====================
 
+    @GetMapping("/ping")
+    public ResponseEntity<?> ping() {
+        try {
+            String url = operationsServiceUrl + "/actuator/health";
+            return restTemplate.getForEntity(url, Object.class);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Pong Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/reservations")
     public ResponseEntity<?> getReservations(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(required = false) String date) {
 
-        String url = operationsServiceUrl + "/api/reservations" + (date != null ? "?date=" + date : "");
-        HttpHeaders headers = createHeaders(authHeader, tenantId);
-
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        try {
+            String url = operationsServiceUrl + "/api/reservations" + (date != null ? "?date=" + date : "");
+            HttpHeaders headers = createHeaders(authHeader, tenantId);
+            return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body("BFF Error getting reservations: " + e.getMessage());
+        }
     }
 
     @PostMapping("/reservations")
@@ -289,10 +308,13 @@ public class OperationsController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        String url = operationsServiceUrl + "/api/automations";
-        HttpHeaders headers = createHeaders(authHeader, tenantId);
-
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        try {
+            String url = operationsServiceUrl + "/api/automations";
+            HttpHeaders headers = createHeaders(authHeader, tenantId);
+            return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body("BFF Error getting automations: " + e.getMessage());
+        }
     }
 
     @PostMapping("/automations/{id}/toggle")
