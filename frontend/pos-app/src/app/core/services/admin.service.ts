@@ -225,6 +225,37 @@ export class AdminService {
         return this.http.get<Record<string, ModuleConfig[]>>(`${this.apiUrl}/modules/grouped`);
     }
 
+    // Module CRUD
+    createModule(module: Partial<ModuleConfig>): Observable<ModuleConfig> {
+        return this.http.post<ModuleConfig>(`${this.apiUrl}/modules`, module);
+    }
+
+    updateModule(id: string, module: Partial<ModuleConfig>): Observable<ModuleConfig> {
+        return this.http.put<ModuleConfig>(`${this.apiUrl}/modules/${id}`, module);
+    }
+
+    deleteModule(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/modules/${id}`);
+    }
+
+    reorderModules(items: { id: string; sortOrder: number }[]): Observable<ModuleConfig[]> {
+        return this.http.put<ModuleConfig[]>(`${this.apiUrl}/modules/reorder`, items);
+    }
+
+    // Plan CRUD
+    createPlan(plan: Partial<PlanConfig>): Observable<PlanConfig> {
+        return this.http.post<PlanConfig>(`${this.apiUrl}/plans`, plan);
+    }
+
+    updatePlan(id: string, plan: Partial<PlanConfig>): Observable<PlanConfig> {
+        return this.http.put<PlanConfig>(`${this.apiUrl}/plans/${id}`, plan);
+    }
+
+    deletePlan(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/plans/${id}`);
+    }
+
+
     // API: Get user permissions
     getUserPermissions(userId: string): Observable<{ userId: string; modules: any[] }> {
         return this.http.get<{ userId: string; modules: any[] }>(`${this.apiUrl}/users/${userId}/modules`);

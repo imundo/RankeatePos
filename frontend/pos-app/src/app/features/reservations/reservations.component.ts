@@ -1897,6 +1897,100 @@ interface AutomationConfig {
       align-items: center;
       margin-bottom: 1rem;
     }
+
+    /* Mobile: Stack day detail header */
+    @media (max-width: 480px) {
+      .day-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+
+    /* Time Slots */
+    .time-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .time-row {
+      display: flex;
+      gap: 1rem;
+      padding: 0.5rem;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .time-row:hover { background: rgba(255, 255, 255, 0.02); }
+    .time-row.has-reservation { background: rgba(255, 255, 255, 0.04); }
+
+    .time-label {
+      min-width: 60px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.9rem;
+      padding-top: 0.5rem;
+    }
+
+    .time-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* Mobile: Adjust time row layout */
+    @media (max-width: 480px) {
+      .time-row {
+        gap: 0.5rem;
+        padding-left: 0;
+      }
+      .time-label {
+        min-width: 45px;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* ... (rest of the styles) ... */
+
+    /* Ensure modals are responsive */
+    @media (max-width: 768px) {
+      .modal-content {
+        width: 95%;
+        padding: 1.25rem;
+        max-height: 90vh;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .mobile-bottom-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #1a1a2e;
+        padding: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+      }
+
+      .fab-primary {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      }
+    }
+
     .day-detail-header h3 { margin: 0; font-size: 1.1rem; text-transform: capitalize; }
     .res-count { 
       background: rgba(99, 102, 241, 0.2); 

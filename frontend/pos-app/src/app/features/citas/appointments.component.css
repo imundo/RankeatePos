@@ -800,6 +800,161 @@
     font-size: .9rem;
 }
 
+/* ==========================================================================
+   Responsive Design (Mobile & Tablet)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .appointments-container {
+        padding: 1rem;
+        padding-bottom: 80px;
+        /* Space for bottom nav if present */
+    }
+
+    /* Header adjustments */
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: auto 1fr;
+    }
+
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .5rem;
+    }
+
+    .stat-icon {
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    /* View Tabs - Scrollable */
+    .view-tabs {
+        overflow-x: auto;
+        padding-bottom: .5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .view-tabs button {
+        white-space: nowrap;
+        min-width: max-content;
+    }
+
+    /* Agenda View */
+    .date-nav {
+        justify-content: space-between;
+    }
+
+    .timeline-item {
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .time-badge {
+        flex-direction: row;
+        align-items: center;
+        gap: .5rem;
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+        padding-bottom: .5rem;
+        margin-bottom: .5rem;
+    }
+
+    .item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .25rem;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+
+    /* Calendar View */
+    .calendar-grid {
+        gap: 2px;
+    }
+
+    .cal-header {
+        font-size: .65rem;
+        padding: .2rem;
+    }
+
+    .day-number {
+        font-size: .8rem;
+    }
+
+    .event-count {
+        width: 14px;
+        height: 14px;
+        font-size: .5rem;
+        top: 2px;
+        right: 2px;
+    }
+
+    /* Modals */
+    .modal-content {
+        padding: 1.25rem;
+        max-height: 95vh;
+        width: 95%;
+        margin: auto;
+    }
+
+    .wizard-steps {
+        gap: .25rem;
+    }
+
+    .step {
+        font-size: .7rem;
+        padding: .4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .date-picker-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .date-picker-row input {
+        width: 100%;
+    }
+
+    .slots-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 .info-row span:first-child {
     min-width: 24px;
 }

@@ -46,6 +46,9 @@ interface User {
         <button class="tab" [class.active]="activeTab() === 'branches'" (click)="activeTab.set('branches')">
           <span>📍</span> Sucursales
         </button>
+        <button class="tab" [class.active]="activeTab() === 'integrations'" (click)="activeTab.set('integrations')">
+          <span>🔌</span> Integraciones
+        </button>
         <button class="tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
           <span>🧾</span> Impuestos
         </button>
@@ -86,6 +89,10 @@ interface User {
               <div class="info-row">
                 <span class="label">Plan</span>
                 <span class="value plan-badge">{{ tenantPlan() }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">País</span>
+                <span class="value">{{ authService.tenant()?.country || 'Chile' }}</span>
               </div>
             </div>
           </section>
@@ -146,6 +153,85 @@ interface User {
           <app-branches></app-branches>
         }
 
+        <!-- Integrations Tab -->
+        @if (activeTab() === 'integrations') {
+          <section class="section">
+            <div class="section-header">
+              <h3>🔌 Integraciones Externas</h3>
+            </div>
+            
+            <div class="settings-card">
+              <!-- SII Integration -->
+              <div class="info-row">
+                <div class="integration-info">
+                  <span class="icon">🏛️</span>
+                  <div>
+                    <span class="block font-medium">Servicio de Impuestos Internos (SII)</span>
+                    <span class="text-sm text-gray-400">Emisión automática de Boletas y Facturas Electrónicas</span>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" 
+                         [checked]="configs()['integration.sii'] === 'true'"
+                         (change)="toggleIntegration('integration.sii', $event)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <!-- MercadoPago -->
+              <div class="info-row">
+                <div class="integration-info">
+                  <span class="icon">💳</span>
+                  <div>
+                    <span class="block font-medium">MercadoPago</span>
+                    <span class="text-sm text-gray-400">Cobros con QR y tarjetas</span>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" 
+                         [checked]="configs()['integration.mercadopago'] === 'true'"
+                         (change)="toggleIntegration('integration.mercadopago', $event)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <!-- WhatsApp -->
+              <div class="info-row">
+                <div class="integration-info">
+                  <span class="icon">📱</span>
+                  <div>
+                    <span class="block font-medium">WhatsApp Business</span>
+                    <span class="text-sm text-gray-400">Notificaciones automáticas a clientes</span>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" 
+                         [checked]="configs()['integration.whatsapp'] === 'true'"
+                         (change)="toggleIntegration('integration.whatsapp', $event)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <!-- Email -->
+              <div class="info-row">
+                <div class="integration-info">
+                  <span class="icon">📧</span>
+                  <div>
+                    <span class="block font-medium">Email Server (SMTP)</span>
+                    <span class="text-sm text-gray-400">Envío de reportes y comprobantes</span>
+                  </div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" 
+                         [checked]="configs()['integration.email'] === 'true'"
+                         (change)="toggleIntegration('integration.email', $event)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+        }
+
         <!-- Taxes Tab -->
         @if (activeTab() === 'taxes') {
           <section class="section">
@@ -157,22 +243,42 @@ interface User {
               <div class="tax-config">
                 <div class="tax-row">
                   <span class="tax-label">País</span>
-                  <select class="tax-select" [(ngModel)]="selectedCountry">
-                    <option value="CL">🇨🇱 Chile</option>
-                    <option value="AR">🇦🇷 Argentina</option>
-                    <option value="PE">🇵🇪 Perú</option>
-                    <option value="CO">🇨🇴 Colombia</option>
-                    <option value="MX">🇲🇽 México</option>
-                    <option value="EC">🇪🇨 Ecuador</option>
+                  <select class="tax-select" [(ngModel)]="selectedCountry" (change)="saveCountry()">
+                    <option value="Chile">🇨🇱 Chile</option>
+                    <option value="Argentina">🇦🇷 Argentina</option>
+                    <option value="Peru">🇵🇪 Perú</option>
+                    <option value="Colombia">🇨🇴 Colombia</option>
+                    <option value="Mexico">🇲🇽 México</option>
+                    <option value="Ecuador">🇪🇨 Ecuador</option>
                   </select>
                 </div>
                 <div class="tax-row">
                   <span class="tax-label">Impuesto Principal</span>
-                  <span class="tax-value">IVA 19%</span>
+                  <span class="tax-value">
+                    @switch (selectedCountry) {
+                      @case ('Chile') { IVA 19% }
+                      @case ('Argentina') { IVA 21% }
+                      @case ('Peru') { IGV 18% }
+                      @case ('Colombia') { IVA 19% }
+                      @case ('Mexico') { IVA 16% }
+                      @case ('Ecuador') { IVA 12% }
+                      @default { Variable }
+                    }
+                  </span>
                 </div>
                 <div class="tax-row">
                   <span class="tax-label">Moneda</span>
-                  <span class="tax-value">CLP ($)</span>
+                  <span class="tax-value">
+                    @switch (selectedCountry) {
+                      @case ('Chile') { CLP ($) }
+                      @case ('Argentina') { ARS ($) }
+                      @case ('Peru') { PEN (S/) }
+                      @case ('Colombia') { COP ($) }
+                      @case ('Mexico') { MXN ($) }
+                      @case ('Ecuador') { USD ($) }
+                      @default { USD ($) }
+                    }
+                  </span>
                 </div>
                 <div class="tax-row">
                   <span class="tax-label">Zona Horaria</span>
@@ -183,7 +289,7 @@ interface User {
 
             <div class="info-box">
               <span class="info-icon">ℹ️</span>
-              <p>La configuración de impuestos se aplica automáticamente según el país seleccionado.</p>
+              <p>La configuración de impuestos y moneda se actualiza automáticamente al cambiar el país.</p>
             </div>
           </section>
         }
@@ -431,6 +537,99 @@ interface User {
       color: rgba(255, 255, 255, 0.5);
       span { font-size: 3rem; margin-bottom: 1rem; }
     }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .settings-container {
+        padding-bottom: 5rem; /* Space for bottom nav */
+      }
+
+      .settings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .header-title h1 {
+        font-size: 1.25rem;
+      }
+
+      .tabs-container {
+        padding: 0.5rem 1rem;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .settings-content {
+        padding: 1rem;
+      }
+
+      /* Stack Info Rows */
+      .info-row {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-start;
+      }
+
+      .label {
+        font-size: 0.8rem;
+      }
+
+      .integration-info {
+        margin-bottom: 0.5rem;
+      }
+
+      /* Responsive Data Table (Card View) */
+      .table-header {
+        display: none;
+      }
+
+      .table-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .cell-main {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+      }
+
+      .cell-actions {
+        margin-top: 0.5rem;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      /* Stack Tax Rows */
+      .tax-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .tax-value {
+        font-size: 1.1rem;
+      }
+
+      .tax-select {
+        width: 100%;
+      }
+    }
   `]
 })
 export class SettingsComponent implements OnInit {
@@ -464,8 +663,59 @@ export class SettingsComponent implements OnInit {
     };
   }
 
+  configs = signal<Record<string, string>>({});
+  isLoading = signal(false);
+
   ngOnInit() {
     this.loadUsers();
+    this.loadConfigs();
+    if (this.authService.tenant()?.country) {
+      this.selectedCountry = this.authService.tenant()?.country || 'Chile';
+    }
+  }
+
+  loadConfigs() {
+    this.http.get<Record<string, string>>(`${this.baseUrl}/tenants/current/configs`, { headers: this.getHeaders() })
+      .subscribe({
+        next: (configs) => this.configs.set(configs),
+        error: (err) => console.error('Error loading configs', err)
+      });
+  }
+
+  saveCountry() {
+    this.isLoading.set(true);
+    this.http.put(`${this.baseUrl}/tenants/current`, { country: this.selectedCountry }, { headers: this.getHeaders() })
+      .subscribe({
+        next: (tenant: any) => {
+          // Update local storage tenant
+          const current = this.authService.tenant();
+          if (current) {
+            const updated = { ...current, country: this.selectedCountry };
+            localStorage.setItem('pos_tenant', JSON.stringify(updated));
+            window.location.reload(); // Reload to apply changes (currency, taxes, etc.)
+          }
+        },
+        error: (err) => {
+          console.error('Error updating country', err);
+          this.isLoading.set(false);
+        },
+        complete: () => this.isLoading.set(false)
+      });
+  }
+
+  toggleIntegration(key: string, event: any) {
+    const value = event.target.checked.toString();
+    const configs = { ...this.configs(), [key]: value };
+
+    this.http.put(`${this.baseUrl}/tenants/current/configs`, { [key]: value }, { headers: this.getHeaders() })
+      .subscribe({
+        next: () => this.configs.set(configs),
+        error: (err) => {
+          console.error('Error updating config', err);
+          // Revert on error
+          event.target.checked = !event.target.checked;
+        }
+      });
   }
 
   loadUsers() {

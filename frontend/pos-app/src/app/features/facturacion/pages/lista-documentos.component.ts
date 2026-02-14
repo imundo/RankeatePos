@@ -505,6 +505,123 @@ import { AuthService } from '@core/auth/auth.service';
     }
     :host ::ng-deep .p-datepicker table td > span { color: #e2e8f0; }
     :host ::ng-deep .p-datepicker table td > span:hover { background: #3b82f6 !important; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .billing-container {
+        padding: 1rem;
+        padding-bottom: 5rem;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .header-content h1 {
+        font-size: 1.75rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+
+      .premium-btn {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.85rem !important;
+        padding: 0.6rem !important;
+      }
+
+      .filters-bar {
+        padding: 1rem;
+        gap: 0.75rem;
+      }
+
+      .search-wrapper {
+        min-width: 100%;
+      }
+
+      .date-filters {
+        width: 100%;
+      }
+
+      :host ::ng-deep .premium-calendar {
+        width: 100%;
+      }
+
+      .search-btn {
+        width: 100%;
+      }
+
+      /* Responsive Table (Card View) */
+      :host ::ng-deep .p-datatable-thead {
+        display: none !important;
+      }
+
+      :host ::ng-deep .p-datatable-tbody > tr {
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05) !important;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      :host ::ng-deep .p-datatable-tbody > tr > td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0 !important;
+        border: none !important;
+        text-align: right;
+        width: 100% !important;
+      }
+
+      :host ::ng-deep .p-datatable-tbody > tr > td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #94a3b8;
+        text-align: left;
+        margin-right: 1rem;
+      }
+      
+      /* Manual labels for card view since p-table doesn't auto-add data-label */
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(1)::before { content: "Folio"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(2)::before { content: "Tipo"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(3)::before { content: "Emisión"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(4)::before { content: "Receptor"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(5)::before { content: "Monto"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(6)::before { content: "Estado"; }
+      :host ::ng-deep .p-datatable-tbody > tr > td:nth-child(7)::before { content: "Acciones"; }
+
+      .action-buttons {
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      /* Modal Adjustments */
+      .modal-content {
+        max-height: 90vh;
+        width: 95% !important;
+        margin: auto;
+      }
+
+      .receipt-preview-container {
+        padding: 1rem;
+      }
+
+      .thermal-receipt {
+        padding: 15px;
+        font-size: 11px;
+      }
+    }
   `]
 })
 export class ListaDocumentosComponent {

@@ -29,6 +29,7 @@ export interface AuthTenant {
     businessType: string;
     plan: string;
     modules: string[];
+    country?: string;
 }
 
 export interface AuthResponse {

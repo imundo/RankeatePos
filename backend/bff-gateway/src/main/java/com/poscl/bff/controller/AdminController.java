@@ -177,6 +177,77 @@ public class AdminController {
 
     // ==================== Audit Logs Proxy ====================
 
+    // ---- Module CRUD ----
+
+    @PostMapping("/modules")
+    @Operation(summary = "Proxy: Crear módulo")
+    public Mono<ResponseEntity<Map<String, Object>>> createModule(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, Object> request) {
+        log.info("BFF: POST /api/admin/modules");
+        return forwardPostRequest("/api/admin/modules", authHeader, request);
+    }
+
+    @PutMapping("/modules/{id}")
+    @Operation(summary = "Proxy: Actualizar módulo")
+    public Mono<ResponseEntity<Map<String, Object>>> updateModule(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> request) {
+        log.info("BFF: PUT /api/admin/modules/{}", id);
+        return forwardPutRequest("/api/admin/modules/" + id, authHeader, request);
+    }
+
+    @DeleteMapping("/modules/{id}")
+    @Operation(summary = "Proxy: Eliminar módulo")
+    public Mono<ResponseEntity<Map<String, Object>>> deleteModule(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID id) {
+        log.info("BFF: DELETE /api/admin/modules/{}", id);
+        return forwardDeleteRequest("/api/admin/modules/" + id, authHeader);
+    }
+
+    @PutMapping("/modules/reorder")
+    @Operation(summary = "Proxy: Reordenar módulos")
+    public Mono<ResponseEntity<Map<String, Object>>> reorderModules(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Object request) {
+        log.info("BFF: PUT /api/admin/modules/reorder");
+        return forwardPutRequest("/api/admin/modules/reorder", authHeader, request);
+    }
+
+    // ---- Plan CRUD ----
+
+    @PostMapping("/plans")
+    @Operation(summary = "Proxy: Crear plan")
+    public Mono<ResponseEntity<Map<String, Object>>> createPlan(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, Object> request) {
+        log.info("BFF: POST /api/admin/plans");
+        return forwardPostRequest("/api/admin/plans", authHeader, request);
+    }
+
+    @PutMapping("/plans/{id}")
+    @Operation(summary = "Proxy: Actualizar plan")
+    public Mono<ResponseEntity<Map<String, Object>>> updatePlan(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> request) {
+        log.info("BFF: PUT /api/admin/plans/{}", id);
+        return forwardPutRequest("/api/admin/plans/" + id, authHeader, request);
+    }
+
+    @DeleteMapping("/plans/{id}")
+    @Operation(summary = "Proxy: Eliminar plan")
+    public Mono<ResponseEntity<Map<String, Object>>> deletePlan(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID id) {
+        log.info("BFF: DELETE /api/admin/plans/{}", id);
+        return forwardDeleteRequest("/api/admin/plans/" + id, authHeader);
+    }
+
+    // ==================== Audit Logs Proxy ====================
+
     @GetMapping("/audit-logs/tenant/{tenantId}")
     @Operation(summary = "Proxy: Obtener logs de auditoría por tenant")
     public Mono<ResponseEntity<Map<String, Object>>> getAuditLogsByTenant(
@@ -322,9 +393,24 @@ public class AdminController {
                 .onErrorResume(e -> handleProxyMapError(e, "Error updating resource"));
     }
 
+    private Mono<ResponseEntity<Map<String, Object>>> forwardDeleteRequest(String uri, String authHeader) {
+        return authWebClient.delete()
+                .uri(uri)
+                .header("Authorization", authHeader)
+                .retrieve()
+                .bodyToMono(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {
+                })
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.noContent().build())
+                .timeout(PROXY_TIMEOUT)
+                .onErrorResume(e -> handleProxyMapError(e, "Error deleting resource"));
+    }
+
     private Mono<ResponseEntity<Object>> handleProxyError(Throwable e, String defaultMessage) { // Generic Object
         return handleProxyErrorInternal(e, defaultMessage)
-                .map(response -> (ResponseEntity<Object>) (ResponseEntity<?>) response);
+                .map(response -> ResponseEntity.status(response.getStatusCode())
+                        .headers(response.getHeaders())
+                        .body((Object) response.getBody()));
     }
 
     // Helper to return Map for methods expecting Map

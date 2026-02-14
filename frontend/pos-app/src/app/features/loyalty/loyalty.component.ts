@@ -5,42 +5,42 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 
 interface LoyaltyCustomer {
-    id: string;
-    nombre: string;
-    email: string;
-    telefono: string;
-    puntos: number;
-    nivel: 'Bronce' | 'Plata' | 'Oro' | 'Platino';
-    totalCompras: number;
-    ultimaVisita: string;
-    fechaRegistro: string;
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  puntos: number;
+  nivel: 'Bronce' | 'Plata' | 'Oro' | 'Platino';
+  totalCompras: number;
+  ultimaVisita: string;
+  fechaRegistro: string;
 }
 
 interface Reward {
-    id: string;
-    nombre: string;
-    descripcion: string;
-    puntosRequeridos: number;
-    tipo: 'descuento' | 'producto' | 'servicio';
-    valor: number;
-    activo: boolean;
-    imagen?: string;
+  id: string;
+  nombre: string;
+  descripcion: string;
+  puntosRequeridos: number;
+  tipo: 'descuento' | 'producto' | 'servicio';
+  valor: number;
+  activo: boolean;
+  imagen?: string;
 }
 
 interface PointsTransaction {
-    id: string;
-    customerId: string;
-    tipo: 'ganados' | 'canjeados';
-    puntos: number;
-    descripcion: string;
-    fecha: string;
+  id: string;
+  customerId: string;
+  tipo: 'ganados' | 'canjeados';
+  puntos: number;
+  descripcion: string;
+  fecha: string;
 }
 
 @Component({
-    selector: 'app-loyalty',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
-    template: `
+  selector: 'app-loyalty',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
     <div class="loyalty-container">
       <!-- Header -->
       <header class="loyalty-header">
@@ -256,7 +256,7 @@ interface PointsTransaction {
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     .loyalty-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
@@ -769,164 +769,272 @@ interface PointsTransaction {
     }
 
     @media (max-width: 768px) {
+      .loyalty-container {
+        padding: 1rem;
+        padding-bottom: 5rem; /* Space for bottom nav if present */
+      }
+
       .loyalty-header {
         flex-direction: column;
         align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .header-left {
+        width: 100%;
+      }
+
+      .title-section h1 {
+        font-size: 1.5rem;
       }
 
       .header-actions {
-        justify-content: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
       }
 
       .action-btn {
-        flex: 1;
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
       }
 
       .tabs-container {
         overflow-x: auto;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .tab-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      /* Customers Grid Mobile */
+      .customers-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .customer-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .customer-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .icon-btn {
+        padding: 0.5rem;
+        width: 40px;
+        height: 40px;
+      }
+
+      /* Rewards Grid Mobile */
+      .rewards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .reward-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .reward-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .customer-stats {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 1.5rem;
       }
     }
   `]
 })
 export class LoyaltyComponent implements OnInit {
-    private authService = inject(AuthService);
+  private authService = inject(AuthService);
 
-    activeTab: 'customers' | 'rewards' | 'history' = 'customers';
-    searchQuery = '';
-    showAddCustomer = false;
-    showAddReward = false;
-    showSettings = false;
+  activeTab: 'customers' | 'rewards' | 'history' = 'customers';
+  searchQuery = '';
+  showAddCustomer = false;
+  showAddReward = false;
+  showSettings = false;
 
-    newCustomer = {
-        nombre: '',
-        email: '',
-        telefono: ''
+  newCustomer = {
+    nombre: '',
+    email: '',
+    telefono: ''
+  };
+
+  // Demo customers
+  customers = signal<LoyaltyCustomer[]>([
+    { id: '1', nombre: 'María González', email: 'maria@email.com', telefono: '+56912345678', puntos: 2450, nivel: 'Oro', totalCompras: 485000, ultimaVisita: '2024-12-24', fechaRegistro: '2024-01-15' },
+    { id: '2', nombre: 'Juan Pérez', email: 'juan@email.com', telefono: '+56987654321', puntos: 5200, nivel: 'Platino', totalCompras: 1250000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-06-20' },
+    { id: '3', nombre: 'Ana Martínez', email: 'ana@email.com', telefono: '+56911223344', puntos: 890, nivel: 'Plata', totalCompras: 156000, ultimaVisita: '2024-12-20', fechaRegistro: '2024-08-10' },
+    { id: '4', nombre: 'Carlos López', email: 'carlos@email.com', telefono: '+56955667788', puntos: 350, nivel: 'Bronce', totalCompras: 45000, ultimaVisita: '2024-12-15', fechaRegistro: '2024-11-01' },
+    { id: '5', nombre: 'Patricia Díaz', email: 'patricia@email.com', telefono: '+56944556677', puntos: 1850, nivel: 'Oro', totalCompras: 380000, ultimaVisita: '2024-12-23', fechaRegistro: '2024-03-05' },
+    { id: '6', nombre: 'Roberto Silva', email: 'roberto@email.com', telefono: '+56933445566', puntos: 3100, nivel: 'Platino', totalCompras: 890000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-09-15' },
+  ]);
+
+  // Demo rewards
+  rewards = signal<Reward[]>([
+    { id: '1', nombre: 'Café Gratis', descripcion: 'Un café espresso o americano gratis', puntosRequeridos: 500, tipo: 'producto', valor: 1500, activo: true },
+    { id: '2', nombre: '10% Descuento', descripcion: 'Descuento en tu próxima compra', puntosRequeridos: 1000, tipo: 'descuento', valor: 10, activo: true },
+    { id: '3', nombre: 'Torta de Regalo', descripcion: 'Una porción de torta a elección', puntosRequeridos: 1500, tipo: 'producto', valor: 4500, activo: true },
+    { id: '4', nombre: '20% Descuento', descripcion: 'Descuento especial para clientes fieles', puntosRequeridos: 3000, tipo: 'descuento', valor: 20, activo: true },
+    { id: '5', nombre: 'Desayuno Premium', descripcion: 'Desayuno completo para 2 personas', puntosRequeridos: 5000, tipo: 'servicio', valor: 25000, activo: true },
+    { id: '6', nombre: '50% Aniversario', descripcion: 'Descuento especial de cumpleaños', puntosRequeridos: 0, tipo: 'descuento', valor: 50, activo: false },
+  ]);
+
+  // Demo transactions
+  transactions = signal<PointsTransaction[]>([
+    { id: '1', customerId: '1', tipo: 'ganados', puntos: 450, descripcion: 'Compra #0015 - María González', fecha: '2024-12-25T10:30:00' },
+    { id: '2', customerId: '2', tipo: 'canjeados', puntos: 1000, descripcion: 'Canje: 10% Descuento - Juan Pérez', fecha: '2024-12-25T09:15:00' },
+    { id: '3', customerId: '6', tipo: 'ganados', puntos: 890, descripcion: 'Compra #0014 - Roberto Silva', fecha: '2024-12-24T18:45:00' },
+    { id: '4', customerId: '5', tipo: 'ganados', puntos: 320, descripcion: 'Compra #0013 - Patricia Díaz', fecha: '2024-12-24T16:20:00' },
+    { id: '5', customerId: '1', tipo: 'canjeados', puntos: 500, descripcion: 'Canje: Café Gratis - María González', fecha: '2024-12-24T11:00:00' },
+    { id: '6', customerId: '3', tipo: 'ganados', puntos: 180, descripcion: 'Compra #0012 - Ana Martínez', fecha: '2024-12-23T14:30:00' },
+  ]);
+
+  // Computed values
+  totalCustomers = computed(() => this.customers().length);
+  totalPuntosActivos = computed(() => this.customers().reduce((sum, c) => sum + c.puntos, 0));
+  rewardsCanjeados = computed(() => this.transactions().filter(t => t.tipo === 'canjeados').length);
+  clientesPlatino = computed(() => this.customers().filter(c => c.nivel === 'Platino').length);
+
+  filteredCustomers = computed(() => {
+    const query = this.searchQuery.toLowerCase();
+    if (!query) return this.customers();
+    return this.customers().filter(c =>
+      c.nombre.toLowerCase().includes(query) ||
+      c.email.toLowerCase().includes(query) ||
+      c.telefono.includes(query)
+    );
+  });
+
+  recentTransactions = computed(() => this.transactions().slice(0, 10));
+
+  ngOnInit() {
+    // Load data
+  }
+
+  getNivelIcon(nivel: string): string {
+    switch (nivel) {
+      case 'Platino': return '💎';
+      case 'Oro': return '🥇';
+      case 'Plata': return '🥈';
+      default: return '🥉';
+    }
+  }
+
+  formatPrice(amount: number): string {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0
+    }).format(amount);
+  }
+
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  addPoints(customer: LoyaltyCustomer) {
+    const points = prompt('Ingrese los puntos a agregar:', '100');
+    if (points) {
+      const amount = parseInt(points);
+      this.customers.update(customers =>
+        customers.map(c => c.id === customer.id ? { ...c, puntos: c.puntos + amount } : c)
+      );
+      this.transactions.update(txs => [{
+        id: crypto.randomUUID(),
+        customerId: customer.id,
+        tipo: 'ganados',
+        puntos: amount,
+        descripcion: `Puntos manuales - ${customer.nombre}`,
+        fecha: new Date().toISOString()
+      }, ...txs]);
+    }
+  }
+
+  redeemReward(customer: LoyaltyCustomer) {
+    alert(`Selecciona una recompensa para ${customer.nombre}`);
+  }
+
+  viewHistory(customer: LoyaltyCustomer) {
+    this.activeTab = 'history';
+  }
+
+  toggleReward(reward: Reward) {
+    this.rewards.update(rewards =>
+      rewards.map(r => r.id === reward.id ? { ...r, activo: !r.activo } : r)
+    );
+  }
+
+  saveCustomer() {
+    if (!this.newCustomer.nombre) return;
+
+    const customer: LoyaltyCustomer = {
+      id: crypto.randomUUID(),
+      ...this.newCustomer,
+      puntos: 0,
+      nivel: 'Bronce',
+      totalCompras: 0,
+      ultimaVisita: new Date().toISOString().split('T')[0],
+      fechaRegistro: new Date().toISOString().split('T')[0]
     };
 
-    // Demo customers
-    customers = signal<LoyaltyCustomer[]>([
-        { id: '1', nombre: 'María González', email: 'maria@email.com', telefono: '+56912345678', puntos: 2450, nivel: 'Oro', totalCompras: 485000, ultimaVisita: '2024-12-24', fechaRegistro: '2024-01-15' },
-        { id: '2', nombre: 'Juan Pérez', email: 'juan@email.com', telefono: '+56987654321', puntos: 5200, nivel: 'Platino', totalCompras: 1250000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-06-20' },
-        { id: '3', nombre: 'Ana Martínez', email: 'ana@email.com', telefono: '+56911223344', puntos: 890, nivel: 'Plata', totalCompras: 156000, ultimaVisita: '2024-12-20', fechaRegistro: '2024-08-10' },
-        { id: '4', nombre: 'Carlos López', email: 'carlos@email.com', telefono: '+56955667788', puntos: 350, nivel: 'Bronce', totalCompras: 45000, ultimaVisita: '2024-12-15', fechaRegistro: '2024-11-01' },
-        { id: '5', nombre: 'Patricia Díaz', email: 'patricia@email.com', telefono: '+56944556677', puntos: 1850, nivel: 'Oro', totalCompras: 380000, ultimaVisita: '2024-12-23', fechaRegistro: '2024-03-05' },
-        { id: '6', nombre: 'Roberto Silva', email: 'roberto@email.com', telefono: '+56933445566', puntos: 3100, nivel: 'Platino', totalCompras: 890000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-09-15' },
-    ]);
-
-    // Demo rewards
-    rewards = signal<Reward[]>([
-        { id: '1', nombre: 'Café Gratis', descripcion: 'Un café espresso o americano gratis', puntosRequeridos: 500, tipo: 'producto', valor: 1500, activo: true },
-        { id: '2', nombre: '10% Descuento', descripcion: 'Descuento en tu próxima compra', puntosRequeridos: 1000, tipo: 'descuento', valor: 10, activo: true },
-        { id: '3', nombre: 'Torta de Regalo', descripcion: 'Una porción de torta a elección', puntosRequeridos: 1500, tipo: 'producto', valor: 4500, activo: true },
-        { id: '4', nombre: '20% Descuento', descripcion: 'Descuento especial para clientes fieles', puntosRequeridos: 3000, tipo: 'descuento', valor: 20, activo: true },
-        { id: '5', nombre: 'Desayuno Premium', descripcion: 'Desayuno completo para 2 personas', puntosRequeridos: 5000, tipo: 'servicio', valor: 25000, activo: true },
-        { id: '6', nombre: '50% Aniversario', descripcion: 'Descuento especial de cumpleaños', puntosRequeridos: 0, tipo: 'descuento', valor: 50, activo: false },
-    ]);
-
-    // Demo transactions
-    transactions = signal<PointsTransaction[]>([
-        { id: '1', customerId: '1', tipo: 'ganados', puntos: 450, descripcion: 'Compra #0015 - María González', fecha: '2024-12-25T10:30:00' },
-        { id: '2', customerId: '2', tipo: 'canjeados', puntos: 1000, descripcion: 'Canje: 10% Descuento - Juan Pérez', fecha: '2024-12-25T09:15:00' },
-        { id: '3', customerId: '6', tipo: 'ganados', puntos: 890, descripcion: 'Compra #0014 - Roberto Silva', fecha: '2024-12-24T18:45:00' },
-        { id: '4', customerId: '5', tipo: 'ganados', puntos: 320, descripcion: 'Compra #0013 - Patricia Díaz', fecha: '2024-12-24T16:20:00' },
-        { id: '5', customerId: '1', tipo: 'canjeados', puntos: 500, descripcion: 'Canje: Café Gratis - María González', fecha: '2024-12-24T11:00:00' },
-        { id: '6', customerId: '3', tipo: 'ganados', puntos: 180, descripcion: 'Compra #0012 - Ana Martínez', fecha: '2024-12-23T14:30:00' },
-    ]);
-
-    // Computed values
-    totalCustomers = computed(() => this.customers().length);
-    totalPuntosActivos = computed(() => this.customers().reduce((sum, c) => sum + c.puntos, 0));
-    rewardsCanjeados = computed(() => this.transactions().filter(t => t.tipo === 'canjeados').length);
-    clientesPlatino = computed(() => this.customers().filter(c => c.nivel === 'Platino').length);
-
-    filteredCustomers = computed(() => {
-        const query = this.searchQuery.toLowerCase();
-        if (!query) return this.customers();
-        return this.customers().filter(c =>
-            c.nombre.toLowerCase().includes(query) ||
-            c.email.toLowerCase().includes(query) ||
-            c.telefono.includes(query)
-        );
-    });
-
-    recentTransactions = computed(() => this.transactions().slice(0, 10));
-
-    ngOnInit() {
-        // Load data
-    }
-
-    getNivelIcon(nivel: string): string {
-        switch (nivel) {
-            case 'Platino': return '💎';
-            case 'Oro': return '🥇';
-            case 'Plata': return '🥈';
-            default: return '🥉';
-        }
-    }
-
-    formatPrice(amount: number): string {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP',
-            minimumFractionDigits: 0
-        }).format(amount);
-    }
-
-    formatDate(dateStr: string): string {
-        return new Date(dateStr).toLocaleDateString('es-CL', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        });
-    }
-
-    addPoints(customer: LoyaltyCustomer) {
-        const points = prompt('Ingrese los puntos a agregar:', '100');
-        if (points) {
-            const amount = parseInt(points);
-            this.customers.update(customers =>
-                customers.map(c => c.id === customer.id ? { ...c, puntos: c.puntos + amount } : c)
-            );
-            this.transactions.update(txs => [{
-                id: crypto.randomUUID(),
-                customerId: customer.id,
-                tipo: 'ganados',
-                puntos: amount,
-                descripcion: `Puntos manuales - ${customer.nombre}`,
-                fecha: new Date().toISOString()
-            }, ...txs]);
-        }
-    }
-
-    redeemReward(customer: LoyaltyCustomer) {
-        alert(`Selecciona una recompensa para ${customer.nombre}`);
-    }
-
-    viewHistory(customer: LoyaltyCustomer) {
-        this.activeTab = 'history';
-    }
-
-    toggleReward(reward: Reward) {
-        this.rewards.update(rewards =>
-            rewards.map(r => r.id === reward.id ? { ...r, activo: !r.activo } : r)
-        );
-    }
-
-    saveCustomer() {
-        if (!this.newCustomer.nombre) return;
-
-        const customer: LoyaltyCustomer = {
-            id: crypto.randomUUID(),
-            ...this.newCustomer,
-            puntos: 0,
-            nivel: 'Bronce',
-            totalCompras: 0,
-            ultimaVisita: new Date().toISOString().split('T')[0],
-            fechaRegistro: new Date().toISOString().split('T')[0]
-        };
-
-        this.customers.update(c => [customer, ...c]);
-        this.showAddCustomer = false;
-        this.newCustomer = { nombre: '', email: '', telefono: '' };
-    }
+    this.customers.update(c => [customer, ...c]);
+    this.showAddCustomer = false;
+    this.newCustomer = { nombre: '', email: '', telefono: '' };
+  }
 }

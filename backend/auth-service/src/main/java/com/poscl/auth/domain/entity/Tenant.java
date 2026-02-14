@@ -58,6 +58,10 @@ public class Tenant {
     @Column(length = 20)
     private String telefono;
 
+    @Column(nullable = false, length = 50)
+    @Builder.Default
+    private String country = "Chile";
+
     @Column(length = 200)
     private String email;
 

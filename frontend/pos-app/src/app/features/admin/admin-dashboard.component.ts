@@ -580,6 +580,7 @@ interface QuickAction {
     @media (max-width: 768px) {
       .dashboard-container {
         padding: 1rem;
+        padding-bottom: 5rem; /* Space for bottom nav */
       }
 
       h1 {
@@ -590,12 +591,33 @@ interface QuickAction {
         font-size: 2rem;
       }
 
+      .dashboard-header {
+        margin-bottom: 1.5rem;
+      }
+
+      .header-content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-actions {
+        margin-top: 1rem;
+      }
+
+      .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* Scrollable Stats */
       .stats-grid {
         display: flex;
         overflow-x: auto;
-        gap: 1rem;
+        gap: 0.75rem;
         padding-bottom: 0.5rem;
         scroll-snap-type: x mandatory;
+        margin: 0 -1rem;
+        padding: 0 1rem 0.5rem;
         -webkit-overflow-scrolling: touch;
       }
 
@@ -604,16 +626,21 @@ interface QuickAction {
       }
 
       .stat-card {
-        min-width: 180px;
+        min-width: 220px;
         flex-shrink: 0;
-        scroll-snap-align: start;
+        scroll-snap-align: center;
+        padding: 1.25rem;
       }
 
+      /* Scrollable Actions */
       .actions-grid {
         display: flex;
         overflow-x: auto;
         padding-bottom: 0.5rem;
         scroll-snap-type: x mandatory;
+        margin: 0 -1rem;
+        padding: 0 1rem 0.5rem;
+        gap: 0.75rem;
       }
 
       .actions-grid::-webkit-scrollbar {
@@ -624,16 +651,50 @@ interface QuickAction {
         min-width: 160px;
         flex-shrink: 0;
         scroll-snap-align: start;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
       }
 
+      .action-badge {
+        top: 8px;
+        right: 8px;
+      }
+
+      /* Activity List Mobile */
       .activity-item {
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .activity-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+      }
+
+      .activity-content {
+        width: 100%;
+      }
+
+      .activity-meta {
+        display: block;
+        margin-top: 0.25rem;
       }
 
       .activity-actions {
-        order: 3;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        margin: 0;
+      }
+
+      .activity-status {
         width: 100%;
-        justify-content: flex-end;
+        text-align: center;
         margin-top: 0.5rem;
       }
 

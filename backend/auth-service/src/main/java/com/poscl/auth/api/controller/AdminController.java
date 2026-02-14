@@ -268,6 +268,62 @@ public class AdminController {
         return ResponseEntity.ok(grouped);
     }
 
+    @PostMapping("/modules")
+    @Operation(summary = "Crear módulo", description = "Agrega un nuevo módulo al catálogo")
+    public ResponseEntity<ModuleDto> createModule(@RequestBody Map<String, Object> request) {
+        log.info("POST /api/admin/modules - creating: {}", request.get("code"));
+        Module module = Module.builder()
+                .code((String) request.get("code"))
+                .name((String) request.get("name"))
+                .description((String) request.get("description"))
+                .icon((String) request.get("icon"))
+                .category((String) request.getOrDefault("category", "Operaciones"))
+                .sortOrder(request.get("sortOrder") != null ? ((Number) request.get("sortOrder")).intValue() : 0)
+                .active(request.get("active") != null ? (Boolean) request.get("active") : true)
+                .build();
+        Module created = moduleService.create(module);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toModuleDto(created));
+    }
+
+    @PutMapping("/modules/{id}")
+    @Operation(summary = "Actualizar módulo", description = "Edita nombre, icono, categoría, etc.")
+    public ResponseEntity<ModuleDto> updateModule(@PathVariable UUID id, @RequestBody Map<String, Object> request) {
+        log.info("PUT /api/admin/modules/{}", id);
+        Module data = Module.builder()
+                .name((String) request.get("name"))
+                .description((String) request.get("description"))
+                .icon((String) request.get("icon"))
+                .category((String) request.get("category"))
+                .sortOrder(request.get("sortOrder") != null ? ((Number) request.get("sortOrder")).intValue() : null)
+                .active(request.get("active") != null ? (Boolean) request.get("active") : null)
+                .build();
+        Module updated = moduleService.update(id, data);
+        return ResponseEntity.ok(toModuleDto(updated));
+    }
+
+    @DeleteMapping("/modules/{id}")
+    @Operation(summary = "Eliminar módulo", description = "Elimina un módulo del catálogo")
+    public ResponseEntity<Void> deleteModule(@PathVariable UUID id) {
+        log.info("DELETE /api/admin/modules/{}", id);
+        moduleService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/modules/reorder")
+    @Operation(summary = "Reordenar módulos", description = "Actualiza el orden de los módulos")
+    public ResponseEntity<List<ModuleDto>> reorderModules(@RequestBody List<Map<String, Object>> items) {
+        log.info("PUT /api/admin/modules/reorder - {} items", items.size());
+        for (Map<String, Object> item : items) {
+            UUID moduleId = UUID.fromString((String) item.get("id"));
+            int sortOrder = ((Number) item.get("sortOrder")).intValue();
+            moduleService.findById(moduleId).ifPresent(m -> {
+                m.setSortOrder(sortOrder);
+                moduleService.create(m); // save
+            });
+        }
+        return ResponseEntity.ok(moduleService.findAll().stream().map(this::toModuleDto).collect(Collectors.toList()));
+    }
+
     // ==================== Plans Management ====================
 
     @GetMapping("/plans")
@@ -287,6 +343,58 @@ public class AdminController {
         return planService.findByCode(code)
                 .map(plan -> ResponseEntity.ok(toPlanDto(plan)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/plans")
+    @Operation(summary = "Crear plan", description = "Agrega un nuevo plan de suscripción")
+    public ResponseEntity<PlanDto> createPlan(@RequestBody Map<String, Object> request) {
+        log.info("POST /api/admin/plans - creating: {}", request.get("code"));
+        Plan plan = Plan.builder()
+                .code((String) request.get("code"))
+                .name((String) request.get("name"))
+                .description((String) request.get("description"))
+                .price(request.get("price") != null ? new java.math.BigDecimal(request.get("price").toString())
+                        : java.math.BigDecimal.ZERO)
+                .currency((String) request.getOrDefault("currency", "CLP"))
+                .billingCycle((String) request.getOrDefault("billingCycle", "monthly"))
+                .includedModules(request.get("includedModules") != null ? (List<String>) request.get("includedModules")
+                        : List.of("pos", "products"))
+                .maxUsers(request.get("maxUsers") != null ? ((Number) request.get("maxUsers")).intValue() : 5)
+                .maxBranches(request.get("maxBranches") != null ? ((Number) request.get("maxBranches")).intValue() : 1)
+                .maxProducts(
+                        request.get("maxProducts") != null ? ((Number) request.get("maxProducts")).intValue() : 500)
+                .build();
+        Plan created = planService.create(plan);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toPlanDto(created));
+    }
+
+    @PutMapping("/plans/{id}")
+    @Operation(summary = "Actualizar plan", description = "Edita precio, módulos incluidos, límites")
+    public ResponseEntity<PlanDto> updatePlan(@PathVariable UUID id, @RequestBody Map<String, Object> request) {
+        log.info("PUT /api/admin/plans/{}", id);
+        Plan data = Plan.builder()
+                .name((String) request.get("name"))
+                .description((String) request.get("description"))
+                .price(request.get("price") != null ? new java.math.BigDecimal(request.get("price").toString()) : null)
+                .includedModules(
+                        request.get("includedModules") != null ? (List<String>) request.get("includedModules") : null)
+                .maxUsers(request.get("maxUsers") != null ? ((Number) request.get("maxUsers")).intValue() : null)
+                .maxBranches(
+                        request.get("maxBranches") != null ? ((Number) request.get("maxBranches")).intValue() : null)
+                .maxProducts(
+                        request.get("maxProducts") != null ? ((Number) request.get("maxProducts")).intValue() : null)
+                .active(request.get("active") != null ? (Boolean) request.get("active") : null)
+                .build();
+        Plan updated = planService.update(id, data);
+        return ResponseEntity.ok(toPlanDto(updated));
+    }
+
+    @DeleteMapping("/plans/{id}")
+    @Operation(summary = "Eliminar plan", description = "Elimina un plan de suscripción")
+    public ResponseEntity<Void> deletePlan(@PathVariable UUID id) {
+        log.info("DELETE /api/admin/plans/{}", id);
+        planService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     // ==================== User Permissions ====================

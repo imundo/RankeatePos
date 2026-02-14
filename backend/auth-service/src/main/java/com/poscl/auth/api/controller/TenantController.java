@@ -22,6 +22,7 @@ import java.util.UUID;
 public class TenantController {
 
     private final TenantRepository tenantRepository;
+    private final com.poscl.auth.application.service.TenantConfigService tenantConfigService;
 
     /**
      * Obtiene los datos del tenant actual
@@ -72,6 +73,8 @@ public class TenantController {
             tenant.setSitioWeb(request.getSitioWeb());
         if (request.getLogoUrl() != null)
             tenant.setLogoUrl(request.getLogoUrl());
+        if (request.getCountry() != null)
+            tenant.setCountry(request.getCountry());
 
         tenant = tenantRepository.save(tenant);
         log.info("Tenant actualizado: {}", tenant.getDisplayName());
@@ -98,6 +101,27 @@ public class TenantController {
         return ResponseEntity.ok(toDto(tenant));
     }
 
+    /**
+     * Obtiene las configuraciones del tenant
+     */
+    @GetMapping("/current/configs")
+    public ResponseEntity<java.util.Map<String, String>> getTenantConfigs(
+            @RequestHeader("X-Tenant-Id") UUID tenantId) {
+        return ResponseEntity.ok(tenantConfigService.getConfigs(tenantId));
+    }
+
+    /**
+     * Actualiza las configuraciones del tenant
+     */
+    @PutMapping("/current/configs")
+    public ResponseEntity<java.util.Map<String, String>> updateTenantConfigs(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestBody java.util.Map<String, String> configs) {
+
+        tenantConfigService.updateConfigs(tenantId, configs);
+        return ResponseEntity.ok(tenantConfigService.getConfigs(tenantId));
+    }
+
     private TenantDto toDto(Tenant tenant) {
         return TenantDto.builder()
                 .id(tenant.getId())
@@ -113,6 +137,7 @@ public class TenantController {
                 .sitioWeb(tenant.getSitioWeb())
                 .logoUrl(tenant.getLogoUrl())
                 .activo(tenant.getActivo())
+                .country(tenant.getCountry())
                 .build();
     }
 
@@ -134,6 +159,7 @@ public class TenantController {
         private String sitioWeb;
         private String logoUrl;
         private Boolean activo;
+        private String country;
     }
 
     @Data
@@ -151,6 +177,7 @@ public class TenantController {
         private String email;
         private String sitioWeb;
         private String logoUrl;
+        private String country;
     }
 
     @Data
