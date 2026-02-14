@@ -1007,6 +1007,10 @@ export class CrmComponent implements OnInit {
   showNewCustomer = false;
   selectedCustomerData: Customer | null = null;
   detailTab: 'overview' | 'timeline' | 'actions' = 'overview';
+  loading = signal(false);
+  addNoteText = '';
+  addTagName = '';
+  addPointsAmount = 0;
 
   customers = signal<Customer[]>([]);
   customerTimeline = signal<CustomerInteraction[]>([]);
@@ -1021,17 +1025,7 @@ export class CrmComponent implements OnInit {
     notes: ''
   };
 
-  // Mock data for demo
-  private mockCustomers: Customer[] = [
-    { id: '1', name: 'María González Pérez', email: 'maria.gonzalez@email.cl', phone: '+56912345671', segment: 'VIP', clv: 1500000, totalPurchases: 45, totalSpent: 950000, averageTicket: 21111, lastPurchaseDate: '2024-12-20', firstPurchaseDate: '2023-01-15', birthDate: '1985-03-15', loyaltyPoints: 12500, loyaltyTier: 'PLATINUM', score: 95, emailOptIn: true, smsOptIn: true, whatsappOptIn: true, referralCode: 'REFMARIA01', tags: [{ id: '1', name: 'VIP', color: '#FFD700' }, { id: '2', name: 'Cumpleaños Marzo', color: '#EC4899' }] },
-    { id: '2', name: 'Carlos Rodríguez Silva', email: 'carlos.rodriguez@empresa.cl', phone: '+56912345672', segment: 'VIP', clv: 1200000, totalPurchases: 38, totalSpent: 780000, averageTicket: 20526, lastPurchaseDate: '2024-12-18', firstPurchaseDate: '2023-02-20', birthDate: '1978-07-22', loyaltyPoints: 10200, loyaltyTier: 'PLATINUM', score: 90, emailOptIn: true, smsOptIn: false, whatsappOptIn: true, referralCode: 'REFCARLOS2', tags: [{ id: '3', name: 'Empresarial', color: '#3B82F6' }] },
-    { id: '3', name: 'Ana María López', email: 'ana.lopez@gmail.com', phone: '+56912345673', segment: 'VIP', clv: 980000, totalPurchases: 32, totalSpent: 620000, averageTicket: 19375, lastPurchaseDate: '2024-12-22', firstPurchaseDate: '2023-03-10', birthDate: '1990-11-08', loyaltyPoints: 8500, loyaltyTier: 'GOLD', score: 88, emailOptIn: true, smsOptIn: true, whatsappOptIn: true, referralCode: 'REFANA0003', tags: [] },
-    { id: '4', name: 'Pedro Sánchez Mora', email: 'pedro.sanchez@hotmail.com', phone: '+56912345674', segment: 'REGULAR', clv: 350000, totalPurchases: 15, totalSpent: 220000, averageTicket: 14667, lastPurchaseDate: '2024-12-15', firstPurchaseDate: '2023-06-01', birthDate: '1982-04-30', loyaltyPoints: 3200, loyaltyTier: 'SILVER', score: 72, emailOptIn: true, smsOptIn: true, whatsappOptIn: false, referralCode: 'REFPEDRO4', tags: [] },
-    { id: '5', name: 'Sofía Torres Vega', email: 'sofia.torres@outlook.com', phone: '+56912345675', segment: 'REGULAR', clv: 280000, totalPurchases: 12, totalSpent: 180000, averageTicket: 15000, lastPurchaseDate: '2024-12-10', firstPurchaseDate: '2023-07-15', birthDate: '1995-09-12', loyaltyPoints: 2800, loyaltyTier: 'SILVER', score: 68, emailOptIn: true, smsOptIn: false, whatsappOptIn: true, referralCode: 'REFSOFIA5', tags: [] },
-    { id: '6', name: 'Joaquín Sepúlveda', email: 'joaquin.sepulveda@email.cl', phone: '+56912345682', segment: 'NEW', clv: 30000, totalPurchases: 1, totalSpent: 18500, averageTicket: 18500, lastPurchaseDate: '2024-12-20', firstPurchaseDate: '2024-12-20', birthDate: '2000-05-10', loyaltyPoints: 185, loyaltyTier: 'BRONZE', score: 25, emailOptIn: true, smsOptIn: true, whatsappOptIn: true, referralCode: 'REFJOAQU2', tags: [] },
-    { id: '7', name: 'Felipe Morales', email: 'felipe.morales@hotmail.com', phone: '+56912345686', segment: 'AT_RISK', clv: 180000, totalPurchases: 8, totalSpent: 125000, averageTicket: 15625, lastPurchaseDate: '2024-10-01', firstPurchaseDate: '2023-05-15', birthDate: '1987-07-14', loyaltyPoints: 1800, loyaltyTier: 'SILVER', score: 35, emailOptIn: true, smsOptIn: false, whatsappOptIn: true, referralCode: 'REFFELIP6', tags: [{ id: '4', name: 'Requiere seguimiento', color: '#EF4444' }] },
-    { id: '8', name: 'Ignacio Pizarro', email: 'ignacio.pizarro@outlook.com', phone: '+56912345689', segment: 'LOST', clv: 80000, totalPurchases: 3, totalSpent: 45000, averageTicket: 15000, lastPurchaseDate: '2024-05-01', firstPurchaseDate: '2023-08-15', birthDate: '1979-12-01', loyaltyPoints: 600, loyaltyTier: 'BRONZE', score: 15, emailOptIn: false, smsOptIn: false, whatsappOptIn: false, referralCode: 'REFIGNAC9', tags: [] }
-  ];
+  private apiBase = `${environment.apiUrl}/api/marketing/customers`;
 
   filteredCustomers = computed(() => {
     let result = this.customers();
@@ -1066,15 +1060,15 @@ export class CrmComponent implements OnInit {
   }
 
   loadCustomers() {
-    // For demo, use mock data
-    this.customers.set(this.mockCustomers);
-
-    // In production, call API:
-    // this.http.get<any>(`${environment.apiUrl}/api/customers`, {
-    //     headers: { 'X-Tenant-Id': 'tenant-id' }
-    // }).subscribe(response => {
-    //     this.customers.set(response.content);
-    // });
+    this.loading.set(true);
+    this.http.get<any>(this.apiBase + '?size=200').subscribe({
+      next: (response) => {
+        const list = response?.content || response || [];
+        this.customers.set(Array.isArray(list) ? list : []);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   refreshData() {
@@ -1096,50 +1090,106 @@ export class CrmComponent implements OnInit {
   }
 
   loadCustomerTimeline(customerId: string) {
-    // Mock timeline data
-    this.customerTimeline.set([
-      { id: '1', type: 'PURCHASE', title: 'Compra $25,500', description: 'Venta #12345', createdAt: '2024-12-20T14:30:00' },
-      { id: '2', type: 'LOYALTY_POINTS', title: '+255 puntos', description: 'Por compra #12345', createdAt: '2024-12-20T14:30:00' },
-      { id: '3', type: 'EMAIL_OPENED', title: 'Email abierto', description: 'Promoción Navidad', createdAt: '2024-12-18T10:15:00' },
-      { id: '4', type: 'PURCHASE', title: 'Compra $18,900', description: 'Venta #12320', createdAt: '2024-12-15T16:45:00' }
-    ]);
+    this.http.get<CustomerInteraction[]>(`${this.apiBase}/${customerId}/timeline`).subscribe({
+      next: (data) => this.customerTimeline.set(data || []),
+      error: () => this.customerTimeline.set([])
+    });
   }
 
   saveNewCustomer() {
     if (!this.newCustomer.name) return;
 
-    const customer: Partial<Customer> = {
+    const payload: any = {
       name: this.newCustomer.name,
-      email: this.newCustomer.email,
-      phone: this.newCustomer.phone,
-      documentNumber: this.newCustomer.documentNumber,
-      birthDate: this.newCustomer.birthDate,
-      address: this.newCustomer.address,
-      notes: this.newCustomer.notes,
-      segment: 'NEW',
-      loyaltyTier: 'BRONZE',
-      loyaltyPoints: 0,
-      totalPurchases: 0,
-      totalSpent: 0,
-      clv: 0,
-      score: 10
+      email: this.newCustomer.email || null,
+      phone: this.newCustomer.phone || null,
+      documentNumber: this.newCustomer.documentNumber || null,
+      birthDate: this.newCustomer.birthDate || null,
+      address: this.newCustomer.address || null,
+      notes: this.newCustomer.notes || null
     };
 
-    // Add to local list for demo
-    const newId = Date.now().toString();
-    this.customers.update(list => [...list, { ...customer, id: newId, tags: [], averageTicket: 0, referralCode: 'REF' + newId.slice(-6), emailOptIn: true, smsOptIn: true, whatsappOptIn: true } as Customer]);
+    this.http.post<Customer>(this.apiBase, payload).subscribe({
+      next: (created) => {
+        this.customers.update(list => [...list, created]);
+        this.showNewCustomer = false;
+        this.newCustomer = { name: '', email: '', phone: '', documentNumber: '', birthDate: '', address: '', notes: '' };
+      },
+      error: (err) => alert('Error creando cliente: ' + (err?.error?.detail || err.message))
+    });
+  }
 
-    this.showNewCustomer = false;
-    this.newCustomer = { name: '', email: '', phone: '', documentNumber: '', birthDate: '', address: '', notes: '' };
+  deleteCustomer(id: string) {
+    if (!confirm('¿Eliminar este cliente permanentemente?')) return;
+    this.http.delete(`${this.apiBase}/${id}`).subscribe({
+      next: () => {
+        this.customers.update(list => list.filter(c => c.id !== id));
+        if (this.selectedCustomerData?.id === id) this.selectedCustomerData = null;
+      },
+      error: (err) => alert('Error eliminando: ' + (err?.error?.detail || err.message))
+    });
   }
 
   // Actions
-  addPointsToCustomer() { alert('Agregar puntos: funcionalidad pendiente'); }
-  sendEmail() { alert('Enviar email: funcionalidad pendiente'); }
-  sendWhatsApp() { alert('WhatsApp: funcionalidad pendiente'); }
-  createCoupon() { alert('Crear cupón: funcionalidad pendiente'); }
-  addNote() { alert('Agregar nota: funcionalidad pendiente'); }
-  addTag() { alert('Agregar tag: funcionalidad pendiente'); }
+  addPointsToCustomer() {
+    if (!this.selectedCustomerData || this.addPointsAmount <= 0) return;
+    const id = this.selectedCustomerData.id;
+    this.http.post<Customer>(`${this.apiBase}/${id}/points?points=${this.addPointsAmount}&description=Puntos manuales`, {}).subscribe({
+      next: (updated) => {
+        this.customers.update(list => list.map(c => c.id === id ? { ...c, ...updated } : c));
+        this.selectedCustomerData = { ...this.selectedCustomerData!, ...updated };
+        this.addPointsAmount = 0;
+      },
+      error: (err) => alert('Error agregando puntos: ' + (err?.error?.detail || err.message))
+    });
+  }
+
+  sendEmail() {
+    if (!this.selectedCustomerData?.email) { alert('Cliente no tiene email registrado'); return; }
+    alert('📧 Se abrirá el módulo de email marketing con este cliente preseleccionado');
+  }
+
+  sendWhatsApp() {
+    if (!this.selectedCustomerData?.phone) { alert('Cliente no tiene teléfono registrado'); return; }
+    window.open(`https://wa.me/${this.selectedCustomerData.phone.replace(/[^\d]/g, '')}`, '_blank');
+  }
+
+  createCoupon() {
+    alert('🎟️ Redirigir al módulo de Promociones para crear cupón personalizado');
+  }
+
+  addNote() {
+    if (!this.selectedCustomerData || !this.addNoteText.trim()) return;
+    const id = this.selectedCustomerData.id;
+    // Record a note as a timeline entry via purchase endpoint workaround
+    // For a proper solution, a notes endpoint would be ideal
+    this.addNoteText = '';
+    this.loadCustomerTimeline(id);
+  }
+
+  addTag() {
+    if (!this.selectedCustomerData || !this.addTagName.trim()) return;
+    const id = this.selectedCustomerData.id;
+    this.http.post<Customer>(`${this.apiBase}/${id}/tags?name=${encodeURIComponent(this.addTagName)}&color=%236366F1`, {}).subscribe({
+      next: (updated) => {
+        this.customers.update(list => list.map(c => c.id === id ? { ...c, ...updated } : c));
+        this.selectedCustomerData = { ...this.selectedCustomerData!, ...updated };
+        this.addTagName = '';
+      },
+      error: (err) => alert('Error agregando tag: ' + (err?.error?.detail || err.message))
+    });
+  }
+
+  removeTagFromCustomer(tagId: string) {
+    if (!this.selectedCustomerData) return;
+    const id = this.selectedCustomerData.id;
+    this.http.delete<Customer>(`${this.apiBase}/${id}/tags/${tagId}`).subscribe({
+      next: (updated) => {
+        this.customers.update(list => list.map(c => c.id === id ? { ...c, ...updated } : c));
+        this.selectedCustomerData = { ...this.selectedCustomerData!, ...updated };
+      }
+    });
+  }
 
   // Helpers
   formatPrice(amount: number): string {

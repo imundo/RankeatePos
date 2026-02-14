@@ -221,6 +221,12 @@ export const routes: Routes = [
         loadChildren: () => import('./features/cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule),
         canActivate: [authGuard]
     },
+    // Appointments
+    {
+        path: 'appointments',
+        loadComponent: () => import('./features/citas/appointments.component').then(m => m.AppointmentsComponent),
+        canActivate: [authGuard]
+    },
     // Marketing Modules
     {
         path: 'marketing/crm',

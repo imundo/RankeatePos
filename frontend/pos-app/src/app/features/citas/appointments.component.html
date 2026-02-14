@@ -1,0 +1,362 @@
+<div class="appointments-container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <a routerLink="/dashboard" class="back-btn">←</a>
+      <div class="title-section">
+        <h1>📅 Gestión de Citas</h1>
+        <p class="subtitle">Agenda, calendario y servicios</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="action-btn secondary" (click)="loadData()">🔄</button>
+      <button class="action-btn primary" (click)="openBooking()">➕ Nueva Cita</button>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card gradient-indigo">
+      <span class="stat-icon">📅</span>
+      <div class="stat-info"><span class="stat-value">{{ stats().hoy || 0 }}</span><span class="stat-label">Hoy</span></div>
+    </div>
+    <div class="stat-card gradient-blue">
+      <span class="stat-icon">⏳</span>
+      <div class="stat-info"><span class="stat-value">{{ stats().programadas || 0 }}</span><span class="stat-label">Programadas</span></div>
+    </div>
+    <div class="stat-card gradient-green">
+      <span class="stat-icon">✅</span>
+      <div class="stat-info"><span class="stat-value">{{ stats().completadasMes || 0 }}</span><span class="stat-label">Completadas (mes)</span></div>
+    </div>
+    <div class="stat-card gradient-red">
+      <span class="stat-icon">❌</span>
+      <div class="stat-info"><span class="stat-value">{{ stats().canceladasMes || 0 }}</span><span class="stat-label">Canceladas (mes)</span></div>
+    </div>
+  </div>
+
+  <!-- View Tabs -->
+  <div class="view-tabs">
+    <button [class.active]="activeView() === 'agenda'" (click)="setView('agenda')">📋 Agenda</button>
+    <button [class.active]="activeView() === 'calendar'" (click)="setView('calendar')">🗓️ Calendario</button>
+    <button [class.active]="activeView() === 'services'" (click)="setView('services')">🎨 Servicios</button>
+    <button [class.active]="activeView() === 'staff'" (click)="setView('staff')">👥 Staff</button>
+  </div>
+
+  <!-- ===== AGENDA VIEW ===== -->
+  @if (activeView() === 'agenda') {
+    <div class="agenda-section">
+      <div class="date-nav">
+        <button (click)="changeDate(-1)" class="nav-btn">‹</button>
+        <div class="date-display">
+          <span class="date-label" [class.today]="isToday(selectedDate())">
+            {{ getDayName(selectedDate()) }}
+          </span>
+          <input type="date" [value]="selectedDate()" (change)="selectedDate.set($any($event.target).value); loadAppointments()">
+        </div>
+        <button (click)="changeDate(1)" class="nav-btn">›</button>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando citas...</p>
+        </div>
+      } @else if (filteredAppointments().length === 0) {
+        <div class="empty-state">
+          <span class="empty-icon">📭</span>
+          <h3>Sin citas para este día</h3>
+          <p>Crea una nueva cita con el botón de arriba</p>
+        </div>
+      } @else {
+        <div class="timeline">
+          @for (apt of filteredAppointments(); track apt.id) {
+            <div class="timeline-item" (click)="openDetail(apt)" [style.border-left-color]="apt.color || getStatusColor(apt.estado)">
+              <div class="time-badge">
+                <span class="time">{{ formatTime(apt.horaInicio) }}</span>
+                <span class="time-end">{{ formatTime(apt.horaFin) }}</span>
+              </div>
+              <div class="item-content">
+                <div class="item-header">
+                  <h4>{{ apt.customerNombre }}</h4>
+                  <span class="status-badge" [style.background]="getStatusColor(apt.estado)">
+                    {{ getStatusIcon(apt.estado) }} {{ getStatusLabel(apt.estado) }}
+                  </span>
+                </div>
+                <div class="item-meta">
+                  @if (apt.serviceNombre) { <span>🎯 {{ apt.serviceNombre }}</span> }
+                  @if (apt.staffNombre) { <span>👤 {{ apt.staffNombre }}</span> }
+                  @if (apt.precioEstimado) { <span>💰 {{ formatPrice(apt.precioEstimado) }}</span> }
+                </div>
+                @if (apt.notas) { <p class="item-notes">{{ apt.notas }}</p> }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===== CALENDAR VIEW ===== -->
+  @if (activeView() === 'calendar') {
+    <div class="calendar-section">
+      <div class="calendar-nav">
+        <button (click)="prevMonth()" class="nav-btn">‹</button>
+        <h3 class="month-title">{{ getMonthName() }}</h3>
+        <button (click)="nextMonth()" class="nav-btn">›</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="cal-header">Dom</div><div class="cal-header">Lun</div><div class="cal-header">Mar</div>
+        <div class="cal-header">Mié</div><div class="cal-header">Jue</div><div class="cal-header">Vie</div>
+        <div class="cal-header">Sáb</div>
+        @for (day of calendarDays(); track day.fecha) {
+          <div class="cal-day" [class.today]="isToday(day.fecha)" [class.has-events]="day.count > 0"
+               (click)="selectCalendarDate(day.fecha)">
+            <span class="day-number">{{ day.fecha?.split('-')[2] }}</span>
+            @if (day.count > 0) {
+              <span class="event-count">{{ day.count }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== SERVICES VIEW ===== -->
+  @if (activeView() === 'services') {
+    <div class="services-section">
+      <div class="section-header">
+        <h3>Catálogo de Servicios</h3>
+        <button class="action-btn primary" (click)="openServiceModal()">➕ Nuevo Servicio</button>
+      </div>
+      <div class="services-grid">
+        @for (s of services(); track s.id) {
+          <div class="service-card">
+            <div class="service-color" [style.background]="s.color"></div>
+            <div class="service-info">
+              <h4>{{ s.nombre }}</h4>
+              <p>{{ s.duracionMinutos }} min · {{ formatPrice(s.precio) }}</p>
+              @if (s.categoria) { <span class="cat-badge">{{ s.categoria }}</span> }
+            </div>
+            <div class="service-actions">
+              <button (click)="openServiceModal(s); $event.stopPropagation()">✏️</button>
+              <button (click)="deleteService(s.id); $event.stopPropagation()">🗑️</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state"><span class="empty-icon">🎨</span><h3>Sin servicios</h3><p>Crea servicios para ofrecerlos en las citas</p></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== STAFF VIEW ===== -->
+  @if (activeView() === 'staff') {
+    <div class="staff-section">
+      <div class="section-header">
+        <h3>Horarios de Staff</h3>
+        <button class="action-btn primary" (click)="openStaffModal()">➕ Agregar Horario</button>
+      </div>
+      <div class="staff-grid">
+        @for (sa of staffSchedules(); track sa.id) {
+          <div class="staff-schedule-card">
+            <span class="day-badge">{{ ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][sa.diaSemana] }}</span>
+            <span class="staff-name">{{ sa.staffNombre }}</span>
+            <span class="hours">{{ formatTime(sa.horaInicio) }} - {{ formatTime(sa.horaFin) }}</span>
+          </div>
+        } @empty {
+          <div class="empty-state"><span class="empty-icon">👥</span><h3>Sin horarios</h3></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== BOOKING WIZARD MODAL ===== -->
+  @if (showBooking()) {
+    <div class="modal-overlay" (click)="showBooking.set(false)">
+      <div class="modal-content booking-modal" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="showBooking.set(false)">✕</button>
+        <h2>📅 Nueva Cita</h2>
+
+        <div class="wizard-steps">
+          <div class="step" [class.active]="bookingStep() >= 1" [class.done]="bookingStep() > 1">1. Servicio</div>
+          <div class="step" [class.active]="bookingStep() >= 2" [class.done]="bookingStep() > 2">2. Horario</div>
+          <div class="step" [class.active]="bookingStep() >= 3">3. Datos</div>
+        </div>
+
+        <!-- Step 1: Service -->
+        @if (bookingStep() === 1) {
+          <div class="wizard-body">
+            <h3>Selecciona un servicio</h3>
+            <div class="service-options">
+              @for (s of services(); track s.id) {
+                <button class="service-option" (click)="selectService(s)" [style.border-color]="s.color">
+                  <div class="so-color" [style.background]="s.color"></div>
+                  <div class="so-info">
+                    <strong>{{ s.nombre }}</strong>
+                    <span>{{ s.duracionMinutos }} min · {{ formatPrice(s.precio) }}</span>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Step 2: Time Slot -->
+        @if (bookingStep() === 2) {
+          <div class="wizard-body">
+            <h3>Selecciona fecha y horario</h3>
+            <div class="date-picker-row">
+              <label>Fecha:</label>
+              <input type="date" [(ngModel)]="bookingData.fecha" (change)="loadSlots()">
+            </div>
+            <div class="slots-grid">
+              @for (slot of availableSlots(); track slot.horaInicio + slot.staffId) {
+                <button class="slot-btn" [class.available]="slot.disponible" [class.taken]="!slot.disponible"
+                        [disabled]="!slot.disponible" (click)="selectSlot(slot)">
+                  <span class="slot-time">{{ formatTime(slot.horaInicio) }}</span>
+                  <span class="slot-staff">{{ slot.staffNombre }}</span>
+                </button>
+              } @empty {
+                <p class="no-slots">No hay horarios disponibles para esta fecha</p>
+              }
+            </div>
+            <button class="back-step" (click)="bookingStep.set(1)">← Volver</button>
+          </div>
+        }
+
+        <!-- Step 3: Customer Data -->
+        @if (bookingStep() === 3) {
+          <div class="wizard-body">
+            <h3>Datos del cliente</h3>
+            <div class="booking-summary">
+              <p>🎯 {{ bookingData.serviceName }} · {{ bookingData.duration }} min</p>
+              <p>📅 {{ bookingData.fecha }} · {{ formatTime(bookingData.horaInicio) }} - {{ formatTime(bookingData.horaFin) }}</p>
+              <p>👤 {{ bookingData.staffName }}</p>
+            </div>
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" [(ngModel)]="bookingData.customerNombre" placeholder="Nombre del cliente">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" [(ngModel)]="bookingData.customerTelefono" placeholder="+56 9...">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="bookingData.customerEmail" placeholder="email@ejemplo.com">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Notas</label>
+              <textarea [(ngModel)]="bookingData.notas" rows="2" placeholder="Notas adicionales..."></textarea>
+            </div>
+            <div class="wizard-actions">
+              <button class="back-step" (click)="bookingStep.set(2)">← Volver</button>
+              <button class="confirm-btn" (click)="confirmBooking()" [disabled]="!bookingData.customerNombre">
+                ✅ Confirmar Cita
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== DETAIL MODAL ===== -->
+  @if (showDetail() && selectedAppointment()) {
+    <div class="modal-overlay" (click)="showDetail.set(false)">
+      <div class="modal-content detail-modal" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="showDetail.set(false)">✕</button>
+        <div class="detail-header" [style.border-left-color]="selectedAppointment()!.color || '#6366f1'">
+          <h2>{{ selectedAppointment()!.customerNombre }}</h2>
+          <span class="status-badge large" [style.background]="getStatusColor(selectedAppointment()!.estado)">
+            {{ getStatusIcon(selectedAppointment()!.estado) }} {{ getStatusLabel(selectedAppointment()!.estado) }}
+          </span>
+        </div>
+        <div class="detail-info">
+          <div class="info-row"><span>📅</span><span>{{ selectedAppointment()!.fecha }}</span></div>
+          <div class="info-row"><span>🕐</span><span>{{ formatTime(selectedAppointment()!.horaInicio) }} - {{ formatTime(selectedAppointment()!.horaFin) }}</span></div>
+          @if (selectedAppointment()!.serviceNombre) { <div class="info-row"><span>🎯</span><span>{{ selectedAppointment()!.serviceNombre }}</span></div> }
+          @if (selectedAppointment()!.staffNombre) { <div class="info-row"><span>👤</span><span>{{ selectedAppointment()!.staffNombre }}</span></div> }
+          @if (selectedAppointment()!.customerTelefono) { <div class="info-row"><span>📱</span><span>{{ selectedAppointment()!.customerTelefono }}</span></div> }
+          @if (selectedAppointment()!.customerEmail) { <div class="info-row"><span>📧</span><span>{{ selectedAppointment()!.customerEmail }}</span></div> }
+          @if (selectedAppointment()!.precioEstimado) { <div class="info-row"><span>💰</span><span>{{ formatPrice(selectedAppointment()!.precioEstimado) }}</span></div> }
+          @if (selectedAppointment()!.notas) { <div class="info-row"><span>📝</span><span>{{ selectedAppointment()!.notas }}</span></div> }
+        </div>
+        <div class="detail-actions">
+          @if (selectedAppointment()!.estado === 'PROGRAMADA') {
+            <button class="act-btn confirm" (click)="updateStatus(selectedAppointment()!.id, 'CONFIRMADA')">✅ Confirmar</button>
+          }
+          @if (selectedAppointment()!.estado === 'CONFIRMADA') {
+            <button class="act-btn start" (click)="updateStatus(selectedAppointment()!.id, 'EN_PROGRESO')">▶️ Iniciar</button>
+          }
+          @if (selectedAppointment()!.estado === 'EN_PROGRESO') {
+            <button class="act-btn complete" (click)="updateStatus(selectedAppointment()!.id, 'COMPLETADA')">🎉 Completar</button>
+          }
+          @if (selectedAppointment()!.estado !== 'CANCELADA' && selectedAppointment()!.estado !== 'COMPLETADA') {
+            <button class="act-btn cancel" (click)="updateStatus(selectedAppointment()!.id, 'CANCELADA')">❌ Cancelar</button>
+            <button class="act-btn noshow" (click)="updateStatus(selectedAppointment()!.id, 'NO_SHOW')">👻 No Show</button>
+          }
+          <button class="act-btn delete" (click)="deleteAppointment(selectedAppointment()!.id)">🗑️ Eliminar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== SERVICE MODAL ===== -->
+  @if (showServiceModal()) {
+    <div class="modal-overlay" (click)="showServiceModal.set(false)">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="showServiceModal.set(false)">✕</button>
+        <h2>{{ editingServiceId ? '✏️ Editar' : '➕ Nuevo' }} Servicio</h2>
+        <div class="form-group"><label>Nombre *</label><input type="text" [(ngModel)]="serviceForm.nombre"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Duración (min)</label><input type="number" [(ngModel)]="serviceForm.duracionMinutos"></div>
+          <div class="form-group"><label>Precio</label><input type="number" [(ngModel)]="serviceForm.precio"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Color</label><input type="color" [(ngModel)]="serviceForm.color"></div>
+          <div class="form-group"><label>Categoría</label><input type="text" [(ngModel)]="serviceForm.categoria"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="showServiceModal.set(false)">Cancelar</button>
+          <button class="save-btn" (click)="saveService()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== STAFF SCHEDULE MODAL ===== -->
+  @if (showStaffModal()) {
+    <div class="modal-overlay" (click)="showStaffModal.set(false)">
+      <div class="modal-content staff-modal" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="showStaffModal.set(false)">✕</button>
+        <h2>👥 Horario de Staff</h2>
+        <div class="form-row">
+          <div class="form-group"><label>ID Staff</label><input type="text" [(ngModel)]="staffForm.staffId" placeholder="UUID del profesional"></div>
+          <div class="form-group"><label>Nombre</label><input type="text" [(ngModel)]="staffForm.staffNombre" placeholder="Nombre completo"></div>
+        </div>
+        <div class="schedule-grid">
+          @for (day of staffForm.schedules; track day.diaSemana) {
+            <div class="schedule-row">
+              <label class="day-toggle">
+                <input type="checkbox" [(ngModel)]="day.activo">
+                <span class="day-name">{{ day.name }}</span>
+              </label>
+              @if (day.activo) {
+                <input type="time" [(ngModel)]="day.horaInicio">
+                <span>-</span>
+                <input type="time" [(ngModel)]="day.horaFin">
+              }
+            </div>
+          }
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="showStaffModal.set(false)">Cancelar</button>
+          <button class="save-btn" (click)="saveStaffSchedule()">Guardar Horario</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

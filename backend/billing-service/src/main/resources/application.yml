@@ -74,6 +74,8 @@ springdoc:
 
 # SII Configuration
 sii:
+  mock-mode: ${SII_MOCK_MODE:true}
+  environment: ${SII_ENVIRONMENT:certificacion}
   ambiente: certificacion  # certificacion | produccion
   urls:
     certificacion:
