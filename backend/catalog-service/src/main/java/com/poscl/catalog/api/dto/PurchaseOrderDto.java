@@ -24,4 +24,5 @@ public class PurchaseOrderDto {
     private String notes;
     private List<PurchaseOrderItemDto> items;
     private Instant createdAt;
+    private Instant updatedAt;
 }

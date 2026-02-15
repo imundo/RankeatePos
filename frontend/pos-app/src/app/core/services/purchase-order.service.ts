@@ -31,6 +31,7 @@ export interface PurchaseOrder {
     notes?: string;
     items: PurchaseOrderItem[];
     createdAt: string;
+    updatedAt?: string;
 }
 
 export interface CreatePurchaseOrderRequest {
