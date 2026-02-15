@@ -1,7 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ChartModule } from 'primeng/chart';
 import { SalesService, DailyStats } from '../../core/services/sales.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface HourlySales {
   hora: number;
@@ -11,7 +14,7 @@ interface HourlySales {
 @Component({
   selector: 'app-analytics-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChartModule],
   template: `
     <div class="analytics-premium min-h-screen bg-[#0f172a] text-white pb-20">
       
@@ -39,6 +42,16 @@ interface HourlySales {
               {{ range.label }}
             </button>
           </div>
+          
+          <!-- Export Actions -->
+          <div class="flex gap-2 ml-4">
+            <button (click)="exportToPdf()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-red-400 transition-colors border border-white/5" title="Export PDF">
+              📄
+            </button>
+            <button (click)="exportToCsv()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-emerald-400 transition-colors border border-white/5" title="Export CSV">
+              📊
+            </button>
+          </div>
         </div>
       </header>
 
@@ -47,7 +60,7 @@ interface HourlySales {
         <!-- Hero Metrics Row -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           
-          <!-- Total Sales Card with Sparkline -->
+          <!-- Total Sales Card -->
           <div class="glass-card p-6 rounded-3xl relative overflow-hidden group">
             <div class="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/20 rounded-full blur-3xl group-hover:bg-violet-500/30 transition-all"></div>
             <div class="relative z-10">
@@ -59,12 +72,6 @@ interface HourlySales {
                 <div class="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-300">
                   💰
                 </div>
-              </div>
-              <!-- Simulated Sparkline -->
-              <div class="h-10 w-full flex items-end gap-1 opacity-50">
-                <div *ngFor="let h of hourlySales.slice(-10)" 
-                     class="flex-1 bg-violet-500 rounded-t-sm transition-all duration-500"
-                     [style.height.%]="getBarHeight(h.ventas)"></div>
               </div>
               <div class="mt-2 flex items-center gap-2 text-xs font-medium text-emerald-400">
                 <span class="bg-emerald-500/10 px-2 py-0.5 rounded-full">↑ 12.5%</span>
@@ -100,7 +107,7 @@ interface HourlySales {
               <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-lg">~ / hora</span>
             </div>
             <div class="flex items-baseline gap-1 mt-2">
-              <h3 class="text-3xl font-bold text-white">{{ salesVelocity | number:'1.0-0' }}</h3>
+              <h3 class="text-3xl font-bold text-white">{{ salesVelocity | number:'1.0-1' }}</h3>
               <span class="text-sm text-slate-400">transacc.</span>
             </div>
             <div class="mt-4 w-full bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
@@ -125,42 +132,17 @@ interface HourlySales {
         <!-- Main Chart Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <!-- Sales Trend Area Chart -->
+          <!-- Sales Trend Chart (PrimeNG) -->
           <div class="lg:col-span-2 glass-card rounded-3xl p-6 border border-white/5 relative">
             <div class="flex justify-between items-center mb-6">
               <h3 class="font-bold text-lg flex items-center gap-2">
                 <span class="w-1 h-6 bg-violet-500 rounded-full"></span>
                 Tendencia de Ventas
               </h3>
-              <div class="flex gap-2">
-                <span class="w-3 h-3 rounded-full bg-violet-500"></span>
-                <span class="text-xs text-slate-400">Ventas ($)</span>
-              </div>
             </div>
             
-            <!-- SVG Chart Container -->
-            <div class="relative h-64 w-full group">
-              <svg viewBox="0 0 100 50" preserveAspectRatio="none" class="w-full h-full overflow-visible">
-                <!-- Grid Lines -->
-                <line x1="0" y1="10" x2="100" y2="10" stroke="#334155" stroke-width="0.1" stroke-dasharray="2"/>
-                <line x1="0" y1="25" x2="100" y2="25" stroke="#334155" stroke-width="0.1" stroke-dasharray="2"/>
-                <line x1="0" y1="40" x2="100" y2="40" stroke="#334155" stroke-width="0.1" stroke-dasharray="2"/>
-                
-                <!-- Area Path with Gradient -->
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path [attr.d]="salesChartPath" fill="url(#chartGradient)" stroke="none" class="transition-all duration-700 ease-out"/>
-                <path [attr.d]="salesLinePath" fill="none" stroke="#8b5cf6" stroke-width="0.8" vector-effect="non-scaling-stroke" 
-                      class="drop-shadow-[0_0_10px_rgba(139,92,246,0.5)] transition-all duration-700 ease-out"/>
-                
-                <!-- Hover Points (Generated dynamically) -->
-                <circle *ngFor="let p of chartPoints" [attr.cx]="p.x" [attr.cy]="p.y" r="1.5" 
-                        class="fill-violet-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:r-3 cursor-pointer" />
-              </svg>
+            <div class="h-80 w-full" *ngIf="chartData">
+                <p-chart type="line" [data]="chartData" [options]="chartOptions" height="100%"></p-chart>
             </div>
           </div>
 
@@ -178,16 +160,16 @@ interface HourlySales {
                   {{ i + 1 }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium truncate text-slate-200 group-hover:text-white transition-colors">{{ p.nombre }}</p>
+                  <p class="text-sm font-medium truncate text-slate-200 group-hover:text-white transition-colors">{{ p.productName || p.nombre }}</p>
                   <div class="flex items-center gap-2 mt-1">
                     <div class="h-1.5 flex-1 bg-slate-700 rounded-full overflow-hidden">
-                      <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="(p.total / maxProductSales) * 100"></div>
+                      <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="(p.totalRevenue || p.total / maxProductSales) * 100"></div>
                     </div>
-                    <span class="text-[10px] text-slate-400">{{ p.cantidad }} un.</span>
+                    <span class="text-[10px] text-slate-400">{{ p.totalQuantity || p.cantidad }} un.</span>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-sm font-bold text-emerald-400">\${{ p.total | number:'1.0-0' }}</p>
+                  <p class="text-sm font-bold text-emerald-400">\${{ (p.totalRevenue || p.total) | number:'1.0-0' }}</p>
                 </div>
               </div>
             </div>
@@ -195,33 +177,38 @@ interface HourlySales {
 
         </div>
 
-        <!-- Payment Methods & Branches -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Payment Methods & Customers -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          <!-- Payment Methods Donut -->
+          <!-- Payment Methods -->
           <div class="glass-card rounded-3xl p-6">
             <h3 class="font-bold text-lg mb-6">Medios de Pago</h3>
-            <div class="flex flex-col md:flex-row items-center gap-8">
-              <!-- Custom CSS Donut -->
-              <div class="relative w-48 h-48 rounded-full"
-                   [style.background]="paymentMethodsGradient">
-                <div class="absolute inset-4 bg-[#131b31] rounded-full flex flex-col items-center justify-center">
-                  <span class="text-xs text-slate-400">Total</span>
-                  <span class="text-xl font-bold text-white">{{ kpis[0]?.value }}</span>
+            <div class="flex items-center justify-center h-64">
+                <p-chart type="doughnut" [data]="paymentChartData" [options]="paymentChartOptions" height="100%"></p-chart>
+            </div>
+          </div>
+          
+           <!-- Best Customers -->
+           <div class="glass-card rounded-3xl p-6 flex flex-col h-full">
+            <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
+              <span class="w-1 h-6 bg-amber-500 rounded-full"></span>
+              Clientes VIP
+            </h3>
+            <div class="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+              <div *ngFor="let c of customerMetrics; let i = index" 
+                   class="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center text-xs font-bold shadow-lg">
+                    {{ (c.customerName || 'A')[0] }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-white truncate max-w-[120px]">{{ c.customerName || 'Anónimo' }}</p>
+                    <p class="text-[10px] text-slate-400">{{ c.transactionCount }} órdenes</p>
+                  </div>
                 </div>
-              </div>
-              
-              <!-- Legend -->
-              <div class="flex-1 space-y-3 w-full">
-                <div *ngFor="let pm of paymentMethods" class="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors">
-                  <div class="flex items-center gap-3">
-                    <span class="w-3 h-3 rounded-full shadow-[0_0_8px_currentColor]" [style.color]="pm.color" [style.background-color]="pm.color"></span>
-                    <span class="text-sm text-slate-300">{{ pm.metodoPago }}</span>
-                  </div>
-                  <div class="text-right">
-                    <p class="text-sm font-semibold">\${{ pm.total | number:'1.0-0' }}</p>
-                    <p class="text-[10px] text-slate-500">{{ pm.porcentaje | number:'1.0-0' }}%</p>
-                  </div>
+                <div class="text-right">
+                  <p class="text-sm font-bold text-amber-400">\${{ c.totalSpent | number:'1.0-0' }}</p>
+                  <p class="text-[10px] text-slate-500">Ticket: \${{ c.averageTicket | number:'1.0-0' }}</p>
                 </div>
               </div>
             </div>
@@ -231,9 +218,6 @@ interface HourlySales {
           <div class="glass-card rounded-3xl p-6">
              <div class="flex justify-between items-center mb-6">
               <h3 class="font-bold text-lg">Sucursales</h3>
-              <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 transition-colors">
-                ↗
-              </button>
             </div>
             
             <div class="space-y-4">
@@ -291,6 +275,9 @@ interface HourlySales {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+        :host ::ng-deep .p-chart canvas {
+            max-width: 100%;
+        }
       </style>
     </div>
   `
@@ -310,25 +297,24 @@ export class AnalyticsDashboardComponent implements OnInit {
   kpis: any[] = [];
   topProducts: any[] = [];
   salesByBranch: any[] = [];
-  hourlySales: HourlySales[] = [];
-  paymentMethods: any[] = [];
+  customerMetrics: any[] = [];
 
-  // Chart Visual Data
-  salesChartPath = '';
-  salesLinePath = '';
-  chartPoints: any[] = [];
-  paymentMethodsGradient = '';
+  // Charts
+  chartData: any;
+  chartOptions: any;
+  paymentChartData: any;
+  paymentChartOptions: any;
 
   // Scales
-  maxSales = 1000;
   maxProductSales = 1;
 
   // Premium Metrics
   goalPercentage = 0;
   salesVelocity = 0;
-  monthlyGoal = 5000000; // Static goal for demo
+  monthlyGoal = 5000000;
 
   ngOnInit() {
+    this.initChartOptions();
     this.loadMetrics();
   }
 
@@ -339,261 +325,282 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   loadMetrics() {
     const now = new Date();
-    const endDate = now.toISOString().split('T')[0];
-    let startDate = endDate;
+    // End date is EOD
+    const endDate = new Date(now);
+    endDate.setHours(23, 59, 59, 999);
+
+    let startDate = new Date(now);
+    startDate.setHours(0, 0, 0, 0); // Default to today start
 
     if (this.selectedRange === 'week') {
-      const d = new Date();
-      d.setDate(d.getDate() - 7);
-      startDate = d.toISOString().split('T')[0];
+      startDate.setDate(now.getDate() - 7);
     } else if (this.selectedRange === 'month') {
-      const d = new Date();
-      d.setMonth(d.getMonth() - 1);
-      startDate = d.toISOString().split('T')[0];
+      startDate.setMonth(now.getMonth() - 1);
     } else if (this.selectedRange === 'year') {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() - 1);
-      startDate = d.toISOString().split('T')[0];
+      startDate.setFullYear(now.getFullYear() - 1);
     }
 
-    if (startDate === endDate) {
-      this.salesService.getDailyStats(endDate).subscribe({
-        next: (stats) => this.handleData(stats),
-        error: (err) => console.error(err)
-      });
-    } else {
-      this.salesService.getStatsRange(startDate, endDate).subscribe({
-        next: (statsList) => this.handleData(this.aggregateStats(statsList)),
-        error: (err) => console.error(err)
-      });
-    }
-  }
+    const startStr = startDate.toISOString();
+    const endStr = endDate.toISOString();
 
-  private handleData(stats: DailyStats) {
-    // Check if empty/zero data -> Trigger Demo Mode
-    if (!stats || stats.totalVentas === 0) {
-      this.generateMockData();
-    } else {
-      this.processData(stats);
-    }
-  }
-
-  private processData(stats: DailyStats) {
-    this.updateKPIs(stats);
-    this.updateCharts(stats);
-    this.generateSalesChart(this.hourlySales); // Use processed hourlySales
-    this.calculateNewMetrics(stats);
-    this.generatePaymentChart();
-  }
-
-  private generateMockData() {
-    console.log('Generating Mock Data for Premium UI Showcase');
-
-    // 1. Mock Hourly Sales (Trend)
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    this.hourlySales = hours.map(h => {
-      let base = 5000 + Math.random() * 2000;
-      // Peaking hours
-      if (h >= 12 && h <= 15) base += 8000;
-      if (h >= 19 && h <= 21) base += 6000;
-      return { hora: h, ventas: Math.round(base) };
+    // 1. Fetch Sales Trend (New Endpoint)
+    this.salesService.getSalesTrend(startStr, endStr).subscribe({
+      next: (data) => {
+        this.updateSalesChart(data);
+      },
+      error: (e) => console.error('Error fetching trends', e)
     });
-    this.maxSales = Math.max(...this.hourlySales.map(h => h.ventas));
 
-    // 2. Mock KPIs
-    this.kpis = [
-      { label: 'Ventas Totales', value: '$845.290', trend: 12.5, icon: '💰', gradient: 'from-blue-500 to-blue-600' },
-      { label: 'Transacciones', value: '142', trend: 8.2, icon: '🧾', gradient: 'from-purple-500 to-purple-600' },
-      { label: 'Ticket Promedio', value: '$5.950', trend: -2.1, icon: '🏷️', gradient: 'from-emerald-500 to-emerald-600' },
-      { label: 'Ganancias', value: '$253.587', trend: 8.4, icon: '📈', gradient: 'from-amber-500 to-amber-600' }
-    ];
+    // 2. Fetch Top Products (New Endpoint)
+    this.salesService.getTopProducts(startStr, endStr, 5).subscribe({
+      next: (data) => {
+        this.topProducts = data;
+        this.maxProductSales = Math.max(...data.map((p: any) => p.totalRevenue), 1);
+      },
+      error: (e) => console.error('Error fetching top products', e)
+    });
 
-    // 3. Mock Top Products (using 'nombre' to match TopProduct interface)
-    this.topProducts = [
-      { nombre: 'Bebida Energética', cantidad: 45, total: 135000 },
-      { nombre: 'Sandwich Ave Palta', cantidad: 32, total: 112000 },
-      { nombre: 'Café Americano', cantidad: 28, total: 56000 },
-      { nombre: 'Galletas Avena', cantidad: 24, total: 24000 },
-    ];
-    this.maxProductSales = Math.max(...this.topProducts.map(p => p.total), 1);
+    // 3. Fetch Customer Metrics (New Endpoint)
+    this.salesService.getCustomerMetrics(startStr, endStr, 5).subscribe({
+      next: (data) => {
+        this.customerMetrics = data;
+      },
+      error: (e) => console.error('Error fetching customers', e)
+    });
 
-    // 4. Mock Payment Methods
-    this.paymentMethods = [
-      { metodoPago: 'Tarjeta', total: 500000, porcentaje: 59.1, color: this.getPmColor(0) },
-      { metodoPago: 'Efectivo', total: 250000, porcentaje: 29.6, color: this.getPmColor(1) },
-      { metodoPago: 'Transferencia', total: 95290, porcentaje: 11.3, color: this.getPmColor(2) },
-    ];
+    // 4. Fetch KPI Summary (Existing endpoints for aggregate)
+    const dStart = startDate.toISOString().split('T')[0];
+    const dEnd = endDate.toISOString().split('T')[0];
 
-    // 5. Mock Branches
-    this.salesByBranch = [
-      { sucursalNombre: 'Centro', ventas: 520000, porcentaje: 61.5, transacciones: 80 },
-      { sucursalNombre: 'Norte', ventas: 325290, porcentaje: 38.5, transacciones: 62 }
-    ];
-
-    // 6. Metrics
-    this.goalPercentage = 78;
-    this.salesVelocity = 12; // tx/hour
-
-    // Render Visuals
-    this.generateSalesChart(this.hourlySales);
-    this.generatePaymentChart();
+    // If 'today', use getDailyStats for accuracy including headers
+    if (this.selectedRange === 'today') {
+      this.salesService.getDailyStats(dStart).subscribe({
+        next: (stats) => this.processDailyStats([stats]),
+        error: (e) => console.error(e)
+      });
+    } else {
+      this.salesService.getStatsRange(dStart, dEnd).subscribe({
+        next: (stats) => this.processDailyStats(stats),
+        error: (e) => console.error(e)
+      });
+    }
   }
 
-  private updateKPIs(stats: DailyStats) {
+  exportToPdf() {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Reporte de Ventas', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generado: ${new Date().toLocaleDateString()} - Rango: ${this.selectedRange}`, 14, 30);
+
+    // KPIs Table
+    const kpiData = this.kpis.map(k => [k.label, k.value]);
+    autoTable(doc, {
+      head: [['Métrica', 'Valor']],
+      body: kpiData,
+      startY: 40,
+      theme: 'grid'
+    });
+
+    // Top Products Table
+    const productData = this.topProducts.map(p => [
+      p.productName || p.nombre,
+      p.totalQuantity || p.cantidad,
+      '$' + (p.totalRevenue || p.total)
+    ]);
+
+    autoTable(doc, {
+      head: [['Producto', 'Cantidad', 'Ventas']],
+      body: productData,
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      theme: 'striped'
+    });
+
+    doc.save('reporte_ventas.pdf');
+  }
+
+  exportToCsv() {
+    let csv = 'Reporte de Ventas Detallado\n';
+    csv += `Rango,${this.selectedRange}\n\n`;
+
+    csv += 'KPIs\n';
+    this.kpis.forEach(k => csv += `${k.label},"${k.value}"\n`);
+
+    csv += '\nTop Productos\nProducto,Cantidad,Ventas\n';
+    this.topProducts.forEach(p => {
+      csv += `"${p.productName || p.nombre}",${p.totalQuantity || p.cantidad},${p.totalRevenue || p.total}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'reporte_ventas.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  private processDailyStats(statsList: DailyStats[]) {
+    // Defines existing aggregation logic
+    let totalSales = 0;
+    let totalTransactions = 0;
+
+    // Payment methods aggregation
+    const pmMap = new Map<string, number>();
+
+    // Branch aggregation
+    const branchMap = new Map<string, { name: string, sales: number, count: number }>();
+
+    statsList.forEach(s => {
+      totalSales += s.totalVentas;
+      totalTransactions += s.totalTransacciones;
+
+      s.ventasPorMetodoPago?.forEach(pm => {
+        pmMap.set(pm.metodoPago, (pmMap.get(pm.metodoPago) || 0) + pm.total);
+      });
+
+      s.ventasPorSucursal?.forEach(b => {
+        const key = b.sucursalId;
+        const existing = branchMap.get(key) || { name: b.sucursalNombre || 'Sucursal', sales: 0, count: 0 };
+        existing.sales += b.ventas;
+        existing.count += b.transacciones;
+        branchMap.set(key, existing);
+      });
+    });
+
+    // Update KPIs
+    const ticketPromedio = totalTransactions > 0 ? totalSales / totalTransactions : 0;
+
     this.kpis = [
-      {
-        label: 'Ventas Totales',
-        value: this.formatCurrency(stats.totalVentas),
-        trend: 0,
-        icon: '💰',
-        gradient: 'from-blue-500 to-blue-600'
+      { label: 'Ventas Totales', value: this.formatCurrency(totalSales) },
+      { label: 'Transacciones', value: totalTransactions.toString() },
+      { label: 'Ticket Promedio', value: this.formatCurrency(ticketPromedio) }
+    ];
+
+    // Update Sales Velocity
+    // Estimate hours based on range
+    let hours = 24;
+    if (this.selectedRange === 'today') hours = Math.max(new Date().getHours() - 8, 1);
+    else if (this.selectedRange === 'week') hours = 7 * 12; // approx 12h open per day
+    else if (this.selectedRange === 'month') hours = 30 * 12;
+
+    this.salesVelocity = totalTransactions / hours;
+    this.goalPercentage = Math.min((totalSales / this.monthlyGoal) * 100, 100);
+
+    // Update Payment Chart
+    this.updatePaymentChart(pmMap, totalSales);
+
+    // Update Branch List
+    this.salesByBranch = Array.from(branchMap.values()).map(b => ({
+      sucursalNombre: b.name,
+      ventas: b.sales,
+      transacciones: b.count,
+      porcentaje: totalSales > 0 ? (b.sales / totalSales) * 100 : 0
+    })).sort((a, b) => b.ventas - a.ventas);
+  }
+
+  private updateSalesChart(trends: any[]) {
+    const labels = trends.map(t => {
+      // Format date dd/MM
+      const d = new Date(t.period);
+      return d.getDate() + '/' + (d.getMonth() + 1);
+    });
+    const data = trends.map(t => t.totalSales);
+
+    this.chartData = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Ventas',
+          data: data,
+          fill: true,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  }
+
+  private updatePaymentChart(pmMap: Map<string, number>, total: number) {
+    const labels = Array.from(pmMap.keys());
+    const data = Array.from(pmMap.values());
+    const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+
+    this.paymentChartData = {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: colors,
+          hoverBackgroundColor: colors,
+          borderWidth: 0
+        }
+      ]
+    };
+  }
+
+  private initChartOptions() {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = '#94a3b8';
+    const textColorSecondary = '#64748b';
+    const surfaceBorder = 'rgba(255,255,255,0.05)';
+
+    this.chartOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.6,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
       },
-      {
-        label: 'Transacciones',
-        value: stats.totalTransacciones.toString(),
-        trend: 0,
-        icon: '🧾',
-        gradient: 'from-purple-500 to-purple-600'
-      },
-      {
-        label: 'Ticket Promedio',
-        value: this.formatCurrency(stats.ticketPromedio),
-        trend: 0,
-        icon: '🏷️',
-        gradient: 'from-emerald-500 to-emerald-600'
-      },
-      {
-        label: 'Ganancias', // Estimación del 30%
-        value: this.formatCurrency(stats.totalVentas * 0.3),
-        trend: 0,
-        icon: '📈',
-        gradient: 'from-amber-500 to-amber-600'
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false
+          }
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+            callback: (value: any) => '$' + value
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false
+          }
+        }
       }
-    ];
-  }
-
-  private updateCharts(stats: DailyStats) {
-    // Top Products
-    this.topProducts = (stats.topProductos || []).map(p => ({
-      ...p,
-      nombre: p.nombre // Use strict typing
-    }));
-    this.maxProductSales = Math.max(...this.topProducts.map(p => p.total), 1);
-
-    // Hourly
-    this.hourlySales = (stats.ventasPorHora || []).map(h => ({
-      hora: h.hora,
-      ventas: h.total
-    }));
-    this.maxSales = Math.max(...this.hourlySales.map(h => h.ventas), 100);
-
-    // Branches
-    this.salesByBranch = (stats.ventasPorSucursal || []).map(b => ({
-      ...b,
-      sucursalNombre: b.sucursalNombre || b.sucursalId // If name missing, use ID
-    }));
-
-    // Payment Methods
-    this.paymentMethods = (stats.ventasPorMetodoPago || []).map((pm, i) => ({
-      ...pm,
-      color: this.getPmColor(i)
-    }));
-  }
-
-  private calculateNewMetrics(stats: DailyStats) {
-    // Goal progress
-    this.goalPercentage = Math.min((stats.totalVentas / this.monthlyGoal) * 100, 100);
-
-    // Sales Velocity
-    const hours = new Date().getHours() - 8;
-    const activeHours = Math.max(hours, 1);
-    this.salesVelocity = stats.totalTransacciones / activeHours;
-  }
-
-  // --- Visual Generators ---
-
-  private generateSalesChart(data: HourlySales[]) {
-    if (!data || data.length < 2) {
-      this.salesChartPath = '';
-      this.salesLinePath = '';
-      return;
-    }
-
-    const sorted = [...data].sort((a, b) => a.hora - b.hora);
-    const maxVal = Math.max(...sorted.map(d => d.ventas)) * 1.1;
-    const width = 100;
-    const height = 50;
-    const points: { x: number, y: number }[] = [];
-
-    sorted.forEach((d, i) => {
-      const x = (i / (sorted.length - 1)) * width;
-      const y = height - (d.ventas / maxVal) * height; // Invert Y
-      points.push({ x, y });
-    });
-
-    this.chartPoints = points;
-
-    // Simple line path
-    let path = `M ${points[0].x},${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      path += ` L ${points[i].x},${points[i].y}`;
-    }
-
-    this.salesLinePath = path;
-    this.salesChartPath = `${path} L ${width},${height} L 0,${height} Z`;
-  }
-
-  private generatePaymentChart() {
-    if (!this.paymentMethods.length) return;
-
-    let gradientStr = 'conic-gradient(';
-    let currentDeg = 0;
-
-    this.paymentMethods.forEach((pm) => {
-      const deg = (pm.porcentaje / 100) * 360;
-      gradientStr += `${pm.color} ${currentDeg}deg ${currentDeg + deg}deg,`;
-      currentDeg += deg;
-    });
-
-    gradientStr = gradientStr.slice(0, -1) + ')';
-    this.paymentMethodsGradient = gradientStr;
-  }
-
-  private aggregateStats(statsList: DailyStats[]): DailyStats {
-    // Helper to merge multiple days
-    const agg: DailyStats = {
-      fecha: '',
-      totalVentas: 0, totalTransacciones: 0, ticketPromedio: 0,
-      ventasAprobadas: 0, ventasPendientes: 0, ventasRechazadas: 0, ventasAnuladas: 0,
-      montoAprobado: 0, montoPendiente: 0,
-      topProductos: [], ventasPorHora: [], ventasPorMetodoPago: [], ventasPorSucursal: []
     };
 
-    // Simplified aggregation (summing totals)
-    statsList.forEach(s => {
-      agg.totalVentas += s.totalVentas;
-      agg.totalTransacciones += s.totalTransacciones;
-      // ... more complex aggregation skipped for brevity but would go here
-    });
-
-    // Recalc ticket
-    agg.ticketPromedio = agg.totalTransacciones ? agg.totalVentas / agg.totalTransacciones : 0;
-    return agg;
-  }
-
-  // --- Helpers ---
-
-  getBarHeight(val: number) {
-    if (this.maxSales === 0) return 0;
-    return (val / this.maxSales) * 100;
+    this.paymentChartOptions = {
+      plugins: {
+        legend: {
+          labels: {
+            usePointStyle: true,
+            color: textColor
+          },
+          position: 'right'
+        }
+      },
+      cutout: '60%'
+    };
   }
 
   formatCurrency(val: number) {
     return '$' + (val || 0).toLocaleString('es-CL');
-  }
-
-  getPmColor(index: number) {
-    const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
-    return colors[index % colors.length];
   }
 }

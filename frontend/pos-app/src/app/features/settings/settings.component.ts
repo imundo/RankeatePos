@@ -633,12 +633,12 @@ interface User {
   `]
 })
 export class SettingsComponent implements OnInit {
-  private authService = inject(AuthService);
+  protected authService = inject(AuthService);
   private http = inject(HttpClient);
   private router = inject(Router);
   private baseUrl = environment.apiUrl;
 
-  activeTab = signal<'general' | 'users' | 'branches' | 'taxes'>('general');
+  activeTab = signal<'general' | 'users' | 'branches' | 'taxes' | 'integrations'>('general');
   users = signal<User[]>([]);
   selectedCountry = 'CL';
 

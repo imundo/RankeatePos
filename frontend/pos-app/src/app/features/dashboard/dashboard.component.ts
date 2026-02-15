@@ -10,6 +10,7 @@ import { UserPreferencesService, ModuleInfo } from '@core/services/user-preferen
 import { OfflineService } from '@core/offline/offline.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
+import { StockAlertsWidgetComponent } from './components/stock-alerts-widget.component';
 
 interface DashboardStats {
   ventasHoy: number;
@@ -32,7 +33,7 @@ interface StatCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, BranchSwitcherComponent],
+  imports: [CommonModule, RouterLink, BranchSwitcherComponent, StockAlertsWidgetComponent],
   template: `
     <div class="dashboard-mobile">
       <!-- Compact Mobile Header -->
@@ -93,6 +94,9 @@ interface StatCard {
           }
         </div>
       </section>
+
+      <!-- Stock Alerts Widget -->
+      <app-stock-alerts-widget></app-stock-alerts-widget>
 
       <!-- Quick Actions -->
       <section class="dashboard-section">

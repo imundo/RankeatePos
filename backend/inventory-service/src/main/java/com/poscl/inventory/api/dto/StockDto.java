@@ -18,6 +18,7 @@ public class StockDto {
     private Integer cantidadReservada;
     private Integer cantidadDisponible;
     private Integer stockMinimo;
+    private Integer stockMaximo;
     private boolean stockBajo;
     private Instant updatedAt;
 }

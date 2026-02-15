@@ -58,6 +58,10 @@ public class Stock {
         return variant != null ? variant.getStockMinimo() : 0;
     }
 
+    public Integer getStockMaximo() {
+        return variant != null ? variant.getStockMaximo() : 0;
+    }
+
     public boolean isStockBajo() {
         Integer min = getStockMinimo();
         return min != null && cantidadActual <= min;

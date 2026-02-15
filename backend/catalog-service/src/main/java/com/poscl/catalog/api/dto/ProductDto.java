@@ -44,6 +44,7 @@ public class ProductDto {
         private UUID taxId;
         private Integer taxPercentage;
         private Integer stockMinimo;
+        private Integer stockMaximo;
         private Integer stock; // Current stock from inventory-service
         private Boolean activo;
         private Boolean esDefault;

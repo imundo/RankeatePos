@@ -34,6 +34,9 @@ public class ProductVariant implements Serializable {
     @Column(name = "stock_minimo")
     private Integer stockMinimo;
 
+    @Column(name = "stock_maximo")
+    private Integer stockMaximo;
+
     // Helper to get full name
     public String getFullName() {
         if (product == null)

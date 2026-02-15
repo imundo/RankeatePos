@@ -167,6 +167,7 @@ public class StockService {
                 .cantidadReservada(stock.getCantidadReservada())
                 .cantidadDisponible(stock.getCantidadDisponible())
                 .stockMinimo(stock.getStockMinimo())
+                .stockMaximo(stock.getStockMaximo())
                 .stockBajo(stock.isStockBajo())
                 .updatedAt(stock.getUpdatedAt())
                 .build();

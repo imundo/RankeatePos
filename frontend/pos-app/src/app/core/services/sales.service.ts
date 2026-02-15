@@ -234,6 +234,40 @@ export class SalesService {
         const lastDayStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
         return this.getStatsRange(firstDay, lastDayStr);
     }
+
+    // ========== ADVANCED ANALYTICS (Phase 10) ==========
+
+    getSalesTrend(startDate: string, endDate: string): Observable<any[]> {
+        const params = new HttpParams()
+            .set('startDate', startDate)
+            .set('endDate', endDate);
+        return this.http.get<any[]>(`${this.baseUrl}/reports/sales/trend`, {
+            headers: this.getHeaders(),
+            params
+        });
+    }
+
+    getTopProducts(startDate: string, endDate: string, limit = 5): Observable<any[]> {
+        const params = new HttpParams()
+            .set('startDate', startDate)
+            .set('endDate', endDate)
+            .set('limit', limit.toString());
+        return this.http.get<any[]>(`${this.baseUrl}/reports/products/top`, {
+            headers: this.getHeaders(),
+            params
+        });
+    }
+
+    getCustomerMetrics(startDate: string, endDate: string, limit = 10): Observable<any[]> {
+        const params = new HttpParams()
+            .set('startDate', startDate)
+            .set('endDate', endDate)
+            .set('limit', limit.toString());
+        return this.http.get<any[]>(`${this.baseUrl}/reports/customers/metrics`, {
+            headers: this.getHeaders(),
+            params
+        });
+    }
 }
 
 // ========== STATS DTOs ==========

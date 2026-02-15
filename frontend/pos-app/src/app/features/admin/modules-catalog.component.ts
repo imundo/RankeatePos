@@ -222,9 +222,9 @@ interface TenantModules {
                                     </div>
                                 </div>
                                 <div class="module-progress">
-                                    <span class="progress-label">{{ getActiveModuleCount(item) }}/{{ allModules.length }}</span>
+                                    <span class="progress-label">{{ getActiveModuleCount(item) }}/{{ allModules().length }}</span>
                                     <p-progressBar 
-                                        [value]="(getActiveModuleCount(item) / allModules.length) * 100" 
+                                        [value]="(getActiveModuleCount(item) / allModules().length) * 100" 
                                         [showValue]="false"
                                         styleClass="progress-mini">
                                     </p-progressBar>
@@ -234,7 +234,7 @@ interface TenantModules {
                         
                         <div class="modules-content">
                             <div class="modules-grid">
-                                @for (module of allModules; track module.code) {
+                                @for (module of allModules(); track module.code) {
                                     <div class="module-card" 
                                          [class.active]="item.modules[module.code]"
                                          (click)="toggleModule(item, module.code)">

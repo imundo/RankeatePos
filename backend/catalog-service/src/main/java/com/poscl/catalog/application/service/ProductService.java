@@ -193,6 +193,40 @@ public class ProductService {
             product.setUnit(unit);
         }
 
+        // Update variants (Upsert by SKU)
+        if (request.getVariants() != null) {
+            Map<String, ProductVariant> existingVariants = product.getVariants().stream()
+                    .collect(Collectors.toMap(ProductVariant::getSku, v -> v));
+
+            for (ProductRequest.VariantRequest vr : request.getVariants()) {
+                ProductVariant variant = existingVariants.get(vr.getSku());
+                if (variant != null) {
+                    // Update existing
+                    variant.setNombre(vr.getNombre());
+                    variant.setBarcode(vr.getBarcode());
+                    if (vr.getCosto() != null)
+                        variant.setCosto(vr.getCosto());
+                    variant.setPrecioNeto(vr.getPrecioNeto());
+                    variant.setPrecioBruto(vr.getPrecioBruto());
+                    variant.setStockMinimo(vr.getStockMinimo() != null ? vr.getStockMinimo() : 0);
+                    variant.setStockMaximo(vr.getStockMaximo() != null ? vr.getStockMaximo() : 0);
+                    variant.setEsDefault(vr.getEsDefault() != null ? vr.getEsDefault() : false);
+
+                    if (vr.getTaxId() != null) {
+                        Tax tax = taxRepository.findByIdAndTenantId(vr.getTaxId(), tenantId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Impuesto", vr.getTaxId()));
+                        variant.setTax(tax);
+                    }
+                } else {
+                    // Create new
+                    ProductVariant newVariant = createVariant(tenantId, vr);
+                    newVariant.setProduct(product); // Ensure relationship
+                    product.getVariants().add(newVariant); // Add to list directly if addVariant not available or
+                                                           // distinct
+                }
+            }
+        }
+
         product = productRepository.save(product);
         return toDto(product);
     }
@@ -384,6 +418,7 @@ public class ProductService {
                 .taxId(v.getTax() != null ? v.getTax().getId() : null)
                 .taxPercentage(v.getTaxPercentage())
                 .stockMinimo(v.getStockMinimo())
+                .stockMaximo(v.getStockMaximo())
                 .stock(stock)
                 .activo(v.getActivo())
                 .esDefault(v.getEsDefault())
@@ -417,6 +452,7 @@ public class ProductService {
                 .precioBruto(vr.getPrecioBruto())
                 .tax(tax)
                 .stockMinimo(vr.getStockMinimo() != null ? vr.getStockMinimo() : 0)
+                .stockMaximo(vr.getStockMaximo() != null ? vr.getStockMaximo() : 0)
                 .esDefault(vr.getEsDefault() != null ? vr.getEsDefault() : false)
                 .activo(true)
                 .build();
@@ -460,6 +496,7 @@ public class ProductService {
                 .taxId(v.getTax() != null ? v.getTax().getId() : null)
                 .taxPercentage(v.getTaxPercentage())
                 .stockMinimo(v.getStockMinimo())
+                .stockMaximo(v.getStockMaximo())
                 .activo(v.getActivo())
                 .esDefault(v.getEsDefault())
                 .marginPercentage(v.getMarginPercentage())

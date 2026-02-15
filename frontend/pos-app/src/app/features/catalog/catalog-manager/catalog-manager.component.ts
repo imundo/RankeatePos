@@ -45,6 +45,8 @@ interface ProductVariant {
   precioNeto: number;
   costo?: number;
   stock?: number;
+  stockMinimo?: number;
+  stockMaximo?: number;
 }
 
 @Component({
@@ -281,6 +283,17 @@ interface ProductVariant {
             </div>
           </div>
 
+          <div class="form-grid">
+            <div class="input-group">
+              <label class="input-label">Stock Mínimo</label>
+              <input type="number" [(ngModel)]="productForm.stockMinimo" min="0" placeholder="5" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Stock Máximo</label>
+              <input type="number" [(ngModel)]="productForm.stockMaximo" min="0" placeholder="100" />
+            </div>
+          </div>
+
           <!-- Image Upload -->
           <div class="input-group">
             <label class="input-label">Imagen del Producto</label>
@@ -487,6 +500,25 @@ interface ProductVariant {
       padding: 1rem 0;
     }
 
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .input-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
     .badge {
       display: inline-flex;
       padding: 0.25rem 0.75rem;
@@ -535,6 +567,8 @@ export class CatalogManagerComponent implements OnInit {
     categoryId: '',
     precioBruto: 0,
     costo: 0,
+    stockMinimo: 5,
+    stockMaximo: 0,
     imagenUrl: ''
   };
 
@@ -665,6 +699,8 @@ export class CatalogManagerComponent implements OnInit {
       categoryId: product?.categoryId || '',
       precioBruto: product?.variants?.[0]?.precioBruto || 0,
       costo: product?.variants?.[0]?.costo || 0,
+      stockMinimo: product?.variants?.[0]?.stockMinimo || 5,
+      stockMaximo: product?.variants?.[0]?.stockMaximo || 0,
       imagenUrl: product?.imagenUrl || ''
     };
     this.showProductDialog = true;
@@ -693,7 +729,9 @@ export class CatalogManagerComponent implements OnInit {
         sku: this.productForm.sku,
         precioBruto: this.productForm.precioBruto,
         precioNeto: Math.round(this.productForm.precioBruto / 1.19),
-        costo: this.productForm.costo
+        costo: this.productForm.costo,
+        stockMinimo: this.productForm.stockMinimo,
+        stockMaximo: this.productForm.stockMaximo
       }]
     };
 
