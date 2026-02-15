@@ -56,6 +56,9 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
         @Query("SELECT s FROM Sale s LEFT JOIN FETCH s.items WHERE s.tenantId = :tenantId AND s.dteStatus = :status")
         List<Sale> findByTenantIdAndDteStatus(UUID tenantId, Sale.DteStatus status);
 
+        // Batch processing for scheduler
+        List<Sale> findTop50ByDteStatus(Sale.DteStatus dteStatus, Pageable pageable);
+
         // Global batch fetch (ignore tenant filter implies admin usage or background
         // job)
         // Global batch fetch
