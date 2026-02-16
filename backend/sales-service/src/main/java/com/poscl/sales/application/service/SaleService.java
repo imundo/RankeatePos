@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.poscl.shared.event.SaleCompletedEvent;
+import com.poscl.sales.infrastructure.config.RabbitMQConfig;
 
 /**
  * Servicio de ventas POS
@@ -37,6 +40,7 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final CashSessionRepository sessionRepository;
     private final CashRegisterRepository registerRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     @Value("${services.billing.url:http://billing-service:8084}")
     private String billingServiceUrl;
@@ -136,6 +140,7 @@ public class SaleService {
         log.info("Venta {} guardada. Encolada para facturación (DteStatus=PENDING)", sale.getNumero());
 
         // TODO: Publicar evento SaleCreated para inventory-service
+        publishSaleCompletedEvent(sale);
 
         return toDto(sale);
     }
@@ -802,23 +807,55 @@ public class SaleService {
 
         return SaleDto.builder()
                 .id(sale.getId())
-                .commandId(sale.getCommandId())
+                .tenantId(sale.getTenantId())
                 .numero(sale.getNumero())
-                .sessionId(sale.getSessionId())
+                .sessionId(sale.getSession() != null ? sale.getSession().getId() : null)
+                .commandId(sale.getCommandId())
                 .customerId(sale.getCustomerId())
                 .customerNombre(sale.getCustomerNombre())
+                .estado(sale.getEstado())
+                .updatedAt(sale.getUpdatedAt())
+                .items(items)
+                .payments(payments)
                 .subtotal(sale.getSubtotal())
                 .descuento(sale.getDescuento())
                 .descuentoPorcentaje(sale.getDescuentoPorcentaje())
-                .impuestos(sale.getImpuestos())
+                .impuestoTotal(sale.getImpuestoTotal())
                 .total(sale.getTotal())
-                .estado(sale.getEstado().name())
-                .createdAt(sale.getCreatedAt())
-                .createdBy(sale.getCreatedBy())
-                .anuladaAt(sale.getAnuladaAt())
-                .anulacionMotivo(sale.getAnulacionMotivo())
-                .items(items)
-                .payments(payments)
                 .build();
+    }
+
+    private void publishSaleCompletedEvent(Sale sale) {
+        try {
+            SaleCompletedEvent event = SaleCompletedEvent.builder()
+                    .saleId(sale.getId())
+                    .tenantId(sale.getTenantId())
+                    .customerId(sale.getCustomerId())
+                    .totalAmount(BigDecimal.valueOf(sale.getTotal())) // Assuming total is Integer in shared event but
+                                                                      // definition was BigDecimal? Let check.
+                    // Checking implementation_plan shared event definition: totalAmount is
+                    // BigDecimal.
+                    // Sale entity total is Integer (from previous code reading context, usually
+                    // stored as Int cents or just Int).
+                    // Wait, SaleService line 122: sale.getTotal() returns int/long likely?
+                    // Line 490: BigDecimal.valueOf(sale.getTotal()); -> so sale.getTotal() returns
+                    // a number.
+                    // If shared event has BigDecimal, I need to convert.
+                    .timestamp(java.time.Instant.now())
+                    .items(sale.getItems().stream().map(i -> SaleCompletedEvent.SaleItemEventDto.builder()
+                            .productId(i.getVariantId()) // Variant ID acts as Product ID for stock
+                            .productSku(i.getProductSku())
+                            .quantity(i.getCantidad() != null ? i.getCantidad().intValue() : 0)
+                            .unitPrice(i.getPrecioUnitario() != null ? i.getPrecioUnitario() : BigDecimal.ZERO)
+                            .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO)
+                            .build()).collect(Collectors.toList()))
+                    .build();
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "sale.completed", event);
+            log.info("Evento SaleCompletedEvent publicado para venta {}", sale.getNumero());
+        } catch (Exception e) {
+            log.error("Error publicando evento SaleCompletedEvent para venta {}: {}", sale.getNumero(), e.getMessage());
+            // No bloqueamos la venta si falla el evento (messaging asíncrono)
+        }
     }
 }
