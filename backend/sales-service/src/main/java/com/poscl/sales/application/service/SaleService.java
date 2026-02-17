@@ -806,21 +806,23 @@ public class SaleService {
 
         return SaleDto.builder()
                 .id(sale.getId())
-                .tenantId(sale.getTenantId())
                 .numero(sale.getNumero())
                 .sessionId(sale.getSession() != null ? sale.getSession().getId() : null)
                 .commandId(sale.getCommandId())
                 .customerId(sale.getCustomerId())
                 .customerNombre(sale.getCustomerNombre())
-                .estado(sale.getEstado())
-                .updatedAt(sale.getUpdatedAt())
+                .estado(sale.getEstado().name())
                 .items(items)
                 .payments(payments)
                 .subtotal(sale.getSubtotal())
                 .descuento(sale.getDescuento())
                 .descuentoPorcentaje(sale.getDescuentoPorcentaje())
-                .impuestoTotal(sale.getImpuestoTotal())
+                .impuestos(sale.getImpuestos())
                 .total(sale.getTotal())
+                .createdAt(sale.getCreatedAt())
+                .createdBy(sale.getCreatedBy())
+                .anuladaAt(sale.getAnuladaAt())
+                .anulacionMotivo(sale.getAnulacionMotivo())
                 .build();
     }
 
@@ -841,13 +843,17 @@ public class SaleService {
                         .customerId(sale.getCustomerId())
                         .totalAmount(BigDecimal.valueOf(sale.getTotal()))
                         .timestamp(java.time.Instant.now())
-                        .items(sale.getItems().stream().map(i -> SaleCompletedEvent.SaleItemEventDto.builder()
-                                .productId(i.getVariantId())
-                                .productSku(i.getProductSku())
-                                .quantity(i.getCantidad() != null ? i.getCantidad().intValue() : 0)
-                                .unitPrice(i.getPrecioUnitario() != null ? i.getPrecioUnitario() : BigDecimal.ZERO)
-                                .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO)
-                                .build()).collect(Collectors.toList()))
+                        .items(sale.getItems().stream().map(i -> {
+                            SaleCompletedEvent.SaleItemEventDto.SaleItemEventDtoBuilder b = SaleCompletedEvent.SaleItemEventDto
+                                    .builder()
+                                    .productId(i.getVariantId())
+                                    .productSku(i.getProductSku())
+                                    .quantity(i.getCantidad() != null ? i.getCantidad().intValue() : 0)
+                                    .unitPrice(i.getPrecioUnitario() != null ? BigDecimal.valueOf(i.getPrecioUnitario())
+                                            : BigDecimal.ZERO)
+                                    .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO);
+                            return b.build();
+                        }).collect(Collectors.toList()))
                         .build();
 
                 restTemplate.postForEntity(marketingServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
