@@ -826,12 +826,12 @@ public class SaleService {
                 .build();
     }
 
-    @Value("${services.marketing.url:}")
-    private String marketingServiceUrl;
+    @Value("${services.operations.url:}")
+    private String operationsServiceUrl;
 
     private void publishSaleCompletedEvent(Sale sale) {
-        if (marketingServiceUrl == null || marketingServiceUrl.isBlank()) {
-            log.debug("Marketing service URL no configurada, omitiendo notificación");
+        if (operationsServiceUrl == null || operationsServiceUrl.isBlank()) {
+            log.debug("Operations service URL no configurada, omitiendo notificación");
             return;
         }
         // Fire-and-forget: no bloqueamos la venta
@@ -856,10 +856,10 @@ public class SaleService {
                         }).collect(Collectors.toList()))
                         .build();
 
-                restTemplate.postForEntity(marketingServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
-                log.info("Notificación de venta enviada a marketing-service para venta {}", sale.getNumero());
+                restTemplate.postForEntity(operationsServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
+                log.info("Notificación de venta enviada a operations-service para venta {}", sale.getNumero());
             } catch (Exception e) {
-                log.warn("No se pudo notificar a marketing-service para venta {}: {}", sale.getNumero(),
+                log.warn("No se pudo notificar a operations-service para venta {}: {}", sale.getNumero(),
                         e.getMessage());
             }
         }).start();

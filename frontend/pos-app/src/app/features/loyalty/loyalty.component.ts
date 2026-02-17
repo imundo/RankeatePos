@@ -3,38 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { LoyaltyService, LoyaltyCustomer, LoyaltyTransaction, Reward } from '@core/services/loyalty.service';
 
-interface LoyaltyCustomer {
-  id: string;
-  nombre: string;
-  email: string;
-  telefono: string;
-  puntos: number;
-  nivel: 'Bronce' | 'Plata' | 'Oro' | 'Platino';
-  totalCompras: number;
-  ultimaVisita: string;
-  fechaRegistro: string;
-}
 
-interface Reward {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  puntosRequeridos: number;
-  tipo: 'descuento' | 'producto' | 'servicio';
-  valor: number;
-  activo: boolean;
-  imagen?: string;
-}
-
-interface PointsTransaction {
-  id: string;
-  customerId: string;
-  tipo: 'ganados' | 'canjeados';
-  puntos: number;
-  descripcion: string;
-  fecha: string;
-}
 
 @Component({
   selector: 'app-loyalty',
@@ -143,15 +114,15 @@ interface PointsTransaction {
                 <div class="customer-stats">
                   <div class="stat">
                     <span class="label">Puntos</span>
-                    <span class="value">{{ customer.puntos | number }}</span>
+                    <span class="value">{{ customer.puntosActuales | number }}</span>
                   </div>
                   <div class="stat">
                     <span class="label">Total Compras</span>
-                    <span class="value">{{ formatPrice(customer.totalCompras) }}</span>
+                    <span class="value">{{ customer.puntosTotales | number }} totales</span>
                   </div>
                 </div>
                 <div class="customer-footer">
-                  <span class="last-visit">Última visita: {{ formatDate(customer.ultimaVisita) }}</span>
+                  <span class="last-visit">Última compra: {{ customer.ultimaCompra ? formatDate(customer.ultimaCompra) : 'Sin compras' }}</span>
                   <div class="customer-actions">
                     <button class="icon-btn" title="Agregar puntos" (click)="addPoints(customer)">➕</button>
                     <button class="icon-btn" title="Canjear recompensa" (click)="redeemReward(customer)">🎁</button>
@@ -213,14 +184,14 @@ interface PointsTransaction {
             @for (tx of recentTransactions(); track tx.id) {
               <div class="history-item" [class]="tx.tipo">
                 <div class="tx-icon">
-                  {{ tx.tipo === 'ganados' ? '➕' : '🎁' }}
+                  {{ tx.tipo === 'EARN' ? '➕' : '🎁' }}
                 </div>
                 <div class="tx-content">
                   <span class="tx-description">{{ tx.descripcion }}</span>
-                  <span class="tx-date">{{ formatDate(tx.fecha) }}</span>
+                  <span class="tx-date">{{ formatDate(tx.createdAt) }}</span>
                 </div>
-                <div class="tx-points" [class]="tx.tipo">
-                  {{ tx.tipo === 'ganados' ? '+' : '-' }}{{ tx.puntos }} pts
+                <div class="tx-points" [class]="tx.tipo === 'EARN' ? 'ganados' : 'canjeados'">
+                  {{ tx.tipo === 'EARN' ? '+' : '-' }}{{ tx.puntos }} pts
                 </div>
               </div>
             }
@@ -898,12 +869,15 @@ interface PointsTransaction {
 })
 export class LoyaltyComponent implements OnInit {
   private authService = inject(AuthService);
+  private loyaltyService = inject(LoyaltyService);
 
   activeTab: 'customers' | 'rewards' | 'history' = 'customers';
   searchQuery = '';
   showAddCustomer = false;
   showAddReward = false;
   showSettings = false;
+  loading = signal(false);
+  selectedCustomerId: string | null = null;
 
   newCustomer = {
     nombre: '',
@@ -911,63 +885,63 @@ export class LoyaltyComponent implements OnInit {
     telefono: ''
   };
 
-  // Demo customers
-  customers = signal<LoyaltyCustomer[]>([
-    { id: '1', nombre: 'María González', email: 'maria@email.com', telefono: '+56912345678', puntos: 2450, nivel: 'Oro', totalCompras: 485000, ultimaVisita: '2024-12-24', fechaRegistro: '2024-01-15' },
-    { id: '2', nombre: 'Juan Pérez', email: 'juan@email.com', telefono: '+56987654321', puntos: 5200, nivel: 'Platino', totalCompras: 1250000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-06-20' },
-    { id: '3', nombre: 'Ana Martínez', email: 'ana@email.com', telefono: '+56911223344', puntos: 890, nivel: 'Plata', totalCompras: 156000, ultimaVisita: '2024-12-20', fechaRegistro: '2024-08-10' },
-    { id: '4', nombre: 'Carlos López', email: 'carlos@email.com', telefono: '+56955667788', puntos: 350, nivel: 'Bronce', totalCompras: 45000, ultimaVisita: '2024-12-15', fechaRegistro: '2024-11-01' },
-    { id: '5', nombre: 'Patricia Díaz', email: 'patricia@email.com', telefono: '+56944556677', puntos: 1850, nivel: 'Oro', totalCompras: 380000, ultimaVisita: '2024-12-23', fechaRegistro: '2024-03-05' },
-    { id: '6', nombre: 'Roberto Silva', email: 'roberto@email.com', telefono: '+56933445566', puntos: 3100, nivel: 'Platino', totalCompras: 890000, ultimaVisita: '2024-12-25', fechaRegistro: '2023-09-15' },
-  ]);
-
-  // Demo rewards
-  rewards = signal<Reward[]>([
-    { id: '1', nombre: 'Café Gratis', descripcion: 'Un café espresso o americano gratis', puntosRequeridos: 500, tipo: 'producto', valor: 1500, activo: true },
-    { id: '2', nombre: '10% Descuento', descripcion: 'Descuento en tu próxima compra', puntosRequeridos: 1000, tipo: 'descuento', valor: 10, activo: true },
-    { id: '3', nombre: 'Torta de Regalo', descripcion: 'Una porción de torta a elección', puntosRequeridos: 1500, tipo: 'producto', valor: 4500, activo: true },
-    { id: '4', nombre: '20% Descuento', descripcion: 'Descuento especial para clientes fieles', puntosRequeridos: 3000, tipo: 'descuento', valor: 20, activo: true },
-    { id: '5', nombre: 'Desayuno Premium', descripcion: 'Desayuno completo para 2 personas', puntosRequeridos: 5000, tipo: 'servicio', valor: 25000, activo: true },
-    { id: '6', nombre: '50% Aniversario', descripcion: 'Descuento especial de cumpleaños', puntosRequeridos: 0, tipo: 'descuento', valor: 50, activo: false },
-  ]);
-
-  // Demo transactions
-  transactions = signal<PointsTransaction[]>([
-    { id: '1', customerId: '1', tipo: 'ganados', puntos: 450, descripcion: 'Compra #0015 - María González', fecha: '2024-12-25T10:30:00' },
-    { id: '2', customerId: '2', tipo: 'canjeados', puntos: 1000, descripcion: 'Canje: 10% Descuento - Juan Pérez', fecha: '2024-12-25T09:15:00' },
-    { id: '3', customerId: '6', tipo: 'ganados', puntos: 890, descripcion: 'Compra #0014 - Roberto Silva', fecha: '2024-12-24T18:45:00' },
-    { id: '4', customerId: '5', tipo: 'ganados', puntos: 320, descripcion: 'Compra #0013 - Patricia Díaz', fecha: '2024-12-24T16:20:00' },
-    { id: '5', customerId: '1', tipo: 'canjeados', puntos: 500, descripcion: 'Canje: Café Gratis - María González', fecha: '2024-12-24T11:00:00' },
-    { id: '6', customerId: '3', tipo: 'ganados', puntos: 180, descripcion: 'Compra #0012 - Ana Martínez', fecha: '2024-12-23T14:30:00' },
-  ]);
+  customers = signal<LoyaltyCustomer[]>([]);
+  rewards = signal<Reward[]>([]);
+  transactions = signal<LoyaltyTransaction[]>([]);
+  stats = signal<{ totalCustomers: number; totalPointsInCirculation: number; activeRewards: number }>({
+    totalCustomers: 0, totalPointsInCirculation: 0, activeRewards: 0
+  });
 
   // Computed values
-  totalCustomers = computed(() => this.customers().length);
-  totalPuntosActivos = computed(() => this.customers().reduce((sum, c) => sum + c.puntos, 0));
-  rewardsCanjeados = computed(() => this.transactions().filter(t => t.tipo === 'canjeados').length);
-  clientesPlatino = computed(() => this.customers().filter(c => c.nivel === 'Platino').length);
+  totalCustomers = computed(() => this.stats().totalCustomers || this.customers().length);
+  totalPuntosActivos = computed(() => this.stats().totalPointsInCirculation || this.customers().reduce((sum, c) => sum + c.puntosActuales, 0));
+  rewardsCanjeados = computed(() => this.transactions().filter(t => t.tipo === 'REDEEM').length);
+  clientesPlatino = computed(() => this.customers().filter(c => c.nivel === 'PLATINO').length);
 
   filteredCustomers = computed(() => {
     const query = this.searchQuery.toLowerCase();
     if (!query) return this.customers();
     return this.customers().filter(c =>
       c.nombre.toLowerCase().includes(query) ||
-      c.email.toLowerCase().includes(query) ||
-      c.telefono.includes(query)
+      (c.email && c.email.toLowerCase().includes(query)) ||
+      (c.telefono && c.telefono.includes(query))
     );
   });
 
-  recentTransactions = computed(() => this.transactions().slice(0, 10));
+  recentTransactions = computed(() => this.transactions().slice(0, 20));
 
   ngOnInit() {
-    // Load data
+    this.loadData();
+  }
+
+  loadData() {
+    this.loading.set(true);
+    // Load customers
+    this.loyaltyService.getCustomers(0, 100).subscribe({
+      next: (response: any) => {
+        const list = response.content || response;
+        this.customers.set(Array.isArray(list) ? list : []);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+    // Load rewards
+    this.loyaltyService.getRewards().subscribe({
+      next: (data) => this.rewards.set(data),
+      error: () => { }
+    });
+    // Load stats
+    this.loyaltyService.getStats().subscribe({
+      next: (data) => this.stats.set(data),
+      error: () => { }
+    });
   }
 
   getNivelIcon(nivel: string): string {
-    switch (nivel) {
-      case 'Platino': return '💎';
-      case 'Oro': return '🥇';
-      case 'Plata': return '🥈';
+    switch (nivel?.toUpperCase()) {
+      case 'PLATINO': return '💎';
+      case 'ORO': return '🥇';
+      case 'PLATA': return '🥈';
       default: return '🥉';
     }
   }
@@ -981,6 +955,7 @@ export class LoyaltyComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('es-CL', {
       day: 'numeric',
       month: 'short',
@@ -992,26 +967,37 @@ export class LoyaltyComponent implements OnInit {
     const points = prompt('Ingrese los puntos a agregar:', '100');
     if (points) {
       const amount = parseInt(points);
-      this.customers.update(customers =>
-        customers.map(c => c.id === customer.id ? { ...c, puntos: c.puntos + amount } : c)
-      );
-      this.transactions.update(txs => [{
-        id: crypto.randomUUID(),
-        customerId: customer.id,
-        tipo: 'ganados',
-        puntos: amount,
-        descripcion: `Puntos manuales - ${customer.nombre}`,
-        fecha: new Date().toISOString()
-      }, ...txs]);
+      if (isNaN(amount) || amount <= 0) return;
+      this.loyaltyService.addPoints(customer.id, { puntos: amount, descripcion: `Puntos manuales` }).subscribe({
+        next: () => this.loadData(),
+        error: (err) => alert('Error al agregar puntos: ' + (err.error?.message || err.message))
+      });
     }
   }
 
   redeemReward(customer: LoyaltyCustomer) {
-    alert(`Selecciona una recompensa para ${customer.nombre}`);
+    const points = prompt(`Puntos a canjear para ${customer.nombre} (disponible: ${customer.puntosActuales}):`, '500');
+    if (points) {
+      const amount = parseInt(points);
+      if (isNaN(amount) || amount <= 0) return;
+      if (amount > customer.puntosActuales) {
+        alert('Puntos insuficientes');
+        return;
+      }
+      this.loyaltyService.redeemPoints(customer.id, { puntos: amount, descripcion: 'Canje en módulo de lealtad' }).subscribe({
+        next: () => this.loadData(),
+        error: (err) => alert('Error al canjear: ' + (err.error?.message || err.message || 'Puntos insuficientes'))
+      });
+    }
   }
 
   viewHistory(customer: LoyaltyCustomer) {
+    this.selectedCustomerId = customer.id;
     this.activeTab = 'history';
+    this.loyaltyService.getTransactions(customer.id).subscribe({
+      next: (data) => this.transactions.set(data),
+      error: () => this.transactions.set([])
+    });
   }
 
   toggleReward(reward: Reward) {
@@ -1022,19 +1008,13 @@ export class LoyaltyComponent implements OnInit {
 
   saveCustomer() {
     if (!this.newCustomer.nombre) return;
-
-    const customer: LoyaltyCustomer = {
-      id: crypto.randomUUID(),
-      ...this.newCustomer,
-      puntos: 0,
-      nivel: 'Bronce',
-      totalCompras: 0,
-      ultimaVisita: new Date().toISOString().split('T')[0],
-      fechaRegistro: new Date().toISOString().split('T')[0]
-    };
-
-    this.customers.update(c => [customer, ...c]);
-    this.showAddCustomer = false;
-    this.newCustomer = { nombre: '', email: '', telefono: '' };
+    this.loyaltyService.createCustomer(this.newCustomer).subscribe({
+      next: (created) => {
+        this.customers.update(c => [created, ...c]);
+        this.showAddCustomer = false;
+        this.newCustomer = { nombre: '', email: '', telefono: '' };
+      },
+      error: (err) => alert('Error al crear cliente: ' + (err.error?.message || err.message))
+    });
   }
 }

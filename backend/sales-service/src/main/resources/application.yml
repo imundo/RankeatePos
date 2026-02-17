@@ -21,8 +21,8 @@ services:
     url: ${INVENTORY_SERVICE_URL:http://${INVENTORY_SERVICE_HOST:pos-inventory-service.railway.internal}:${INVENTORY_SERVICE_PORT:8087}}
   billing:
     url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:pos-billing-service.railway.internal}:${BILLING_SERVICE_PORT:8084}}
-  marketing:
-    url: ${MARKETING_SERVICE_URL:http://${MARKETING_SERVICE_HOST:pos-marketing-service.railway.internal}:${MARKETING_SERVICE_PORT:8088}}
+  operations:
+    url: ${OPERATIONS_SERVICE_URL:http://${OPERATIONS_SERVICE_HOST:pos-operations-service.railway.internal}:${OPERATIONS_SERVICE_PORT:8086}}
 
 spring:
   application:

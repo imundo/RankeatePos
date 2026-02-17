@@ -7,10 +7,12 @@ import com.poscl.operations.application.service.LoyaltyService;
 import com.poscl.operations.domain.entity.LoyaltyCustomer;
 import com.poscl.operations.domain.entity.LoyaltyTransaction;
 import com.poscl.operations.domain.entity.Reward;
+import com.poscl.shared.event.SaleCompletedEvent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/loyalty")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Loyalty", description = "Programa de lealtad - clientes, puntos y recompensas")
 public class LoyaltyController {
 
@@ -127,6 +130,32 @@ public class LoyaltyController {
     public ResponseEntity<LoyaltyService.LoyaltyStats> getStats(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(loyaltyService.getStats(tenantId));
+    }
+
+    // ==================== SALE COMPLETED (inter-service) ====================
+
+    @PostMapping("/sale-completed")
+    @Operation(summary = "Procesar venta completada para acumular puntos")
+    public ResponseEntity<?> saleCompleted(@RequestBody SaleCompletedEvent event) {
+        try {
+            if (event.getCustomerId() == null) {
+                log.debug("Venta {} sin cliente, omitiendo puntos", event.getSaleId());
+                return ResponseEntity.ok().build();
+            }
+            // 1 punto por cada $1000 de compra
+            int points = event.getTotalAmount().intValue() / 1000;
+            if (points > 0) {
+                loyaltyService.addPoints(
+                        event.getCustomerId(), points,
+                        "Compra #" + event.getSaleId(), event.getSaleId());
+                log.info("Agregados {} puntos al cliente {} por venta {}",
+                        points, event.getCustomerId(), event.getSaleId());
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.warn("Error procesando puntos de venta {}: {}", event.getSaleId(), e.getMessage());
+            return ResponseEntity.ok().build(); // No fallar la venta
+        }
     }
 
     // ==================== MAPPER ====================
