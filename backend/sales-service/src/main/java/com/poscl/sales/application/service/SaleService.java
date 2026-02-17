@@ -25,9 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.web.client.RestTemplate;
 import com.poscl.shared.event.SaleCompletedEvent;
-import com.poscl.sales.infrastructure.config.RabbitMQConfig;
 
 /**
  * Servicio de ventas POS
@@ -40,7 +39,7 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final CashSessionRepository sessionRepository;
     private final CashRegisterRepository registerRepository;
-    private final RabbitTemplate rabbitTemplate;
+    private final RestTemplate restTemplate;
 
     @Value("${services.billing.url:http://billing-service:8084}")
     private String billingServiceUrl;
@@ -825,37 +824,38 @@ public class SaleService {
                 .build();
     }
 
-    private void publishSaleCompletedEvent(Sale sale) {
-        try {
-            SaleCompletedEvent event = SaleCompletedEvent.builder()
-                    .saleId(sale.getId())
-                    .tenantId(sale.getTenantId())
-                    .customerId(sale.getCustomerId())
-                    .totalAmount(BigDecimal.valueOf(sale.getTotal())) // Assuming total is Integer in shared event but
-                                                                      // definition was BigDecimal? Let check.
-                    // Checking implementation_plan shared event definition: totalAmount is
-                    // BigDecimal.
-                    // Sale entity total is Integer (from previous code reading context, usually
-                    // stored as Int cents or just Int).
-                    // Wait, SaleService line 122: sale.getTotal() returns int/long likely?
-                    // Line 490: BigDecimal.valueOf(sale.getTotal()); -> so sale.getTotal() returns
-                    // a number.
-                    // If shared event has BigDecimal, I need to convert.
-                    .timestamp(java.time.Instant.now())
-                    .items(sale.getItems().stream().map(i -> SaleCompletedEvent.SaleItemEventDto.builder()
-                            .productId(i.getVariantId()) // Variant ID acts as Product ID for stock
-                            .productSku(i.getProductSku())
-                            .quantity(i.getCantidad() != null ? i.getCantidad().intValue() : 0)
-                            .unitPrice(i.getPrecioUnitario() != null ? i.getPrecioUnitario() : BigDecimal.ZERO)
-                            .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO)
-                            .build()).collect(Collectors.toList()))
-                    .build();
+    @Value("${services.marketing.url:}")
+    private String marketingServiceUrl;
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "sale.completed", event);
-            log.info("Evento SaleCompletedEvent publicado para venta {}", sale.getNumero());
-        } catch (Exception e) {
-            log.error("Error publicando evento SaleCompletedEvent para venta {}: {}", sale.getNumero(), e.getMessage());
-            // No bloqueamos la venta si falla el evento (messaging asíncrono)
+    private void publishSaleCompletedEvent(Sale sale) {
+        if (marketingServiceUrl == null || marketingServiceUrl.isBlank()) {
+            log.debug("Marketing service URL no configurada, omitiendo notificación");
+            return;
         }
+        // Fire-and-forget: no bloqueamos la venta
+        new Thread(() -> {
+            try {
+                SaleCompletedEvent event = SaleCompletedEvent.builder()
+                        .saleId(sale.getId())
+                        .tenantId(sale.getTenantId())
+                        .customerId(sale.getCustomerId())
+                        .totalAmount(BigDecimal.valueOf(sale.getTotal()))
+                        .timestamp(java.time.Instant.now())
+                        .items(sale.getItems().stream().map(i -> SaleCompletedEvent.SaleItemEventDto.builder()
+                                .productId(i.getVariantId())
+                                .productSku(i.getProductSku())
+                                .quantity(i.getCantidad() != null ? i.getCantidad().intValue() : 0)
+                                .unitPrice(i.getPrecioUnitario() != null ? i.getPrecioUnitario() : BigDecimal.ZERO)
+                                .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO)
+                                .build()).collect(Collectors.toList()))
+                        .build();
+
+                restTemplate.postForEntity(marketingServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
+                log.info("Notificación de venta enviada a marketing-service para venta {}", sale.getNumero());
+            } catch (Exception e) {
+                log.warn("No se pudo notificar a marketing-service para venta {}: {}", sale.getNumero(),
+                        e.getMessage());
+            }
+        }).start();
     }
 }

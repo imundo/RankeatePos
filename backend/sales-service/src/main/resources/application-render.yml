@@ -6,6 +6,8 @@ services:
     url: ${INVENTORY_SERVICE_URL:http://pos-inventory-service:10000}
   billing:
     url: ${BILLING_SERVICE_URL:http://pos-billing-service:10000}
+  marketing:
+    url: ${MARKETING_SERVICE_URL:http://pos-marketing-service:10000}
 
 spring:
   datasource:
@@ -14,7 +16,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 5
+      maximum-pool-size: 2
   jpa:
     hibernate:
       ddl-auto: none
