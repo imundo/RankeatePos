@@ -34,11 +34,28 @@ public class LoyaltyController {
 
     @GetMapping("/customers")
     @Operation(summary = "Listar clientes de lealtad")
-    public ResponseEntity<Page<LoyaltyCustomerDto>> getCustomers(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            Pageable pageable) {
+    public ResponseEntity<?> getCustomers(
+            @RequestHeader("X-Tenant-ID") String tenantIdStr,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        UUID tenantId = UUID.fromString(tenantIdStr);
+        Pageable pageable = PageRequest.of(page, size);
+
         Page<LoyaltyCustomer> customers = loyaltyService.getCustomers(tenantId, pageable);
         return ResponseEntity.ok(customers.map(this::toDto));
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Buscar clientes por nombre, teléfono o email")
+    public ResponseEntity<List<LoyaltyCustomerDto>> searchCustomers(
+            @RequestHeader("X-Tenant-ID") String tenantIdStr,
+            @RequestParam("q") String query) {
+
+        UUID tenantId = UUID.fromString(tenantIdStr);
+        List<LoyaltyCustomer> customers = loyaltyService.searchCustomers(tenantId, query);
+
+        return ResponseEntity.ok(customers.stream().map(this::toDto).toList());
     }
 
     @GetMapping("/customers/{id}")

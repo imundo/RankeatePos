@@ -24,6 +24,7 @@ import { StockService } from '@core/services/stock.service';
 import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
+import { LoyaltyService, LoyaltyCustomer } from '@core/services/loyalty.service';
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
 import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
 import { ClientSearchModalComponent, Client } from '@shared/components/modals/client-search-modal.component';
@@ -437,22 +438,75 @@ interface CartItem {
                 <span>IVA (19%):</span>
                 <span>{{ formatPrice(taxCheckout()) }}</span>
               </div>
+              @if (loyaltyDiscount() > 0) {
+                <div class="total-row" style="color: #34d399;">
+                  <span>Descuento Puntos:</span>
+                  <span>-{{ formatPrice(loyaltyDiscount()) }}</span>
+                </div>
+              }
               <div class="total-row final-total">
                 <span>TOTAL:</span>
                 <span class="total-amount-gradient">{{ formatPrice(total()) }}</span>
               </div>
             </div>
 
-            <div class="customer-input-section">
+            <div class="customer-input-section relative">
               <label class="input-label">
                 <i class="pi pi-user"></i>
-                Cliente (opcional)
+                Cliente Lealtad (opcional)
               </label>
-              <input 
-                type="text" 
-                [(ngModel)]="customerName"
-                placeholder="Nombre del cliente"
-                class="premium-input">
+              <div class="search-loyalty-wrapper" style="display: flex; gap: 0.5rem;">
+                <input 
+                  type="text" 
+                  [(ngModel)]="customerName"
+                  (keyup.enter)="searchLoyaltyCustomer()"
+                  placeholder="Buscar rut, nombre o email..."
+                  class="premium-input"
+                  style="flex: 1;"
+                  [disabled]="loyaltyCustomer() != null">
+                @if (!loyaltyCustomer()) {
+                  <button type="button" class="btn btn-outline" (click)="searchLoyaltyCustomer()" style="padding: 0 1rem;">
+                    <i class="pi" [ngClass]="isSearchingLoyalty() ? 'pi-spin pi-spinner' : 'pi-search'"></i>
+                  </button>
+                } @else {
+                  <button type="button" class="btn btn-danger" (click)="clearLoyaltyCustomer()" style="padding: 0 1rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <i class="pi pi-times"></i>
+                  </button>
+                }
+              </div>
+
+              <!-- Search Results Dropdown -->
+              @if (loyaltySearchResults().length > 0) {
+                <div class="loyalty-search-results" style="position: absolute; width: 100%; margin-top: 0.5rem; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; z-index: 50; max-height: 200px; overflow-y: auto;">
+                  @for (c of loyaltySearchResults(); track c.id) {
+                    <div class="result-item" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);" (click)="selectLoyaltyCustomer(c)">
+                       <div style="font-weight: 600;">{{ c.nombre }}</div>
+                       <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">{{ c.email || c.telefono }}</div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Selected Customer Info -->
+              @if (loyaltyCustomer()) {
+                <div class="selected-customer-card" style="margin-top: 1rem; padding: 1rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px;">
+                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                      <span style="color: #a5b4fc; font-weight: 600;"><i class="pi pi-star-fill" style="color: #fbbf24; margin-right: 0.5rem;"></i> Nivel {{ loyaltyCustomer()!.nivel }}</span>
+                      <span style="font-weight: bold;">{{ loyaltyCustomer()!.puntosActuales }} pts</span>
+                   </div>
+                   
+                   @if (loyaltyCustomer()!.puntosActuales > 0 && loyaltyPointsToRedeem() === 0) {
+                      <button class="btn btn-outline w-full" style="width: 100%; margin-top: 0.5rem; border-color: #6366f1; color: #818cf8;" (click)="applyMaxPoints()">
+                         Canjear Descuento (-{{ formatPrice(Math.min(loyaltyCustomer()!.puntosActuales, subtotal() + taxTotal())) }})
+                      </button>
+                   }
+                   @if (loyaltyPointsToRedeem() > 0) {
+                      <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+                         <i class="pi pi-check-circle"></i> Canjeando {{ loyaltyPointsToRedeem() }} puntos
+                      </div>
+                   }
+                </div>
+              }
             </div>
           </section>
 
@@ -3399,6 +3453,7 @@ export class PosComponent implements OnInit {
   private demoDataService = inject(DemoDataService);
   private barcodeService = inject(BarcodeService);
   private salesEventService = inject(SalesEventService);
+  private loyaltyService = inject(LoyaltyService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -3417,6 +3472,12 @@ export class PosComponent implements OnInit {
 
   // Premium checkout modal properties
   customerName = '';
+  loyaltyCustomer = signal<LoyaltyCustomer | null>(null);
+  loyaltySearchResults = signal<LoyaltyCustomer[]>([]);
+  isSearchingLoyalty = signal(false);
+  loyaltyPointsToRedeem = signal<number>(0);
+  loyaltyDiscount = computed(() => this.loyaltyPointsToRedeem()); // 1 punto = $1
+
   today = new Date();
   Math = Math; // Expose Math to template
 
@@ -3506,6 +3567,51 @@ export class PosComponent implements OnInit {
       this.tipoDocumento = 'FACTURA';
     }
   }
+
+  // --- Loyalty Methods ---
+  searchLoyaltyCustomer() {
+    const query = this.customerName?.trim() || '';
+    if (query.length < 3) {
+      this.loyaltyCustomer.set(null);
+      this.loyaltySearchResults.set([]);
+      return;
+    }
+    this.isSearchingLoyalty.set(true);
+    this.loyaltyService.searchCustomers(query).subscribe({
+      next: (results) => {
+        this.loyaltySearchResults.set(results);
+        this.isSearchingLoyalty.set(false);
+      },
+      error: () => {
+        this.isSearchingLoyalty.set(false);
+        this.loyaltySearchResults.set([]);
+      }
+    });
+  }
+
+  selectLoyaltyCustomer(customer: LoyaltyCustomer) {
+    this.loyaltyCustomer.set(customer);
+    this.customerName = customer.nombre;
+    this.loyaltySearchResults.set([]);
+  }
+
+  clearLoyaltyCustomer() {
+    this.loyaltyCustomer.set(null);
+    this.customerName = '';
+    this.loyaltyPointsToRedeem.set(0);
+    this.loyaltySearchResults.set([]);
+  }
+
+  applyMaxPoints() {
+    const maxPoints = this.loyaltyCustomer()?.puntosActuales || 0;
+    const maxDiscountAllowed = this.subtotal() + this.taxTotal(); // Don't exceed total
+
+    // Redeem up to current total, or max points (1 point = $1)
+    const pointsToUse = Math.min(maxPoints, maxDiscountAllowed);
+    this.loyaltyPointsToRedeem.set(pointsToUse);
+  }
+  // ----------------------
+
 
   openSpecialOrder() {
     this.messageService.add({ severity: 'info', summary: 'Próximamente', detail: 'Gestión de pedidos especiales' });
@@ -3730,7 +3836,7 @@ export class PosComponent implements OnInit {
     Math.round(this.subtotal() * 0.19) // IVA 19% Chile
   );
 
-  total = computed(() => this.subtotal() + this.taxTotal());
+  total = computed(() => Math.max(0, this.subtotal() + this.taxTotal() - this.loyaltyDiscount()));
 
   // For checkout modal
   subtotalCheckout = computed(() => {
@@ -4005,6 +4111,9 @@ export class PosComponent implements OnInit {
     const saleData = {
       commandId,
       sessionId: this.posSessionId,
+      customerId: this.loyaltyCustomer()?.id,
+      customerNombre: this.loyaltyCustomer()?.nombre,
+      descuento: this.loyaltyDiscount(),
       items: this.cartItems().map(item => ({
         variantId: item.variantId,
         productSku: item.productSku,
@@ -4088,6 +4197,16 @@ export class PosComponent implements OnInit {
           timestamp: new Date(),
           type: 'VENTA'
         });
+
+        // Canjear puntos usados en la venta
+        if (this.loyaltyPointsToRedeem() > 0 && this.loyaltyCustomer()) {
+          this.loyaltyService.redeemPoints(this.loyaltyCustomer()!.id, {
+            puntos: this.loyaltyPointsToRedeem(),
+            descripcion: 'Canje en POS',
+            ventaId: saleResult.id || commandId
+          }).subscribe();
+          this.messageService.add({ severity: 'success', summary: 'Puntos Canjeados', detail: `Se descontaron ${this.loyaltyPointsToRedeem()} puntos` });
+        }
       }
 
       // Guardar items para impresión
@@ -4095,6 +4214,7 @@ export class PosComponent implements OnInit {
 
       // Limpiar carrito y cerrar modal de pago
       this.clearCart();
+      this.clearLoyaltyCustomer(); // Limpiar loyalty auth state
       this.showPaymentDialog = false;
       this.processingPayment.set(false);
 
@@ -4138,6 +4258,7 @@ export class PosComponent implements OnInit {
       });
 
       this.clearCart();
+      this.clearLoyaltyCustomer();
       this.showPaymentDialog = false;
     }
   }
