@@ -13,6 +13,8 @@ services:
     url: http://catalog-service:8082
   sales:
     url: http://sales-service:8083
+  marketing:
+    url: http://marketing-service:8093
 
 server:
   port: 8080
