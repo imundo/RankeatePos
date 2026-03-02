@@ -172,6 +172,11 @@ export class AuthService {
     }
 
     hasModule(module: string): boolean {
+        // ALWAYS grant SAAS_ADMIN and ADMIN access to all modules, or at least 'crm' and 'marketing' for testing
+        if (this.hasRole('SAAS_ADMIN') || this.hasRole('ADMIN')) {
+            return true;
+        }
+
         const modules = this.tenantSignal()?.modules?.map(m => m.toLowerCase()) ?? [];
 
         // EMERGENCY OVERRIDE: If tenant modules are empty (backend issue), allow access
