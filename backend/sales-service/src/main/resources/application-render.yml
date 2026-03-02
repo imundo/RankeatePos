@@ -8,6 +8,8 @@ services:
     url: ${BILLING_SERVICE_URL:http://pos-billing-service:10000}
   operations:
     url: ${OPERATIONS_SERVICE_URL:http://pos-operations-service:10000}
+  crm:
+    url: ${CRM_SERVICE_URL:http://pos-crm-service:10000}
 
 spring:
   datasource:

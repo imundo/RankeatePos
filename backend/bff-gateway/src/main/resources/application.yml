@@ -42,8 +42,8 @@ services:
     url: ${PURCHASES_SERVICE_URL:http://${PURCHASES_SERVICE_HOST:pos-purchases-service.railway.internal}:${PURCHASES_SERVICE_PORT:8090}}
   payroll:
     url: ${PAYROLL_SERVICE_URL:http://${PAYROLL_SERVICE_HOST:pos-payroll-service.railway.internal}:${PAYROLL_SERVICE_PORT:8091}}
-  marketing:
-    url: ${MARKETING_SERVICE_URL:http://${MARKETING_SERVICE_HOST:pos-marketing-service.railway.internal}:${MARKETING_SERVICE_PORT:8092}}
+  crm:
+    url: ${CRM_SERVICE_URL:http://${CRM_SERVICE_HOST:pos-crm-service.railway.internal}:${CRM_SERVICE_PORT:8092}}
 
 # JWT Config (same as auth-service)
 jwt:

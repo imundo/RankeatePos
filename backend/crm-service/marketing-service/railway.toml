@@ -1,0 +1,11 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "crm-service/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 600
+startCommand = "java -Xmx256m -jar app.jar"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5
+

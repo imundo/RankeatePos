@@ -25,6 +25,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import com.poscl.shared.event.SaleCompletedEvent;
 
@@ -46,6 +51,9 @@ public class SaleService {
 
     @Value("${services.inventory.url}")
     private String inventoryServiceUrl;
+
+    @Value("${services.crm.url:http://crm-service:8088}")
+    private String crmServiceUrl;
 
     /**
      * Crea una venta (idempotente por commandId)
@@ -123,6 +131,36 @@ public class SaleService {
 
         sale = saleRepository.save(sale);
         log.info("Venta creada: {} - Total: ${}", sale.getNumero(), sale.getTotal());
+
+        // CRM: Validar e informar a crm-service si hay pagos en crédito (FIADO)
+        for (SalePayment payment : sale.getPayments()) {
+            if ("CREDITO_LOCAL".equalsIgnoreCase(payment.getMedio()) || "FIADO".equalsIgnoreCase(payment.getMedio())) {
+                if (sale.getCustomerId() == null) {
+                    throw new DomainException("CUSTOMER_REQUIRED",
+                            "Para pagar con Cuenta Corriente debe seleccionar un Cliente.");
+                }
+                try {
+                    String url = crmServiceUrl + "/api/crm/credit/" + sale.getCustomerId() + "/charge";
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    Map<String, Object> body = new HashMap<>();
+                    body.put("amount", payment.getMonto());
+                    body.put("saleId", sale.getId());
+                    body.put("description", "Venta Fiado #" + sale.getNumero());
+
+                    restTemplate.postForEntity(url, new HttpEntity<>(body, headers), Object.class);
+                    log.info("Cargado a fido para cliente {} por Venta {}", sale.getCustomerId(), sale.getId());
+                } catch (HttpClientErrorException.BadRequest e) {
+                    throw new DomainException("CREDIT_LIMIT_EXCEEDED",
+                            "Crédito disponible insuficiente para esta compra.");
+                } catch (Exception e) {
+                    log.error("Error conectando con crm-service para fiado: {}", e.getMessage());
+                    throw new DomainException("CRM_ERROR",
+                            "No se pudo comunicar con el sistema de cuentas corrientes (" + e.getMessage() + ")");
+                }
+            }
+        }
 
         // Descontar stock inmediatamente
         // Propagamos la excepción para hacer rollback si falla el inventario

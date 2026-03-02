@@ -23,6 +23,8 @@ services:
     url: ${BILLING_SERVICE_URL:http://${BILLING_SERVICE_HOST:pos-billing-service.railway.internal}:${BILLING_SERVICE_PORT:8084}}
   operations:
     url: ${OPERATIONS_SERVICE_URL:http://${OPERATIONS_SERVICE_HOST:pos-operations-service.railway.internal}:${OPERATIONS_SERVICE_PORT:8086}}
+  crm:
+    url: ${CRM_SERVICE_URL:http://${CRM_SERVICE_HOST:pos-crm-service.railway.internal}:${CRM_SERVICE_PORT:8092}}
 
 spring:
   application:
@@ -35,7 +37,7 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
-      maximum-pool-size: 3
+      maximum-pool-size: 2
   
   jpa:
     hibernate:

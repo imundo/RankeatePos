@@ -241,6 +241,12 @@ export const routes: Routes = [
         loadChildren: () => import('./features/cotizaciones/cotizaciones.module').then(m => m.CotizacionesModule),
         canActivate: [authGuard, moduleGuard('quotes')]
     },
+    // === CRM & Cuentas por Cobrar ===
+    {
+        path: 'crm',
+        loadChildren: () => import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
+        canActivate: [authGuard, moduleGuard('crm')]
+    },
     // === Marketing ===
     {
         path: 'marketing/crm',

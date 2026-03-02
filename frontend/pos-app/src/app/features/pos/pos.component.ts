@@ -617,6 +617,17 @@ interface CartItem {
                     <div class="check-mark">✓</div>
                   }
                 </button>
+                
+                <button 
+                  class="payment-card credito-local"
+                  [class.selected]="selectedPaymentMethod === 'CREDITO_LOCAL'"
+                  (click)="selectedPaymentMethod = 'CREDITO_LOCAL'">
+                  <div class="card-icon">📒</div>
+                  <div class="card-label">Cuenta Corriente</div>
+                  @if (selectedPaymentMethod === 'CREDITO_LOCAL') {
+                    <div class="check-mark">✓</div>
+                  }
+                </button>
               </div>
             </div>
 
@@ -1151,6 +1162,12 @@ interface CartItem {
             <!-- MARKETING & CRM -->
             <div class="menu-section">
               <span class="section-title">Marketing & CRM</span>
+              <button *ngIf="canAccess('crm')" class="menu-item" routerLink="/crm/cuentas-por-cobrar" (click)="showMenu = false">
+                <div class="item-icon green">
+                  <i class="pi pi-book"></i>
+                </div>
+                <span class="item-text">Cuentas por Cobrar</span>
+              </button>
               <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/crm" (click)="showMenu = false">
                 <div class="item-icon blue">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3467,7 +3484,7 @@ export class PosComponent implements OnInit {
   fabOpen = false;  // Floating Action Button state
   showPendingModal = false;
   showDocsModal = false;
-  selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' = 'EFECTIVO';
+  selectedPaymentMethod: 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' | 'CREDITO_LOCAL' = 'EFECTIVO';
   cashReceived = 0;
 
   // Premium checkout modal properties
@@ -4099,6 +4116,10 @@ export class PosComponent implements OnInit {
       if (!this.clienteRut || !this.clienteRazonSocial) {
         return false;
       }
+    }
+    // Para fiado (credito local), validar que hay un cliente
+    if (this.selectedPaymentMethod === 'CREDITO_LOCAL' && !this.loyaltyCustomer()) {
+      return false;
     }
     return true;
   }

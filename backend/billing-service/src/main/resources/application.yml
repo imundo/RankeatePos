@@ -41,7 +41,7 @@ spring:
     hikari:
       pool-name: BillingPool
       minimum-idle: 1
-      maximum-pool-size: 3
+      maximum-pool-size: 2
       idle-timeout: 30000
       connection-timeout: 20000
 
