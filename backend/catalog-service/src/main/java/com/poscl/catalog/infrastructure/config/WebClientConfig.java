@@ -13,7 +13,6 @@ public class WebClientConfig {
     @Value("${services.inventory.url}")
     private String inventoryServiceUrl;
 
-    @Bean
     @Value("${services.auth.url:http://localhost:8081}")
     private String authServiceUrl;
 
