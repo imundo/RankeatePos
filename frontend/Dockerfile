@@ -19,7 +19,4 @@ FROM nginx:alpine
 COPY --from=build /app/dist/pos-app/browser /usr/share/nginx/html
 COPY pos-app/nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Set default PORT if not provided by Railway
-ENV PORT=8080
-
 CMD ["sh", "-c", "nginx -g 'daemon off;'"]
