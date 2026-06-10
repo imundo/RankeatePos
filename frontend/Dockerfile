@@ -17,6 +17,8 @@ FROM nginx:alpine
 
 # Copy built app to nginx
 COPY --from=build /app/dist/pos-app/browser /usr/share/nginx/html
-COPY pos-app/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY pos-app/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
 
 CMD ["sh", "-c", "nginx -g 'daemon off;'"]
