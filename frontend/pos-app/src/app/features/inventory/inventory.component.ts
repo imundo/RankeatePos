@@ -774,7 +774,6 @@ export class InventoryComponent implements OnInit {
         const productReq: ProductRequest = {
             sku: this.newProductForm.sku,
             nombre: this.newProductForm.nombre,
-            tipoProducto: 'FISICO',
             imagenUrl: finalImageUrl || undefined,
             variants: [{
                 sku: this.newProductForm.sku,
@@ -912,9 +911,8 @@ export class InventoryComponent implements OnInit {
         const productReq: ProductRequest = {
             sku: currentProduct.sku,
             nombre: this.editProductForm.nombre,
-            tipoProducto: currentProduct.tipoProducto,
             categoryId: currentProduct.categoryId,
-            unidadId: currentProduct.unidad, 
+            unitId: currentProduct.unitId, 
             imagenUrl: finalImageUrl,
             variants: currentProduct.variants.map(v => ({
                 sku: v.sku,
@@ -924,7 +922,7 @@ export class InventoryComponent implements OnInit {
                 precioBruto: this.editProductForm.precioBruto || 0,
                 taxId: this.editProductForm.taxId || undefined,
                 stockMinimo: v.stockMinimo,
-                codigoBarra: v.codigoBarra
+                barcode: v.codigoBarra
             }))
         };
 

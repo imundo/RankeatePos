@@ -58,8 +58,10 @@ export interface Product {
     categoryId?: string;
     categoryName?: string;
     imagenUrl?: string;
-    unidad: string;
-    tipoProducto: string;
+    unitId?: string;
+    unitCode?: string;
+    requiereVariantes?: boolean;
+    permiteVentaFraccionada?: boolean;
     activo: boolean;
     variants: ProductVariant[];
 }
@@ -69,8 +71,9 @@ export interface ProductRequest {
     nombre: string;
     descripcion?: string;
     categoryId?: string;
-    unidadId?: string;
-    tipoProducto: string;
+    unitId?: string;
+    requiereVariantes?: boolean;
+    permiteVentaFraccionada?: boolean;
     imagenUrl?: string;
     variants: VariantRequest[];
 }
@@ -85,13 +88,12 @@ export interface Tax {
 
 export interface VariantRequest {
     sku: string;
-    codigoBarra?: string;
+    barcode?: string;
     nombre?: string;
     costo?: number;
     precioNeto?: number;
     precioBruto: number;
     taxId?: string;
-    stock?: number;
     stockMinimo?: number;
     stockMaximo?: number;
     esDefault?: boolean;

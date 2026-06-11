@@ -100,12 +100,14 @@ public class CatalogController {
         public Mono<Map> createProduct(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @RequestBody Map<String, Object> request) {
 
                 return catalogWebClient.post()
                                 .uri("/api/products")
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -116,6 +118,7 @@ public class CatalogController {
         public Mono<Map> updateProduct(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id,
                         @RequestBody Map<String, Object> request) {
 
@@ -123,6 +126,7 @@ public class CatalogController {
                                 .uri("/api/products/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -133,12 +137,14 @@ public class CatalogController {
         public Mono<Void> deleteProduct(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id) {
 
                 return catalogWebClient.delete()
                                 .uri("/api/products/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .retrieve()
                                 .bodyToMono(Void.class);
         }
