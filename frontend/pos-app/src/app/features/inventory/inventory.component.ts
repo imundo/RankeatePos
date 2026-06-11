@@ -91,6 +91,10 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
          <button class="filter-btn" [class.active]="filterMode() === 'movements'" (click)="filterBy('movements')">
             <span>📋 Movimientos</span>
          </button>
+         
+         <button class="btn-primary" style="margin-left: auto;" (click)="openNewProductModal()">
+            <span>+ Nuevo Artículo</span>
+         </button>
       </div>
 
       <!-- Main Content Area -->
@@ -133,10 +137,16 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                           [class.low-stock]="item.stockBajo"
                           [class.out-of-stock]="item.cantidadDisponible <= 0">
                         
+                        <div class="product-image-container">
+                           @if (item.imageUrl) {
+                              <img [src]="item.imageUrl" [alt]="item.productName">
+                           } @else {
+                              <div class="product-icon">
+                                 {{ item.stockBajo ? '⚠️' : '📦' }}
+                              </div>
+                           }
+                        </div>
                         <div class="card-header">
-                           <div class="product-icon">
-                              {{ item.stockBajo ? '⚠️' : '📦' }}
-                           </div>
                            <div class="card-title">
                               <h3>{{ item.productName }}</h3>
                               <span class="sku">{{ item.variantSku }}</span>
@@ -159,8 +169,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                         </div>
 
                         <div class="card-actions">
-                           <button (click)="openAdjustModalForStock(item, $event)"> Ajustar</button>
-                           <button class="btn-restock" (click)="quickRestock(item, $event)">+ Reponer</button>
+                           <button class="btn-restock" (click)="quickRestock(item, $event)">Reponer</button>
                         </div>
                      </div>
                   }
@@ -233,6 +242,58 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
             </div>
          </div>
       }
+
+      <!-- New Product Modal -->
+      @if (showNewProductModal) {
+         <div class="modal-overlay" (click)="closeNewProductModal()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+               <h2>Nuevo Artículo</h2>
+               
+               <div class="form-group">
+                  <label>Nombre del Artículo</label>
+                  <input type="text" [(ngModel)]="newProductForm.nombre" placeholder="Ej: Coca Cola Zero 500ml" autofocus>
+               </div>
+
+               <div class="form-group">
+                  <label>Código (SKU / Barcode)</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                     <input type="text" [(ngModel)]="newProductForm.sku" placeholder="Escanear o generar..." style="flex: 1;">
+                     <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="generateSku()" title="Generar SKU aleatorio">
+                        🎲
+                     </button>
+                     <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="scanBarcodeForNewProduct()" title="Escanear con cámara">
+                        📷
+                     </button>
+                  </div>
+               </div>
+
+               <div class="form-group">
+                  <label>Foto (URL de imagen o Base64)</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                      <input type="text" [(ngModel)]="newProductForm.imageUrl" placeholder="https://..." style="flex: 1;">
+                      <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="takePhoto()" title="Tomar foto">
+                          📸
+                      </button>
+                  </div>
+                  @if (newProductForm.imageUrl) {
+                      <div style="margin-top: 0.5rem; height: 100px; border-radius: 8px; overflow: hidden; display: inline-block;">
+                          <img [src]="newProductForm.imageUrl" style="height: 100%; object-fit: cover;">
+                      </div>
+                  }
+               </div>
+
+               <div class="form-group">
+                  <label>Stock Inicial</label>
+                  <input type="number" [(ngModel)]="newProductForm.stockInicial" min="0">
+               </div>
+
+               <div class="modal-actions">
+                  <button class="btn-cancel" (click)="closeNewProductModal()">Cancelar</button>
+                  <button class="btn-confirm" (click)="submitNewProduct()">Guardar</button>
+               </div>
+            </div>
+         </div>
+      }
     </div>
   `,
   styleUrls: ['./inventory.component.scss']
@@ -266,6 +327,14 @@ export class InventoryComponent implements OnInit {
     cantidad: 1,
     motivo: '',
     documentoReferencia: ''
+  };
+
+  showNewProductModal = false;
+  newProductForm = {
+    nombre: '',
+    sku: '',
+    imageUrl: '',
+    stockInicial: 0
   };
 
   // Computed
@@ -462,6 +531,76 @@ export class InventoryComponent implements OnInit {
   closeAdjustModal() {
     this.showAdjustModal = false;
     this.selectedStockItem = null;
+  }
+
+  // --- New Product Logic ---
+  openNewProductModal() {
+    this.newProductForm = { nombre: '', sku: '', imageUrl: '', stockInicial: 0 };
+    this.showNewProductModal = true;
+  }
+
+  closeNewProductModal() {
+    this.showNewProductModal = false;
+  }
+
+  generateSku() {
+    this.newProductForm.sku = 'ART-' + Math.floor(1000 + Math.random() * 9000);
+  }
+
+  scanBarcodeForNewProduct() {
+    // Basic implementation for demo. In a real app, this would open a camera scanner modal.
+    const mockBarcode = '780' + Math.floor(100000000 + Math.random() * 900000000);
+    alert('Escáner activado. Código simulado capturado: ' + mockBarcode);
+    this.newProductForm.sku = mockBarcode;
+  }
+
+  takePhoto() {
+    // Basic implementation. In a real app, uses navigator.mediaDevices.getUserMedia
+    const mockImage = 'https://images.unsplash.com/photo-1574226516831-e1dff420e562?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+    alert('Cámara activada. Foto simulada capturada.');
+    this.newProductForm.imageUrl = mockImage;
+  }
+
+  async submitNewProduct() {
+    if (!this.newProductForm.nombre || !this.newProductForm.sku) {
+        alert('Nombre y SKU son obligatorios');
+        return;
+    }
+    
+    // In a real app, we would call CatalogService.createProduct() and then StockService.adjustStock()
+    // For now, we will just simulate a successful save by adding it to the local cache and reloading
+    console.log('Guardando producto...', this.newProductForm);
+    this.loading.set(true);
+    
+    try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Simulating the result from backend
+        const newStockItem: StockDto = {
+            id: 'mock-id-' + Date.now(),
+            variantId: 'mock-variant-' + Date.now(),
+            variantSku: this.newProductForm.sku,
+            productName: this.newProductForm.nombre,
+            branchId: this.branchContext.activeBranchId() || '',
+            cantidadActual: this.newProductForm.stockInicial,
+            cantidadReservada: 0,
+            cantidadDisponible: this.newProductForm.stockInicial,
+            stockMinimo: 5,
+            stockBajo: this.newProductForm.stockInicial <= 5,
+            updatedAt: new Date().toISOString(),
+            imageUrl: this.newProductForm.imageUrl
+        };
+
+        this.stock.update(items => [newStockItem, ...items]);
+        this.closeNewProductModal();
+        alert('Producto creado exitosamente (Simulado para frontend)');
+    } catch (e) {
+        console.error(e);
+        alert('Error al crear producto');
+    } finally {
+        this.loading.set(false);
+    }
   }
 
   searchProducts() {

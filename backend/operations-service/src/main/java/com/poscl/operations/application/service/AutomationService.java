@@ -71,8 +71,7 @@ public class AutomationService {
                         .build());
     }
 
-    @Transactional
-    public com.poscl.operations.domain.entity.AutomationConfig saveAutomationConfig(
+    public synchronized com.poscl.operations.domain.entity.AutomationConfig saveAutomationConfig(
             com.poscl.operations.domain.entity.AutomationConfig config) {
         // Check if exists
         var existing = automationConfigRepository.findByTenantId(config.getTenantId());

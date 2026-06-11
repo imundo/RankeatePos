@@ -290,7 +290,7 @@
 
 .stock-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
 }
 
@@ -298,10 +298,12 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    padding: 1.25rem;
+    padding: 1rem; /* Slightly reduced padding to fit more cards */
     transition: all 0.2s;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 
     &:hover {
         background: rgba(255, 255, 255, 0.06);
@@ -310,41 +312,49 @@
     }
 
     &.low-stock {
-        border-left: 4px solid #f59e0b;
+        border-top: 4px solid #f59e0b; /* Moved to top to look better with images */
+        border-left: none;
     }
 
     &.out-of-stock {
-        border-left: 4px solid #ef4444;
+        border-top: 4px solid #ef4444;
+        border-left: none;
 
-        .product-image {
+        .product-image-container {
             opacity: 0.5;
             filter: grayscale(1);
         }
     }
 
+    .product-image-container {
+        width: 100%;
+        height: 120px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
     .card-header {
         display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-
-        .product-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
 
         .card-title {
-            flex: 1;
-            overflow: hidden;
-
             h3 {
                 margin: 0;
-                font-size: 1rem;
+                font-size: 0.95rem;
                 font-weight: 600;
                 white-space: nowrap;
                 overflow: hidden;
@@ -362,12 +372,13 @@
 
     .stock-status {
         margin-bottom: 1rem;
+        flex: 1;
 
         .status-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 0.5rem;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #cbd5e1;
         }
 
@@ -400,16 +411,18 @@
     .card-actions {
         display: flex;
         gap: 0.5rem;
+        margin-top: auto;
 
         button {
             flex: 1;
-            padding: 0.5rem;
+            padding: 0.75rem; /* Larger touch target */
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: transparent;
             color: #e2e8f0;
             cursor: pointer;
             font-size: 0.85rem;
+            font-weight: 600;
             transition: all 0.2s;
 
             &:hover {

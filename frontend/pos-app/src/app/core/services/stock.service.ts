@@ -17,6 +17,7 @@ export interface StockDto {
     stockMinimo: number;
     stockBajo: boolean;
     updatedAt: string;
+    imageUrl?: string;
 }
 
 export interface StockMovementDto {
