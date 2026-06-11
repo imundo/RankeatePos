@@ -7,7 +7,7 @@ import { StockService, StockDto, StockMovementDto, TipoMovimiento, StockAdjustme
 import { OfflineService, CachedProduct } from '@core/offline/offline.service';
 import { BranchContextService } from '@core/services/branch-context.service';
 import { BranchService } from '@core/services/branches.service';
-import { CatalogService, ProductRequest } from '@core/services/catalog.service';
+import { CatalogService, ProductRequest, Tax } from '@core/services/catalog.service';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 @Component({
@@ -154,6 +154,15 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                            </div>
                         </div>
 
+                        @if ((item as any).precioBruto > 0) {
+                           <div class="card-price">
+                              <span class="price-value">${{ (item as any).precioBruto | number }}</span>
+                              @if ((item as any).marginPercentage > 0) {
+                                 <span class="price-margin">+{{ (item as any).marginPercentage | number:'1.0-1' }}%</span>
+                              }
+                           </div>
+                        }
+
                         <div class="stock-status">
                            <div class="status-header">
                               <span>Disponible: {{ item.cantidadDisponible }}</span>
@@ -248,7 +257,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
       <!-- New Product Modal -->
       @if (showNewProductModal) {
          <div class="modal-overlay" (click)="closeNewProductModal()">
-            <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-content" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
                <h2>Nuevo Artículo</h2>
                
                <div class="form-group">
@@ -286,6 +295,37 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                </div>
 
                <div class="form-group">
+                  <label>Costo (Precio de Compra)</label>
+                  <input type="number" [(ngModel)]="newProductForm.costo" min="0" placeholder="0" (ngModelChange)="recalcNewProduct()">
+               </div>
+
+               <div class="form-group">
+                  <label>Precio de Venta (Neto sin IVA)</label>
+                  <input type="number" [(ngModel)]="newProductForm.precioNeto" min="0" placeholder="0" (ngModelChange)="recalcNewProduct()">
+               </div>
+
+               <div class="form-group">
+                  <label>Impuesto (IVA)</label>
+                  <select [(ngModel)]="newProductForm.taxId" (ngModelChange)="recalcNewProduct()">
+                     <option value="">Sin impuesto</option>
+                     @for (tax of taxes(); track tax.id) {
+                        <option [value]="tax.id">{{ tax.nombre }} ({{ tax.porcentaje }}%)</option>
+                     }
+                  </select>
+               </div>
+
+               <div class="form-group" style="display: flex; gap: 1rem;">
+                  <div style="flex: 1;">
+                     <label>Precio Bruto</label>
+                     <input type="number" [ngModel]="newProductForm.precioBruto" disabled style="opacity: 0.7; cursor: not-allowed;">
+                  </div>
+                  <div style="flex: 1;">
+                     <label>Margen</label>
+                     <input type="text" [value]="newProductForm.margen" disabled style="opacity: 0.7; cursor: not-allowed;">
+                  </div>
+               </div>
+
+               <div class="form-group">
                   <label>Stock Inicial</label>
                   <input type="number" [(ngModel)]="newProductForm.stockInicial" min="0">
                </div>
@@ -301,7 +341,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
       <!-- Edit Product Modal -->
       @if (showEditProductModal) {
          <div class="modal-overlay" (click)="closeEditProductModal()">
-            <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-content" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto;">
                <h2>Editar Artículo</h2>
                
                <div class="form-group">
@@ -330,6 +370,37 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                   }
                </div>
 
+               <div class="form-group">
+                  <label>Costo (Precio de Compra)</label>
+                  <input type="number" [(ngModel)]="editProductForm.costo" min="0" placeholder="0" (ngModelChange)="recalcEditProduct()">
+               </div>
+
+               <div class="form-group">
+                  <label>Precio de Venta (Neto sin IVA)</label>
+                  <input type="number" [(ngModel)]="editProductForm.precioNeto" min="0" placeholder="0" (ngModelChange)="recalcEditProduct()">
+               </div>
+
+               <div class="form-group">
+                  <label>Impuesto (IVA)</label>
+                  <select [(ngModel)]="editProductForm.taxId" (ngModelChange)="recalcEditProduct()">
+                     <option value="">Sin impuesto</option>
+                     @for (tax of taxes(); track tax.id) {
+                        <option [value]="tax.id">{{ tax.nombre }} ({{ tax.porcentaje }}%)</option>
+                     }
+                  </select>
+               </div>
+
+               <div class="form-group" style="display: flex; gap: 1rem;">
+                  <div style="flex: 1;">
+                     <label>Precio Bruto</label>
+                     <input type="number" [ngModel]="editProductForm.precioBruto" disabled style="opacity: 0.7; cursor: not-allowed;">
+                  </div>
+                  <div style="flex: 1;">
+                     <label>Margen</label>
+                     <input type="text" [value]="editProductForm.margen" disabled style="opacity: 0.7; cursor: not-allowed;">
+                  </div>
+               </div>
+
                <div class="modal-actions">
                   <button class="btn-cancel" (click)="closeEditProductModal()">Cancelar</button>
                   <button class="btn-confirm" (click)="submitEditProduct()">Actualizar</button>
@@ -354,7 +425,8 @@ export class InventoryComponent implements OnInit {
   lowStockCount = signal(0);
   movements = signal<StockMovementDto[]>([]);
   loading = signal(false);
-  filterMode = signal<'all' | 'low' | 'movements'>('all'); // Filter state
+  filterMode = signal<'all' | 'low' | 'movements'>('all');
+  taxes = signal<Tax[]>([]);
   currentBranchName = computed(() => this.branchContext.activeBranch()?.nombre || '');
 
   searchQuery = '';
@@ -379,6 +451,11 @@ export class InventoryComponent implements OnInit {
     nombre: '',
     sku: '',
     imageUrl: '',
+    costo: 0,
+    precioNeto: 0,
+    precioBruto: 0,
+    taxId: '',
+    margen: '0%',
     stockInicial: 0
   };
 
@@ -389,7 +466,12 @@ export class InventoryComponent implements OnInit {
     nombre: '',
     sku: '',
     imageUrl: '',
-    originalVariantId: ''
+    originalVariantId: '',
+    costo: 0,
+    precioNeto: 0,
+    precioBruto: 0,
+    taxId: '',
+    margen: '0%'
   };
 
   // Computed
@@ -462,6 +544,16 @@ export class InventoryComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.loadTaxes();
+  }
+
+  async loadTaxes() {
+    try {
+      const taxes = await this.catalogService.getTaxes().toPromise();
+      this.taxes.set(taxes || []);
+    } catch (e) {
+      console.warn('Failed to load taxes', e);
+    }
   }
 
   async loadData(forceApi = false) {
@@ -527,8 +619,33 @@ export class InventoryComponent implements OnInit {
         return [];
       });
 
-      this.stock.set(stockData || []);
-      const manualCount = (stockData || []).filter(i => i.stockBajo).length;
+      // 3. Enrich stock with images and prices from catalog
+      let enrichedStock = stockData || [];
+      try {
+        const productsRes = await this.catalogService.getProducts(0, 200).toPromise();
+        if (productsRes && productsRes.content) {
+          const productMap = new Map<string, any>();
+          for (const p of productsRes.content) {
+            if (p.variants) {
+              for (const v of p.variants) {
+                productMap.set(v.sku, { imagenUrl: p.imagenUrl, precioBruto: v.precioBruto, precioNeto: v.precioNeto, costo: v.costo, marginPercentage: v.marginPercentage });
+              }
+            }
+          }
+          enrichedStock = enrichedStock.map(s => {
+            const catalogInfo = productMap.get(s.variantSku);
+            if (catalogInfo) {
+              return { ...s, imageUrl: catalogInfo.imagenUrl || s.imageUrl, precioBruto: catalogInfo.precioBruto, precioNeto: catalogInfo.precioNeto, costo: catalogInfo.costo, marginPercentage: catalogInfo.marginPercentage };
+            }
+            return s;
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to enrich stock with catalog data', e);
+      }
+
+      this.stock.set(enrichedStock);
+      const manualCount = enrichedStock.filter(i => i.stockBajo).length;
       this.lowStockCount.set(manualCount);
 
     } catch (e) {
@@ -590,9 +707,22 @@ export class InventoryComponent implements OnInit {
 
   // --- New Product Logic ---
   openNewProductModal() {
-    this.newProductForm = { nombre: '', sku: '', imageUrl: '', stockInicial: 0 };
+    const defaultTax = this.taxes().find(t => t.esDefault);
+    this.newProductForm = { nombre: '', sku: '', imageUrl: '', costo: 0, precioNeto: 0, precioBruto: 0, taxId: defaultTax?.id || '', margen: '0%', stockInicial: 0 };
     this.selectedFile = null;
     this.showNewProductModal = true;
+  }
+
+  recalcNewProduct() {
+    const tax = this.taxes().find(t => t.id === this.newProductForm.taxId);
+    const taxRate = tax ? tax.porcentaje / 100 : 0;
+    this.newProductForm.precioBruto = Math.round(this.newProductForm.precioNeto * (1 + taxRate));
+    if (this.newProductForm.costo > 0 && this.newProductForm.precioNeto > 0) {
+      const margin = ((this.newProductForm.precioNeto - this.newProductForm.costo) / this.newProductForm.costo) * 100;
+      this.newProductForm.margen = margin.toFixed(1) + '%';
+    } else {
+      this.newProductForm.margen = '0%';
+    }
   }
 
   closeNewProductModal() {
@@ -642,21 +772,21 @@ export class InventoryComponent implements OnInit {
 
         // 2. Crear producto en CatalogService
         const productReq: ProductRequest = {
-            sku: this.newProductForm.sku, // si está vacío, el backend lo autogenerará
+            sku: this.newProductForm.sku,
             nombre: this.newProductForm.nombre,
             tipoProducto: 'FISICO',
+            imagenUrl: finalImageUrl || undefined,
             variants: [{
                 sku: this.newProductForm.sku,
                 nombre: 'Default',
-                precioBruto: 0,
-                stockMinimo: 5
+                costo: this.newProductForm.costo || 0,
+                precioNeto: this.newProductForm.precioNeto || 0,
+                precioBruto: this.newProductForm.precioBruto || 0,
+                taxId: this.newProductForm.taxId || undefined,
+                stockMinimo: 5,
+                esDefault: true
             }]
         };
-
-        if (finalImageUrl) {
-            // asumiendo que agregamos imageUrl a ProductRequest si no está, o lo recibe el backend
-            (productReq as any).imagenUrl = finalImageUrl; 
-        }
 
         const createdProduct = await this.catalogService.createProduct(productReq).toPromise();
 
@@ -696,12 +826,26 @@ export class InventoryComponent implements OnInit {
         const res = await this.catalogService.getProducts(0, 1, item.variantSku).toPromise();
         if (res && res.content && res.content.length > 0) {
             const product = res.content[0];
+            const defaultVariant = product.variants?.[0];
+            const currentTaxId = defaultVariant?.taxId || '';
+            const costo = defaultVariant?.costo || 0;
+            const precioNeto = defaultVariant?.precioNeto || 0;
+            const precioBruto = defaultVariant?.precioBruto || 0;
+            let margen = '0%';
+            if (costo > 0 && precioNeto > 0) {
+                margen = (((precioNeto - costo) / costo) * 100).toFixed(1) + '%';
+            }
             this.editProductForm = {
                 id: product.id,
                 nombre: product.nombre,
                 sku: product.sku,
                 imageUrl: product.imagenUrl || '',
-                originalVariantId: item.variantId
+                originalVariantId: item.variantId,
+                costo,
+                precioNeto,
+                precioBruto,
+                taxId: currentTaxId,
+                margen
             };
             this.selectedEditFile = null;
             this.showEditProductModal = true;
@@ -718,6 +862,18 @@ export class InventoryComponent implements OnInit {
 
   closeEditProductModal() {
     this.showEditProductModal = false;
+  }
+
+  recalcEditProduct() {
+    const tax = this.taxes().find(t => t.id === this.editProductForm.taxId);
+    const taxRate = tax ? tax.porcentaje / 100 : 0;
+    this.editProductForm.precioBruto = Math.round(this.editProductForm.precioNeto * (1 + taxRate));
+    if (this.editProductForm.costo > 0 && this.editProductForm.precioNeto > 0) {
+      const margin = ((this.editProductForm.precioNeto - this.editProductForm.costo) / this.editProductForm.costo) * 100;
+      this.editProductForm.margen = margin.toFixed(1) + '%';
+    } else {
+      this.editProductForm.margen = '0%';
+    }
   }
 
   onEditFileSelected(event: any) {
@@ -763,7 +919,10 @@ export class InventoryComponent implements OnInit {
             variants: currentProduct.variants.map(v => ({
                 sku: v.sku,
                 nombre: v.nombre,
-                precioBruto: v.precioBruto,
+                costo: this.editProductForm.costo || 0,
+                precioNeto: this.editProductForm.precioNeto || 0,
+                precioBruto: this.editProductForm.precioBruto || 0,
+                taxId: this.editProductForm.taxId || undefined,
                 stockMinimo: v.stockMinimo,
                 codigoBarra: v.codigoBarra
             }))

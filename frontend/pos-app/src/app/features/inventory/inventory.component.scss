@@ -298,12 +298,12 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    padding: 1rem; /* Slightly reduced padding to fit more cards */
+    padding: 1rem 1rem 0.75rem;
     transition: all 0.2s;
     position: relative;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 280px;
 
     &:hover {
         background: rgba(255, 255, 255, 0.06);
@@ -312,7 +312,7 @@
     }
 
     &.low-stock {
-        border-top: 4px solid #f59e0b; /* Moved to top to look better with images */
+        border-top: 4px solid #f59e0b;
         border-left: none;
     }
 
@@ -328,15 +328,16 @@
 
     .product-image-container {
         width: 100%;
-        height: 120px;
+        height: 100px;
         border-radius: 12px;
         overflow: hidden;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
         background: rgba(255, 255, 255, 0.05);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 2rem;
+        flex-shrink: 0;
 
         img {
             width: 100%;
@@ -348,13 +349,13 @@
     .card-header {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
+        gap: 0.25rem;
+        margin-bottom: 0.5rem;
 
         .card-title {
             h3 {
                 margin: 0;
-                font-size: 0.95rem;
+                font-size: 0.9rem;
                 font-weight: 600;
                 white-space: nowrap;
                 overflow: hidden;
@@ -362,28 +363,49 @@
             }
 
             .sku {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 color: #94a3b8;
                 display: block;
-                margin-top: 0.25rem;
+                margin-top: 0.15rem;
             }
         }
     }
 
+    .card-price {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+
+        .price-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .price-margin {
+            font-size: 0.7rem;
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+    }
+
     .stock-status {
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
         flex: 1;
 
         .status-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.8rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.75rem;
             color: #cbd5e1;
         }
 
         .progress-bar {
-            height: 6px;
+            height: 5px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             overflow: hidden;
@@ -410,20 +432,22 @@
 
     .card-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.4rem;
         margin-top: auto;
+        flex-shrink: 0;
 
         button {
             flex: 1;
-            padding: 0.75rem; /* Larger touch target */
+            padding: 0.5rem 0.25rem;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: transparent;
             color: #e2e8f0;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
             transition: all 0.2s;
+            white-space: nowrap;
 
             &:hover {
                 background: rgba(255, 255, 255, 0.1);

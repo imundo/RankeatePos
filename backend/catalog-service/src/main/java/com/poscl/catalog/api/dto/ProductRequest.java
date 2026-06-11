@@ -15,7 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductRequest {
 
-    @NotBlank(message = "El SKU es obligatorio")
     @Size(max = 50)
     private String sku;
 
@@ -28,7 +27,6 @@ public class ProductRequest {
 
     private UUID categoryId;
 
-    @NotNull(message = "La unidad es obligatoria")
     private UUID unitId;
 
     private Boolean requiereVariantes;
@@ -44,7 +42,6 @@ public class ProductRequest {
     @AllArgsConstructor
     public static class VariantRequest {
 
-        @NotBlank(message = "El SKU de variante es obligatorio")
         @Size(max = 50)
         private String sku;
 
@@ -57,11 +54,9 @@ public class ProductRequest {
         @Min(value = 0, message = "El costo no puede ser negativo")
         private Integer costo;
 
-        @NotNull(message = "El precio neto es obligatorio")
         @Min(value = 0, message = "El precio neto no puede ser negativo")
         private Integer precioNeto;
 
-        @NotNull(message = "El precio bruto es obligatorio")
         @Min(value = 0, message = "El precio bruto no puede ser negativo")
         private Integer precioBruto;
 

@@ -36,11 +36,18 @@ export interface ProductVariant {
     sku: string;
     codigoBarra?: string;
     nombre?: string;
+    costo?: number;
     precioBruto: number;
     precioNeto: number;
+    taxId?: string;
+    taxPercentage?: number;
     stock: number;
     stockMinimo: number;
+    stockMaximo?: number;
     activo: boolean;
+    esDefault?: boolean;
+    marginPercentage?: number;
+    marginAbsolute?: number;
 }
 
 export interface Product {
@@ -68,13 +75,26 @@ export interface ProductRequest {
     variants: VariantRequest[];
 }
 
+export interface Tax {
+    id: string;
+    nombre: string;
+    porcentaje: number;
+    esDefault: boolean;
+    activo: boolean;
+}
+
 export interface VariantRequest {
     sku: string;
     codigoBarra?: string;
     nombre?: string;
+    costo?: number;
+    precioNeto?: number;
     precioBruto: number;
+    taxId?: string;
     stock?: number;
     stockMinimo?: number;
+    stockMaximo?: number;
+    esDefault?: boolean;
 }
 
 @Injectable({
@@ -195,7 +215,6 @@ export class CatalogService {
         const formData = new FormData();
         formData.append('file', file);
         
-        // We might not need the JSON headers for multipart/form-data
         const headers = {
             'X-Tenant-Id': this.authService.getTenantId() || '',
             'X-User-Id': this.authService.getUserId() || ''
@@ -203,6 +222,14 @@ export class CatalogService {
 
         return this.http.post<{ url: string, fileName: string }>(`${this.baseUrl}/images/upload`, formData, {
             headers
+        });
+    }
+
+    // ========== TAXES ==========
+
+    getTaxes(): Observable<Tax[]> {
+        return this.http.get<Tax[]>(`${this.baseUrl}/taxes`, {
+            headers: this.getHeaders()
         });
     }
 }

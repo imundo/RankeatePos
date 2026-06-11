@@ -5,10 +5,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -151,17 +152,21 @@ public class CatalogController {
         public Mono<Map> uploadImage(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
-                        ServerWebExchange exchange) {
+                        @RequestParam("file") MultipartFile file) {
 
-                return exchange.getMultipartData().flatMap(parts -> 
-                        catalogWebClient.post()
+                log.info("BFF: POST /api/images/upload - file={}, size={}", file.getOriginalFilename(), file.getSize());
+
+                MultipartBodyBuilder builder = new MultipartBodyBuilder();
+                builder.part("file", file.getResource());
+
+                return catalogWebClient.post()
                                 .uri("/api/images/upload")
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
-                                .body(BodyInserters.fromMultipartData(parts))
+                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .body(BodyInserters.fromMultipartData(builder.build()))
                                 .retrieve()
-                                .bodyToMono(Map.class)
-                );
+                                .bodyToMono(Map.class);
         }
 
         // =====================================================
@@ -202,6 +207,29 @@ public class CatalogController {
                                 .header("X-Tenant-Id", tenantId)
                                 .retrieve()
                                 .bodyToMono(Map.class);
+        }
+
+        // =====================================================
+        // TAXES ENDPOINTS
+        // =====================================================
+
+        @GetMapping("/api/taxes")
+        @Operation(summary = "List taxes", description = "Get all taxes for tenant")
+        public Mono<List> listTaxes(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId) {
+
+                if (tenantId == null || tenantId.isEmpty()) {
+                        return Mono.just(Collections.emptyList());
+                }
+
+                return catalogWebClient.get()
+                                .uri("/api/taxes")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId)
+                                .retrieve()
+                                .bodyToMono(List.class)
+                                .onErrorReturn(Collections.emptyList());
         }
 
 }
