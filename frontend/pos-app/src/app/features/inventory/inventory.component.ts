@@ -171,6 +171,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
 
                         <div class="card-actions">
                            <button class="btn-restock" (click)="quickRestock(item, $event)">Reponer</button>
+                           <button class="btn-edit-small" (click)="openEditProductModal(item, $event)">Editar</button>
                         </div>
                      </div>
                   }
@@ -296,6 +297,46 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
             </div>
          </div>
       }
+
+      <!-- Edit Product Modal -->
+      @if (showEditProductModal) {
+         <div class="modal-overlay" (click)="closeEditProductModal()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+               <h2>Editar Artículo</h2>
+               
+               <div class="form-group">
+                  <label>Nombre del Artículo</label>
+                  <input type="text" [(ngModel)]="editProductForm.nombre" placeholder="Nombre" autofocus>
+               </div>
+
+               <div class="form-group">
+                  <label>Código (SKU)</label>
+                  <input type="text" [ngModel]="editProductForm.sku" disabled style="opacity: 0.7; cursor: not-allowed;">
+               </div>
+
+               <div class="form-group">
+                  <label>Foto</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                      <input type="text" [(ngModel)]="editProductForm.imageUrl" placeholder="Sube una foto" style="flex: 1;" disabled>
+                      <input type="file" #editFileInput accept="image/*" capture="environment" style="display: none;" (change)="onEditFileSelected($event)">
+                      <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="editFileInput.click()" title="Cambiar foto">
+                          📸
+                      </button>
+                  </div>
+                  @if (editProductForm.imageUrl) {
+                      <div style="margin-top: 0.5rem; height: 100px; border-radius: 8px; overflow: hidden; display: inline-block;">
+                          <img [src]="editProductForm.imageUrl" style="height: 100%; object-fit: cover;">
+                      </div>
+                  }
+               </div>
+
+               <div class="modal-actions">
+                  <button class="btn-cancel" (click)="closeEditProductModal()">Cancelar</button>
+                  <button class="btn-confirm" (click)="submitEditProduct()">Actualizar</button>
+               </div>
+            </div>
+         </div>
+      }
     </div>
   `,
   styleUrls: ['./inventory.component.scss']
@@ -339,6 +380,16 @@ export class InventoryComponent implements OnInit {
     sku: '',
     imageUrl: '',
     stockInicial: 0
+  };
+
+  showEditProductModal = false;
+  selectedEditFile: File | null = null;
+  editProductForm = {
+    id: '',
+    nombre: '',
+    sku: '',
+    imageUrl: '',
+    originalVariantId: ''
   };
 
   // Computed
@@ -631,6 +682,101 @@ export class InventoryComponent implements OnInit {
     } catch (e: any) {
         console.error(e);
         alert('Error al crear producto: ' + (e.error?.message || e.message));
+    } finally {
+        this.loading.set(false);
+    }
+  }
+
+  // --- Edit Product Logic ---
+  async openEditProductModal(item: StockDto, event: Event) {
+    event.stopPropagation();
+    this.loading.set(true);
+    try {
+        // Fetch full product by searching SKU to get the main Product ID
+        const res = await this.catalogService.getProducts(0, 1, item.variantSku).toPromise();
+        if (res && res.content && res.content.length > 0) {
+            const product = res.content[0];
+            this.editProductForm = {
+                id: product.id,
+                nombre: product.nombre,
+                sku: product.sku,
+                imageUrl: product.imagenUrl || '',
+                originalVariantId: item.variantId
+            };
+            this.selectedEditFile = null;
+            this.showEditProductModal = true;
+        } else {
+            alert('No se pudo cargar la información del producto.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Error al buscar producto');
+    } finally {
+        this.loading.set(false);
+    }
+  }
+
+  closeEditProductModal() {
+    this.showEditProductModal = false;
+  }
+
+  onEditFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 1048576) {
+        alert('El archivo es demasiado grande. Máximo 1MB.');
+        return;
+      }
+      this.selectedEditFile = file;
+      this.editProductForm.imageUrl = URL.createObjectURL(file);
+    }
+  }
+
+  async submitEditProduct() {
+    if (!this.editProductForm.nombre) {
+        alert('El nombre es obligatorio');
+        return;
+    }
+    
+    this.loading.set(true);
+    try {
+        let finalImageUrl = this.editProductForm.imageUrl;
+
+        if (this.selectedEditFile) {
+            const uploadRes = await this.catalogService.uploadImage(this.selectedEditFile).toPromise();
+            if (uploadRes && uploadRes.url) {
+                finalImageUrl = uploadRes.url;
+            }
+        }
+
+        // We need the existing product to update it without losing variants
+        const currentProduct = await this.catalogService.getProduct(this.editProductForm.id).toPromise();
+        if (!currentProduct) throw new Error('Producto no encontrado');
+
+        const productReq: ProductRequest = {
+            sku: currentProduct.sku,
+            nombre: this.editProductForm.nombre,
+            tipoProducto: currentProduct.tipoProducto,
+            categoryId: currentProduct.categoryId,
+            unidadId: currentProduct.unidad, 
+            imagenUrl: finalImageUrl,
+            variants: currentProduct.variants.map(v => ({
+                sku: v.sku,
+                nombre: v.nombre,
+                precioBruto: v.precioBruto,
+                stockMinimo: v.stockMinimo,
+                codigoBarra: v.codigoBarra
+            }))
+        };
+
+        await this.catalogService.updateProduct(this.editProductForm.id, productReq).toPromise();
+
+        alert('Producto actualizado exitosamente');
+        this.closeEditProductModal();
+        this.loadData(true);
+    } catch (e: any) {
+        console.error(e);
+        alert('Error al actualizar producto: ' + (e.error?.message || e.message));
     } finally {
         this.loading.set(false);
     }

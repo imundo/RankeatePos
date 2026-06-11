@@ -438,6 +438,16 @@
                     background: rgba(99, 102, 241, 0.2);
                 }
             }
+
+            &.btn-edit-small {
+                background: rgba(16, 185, 129, 0.1);
+                color: #34d399;
+                border-color: rgba(16, 185, 129, 0.3);
+
+                &:hover {
+                    background: rgba(16, 185, 129, 0.2);
+                }
+            }
         }
     }
 }
