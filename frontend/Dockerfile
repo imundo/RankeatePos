@@ -16,6 +16,7 @@ RUN npm run build:railway
 FROM nginx:alpine
 
 ENV PORT=80
+ENV NGINX_ENVSUBST_FILTER=PORT
 
 # Copy built app to nginx
 COPY --from=build /app/dist/pos-app/browser /usr/share/nginx/html
@@ -23,4 +24,4 @@ COPY pos-app/nginx.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]
