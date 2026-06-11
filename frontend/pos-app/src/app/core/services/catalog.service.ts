@@ -64,6 +64,7 @@ export interface ProductRequest {
     categoryId?: string;
     unidadId?: string;
     tipoProducto: string;
+    imagenUrl?: string;
     variants: VariantRequest[];
 }
 
@@ -185,6 +186,23 @@ export class CatalogService {
     deleteProduct(id: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/products/${id}`, {
             headers: this.getHeaders()
+        });
+    }
+
+    // ========== IMAGES ==========
+
+    uploadImage(file: File): Observable<{ url: string, fileName: string }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // We might not need the JSON headers for multipart/form-data
+        const headers = {
+            'X-Tenant-Id': this.authService.getTenantId() || '',
+            'X-User-Id': this.authService.getUserId() || ''
+        };
+
+        return this.http.post<{ url: string, fileName: string }>(`${this.baseUrl}/images/upload`, formData, {
+            headers
         });
     }
 }

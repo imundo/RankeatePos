@@ -7,6 +7,7 @@ import { StockService, StockDto, StockMovementDto, TipoMovimiento, StockAdjustme
 import { OfflineService, CachedProduct } from '@core/offline/offline.service';
 import { BranchContextService } from '@core/services/branch-context.service';
 import { BranchService } from '@core/services/branches.service';
+import { CatalogService, ProductRequest } from '@core/services/catalog.service';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 
 @Component({
@@ -268,10 +269,11 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                </div>
 
                <div class="form-group">
-                  <label>Foto (URL de imagen o Base64)</label>
+                  <label>Foto</label>
                   <div style="display: flex; gap: 0.5rem;">
-                      <input type="text" [(ngModel)]="newProductForm.imageUrl" placeholder="https://..." style="flex: 1;">
-                      <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="takePhoto()" title="Tomar foto">
+                      <input type="text" [(ngModel)]="newProductForm.imageUrl" placeholder="Sube una foto o pon URL" style="flex: 1;" disabled>
+                      <input type="file" #fileInput accept="image/*" capture="environment" style="display: none;" (change)="onFileSelected($event)">
+                      <button class="filter-btn" style="height: auto; padding: 0.5rem;" (click)="fileInput.click()" title="Tomar foto o elegir galería">
                           📸
                       </button>
                   </div>
@@ -304,6 +306,7 @@ export class InventoryComponent implements OnInit {
   private offlineService = inject(OfflineService);
   private branchContext = inject(BranchContextService);
   private branchService = inject(BranchService);
+  private catalogService = inject(CatalogService);
 
   // Signals
   stock = signal<StockDto[]>([]);
@@ -330,6 +333,7 @@ export class InventoryComponent implements OnInit {
   };
 
   showNewProductModal = false;
+  selectedFile: File | null = null;
   newProductForm = {
     nombre: '',
     sku: '',
@@ -536,6 +540,7 @@ export class InventoryComponent implements OnInit {
   // --- New Product Logic ---
   openNewProductModal() {
     this.newProductForm = { nombre: '', sku: '', imageUrl: '', stockInicial: 0 };
+    this.selectedFile = null;
     this.showNewProductModal = true;
   }
 
@@ -554,50 +559,78 @@ export class InventoryComponent implements OnInit {
     this.newProductForm.sku = mockBarcode;
   }
 
-  takePhoto() {
-    // Basic implementation. In a real app, uses navigator.mediaDevices.getUserMedia
-    const mockImage = 'https://images.unsplash.com/photo-1574226516831-e1dff420e562?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
-    alert('Cámara activada. Foto simulada capturada.');
-    this.newProductForm.imageUrl = mockImage;
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 1048576) {
+        alert('El archivo es demasiado grande. Máximo 1MB.');
+        return;
+      }
+      this.selectedFile = file;
+      this.newProductForm.imageUrl = URL.createObjectURL(file); // Preview temporal
+    }
   }
 
   async submitNewProduct() {
-    if (!this.newProductForm.nombre || !this.newProductForm.sku) {
-        alert('Nombre y SKU son obligatorios');
+    if (!this.newProductForm.nombre) {
+        alert('El nombre es obligatorio');
         return;
     }
     
-    // In a real app, we would call CatalogService.createProduct() and then StockService.adjustStock()
-    // For now, we will just simulate a successful save by adding it to the local cache and reloading
-    console.log('Guardando producto...', this.newProductForm);
     this.loading.set(true);
-    
     try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Simulating the result from backend
-        const newStockItem: StockDto = {
-            id: 'mock-id-' + Date.now(),
-            variantId: 'mock-variant-' + Date.now(),
-            variantSku: this.newProductForm.sku,
-            productName: this.newProductForm.nombre,
-            branchId: this.branchContext.activeBranchId() || '',
-            cantidadActual: this.newProductForm.stockInicial,
-            cantidadReservada: 0,
-            cantidadDisponible: this.newProductForm.stockInicial,
-            stockMinimo: 5,
-            stockBajo: this.newProductForm.stockInicial <= 5,
-            updatedAt: new Date().toISOString(),
-            imageUrl: this.newProductForm.imageUrl
+        let finalImageUrl = '';
+
+        // 1. Subir imagen si hay un archivo seleccionado
+        if (this.selectedFile) {
+            const uploadRes = await this.catalogService.uploadImage(this.selectedFile).toPromise();
+            if (uploadRes && uploadRes.url) {
+                finalImageUrl = uploadRes.url;
+            }
+        }
+
+        // 2. Crear producto en CatalogService
+        const productReq: ProductRequest = {
+            sku: this.newProductForm.sku, // si está vacío, el backend lo autogenerará
+            nombre: this.newProductForm.nombre,
+            tipoProducto: 'FISICO',
+            variants: [{
+                sku: this.newProductForm.sku,
+                nombre: 'Default',
+                precioBruto: 0,
+                stockMinimo: 5
+            }]
         };
 
-        this.stock.update(items => [newStockItem, ...items]);
+        if (finalImageUrl) {
+            // asumiendo que agregamos imageUrl a ProductRequest si no está, o lo recibe el backend
+            (productReq as any).imagenUrl = finalImageUrl; 
+        }
+
+        const createdProduct = await this.catalogService.createProduct(productReq).toPromise();
+
+        // 3. Crear stock inicial en InventoryService si hay stock > 0
+        if (createdProduct && this.newProductForm.stockInicial > 0) {
+            const branchId = this.branchContext.activeBranchId();
+            if (branchId && createdProduct.variants && createdProduct.variants.length > 0) {
+                const stockReq: StockAdjustmentRequest = {
+                    variantId: createdProduct.variants[0].id,
+                    branchId,
+                    tipo: 'ENTRADA',
+                    cantidad: this.newProductForm.stockInicial,
+                    motivo: 'Stock Inicial',
+                    documentoReferencia: ''
+                };
+                await this.stockService.adjustStock(stockReq).toPromise();
+            }
+        }
+
+        alert('Producto creado exitosamente');
         this.closeNewProductModal();
-        alert('Producto creado exitosamente (Simulado para frontend)');
-    } catch (e) {
+        this.loadData(true); // recargar de la API
+    } catch (e: any) {
         console.error(e);
-        alert('Error al crear producto');
+        alert('Error al crear producto: ' + (e.error?.message || e.message));
     } finally {
         this.loading.set(false);
     }

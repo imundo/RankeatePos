@@ -97,17 +97,47 @@ public class ProductService {
      */
     @Transactional
     public ProductDto create(UUID tenantId, UUID userId, ProductRequest request) {
-        log.info("Creando producto SKU: {} para tenant: {}", request.getSku(), tenantId);
+        log.info("Creando producto nombre: {} para tenant: {}", request.getNombre(), tenantId);
 
-        // Validar SKU único
-        if (productRepository.existsByTenantIdAndSku(tenantId, request.getSku())) {
-            throw new BusinessConflictException("SKU_EXISTS",
-                    "Ya existe un producto con el SKU " + request.getSku());
+        String finalSku = request.getSku();
+        if (finalSku == null || finalSku.trim().isEmpty()) {
+            finalSku = productRepository.findTopByTenantIdOrderByCreatedAtDesc(tenantId)
+                    .map(p -> {
+                        String lastSku = p.getSku();
+                        try {
+                            if (lastSku.startsWith("ART-")) {
+                                int num = Integer.parseInt(lastSku.substring(4));
+                                return String.format("ART-%04d", num + 1);
+                            }
+                        } catch (Exception e) {
+                            log.warn("Formato SKU irreconocible: {}", lastSku);
+                        }
+                        return "ART-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+                    })
+                    .orElse("ART-0001");
+            log.info("SKU autogenerado: {}", finalSku);
         }
 
-        // Obtener unidad
-        Unit unit = unitRepository.findById(request.getUnitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Unidad", request.getUnitId()));
+        // Validar SKU único
+        if (productRepository.existsByTenantIdAndSku(tenantId, finalSku)) {
+            throw new BusinessConflictException("SKU_EXISTS",
+                    "Ya existe un producto con el SKU " + finalSku);
+        }
+
+        // Obtener unidad (Fallback a la primera si no viene en request)
+        Unit unit = null;
+        if (request.getUnitId() != null) {
+            unit = unitRepository.findById(request.getUnitId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unidad", request.getUnitId()));
+        } else {
+            // Fallback para rápida creación desde el inventario
+            List<Unit> units = unitRepository.findAll();
+            if (!units.isEmpty()) {
+                unit = units.get(0);
+            } else {
+                throw new ResourceNotFoundException("No existen unidades de medida en el sistema para asignar por defecto");
+            }
+        }
 
         // Obtener categoría (opcional)
         Category category = null;
@@ -119,7 +149,7 @@ public class ProductService {
         // Crear producto
         Product product = Product.builder()
                 .tenantId(tenantId)
-                .sku(request.getSku())
+                .sku(finalSku)
                 .nombre(request.getNombre())
                 .descripcion(request.getDescripcion())
                 .category(category)
@@ -142,7 +172,7 @@ public class ProductService {
         } else {
             // Crear variante default con el mismo SKU del producto
             ProductVariant defaultVariant = ProductVariant.builder()
-                    .sku(request.getSku())
+                    .sku(finalSku)
                     .esDefault(true)
                     .costo(0)
                     .precioNeto(0)
