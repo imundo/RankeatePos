@@ -55,11 +55,17 @@ public class Stock {
 
     // Logic proxy to variant defaults
     public Integer getStockMinimo() {
-        return variant != null ? variant.getStockMinimo() : 0;
+        if (variant == null || variant.getStockMinimo() == null) {
+            return 0;
+        }
+        return variant.getStockMinimo();
     }
 
     public Integer getStockMaximo() {
-        return variant != null ? variant.getStockMaximo() : 0;
+        if (variant == null || variant.getStockMaximo() == null) {
+            return 0;
+        }
+        return variant.getStockMaximo();
     }
 
     public boolean isStockBajo() {
