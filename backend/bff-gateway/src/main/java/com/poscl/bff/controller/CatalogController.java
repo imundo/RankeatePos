@@ -4,8 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -89,6 +92,76 @@ public class CatalogController {
                                 .header("X-Tenant-Id", tenantId)
                                 .retrieve()
                                 .bodyToMono(Map.class);
+        }
+
+        @PostMapping("/api/products")
+        @Operation(summary = "Create product", description = "Create a new product")
+        public Mono<Map> createProduct(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestBody Map<String, Object> request) {
+
+                return catalogWebClient.post()
+                                .uri("/api/products")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @PutMapping("/api/products/{id}")
+        @Operation(summary = "Update product", description = "Update an existing product")
+        public Mono<Map> updateProduct(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id,
+                        @RequestBody Map<String, Object> request) {
+
+                return catalogWebClient.put()
+                                .uri("/api/products/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @DeleteMapping("/api/products/{id}")
+        @Operation(summary = "Delete product", description = "Delete a product by ID")
+        public Mono<Void> deleteProduct(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id) {
+
+                return catalogWebClient.delete()
+                                .uri("/api/products/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .retrieve()
+                                .bodyToMono(Void.class);
+        }
+
+        // =====================================================
+        // IMAGES ENDPOINTS
+        // =====================================================
+
+        @PostMapping(value = "/api/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @Operation(summary = "Upload image", description = "Upload a product image")
+        public Mono<Map> uploadImage(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        ServerWebExchange exchange) {
+
+                return exchange.getMultipartData().flatMap(parts -> 
+                        catalogWebClient.post()
+                                .uri("/api/images/upload")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .body(BodyInserters.fromMultipartData(parts))
+                                .retrieve()
+                                .bodyToMono(Map.class)
+                );
         }
 
         // =====================================================
