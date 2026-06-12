@@ -169,7 +169,6 @@ public class CatalogController {
                                 .uri("/api/images/upload")
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
                                 .body(BodyInserters.fromMultipartData(builder.build()))
                                 .retrieve()
                                 .bodyToMono(Map.class);
