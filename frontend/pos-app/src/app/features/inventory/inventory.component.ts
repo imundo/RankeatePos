@@ -154,11 +154,11 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                            </div>
                         </div>
 
-                        @if ((item as any).precioBruto > 0) {
+                        @if ($any(item).precioBruto > 0) {
                            <div class="card-price">
-                              <span class="price-value">${{ (item as any).precioBruto | number }}</span>
-                              @if ((item as any).marginPercentage > 0) {
-                                 <span class="price-margin">+{{ (item as any).marginPercentage | number:'1.0-1' }}%</span>
+                              <span class="price-value">${{ $any(item).precioBruto | number }}</span>
+                              @if ($any(item).marginPercentage > 0) {
+                                 <span class="price-margin">+{{ $any(item).marginPercentage | number:'1.0-1' }}%</span>
                               }
                            </div>
                         }
