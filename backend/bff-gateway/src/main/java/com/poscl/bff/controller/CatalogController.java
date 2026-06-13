@@ -170,7 +170,9 @@ public class CatalogController {
                                         return file.getOriginalFilename();
                                 }
                         };
-                        builder.part("file", resource).header("Content-Type", file.getContentType());
+                        builder.part("file", resource)
+                                .filename(file.getOriginalFilename())
+                                .header("Content-Type", file.getContentType());
                 } catch (java.io.IOException e) {
                         log.error("Error reading file", e);
                         return Mono.error(new RuntimeException("Error reading file", e));

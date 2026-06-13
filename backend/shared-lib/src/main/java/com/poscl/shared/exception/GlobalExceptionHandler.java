@@ -55,10 +55,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("Unexpected error", ex);
 
+        Map<String, String> details = new HashMap<>();
+        details.put("error", ex.getMessage());
+        details.put("type", ex.getClass().getName());
+
         ErrorResponse error = ErrorResponse.builder()
                 .code("INTERNAL_ERROR")
                 .message("Error interno del servidor")
                 .timestamp(Instant.now())
+                .details(details)
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
