@@ -57,13 +57,17 @@ public class ImageStorageService {
                 throw new RuntimeException("El archivo excede el límite de 1MB permitido.");
             }
 
+            // Ensure directory exists
+            Files.createDirectories(this.fileStorageLocation);
+
             // Copy file to the target location (Replacing existing file with the same name)
             Path targetLocation = this.fileStorageLocation.resolve(newFileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             return newFileName;
         } catch (IOException ex) {
-            throw new RuntimeException("No se pudo guardar el archivo " + newFileName + ". Por favor intenta nuevamente!", ex);
+            log.error("Error guardando el archivo físico.", ex);
+            throw new RuntimeException("No se pudo guardar el archivo físico: " + ex.getMessage(), ex);
         }
     }
 }

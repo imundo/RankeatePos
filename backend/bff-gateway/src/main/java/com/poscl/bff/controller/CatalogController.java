@@ -185,10 +185,28 @@ public class CatalogController {
                                 .body(BodyInserters.fromMultipartData(builder.build()))
                                 .retrieve()
                                 .bodyToMono(Map.class)
+                                .map(response -> {
+                                        String fileName = (String) response.get("fileName");
+                                        if (fileName != null) {
+                                                // Create a public URL pointing to the BFF
+                                                String publicUrl = "https://pos-bff-gateway-production.up.railway.app/api/images/" + fileName;
+                                                response.put("url", publicUrl);
+                                        }
+                                        return response;
+                                })
                                 .onErrorResume(org.springframework.web.reactive.function.client.WebClientResponseException.class, ex -> {
                                         log.error("Error from catalog-service: {}", ex.getResponseBodyAsString());
                                         return Mono.error(new RuntimeException("Catalog Error: " + ex.getResponseBodyAsString()));
                                 });
+        }
+
+        @GetMapping("/api/images/{fileName}")
+        @Operation(summary = "Get image", description = "Get a product image")
+        public Mono<ResponseEntity<org.springframework.core.io.Resource>> getImage(@PathVariable String fileName) {
+                return catalogWebClient.get()
+                                .uri("/uploads/products/" + fileName)
+                                .retrieve()
+                                .toEntity(org.springframework.core.io.Resource.class);
         }
 
         // =====================================================
