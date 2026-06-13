@@ -21,7 +21,7 @@ public class ImageStorageService {
     private static final String UPLOAD_DIR = "uploads/products";
 
     public ImageStorageService() {
-        this.fileStorageLocation = Paths.get(UPLOAD_DIR)
+        this.fileStorageLocation = Paths.get(System.getProperty("java.io.tmpdir"), UPLOAD_DIR)
                 .toAbsolutePath().normalize();
     }
 

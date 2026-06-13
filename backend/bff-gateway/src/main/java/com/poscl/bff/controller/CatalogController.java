@@ -163,7 +163,18 @@ public class CatalogController {
                 log.info("BFF: POST /api/images/upload - file={}, size={}", file.getOriginalFilename(), file.getSize());
 
                 MultipartBodyBuilder builder = new MultipartBodyBuilder();
-                builder.part("file", file.getResource());
+                try {
+                        org.springframework.core.io.ByteArrayResource resource = new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                                @Override
+                                public String getFilename() {
+                                        return file.getOriginalFilename();
+                                }
+                        };
+                        builder.part("file", resource).header("Content-Type", file.getContentType());
+                } catch (java.io.IOException e) {
+                        log.error("Error reading file", e);
+                        return Mono.error(new RuntimeException("Error reading file", e));
+                }
 
                 return catalogWebClient.post()
                                 .uri("/api/images/upload")
@@ -171,7 +182,11 @@ public class CatalogController {
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
                                 .body(BodyInserters.fromMultipartData(builder.build()))
                                 .retrieve()
-                                .bodyToMono(Map.class);
+                                .bodyToMono(Map.class)
+                                .onErrorResume(org.springframework.web.reactive.function.client.WebClientResponseException.class, ex -> {
+                                        log.error("Error from catalog-service: {}", ex.getResponseBodyAsString());
+                                        return Mono.error(new RuntimeException("Catalog Error: " + ex.getResponseBodyAsString()));
+                                });
         }
 
         // =====================================================

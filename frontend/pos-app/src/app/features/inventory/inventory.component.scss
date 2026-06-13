@@ -432,22 +432,25 @@
 
     .card-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.4rem;
         margin-top: auto;
         flex-shrink: 0;
 
         button {
-            flex: 1;
-            padding: 0.5rem 0.25rem;
+            flex: 1 1 45%;
+            padding: 0.5rem 0.2rem;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             background: transparent;
             color: #e2e8f0;
             cursor: pointer;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.2s;
-            white-space: nowrap;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
             &:hover {
                 background: rgba(255, 255, 255, 0.1);

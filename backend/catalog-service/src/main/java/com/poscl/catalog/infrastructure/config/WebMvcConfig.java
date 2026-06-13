@@ -12,7 +12,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadDir = Paths.get("uploads/products").toAbsolutePath().normalize();
+        Path uploadDir = Paths.get(System.getProperty("java.io.tmpdir"), "uploads/products").toAbsolutePath().normalize();
         String uploadPath = uploadDir.toUri().toString();
 
         registry.addResourceHandler("/uploads/products/**")
