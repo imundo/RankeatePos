@@ -202,7 +202,7 @@ public class CatalogController {
 
         @GetMapping("/api/images/{fileName}")
         @Operation(summary = "Get image", description = "Get a product image")
-        public Mono<ResponseEntity<org.springframework.core.io.Resource>> getImage(@PathVariable String fileName) {
+        public Mono<org.springframework.http.ResponseEntity<org.springframework.core.io.Resource>> getImage(@PathVariable String fileName) {
                 return catalogWebClient.get()
                                 .uri("/uploads/products/" + fileName)
                                 .retrieve()

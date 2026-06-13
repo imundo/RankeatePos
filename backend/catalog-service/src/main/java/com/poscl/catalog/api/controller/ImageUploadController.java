@@ -19,6 +19,11 @@ public class ImageUploadController {
 
     private final ImageStorageService imageStorageService;
 
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
+    }
+
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         log.info("Recibiendo solicitud de subida de imagen: {}", file.getOriginalFilename());
