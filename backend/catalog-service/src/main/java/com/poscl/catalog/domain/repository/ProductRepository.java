@@ -28,6 +28,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     boolean existsByTenantIdAndSku(UUID tenantId, String sku);
 
+    long countByTenantId(UUID tenantId);
+
     Optional<Product> findTopByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants LEFT JOIN FETCH p.category WHERE p.id = :id AND p.tenantId = :tenantId")
