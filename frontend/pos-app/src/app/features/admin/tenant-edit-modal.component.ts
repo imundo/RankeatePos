@@ -149,18 +149,31 @@ import { CardModule } from 'primeng/card';
                             <span class="modules-subtitle">Activa o desactiva los módulos disponibles para esta empresa</span>
                         </div>
                         
-                        <div class="modules-grid">
-                            @for (module of allModules; track module.code) {
-                                <div class="module-card" [class.active]="moduleStates[module.code]" (click)="toggleModule(module.code)">
-                                    <div class="module-icon">{{ module.icon || '📦' }}</div>
-                                    <div class="module-info">
-                                        <span class="module-name">{{ module.name }}</span>
-                                        <span class="module-desc">{{ module.description }}</span>
+                        <div class="modules-container">
+                            @for (category of objectKeys(modulesByCategory); track category) {
+                                <div class="category-section">
+                                    <div class="category-header">
+                                        <h4 class="category-title">
+                                            <i [class]="getCategoryIcon(category)"></i>
+                                            {{ category }}
+                                        </h4>
+                                        <div class="category-line"></div>
                                     </div>
-                                    <p-inputSwitch 
-                                        [(ngModel)]="moduleStates[module.code]" 
-                                        (click)="$event.stopPropagation()">
-                                    </p-inputSwitch>
+                                    <div class="modules-grid">
+                                        @for (module of modulesByCategory[category]; track module.code) {
+                                            <div class="module-card" [class.active]="moduleStates[module.code]" (click)="toggleModule(module.code)">
+                                                <div class="module-icon" [ngClass]="getCategoryColorClass(category)">{{ module.icon || '📦' }}</div>
+                                                <div class="module-info">
+                                                    <span class="module-name">{{ module.name }}</span>
+                                                    <span class="module-desc">{{ module.description }}</span>
+                                                </div>
+                                                <p-inputSwitch 
+                                                    [(ngModel)]="moduleStates[module.code]" 
+                                                    (click)="$event.stopPropagation()">
+                                                </p-inputSwitch>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             }
                         </div>
@@ -400,6 +413,46 @@ import { CardModule } from 'primeng/card';
             gap: 1rem;
         }
         
+        .modules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .category-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .category-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: capitalize;
+        }
+
+        .category-title i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .category-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        }
+
         .module-card {
             display: flex;
             align-items: center;
@@ -410,7 +463,7 @@ import { CardModule } from 'primeng/card';
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 56px;
+            min-height: 70px;
         }
         
         .module-card:hover {
@@ -420,21 +473,35 @@ import { CardModule } from 'primeng/card';
         }
         
         .module-card.active {
-            background: rgba(99, 102, 241, 0.12);
+            background: rgba(99, 102, 241, 0.08);
             border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
         }
         
         .module-icon {
             font-size: 1.25rem;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
+            border-radius: 10px;
             flex-shrink: 0;
+            transition: all 0.25s ease;
         }
+
+        .module-card.active .module-icon {
+            transform: scale(1.1);
+        }
+
+        .module-icon.color-amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .module-icon.color-indigo { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+        .module-icon.color-emerald { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .module-icon.color-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .module-icon.color-pink { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+        .module-icon.color-sky { background: rgba(14, 165, 233, 0.15); color: #0ea5e9; }
+        .module-icon.color-gray { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
         
         .module-info {
             flex: 1;
@@ -642,6 +709,9 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
 
     private fb = inject(FormBuilder);
     private adminService = inject(AdminService);
+    
+    // For template access
+    objectKeys = Object.keys;
 
     activeTabIndex = 0;
     loading = false;
@@ -649,6 +719,7 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
 
     tenant: Tenant | null = null;
     allModules: ModuleConfig[] = [];
+    modulesByCategory: Record<string, ModuleConfig[]> = {};
     moduleStates: Record<string, boolean> = {};
     tenantUsers: AdminUser[] = [];
 
@@ -707,12 +778,59 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
                 } else {
                     this.allModules = this.defaultModules;
                 }
+                this.groupModules();
             },
             error: () => {
                 // Use defaults if API fails
                 this.allModules = this.defaultModules;
+                this.groupModules();
             }
         });
+    }
+
+    private groupModules() {
+        this.modulesByCategory = {};
+        this.allModules.forEach(mod => {
+            const cat = mod.category || 'General';
+            if (!this.modulesByCategory[cat]) {
+                this.modulesByCategory[cat] = [];
+            }
+            this.modulesByCategory[cat].push(mod);
+        });
+    }
+
+    getCategoryIcon(category: string): string {
+        switch (category.toLowerCase()) {
+            case 'core': return 'pi pi-star-fill';
+            case 'ventas': return 'pi pi-shopping-cart';
+            case 'inventario': return 'pi pi-box';
+            case 'compras': return 'pi pi-truck';
+            case 'operaciones': return 'pi pi-cog';
+            case 'growth': return 'pi pi-chart-line';
+            case 'marketing': return 'pi pi-megaphone';
+            case 'finanzas': return 'pi pi-wallet';
+            case 'rrhh': return 'pi pi-users';
+            case 'admin': return 'pi pi-sliders-h';
+            case 'configuración': return 'pi pi-wrench';
+            default: return 'pi pi-folder';
+        }
+    }
+
+    getCategoryColorClass(category: string): string {
+        switch (category.toLowerCase()) {
+            case 'core': return 'color-indigo';
+            case 'ventas': return 'color-emerald';
+            case 'inventario': return 'color-amber';
+            case 'compras': return 'color-sky';
+            case 'operaciones': return 'color-gray';
+            case 'growth': return 'color-pink';
+            case 'marketing': return 'color-pink';
+            case 'finanzas': return 'color-purple';
+            case 'rrhh': return 'color-sky';
+            case 'admin': return 'color-gray';
+            case 'configuración': return 'color-gray';
+            default: return 'color-indigo';
+        }
     }
 
     ngOnChanges(changes: SimpleChanges) {
