@@ -607,10 +607,10 @@ export class InventoryComponent implements OnInit {
           updatedAt: p.syncedAt?.toISOString() || new Date().toISOString(),
           // Fix: Include image and prices from cache
           imageUrl: p.imagenUrl,
-          precioBruto: v.precioBruto,
-          precioNeto: v.precioNeto,
-          costo: v.costo,
-          marginPercentage: v.marginPercentage
+          precioBruto: (v as any).precioBruto || 0,
+          precioNeto: (v as any).precioNeto || 0,
+          costo: (v as any).costo || 0,
+          marginPercentage: (v as any).marginPercentage || 0
         })));
 
         this.stock.set(mapped);
