@@ -15,7 +15,7 @@ import java.util.UUID;
 @Repository
 public interface BankTransactionRepository extends JpaRepository<BankTransaction, UUID> {
 
-    List<BankTransaction> findByTenantId(UUID tenantId);
+    List<BankTransaction> findByBankAccountTenantId(UUID tenantId);
 
     Page<BankTransaction> findByBankAccountIdOrderByTransactionDateDescCreatedAtDesc(
         UUID bankAccountId, Pageable pageable);
