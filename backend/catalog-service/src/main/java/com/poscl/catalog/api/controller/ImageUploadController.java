@@ -1,8 +1,11 @@
 package com.poscl.catalog.api.controller;
 
 import com.poscl.catalog.application.service.ImageStorageService;
+import com.poscl.catalog.domain.entity.UploadedImage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,9 +33,9 @@ public class ImageUploadController {
         
         String fileName = imageStorageService.storeFile(file);
 
-        // Generar URL pública basada en la configuración de recursos estáticos
+        // La URL ahora apunta a /api/images/{fileName}
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/uploads/products/")
+                .path("/api/images/")
                 .path(fileName)
                 .toUriString();
 
@@ -41,5 +44,20 @@ public class ImageUploadController {
         response.put("fileName", fileName);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{fileName:.+}")
+    public ResponseEntity<byte[]> getImage(@PathVariable String fileName) {
+        try {
+            UploadedImage image = imageStorageService.getFile(fileName);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + image.getFileName() + "\"")
+                    .contentType(MediaType.parseMediaType(image.getContentType() != null ? image.getContentType() : "application/octet-stream"))
+                    .body(image.getData());
+        } catch (Exception e) {
+            log.error("Error al obtener imagen: {}", fileName, e);
+            return ResponseEntity.notFound().build();
+        }
     }
 }

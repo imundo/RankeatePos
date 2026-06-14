@@ -1,47 +1,32 @@
 package com.poscl.catalog.application.service;
 
+import com.poscl.catalog.domain.entity.UploadedImage;
+import com.poscl.catalog.domain.repository.UploadedImageRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ImageStorageService {
 
-    private final Path fileStorageLocation;
-    private static final String UPLOAD_DIR = "uploads/products";
+    private final UploadedImageRepository uploadedImageRepository;
 
-    public ImageStorageService() {
-        this.fileStorageLocation = Paths.get(System.getProperty("java.io.tmpdir"), UPLOAD_DIR)
-                .toAbsolutePath().normalize();
-    }
-
-    @PostConstruct
-    public void init() {
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-            log.info("Directorio de uploads creado en: {}", this.fileStorageLocation);
-        } catch (Exception ex) {
-            log.error("No se pudo crear el directorio donde se subirán los archivos.", ex);
-        }
-    }
-
+    @Transactional
     public String storeFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new RuntimeException("Fallo al guardar archivo vacío.");
         }
 
         // Obtener extensión original
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "");
         String extension = "";
         int i = originalFileName.lastIndexOf('.');
         if (i > 0) {
@@ -52,22 +37,29 @@ public class ImageStorageService {
         String newFileName = UUID.randomUUID().toString() + extension;
 
         try {
-            // Verificar tamaño (ej: 1MB máximo se puede forzar aquí o en controller)
+            // Verificar tamaño (ej: 1MB máximo)
             if (file.getSize() > 1_048_576) { // 1MB en bytes
                 throw new RuntimeException("El archivo excede el límite de 1MB permitido.");
             }
 
-            // Ensure directory exists
-            Files.createDirectories(this.fileStorageLocation);
+            UploadedImage uploadedImage = UploadedImage.builder()
+                    .fileName(newFileName)
+                    .contentType(file.getContentType())
+                    .data(file.getBytes())
+                    .build();
 
-            // Copy file to the target location (Replacing existing file with the same name)
-            Path targetLocation = this.fileStorageLocation.resolve(newFileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            uploadedImageRepository.save(uploadedImage);
 
             return newFileName;
         } catch (IOException ex) {
             log.error("Error guardando el archivo físico.", ex);
-            throw new RuntimeException("No se pudo guardar el archivo físico: " + ex.getMessage(), ex);
+            throw new RuntimeException("No se pudo guardar el archivo: " + ex.getMessage(), ex);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public UploadedImage getFile(String fileName) {
+        return uploadedImageRepository.findByFileName(fileName)
+                .orElseThrow(() -> new RuntimeException("Archivo no encontrado: " + fileName));
     }
 }
