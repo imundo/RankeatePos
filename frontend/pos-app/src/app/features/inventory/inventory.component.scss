@@ -660,11 +660,12 @@
 /* Timeline Movements Styles */
 .movements-layout {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr);
+    gap: 0.75rem;
     
     @media (min-width: 1024px) {
         grid-template-columns: minmax(300px, 45%) 1fr;
+        gap: 1.5rem;
         align-items: start;
     }
 }
@@ -845,11 +846,7 @@
 
 /* Calendar Sidebar Styles */
 .movements-calendar-sidebar {
-    display: none;
-    
-    @media (min-width: 1024px) {
-        display: block;
-    }
+    display: block;
 }
 
 .calendar-card {
