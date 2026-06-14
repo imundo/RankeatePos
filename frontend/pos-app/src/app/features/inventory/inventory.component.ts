@@ -604,13 +604,20 @@ export class InventoryComponent implements OnInit {
           cantidadDisponible: v.stock ?? 0,
           stockMinimo: v.stockMinimo ?? 5,
           stockBajo: (v.stock ?? 0) <= (v.stockMinimo ?? 5),
-          updatedAt: p.syncedAt?.toISOString() || new Date().toISOString()
+          updatedAt: p.syncedAt?.toISOString() || new Date().toISOString(),
+          // Fix: Include image and prices from cache
+          imageUrl: p.imagenUrl,
+          precioBruto: v.precioBruto,
+          precioNeto: v.precioNeto,
+          costo: v.costo,
+          marginPercentage: v.marginPercentage
         })));
 
         this.stock.set(mapped);
         this.lowStockCount.set(mapped.filter(x => x.stockBajo).length);
         console.log('Loaded inventory from cache:', mapped.length);
-        return;
+        // Do not return early, fetch API in background to ensure fresh data
+        // return; 
       }
 
       // 2. Fallback to API 
