@@ -176,8 +176,16 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
                   </div>
                   @if (groupedMovements().length === 0) {
                      <div class="empty-state">
-                        <i class="pi pi-inbox"></i>
-                        <p>No hay movimientos registrados</p>
+                        @if (selectedCalendarDate()) {
+                           <div class="icon" style="font-size: 5rem; opacity: 1;">🏖️</div>
+                           <h3>Día Libre de Movimientos</h3>
+                           <p>¡Este día estuvo más tranquilo que unas vacaciones! No se registraron movimientos.</p>
+                           <button class="btn-primary" style="margin-top: 1.5rem;" (click)="selectedCalendarDate.set(null)">Ver historial completo</button>
+                        } @else {
+                           <i class="pi pi-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                           <h3>Historial Vacío</h3>
+                           <p>No hay movimientos registrados</p>
+                        }
                      </div>
                   }
                   </div>
@@ -210,9 +218,9 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
                                     class="calendar-day"
                                     [class.other-month]="!day.isCurrentMonth"
                                     [class.today]="day.isToday"
+                                    [class.selected]="day.isSelected"
                                     [class.has-movements]="day.hasMovements"
-                                    (click)="scrollToDate(day.date)"
-                                    [disabled]="!day.hasMovements"
+                                    (click)="toggleDateSelection(day.date)"
                                  >
                                     <span class="day-number">{{ day.dayNumber }}</span>
                                     @if (day.hasMovements && day.isCurrentMonth) {
@@ -628,7 +636,18 @@ private branchService = inject(BranchService);
   });
 
   groupedMovements = computed(() => {
-    const movements = this.filteredMovements();
+    let movements = this.filteredMovements();
+    const selDate = this.selectedCalendarDate();
+    
+    if (selDate) {
+      movements = movements.filter(m => {
+        const d = new Date(m.createdAt);
+        return d.getFullYear() === selDate.getFullYear() &&
+               d.getMonth() === selDate.getMonth() &&
+               d.getDate() === selDate.getDate();
+      });
+    }
+
     const groups: { date: string, items: StockMovementDto[] }[] = [];
     
     // Agrupar por fecha local
@@ -648,6 +667,7 @@ private branchService = inject(BranchService);
   });
 
   // --- Calendar Navigation Logic ---
+  selectedCalendarDate = signal<Date | null>(null);
   currentCalendarDate = signal(new Date());
   weekdays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 
@@ -693,12 +713,27 @@ private branchService = inject(BranchService);
   });
 
   private createDayData(date: Date, isCurrentMonth: boolean, today: Date) {
+    const selDate = this.selectedCalendarDate();
+    const isSelected = selDate ? 
+                       date.getFullYear() === selDate.getFullYear() && 
+                       date.getMonth() === selDate.getMonth() && 
+                       date.getDate() === selDate.getDate() 
+                       : false;
+
+    const hasMovements = this.filteredMovements().some(m => {
+        const d = new Date(m.createdAt);
+        return d.getFullYear() === date.getFullYear() && 
+               d.getMonth() === date.getMonth() && 
+               d.getDate() === date.getDate();
+    });
+
     return {
       date,
       dayNumber: date.getDate(),
       isCurrentMonth,
+      isSelected,
       isToday: date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate(),
-      hasMovements: this.groupedMovements().some(g => g.date === this.formatDateStrForId(date))
+      hasMovements
     };
   }
 
@@ -712,11 +747,14 @@ private branchService = inject(BranchService);
     this.currentCalendarDate.set(new Date(current.getFullYear(), current.getMonth() + 1, 1));
   }
 
-  scrollToDate(date: Date) {
-    const idStr = 'day-' + this.formatDateStrForId(date);
-    const el = document.getElementById(idStr);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toggleDateSelection(date: Date) {
+    const current = this.selectedCalendarDate();
+    if (current && current.getFullYear() === date.getFullYear() && 
+        current.getMonth() === date.getMonth() && 
+        current.getDate() === date.getDate()) {
+      this.selectedCalendarDate.set(null);
+    } else {
+      this.selectedCalendarDate.set(date);
     }
   }
 
