@@ -99,6 +99,16 @@ interface User {
                 <span class="label">País</span>
                 <span class="value">{{ authService.tenant()?.country || 'Chile' }}</span>
               </div>
+              <div class="info-row">
+                <span class="label">Moneda Principal</span>
+                <select class="tax-select" [(ngModel)]="selectedCurrency" (change)="saveBusinessInfo()">
+                  <option value="CLP">Peso Chileno (CLP)</option>
+                  <option value="VES">Bolívar Venezolano (VES)</option>
+                  <option value="USD">Dólar (USD)</option>
+                  <option value="PEN">Sol Peruano (PEN)</option>
+                  <option value="MXN">Peso Mexicano (MXN)</option>
+                </select>
+              </div>
             </div>
           </section>
 
@@ -594,6 +604,8 @@ export class SettingsComponent implements OnInit {
   activeTab = signal<'general' | 'users' | 'branches' | 'taxes' | 'integrations' | 'categories'>('general');
   users = signal<User[]>([]);
   selectedCountry = 'CL';
+  selectedCurrency = 'CLP';
+  selectedLocale = 'es-CL';
 
   userName = () => this.authService.user()?.nombre || 'Usuario';
   userEmail = () => this.authService.user()?.email || '';
@@ -625,6 +637,12 @@ export class SettingsComponent implements OnInit {
     if (this.authService.tenant()?.country) {
       this.selectedCountry = this.authService.tenant()?.country || 'Chile';
     }
+    if (this.authService.tenant()?.currency) {
+      this.selectedCurrency = this.authService.tenant()?.currency || 'CLP';
+    }
+    if (this.authService.tenant()?.locale) {
+      this.selectedLocale = this.authService.tenant()?.locale || 'es-CL';
+    }
   }
 
   loadConfigs() {
@@ -635,21 +653,38 @@ export class SettingsComponent implements OnInit {
       });
   }
 
-  saveCountry() {
+  saveBusinessInfo() {
     this.isLoading.set(true);
-    this.http.put(`${this.baseUrl}/tenants/current`, { country: this.selectedCountry }, { headers: this.getHeaders() })
+    
+    // Automatically determine locale based on currency selection for formatting
+    const localeMap: Record<string, string> = {
+      'CLP': 'es-CL',
+      'VES': 'es-VE',
+      'USD': 'en-US',
+      'PEN': 'es-PE',
+      'MXN': 'es-MX'
+    };
+    this.selectedLocale = localeMap[this.selectedCurrency] || 'es-CL';
+
+    const updatePayload = { 
+      country: this.selectedCountry,
+      currency: this.selectedCurrency,
+      locale: this.selectedLocale
+    };
+
+    this.http.put(`${this.baseUrl}/tenants/current`, updatePayload, { headers: this.getHeaders() })
       .subscribe({
         next: (tenant: any) => {
           // Update local storage tenant
           const current = this.authService.tenant();
           if (current) {
-            const updated = { ...current, country: this.selectedCountry };
+            const updated = { ...current, ...updatePayload };
             localStorage.setItem('pos_tenant', JSON.stringify(updated));
-            window.location.reload(); // Reload to apply changes (currency, taxes, etc.)
+            window.location.reload(); // Reload to apply changes globally
           }
         },
         error: (err) => {
-          console.error('Error updating country', err);
+          console.error('Error updating business info', err);
           this.isLoading.set(false);
         },
         complete: () => this.isLoading.set(false)

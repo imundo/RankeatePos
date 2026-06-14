@@ -390,9 +390,12 @@ export class SalesReportComponent implements OnInit {
     }
 
     formatPrice(amount: number): string {
-        return new Intl.NumberFormat('es-CL', {
+        const tenant = this.authService.tenant();
+        const locale = tenant?.locale || 'es-CL';
+        const currency = tenant?.currency || 'CLP';
+        return new Intl.NumberFormat(locale, {
             style: 'currency',
-            currency: 'CLP',
+            currency: currency,
             minimumFractionDigits: 0
         }).format(amount);
     }

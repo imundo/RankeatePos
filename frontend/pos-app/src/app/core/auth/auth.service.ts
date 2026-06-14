@@ -30,6 +30,8 @@ export interface AuthTenant {
     plan: string;
     modules: string[];
     country?: string;
+    currency?: string;
+    locale?: string;
 }
 
 export interface AuthResponse {

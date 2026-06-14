@@ -475,7 +475,7 @@ interface CartItem {
                    
                    @if (loyaltyCustomer()!.puntosActuales > 0 && loyaltyPointsToRedeem() === 0) {
                       <button class="btn btn-outline w-full" style="width: 100%; margin-top: 0.5rem; border-color: #6366f1; color: #818cf8;" (click)="applyMaxPoints()">
-                         Canjear Descuento (-{{ formatPrice(Math.min(loyaltyCustomer()!.puntosActuales, subtotal() + taxTotal())) }})
+                         Canjear Descuento (-{{ formatPrice(Math.min(loyaltyCustomer()!.puntosActuales, grossTotal())) }})
                       </button>
                    }
                    @if (loyaltyPointsToRedeem() > 0) {
@@ -3512,7 +3512,7 @@ export class PosComponent implements OnInit {
 
   applyMaxPoints() {
     const maxPoints = this.loyaltyCustomer()?.puntosActuales || 0;
-    const maxDiscountAllowed = this.subtotal() + this.taxTotal(); // Don't exceed total
+    const maxDiscountAllowed = this.grossTotal();
 
     // Redeem up to current total, or max points (1 point = $1)
     const pointsToUse = Math.min(maxPoints, maxDiscountAllowed);
@@ -3731,15 +3731,19 @@ export class PosComponent implements OnInit {
     this.generatePreviewBarcodes();
   }
 
-  subtotal = computed(() =>
+  grossTotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.subtotal, 0)
   );
 
-  taxTotal = computed(() =>
-    Math.round(this.subtotal() * 0.19) // IVA 19% Chile
+  total = computed(() => Math.max(0, this.grossTotal() - this.loyaltyDiscount()));
+
+  subtotal = computed(() =>
+    Math.round(this.total() / 1.19) // Calculate net amount from total
   );
 
-  total = computed(() => Math.max(0, this.subtotal() + this.taxTotal() - this.loyaltyDiscount()));
+  taxTotal = computed(() =>
+    this.total() - this.subtotal() // Difference is the tax
+  );
 
   // For checkout modal
   subtotalCheckout = computed(() => {
@@ -4245,9 +4249,12 @@ export class PosComponent implements OnInit {
 
 
   formatPrice(amount: number): string {
-    return new Intl.NumberFormat('es-CL', {
+    const tenant = this.authService.tenant();
+    const locale = tenant?.locale || 'es-CL';
+    const currency = tenant?.currency || 'CLP';
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'CLP',
+      currency: currency,
       minimumFractionDigits: 0
     }).format(amount);
   }
