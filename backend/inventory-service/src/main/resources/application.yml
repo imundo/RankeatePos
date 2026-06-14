@@ -34,3 +34,5 @@ spring:
 logging:
   level:
     com.poscl.inventory: INFO
+
+# Trigger deployment

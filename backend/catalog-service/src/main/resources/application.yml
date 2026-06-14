@@ -60,3 +60,7 @@ logging:
 services:
   inventory:
     url: ${INVENTORY_SERVICE_URL:http://localhost:8087}
+
+# Trigger deployment
+
+# Trigger deployment

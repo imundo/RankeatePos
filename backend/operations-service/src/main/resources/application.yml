@@ -55,3 +55,5 @@ logging:
     com.poscl.operations: DEBUG
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
+
+# Trigger deployment

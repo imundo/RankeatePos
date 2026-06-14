@@ -47,3 +47,5 @@ springdoc:
 logging:
   level:
     com.poscl: DEBUG
+
+# Trigger deployment

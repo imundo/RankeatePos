@@ -53,3 +53,5 @@ logging:
   level:
     com.poscl: DEBUG
     org.springframework.web: INFO
+
+# Trigger deployment

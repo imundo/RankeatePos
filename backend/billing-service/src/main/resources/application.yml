@@ -92,3 +92,5 @@ logging:
   level:
     com.poscl.billing: DEBUG
     org.springframework.web: INFO
+
+# Trigger deployment
