@@ -57,7 +57,7 @@ import { CatalogService, Category, CategoryRequest } from '@core/services/catalo
               <button class="btn-close" (click)="closeDialog()">✕</button>
             </div>
             
-            <form (ngSubmit)="saveCategory()" class="modal-body form-grid">
+            <form (ngSubmit)="saveCategory()" class="modal-body">
               
               <div class="form-group icon-group">
                 <label>Icono (Emoji)</label>

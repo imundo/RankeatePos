@@ -3963,7 +3963,7 @@ export class PosComponent implements OnInit {
       // Create stock map
       const stockMap = new Map<string, number>();
       if (stockResponse) {
-        stockResponse.forEach((s: any) => stockMap.set(s.variantId, s.cantidadDisponible));
+        stockResponse.forEach((s: any) => stockMap.set(s.variantSku, s.cantidadDisponible));
       }
 
       // Set categories
@@ -3992,7 +3992,7 @@ export class PosComponent implements OnInit {
             precioBruto: v.precioBruto,
             precioNeto: v.precioNeto,
             taxPercentage: v.taxPercentage || 19,
-            stock: stockMap.get(v.id) || 0,
+            stock: stockMap.get(v.sku) || 0,
             stockMinimo: v.stockMinimo || 0 // Map stockMinimo for inventory
           })) || [],
           syncedAt: new Date()

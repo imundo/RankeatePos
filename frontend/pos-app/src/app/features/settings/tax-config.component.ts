@@ -64,7 +64,7 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
               <button class="btn-close" (click)="closeDialog()">✕</button>
             </div>
             
-            <form (ngSubmit)="saveTax()" class="modal-body form-grid">
+            <form (ngSubmit)="saveTax()" class="modal-body">
               <div class="form-group">
                 <label>Nombre</label>
                 <input type="text" [(ngModel)]="currentTax.nombre" name="nombre" required placeholder="Ej. IVA 19%" class="form-control">
@@ -150,6 +150,7 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; margin-bottom: 0.5rem; color: rgba(255,255,255,0.7); font-size: 0.9rem; }
     .form-control { width: 100%; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; box-sizing: border-box; }
+    .form-control option { background: #1e293b; color: white; }
     .checkbox-group { margin-top: 1rem; }
     .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
