@@ -7,13 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(\"/api/accounting/events\")
+@RequestMapping("/api/accounting/events")
 @RequiredArgsConstructor
 public class AccountingEventController {
 
     private final SaleEventListener saleEventListener;
 
-    @PostMapping(\"/sale-completed\")
+    @PostMapping("/sale-completed")
     public ResponseEntity<Void> onSaleCompleted(@RequestBody SaleCompletedEvent event) {
         saleEventListener.handleSaleCompleted(event);
         return ResponseEntity.ok().build();

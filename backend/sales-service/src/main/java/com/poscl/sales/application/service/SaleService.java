@@ -886,10 +886,6 @@ public class SaleService {
     private String accountingServiceUrl;
 
     private void publishSaleCompletedEvent(Sale sale) {
-        if (operationsServiceUrl == null || operationsServiceUrl.isBlank()) {
-            log.debug("Operations service URL no configurada, omitiendo notificación");
-            return;
-        }
         // Fire-and-forget: no bloqueamos la venta
         new Thread(() -> {
             try {
@@ -914,18 +910,26 @@ public class SaleService {
                         .taxAmount(BigDecimal.valueOf(sale.getImpuestos()))
                         .build();
 
-                restTemplate.postForEntity(operationsServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
-                log.info("Notificación de venta enviada a operations-service para venta {}", sale.getNumero());
-            } catch (Exception e) {
-                log.warn("No se pudo notificar a operations-service para venta {}: {}", sale.getNumero(),
-                        e.getMessage());
-            }
-                try {
-                    restTemplate.postForEntity(accountingServiceUrl + "/api/accounting/events/sale-completed", event, Void.class);
-                    log.info("Notificación de venta enviada a accounting-service para venta {}", sale.getNumero());
-                } catch (Exception e) {
-                    log.warn("No se pudo notificar a accounting-service para venta {}: {}", sale.getNumero(), e.getMessage());
+                if (operationsServiceUrl != null && !operationsServiceUrl.isBlank()) {
+                    try {
+                        restTemplate.postForEntity(operationsServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
+                        log.info("Notificación de venta enviada a operations-service para venta {}", sale.getNumero());
+                    } catch (Exception e) {
+                        log.warn("No se pudo notificar a operations-service para venta {}: {}", sale.getNumero(), e.getMessage());
+                    }
                 }
+
+                if (accountingServiceUrl != null && !accountingServiceUrl.isBlank()) {
+                    try {
+                        restTemplate.postForEntity(accountingServiceUrl + "/api/accounting/events/sale-completed", event, Void.class);
+                        log.info("Notificación de venta enviada a accounting-service para venta {}", sale.getNumero());
+                    } catch (Exception e) {
+                        log.warn("No se pudo notificar a accounting-service para venta {}: {}", sale.getNumero(), e.getMessage());
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("Error general publicando evento de venta", ex);
+            }
         }).start();
     }
 }

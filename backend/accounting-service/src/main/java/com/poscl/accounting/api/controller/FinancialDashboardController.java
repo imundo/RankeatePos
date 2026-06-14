@@ -13,15 +13,15 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(\"/api/accounting/dashboard\")
+@RequestMapping("/api/accounting/dashboard")
 @RequiredArgsConstructor
 public class FinancialDashboardController {
 
     private final BankTransactionRepository bankTransactionRepository;
 
-    @GetMapping(\"/summary\")
+    @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getFinancialSummary(
-            @RequestHeader(\"X-Tenant-Id\") UUID tenantId) {
+            @RequestHeader("X-Tenant-Id") UUID tenantId) {
 
         List<BankTransaction> transactions = bankTransactionRepository.findByTenantId(tenantId);
         
@@ -38,10 +38,10 @@ public class FinancialDashboardController {
         BigDecimal balance = ingresos.subtract(egresos);
 
         Map<String, Object> response = new HashMap<>();
-        response.put(\"ingresosTotales\", ingresos);
-        response.put(\"egresosTotales\", egresos);
-        response.put(\"balanceNeto\", balance);
-        response.put(\"impuestosPorPagar\", 0); // Placeholder for MVP
+        response.put("ingresosTotales", ingresos);
+        response.put("egresosTotales", egresos);
+        response.put("balanceNeto", balance);
+        response.put("impuestosPorPagar", 0); // Placeholder for MVP
 
         return ResponseEntity.ok(response);
     }
