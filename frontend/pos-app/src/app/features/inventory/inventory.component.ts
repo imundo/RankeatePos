@@ -96,19 +96,32 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
 
       <!-- Toolbar -->
       <div class="toolbar-section">
-         <div class="search-field">
-            <i class="pi pi-search">🔍</i>
-            <input 
-              type="text" 
-              [(ngModel)]="searchQuery" 
-              placeholder="Buscar por nombre, SKU o escanear código..." 
-              #searchInput
-            />
+         <!-- Search -->
+         <div class="search-container" style="flex: 1; max-width: 500px;">
+           <span class="search-icon">🔍</span>
+           <input 
+             type="text" 
+             [(ngModel)]="searchQuery" 
+             placeholder="Buscar por nombre, SKU o escanear código..." 
+             class="search-input w-full"
+             #searchInput
+           />
+           @if (searchQuery) {
+             <button class="search-clear" (click)="searchQuery = ''">✕</button>
+           }
+           <button class="search-scanner-btn" (click)="openSearchScanner()" title="Escanear Código de Barras">
+             <i class="pi pi-camera"></i>
+           </button>
          </div>
          
-         <button class="filter-btn" [class.active]="filterMode() === 'movements'" (click)="filterBy('movements')">
-            <span>📋 Movimientos</span>
-         </button>
+         <div class="inventory-tabs">
+            <button class="tab-btn" [class.active]="filterMode() === 'all'" (click)="filterBy('all')">
+               <span class="tab-icon">📦</span> Stock Actual
+            </button>
+            <button class="tab-btn" [class.active]="filterMode() === 'movements'" (click)="filterBy('movements')">
+               <span class="tab-icon">📝</span> Movimientos
+            </button>
+         </div>
          
          <button class="btn-primary" style="margin-left: auto;" (click)="openNewProductModal()">
             <span>+ Nuevo Artículo</span>
@@ -127,30 +140,35 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
                <!-- MOVEMENTS VIEW -->
                <div class="movements-timeline-container">
                   <div class="movements-timeline">
-                     @for (mov of filteredMovements(); track mov.id) {
-                        <div class="timeline-item" [class.positive]="isPositive(mov.tipo)" [class.negative]="!isPositive(mov.tipo)">
-                           <div class="timeline-icon">
-                              {{ getMovementIcon(mov.tipo) }}
-                           </div>
-                           <div class="timeline-content">
-                              <div class="timeline-header">
-                                 <div class="timeline-title-group">
-                                    <h3>{{ mov.productName }}</h3>
-                                    <span class="movement-badge">{{ formatMovementType(mov.tipo) }}</span>
-                                 </div>
-                                 <span class="timeline-date">{{ formatDate(mov.createdAt) }}</span>
-                              </div>
-                              <div class="timeline-body">
-                                 <div class="stock-change-box">
-                                    <span class="amount">{{ isPositive(mov.tipo) ? '+' : '-' }}{{ mov.cantidad }}</span>
-                                    <span class="stock-flow">{{ mov.stockAnterior }} ➝ {{ mov.stockNuevo }}</span>
-                                 </div>
-                                 <div class="timeline-note">
-                                    <span>📝 {{ mov.motivo || 'Sin nota de movimiento' }}</span>
-                                 </div>
-                              </div>
-                           </div>
+                     @for (group of groupedMovements(); track group.date) {
+                        <div class="timeline-day-header">
+                           <span class="day-badge">{{ group.date }}</span>
                         </div>
+                        @for (mov of group.items; track mov.id) {
+                           <div class="timeline-item" [class.positive]="isPositive(mov.tipo)" [class.negative]="!isPositive(mov.tipo)">
+                              <div class="timeline-icon">
+                                 {{ getMovementIcon(mov.tipo) }}
+                              </div>
+                              <div class="timeline-content">
+                                 <div class="timeline-header">
+                                    <div class="timeline-title-group">
+                                       <h3>{{ mov.productName }}</h3>
+                                       <span class="movement-badge">{{ formatMovementType(mov.tipo) }}</span>
+                                    </div>
+                                    <span class="timeline-time">{{ mov.createdAt | date:'HH:mm' }}</span>
+                                 </div>
+                                 <div class="timeline-body">
+                                    <div class="stock-change-box">
+                                       <span class="amount">{{ isPositive(mov.tipo) ? '+' : '-' }}{{ mov.cantidad }}</span>
+                                       <span class="stock-flow">{{ mov.stockAnterior }} ➔ {{ mov.stockNuevo }}</span>
+                                    </div>
+                                    <div class="timeline-note">
+                                       <span>📝 {{ mov.motivo || 'Sin nota de movimiento' }}</span>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        }
                      }
                   </div>
                   @if (filteredMovements().length === 0) {
@@ -238,7 +256,6 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
                   <div class="form-group">
                      <label>Buscar Producto</label>
                      <input type="text" [(ngModel)]="productSearch" (input)="searchProducts()" placeholder="Escribe nombre o SKU..." autofocus>
-                     <!-- Results dropdown would go here -->
                      @if (searchedProducts().length > 0) {
                         <div class="search-results-list" style="margin-top:0.5rem; background:rgba(0,0,0,0.3); border-radius:8px; overflow:hidden;">
                            @for(p of searchedProducts(); track p.id) {
@@ -492,6 +509,7 @@ export class InventoryComponent implements OnInit {
   searchQuery = '';
   scanningMode = false;
   showScannerModal = false;
+  scannerTarget: 'search' | 'newProduct' = 'newProduct';
 
   // Modal State
   showAdjustModal = false;
@@ -562,6 +580,29 @@ export class InventoryComponent implements OnInit {
     );
   });
 
+  groupedMovements = computed(() => {
+    const movements = this.filteredMovements();
+    const groups: { date: string, items: StockMovementDto[] }[] = [];
+    
+    // Agrupar por fecha local
+    movements.forEach(m => {
+      const dateObj = new Date(m.createdAt);
+      // Formato "Día, DD de Mes" ej. "Lunes, 14 de Junio"
+      const dateStr = dateObj.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Santiago' });
+      // Capitalizar la primera letra
+      const capitalizedDateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+      
+      const existingGroup = groups.find(g => g.date === capitalizedDateStr);
+      if (existingGroup) {
+        existingGroup.items.push(m);
+      } else {
+        groups.push({ date: capitalizedDateStr, items: [m] });
+      }
+    });
+    
+    return groups;
+  });
+
   // --- Barcode Scanner Listener ---
   private buffer = '';
   private lastKeyTime = 0;
@@ -599,8 +640,22 @@ export class InventoryComponent implements OnInit {
   }
 
   onBarcodeScanned(code: string) {
-    this.newProductForm.sku = code;
+    if (this.scannerTarget === 'search') {
+      this.searchQuery = code;
+    } else {
+      this.newProductForm.sku = code;
+    }
     this.showScannerModal = false;
+  }
+
+  openSearchScanner() {
+    this.scannerTarget = 'search';
+    this.showScannerModal = true;
+  }
+
+  scanBarcodeForNewProduct() {
+    this.scannerTarget = 'newProduct';
+    this.showScannerModal = true;
   }
 
   toggleScanMode() {
