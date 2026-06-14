@@ -842,12 +842,71 @@ export class InventoryComponent implements OnInit {
     this.showScannerModal = true;
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
+  async compressImage(file: File, maxSizeMB: number): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event: any) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Max dimensions to avoid huge canvases
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Start with 0.8 quality and decrease if needed
+          let quality = 0.8;
+          let dataUrl = canvas.toDataURL('image/jpeg', quality);
+          
+          while (dataUrl.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+             quality -= 0.1;
+             dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+          
+          // Convert back to File
+          fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+              const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+              resolve(compressedFile);
+            });
+        };
+      };
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  async onFileSelected(event: any) {
+    let file = event.target.files[0];
     if (file) {
       if (file.size > 1048576) {
-        alert('El archivo es demasiado grande. Máximo 1MB.');
-        return;
+        // Compress if larger than 1MB
+        try {
+           file = await this.compressImage(file, 0.95); // Target ~0.95MB max
+        } catch (e) {
+           console.warn('Image compression failed', e);
+        }
       }
       this.selectedFile = file;
       this.newProductForm.imageUrl = URL.createObjectURL(file);
@@ -973,12 +1032,15 @@ export class InventoryComponent implements OnInit {
     }
   }
 
-  onEditFileSelected(event: any) {
-    const file = event.target.files[0];
+  async onEditFileSelected(event: any) {
+    let file = event.target.files[0];
     if (file) {
       if (file.size > 1048576) {
-        alert('El archivo es demasiado grande. Máximo 1MB.');
-        return;
+        try {
+           file = await this.compressImage(file, 0.95);
+        } catch (e) {
+           console.warn('Image compression failed', e);
+        }
       }
       this.selectedEditFile = file;
       this.editProductForm.imageUrl = URL.createObjectURL(file);
