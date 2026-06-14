@@ -86,6 +86,8 @@ export interface Tax {
     porcentaje: number;
     esDefault: boolean;
     activo: boolean;
+    pais?: string;
+    tipo?: string;
 }
 
 export interface VariantRequest {

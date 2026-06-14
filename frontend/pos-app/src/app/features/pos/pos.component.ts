@@ -3953,11 +3953,18 @@ export class PosComponent implements OnInit {
         'X-User-Id': this.authService.user()?.id || ''
       };
 
-      // Load products and categories in parallel
-      const [productsResponse, categoriesResponse] = await Promise.all([
+      // Load products, categories, and stock in parallel
+      const [productsResponse, categoriesResponse, stockResponse] = await Promise.all([
         this.http.get<any[]>(`${environment.catalogUrl}/products/sync`, { headers }).toPromise(),
-        this.http.get<any[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise().catch(() => [])
+        this.http.get<any[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise().catch(() => []),
+        this.stockService.getStockByBranch(tenantId || '').toPromise().catch(() => [])
       ]);
+
+      // Create stock map
+      const stockMap = new Map<string, number>();
+      if (stockResponse) {
+        stockResponse.forEach((s: any) => stockMap.set(s.variantId, s.cantidadDisponible));
+      }
 
       // Set categories
       if (categoriesResponse && categoriesResponse.length > 0) {
@@ -3985,7 +3992,7 @@ export class PosComponent implements OnInit {
             precioBruto: v.precioBruto,
             precioNeto: v.precioNeto,
             taxPercentage: v.taxPercentage || 19,
-            stock: v.stock,
+            stock: stockMap.get(v.id) || 0,
             stockMinimo: v.stockMinimo || 0 // Map stockMinimo for inventory
           })) || [],
           syncedAt: new Date()

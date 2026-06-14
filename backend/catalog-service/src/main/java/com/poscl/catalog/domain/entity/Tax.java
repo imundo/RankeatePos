@@ -42,6 +42,12 @@ public class Tax {
     @Column(nullable = false)
     @Builder.Default
     private Boolean activo = true;
+
+    @Column(length = 50)
+    private String pais;
+
+    @Column(length = 50)
+    private String tipo;
     
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

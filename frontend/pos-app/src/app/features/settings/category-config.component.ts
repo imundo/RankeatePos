@@ -61,9 +61,19 @@ import { CatalogService, Category, CategoryRequest } from '@core/services/catalo
               
               <div class="form-group icon-group">
                 <label>Icono (Emoji)</label>
-                <div class="icon-selector">
-                  <input type="text" [(ngModel)]="currentCategory.icono" name="icono" class="form-control icon-input" placeholder="🍞" maxlength="2">
-                  <span class="icon-preview">{{ currentCategory.icono || '📁' }}</span>
+                <div class="emoji-grid">
+                  @for (emoji of commonEmojis; track $index) {
+                    <button type="button" 
+                            class="emoji-btn" 
+                            [class.selected]="currentCategory.icono === emoji" 
+                            (click)="currentCategory.icono = emoji">
+                      {{ emoji }}
+                    </button>
+                  }
+                </div>
+                <div class="custom-icon-wrapper" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                   <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">O ingresa uno manualmente:</span>
+                   <input type="text" [(ngModel)]="currentCategory.icono" name="icono" class="form-control" style="width: 60px; text-align: center; padding: 0.25rem;" maxlength="2">
                 </div>
               </div>
 
@@ -124,9 +134,11 @@ import { CatalogService, Category, CategoryRequest } from '@core/services/catalo
     .modal-header h3 { margin: 0; font-size: 1.25rem; }
     .btn-close { background: transparent; border: none; color: rgba(255,255,255,0.5); font-size: 1.25rem; cursor: pointer; }
     
-    .icon-selector { display: flex; align-items: center; gap: 1rem; }
-    .icon-input { width: 80px; text-align: center; font-size: 1.5rem; }
-    .icon-preview { font-size: 2rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 12px; min-width: 50px; text-align: center; }
+    /* Emoji Grid */
+    .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
+    .emoji-btn { background: rgba(255,255,255,0.05); border: 1px solid transparent; border-radius: 8px; font-size: 1.5rem; padding: 0.5rem; cursor: pointer; transition: all 0.2s; }
+    .emoji-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+    .emoji-btn.selected { background: rgba(99, 102, 241, 0.2); border-color: #6366f1; transform: scale(1.1); }
 
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; margin-bottom: 0.5rem; color: rgba(255,255,255,0.7); font-size: 0.9rem; }
@@ -138,6 +150,8 @@ import { CatalogService, Category, CategoryRequest } from '@core/services/catalo
 })
 export class CategoryConfigComponent implements OnInit {
   private catalogService = inject(CatalogService);
+
+  commonEmojis = ['🍔', '🍕', '☕', '🍰', '👕', '🛍️', '📦', '🛒', '🌮', '🥩', '🥖', '🥦', '🍉', '🥐', '🍦', '🍷'];
 
   categories = signal<Category[]>([]);
   showDialog = signal(false);

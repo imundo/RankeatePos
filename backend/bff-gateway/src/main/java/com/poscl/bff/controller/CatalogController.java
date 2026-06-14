@@ -254,12 +254,14 @@ public class CatalogController {
         public Mono<Map> createCategory(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @RequestBody Map<String, Object> request) {
 
                 return catalogWebClient.post()
                                 .uri("/api/categories")
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -270,6 +272,7 @@ public class CatalogController {
         public Mono<Map> updateCategory(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id,
                         @RequestBody Map<String, Object> request) {
 
@@ -277,6 +280,7 @@ public class CatalogController {
                                 .uri("/api/categories/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -287,14 +291,32 @@ public class CatalogController {
         public Mono<Void> deleteCategory(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id) {
 
                 return catalogWebClient.delete()
                                 .uri("/api/categories/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .retrieve()
                                 .bodyToMono(Void.class);
+        }
+        @GetMapping("/api/taxes")
+        @Operation(summary = "List taxes", description = "Get all taxes for tenant")
+        public Mono<List> listTaxes(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId) {
+
+                if (tenantId == null) {
+                        return Mono.just(Collections.emptyList());
+                }
+
+                return catalogWebClient.get()
+                                .uri("/api/taxes")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId)
+                                .retrieve()
         }
         @GetMapping("/api/taxes")
         @Operation(summary = "List taxes", description = "Get all taxes for tenant")
@@ -321,12 +343,14 @@ public class CatalogController {
         public Mono<Map> createTax(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @RequestBody Map<String, Object> request) {
 
                 return catalogWebClient.post()
                                 .uri("/api/taxes")
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -337,6 +361,7 @@ public class CatalogController {
         public Mono<Map> updateTax(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id,
                         @RequestBody Map<String, Object> request) {
 
@@ -344,6 +369,7 @@ public class CatalogController {
                                 .uri("/api/taxes/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .bodyValue(request)
                                 .retrieve()
                                 .bodyToMono(Map.class);
@@ -354,12 +380,14 @@ public class CatalogController {
         public Mono<Void> deleteTax(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId,
                         @PathVariable String id) {
 
                 return catalogWebClient.delete()
                                 .uri("/api/taxes/" + id)
                                 .header("Authorization", authHeader != null ? authHeader : "")
                                 .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .header("X-User-Id", userId != null ? userId : "")
                                 .retrieve()
                                 .bodyToMono(Void.class);
         }

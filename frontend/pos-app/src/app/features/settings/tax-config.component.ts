@@ -22,6 +22,7 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
       <div class="data-table">
         <div class="table-header">
           <span>Nombre</span>
+          <span>País/Tipo</span>
           <span>Porcentaje</span>
           <span>Default</span>
           <span>Estado</span>
@@ -30,6 +31,10 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
         @for (tax of taxes(); track tax.id) {
           <div class="table-row">
             <span class="cell-main">{{ tax.nombre }}</span>
+            <span class="cell-secondary">
+              {{ tax.pais || '-' }} 
+              @if (tax.tipo) { <span class="badge-mini">{{ tax.tipo }}</span> }
+            </span>
             <span class="cell-secondary">{{ tax.porcentaje }}%</span>
             <span class="cell-badge" [class.is-default]="tax.esDefault">
               {{ tax.esDefault ? 'Sí' : 'No' }}
@@ -64,6 +69,31 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
                 <label>Nombre</label>
                 <input type="text" [(ngModel)]="currentTax.nombre" name="nombre" required placeholder="Ej. IVA 19%" class="form-control">
               </div>
+              <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label>País</label>
+                  <select [(ngModel)]="currentTax.pais" name="pais" class="form-control">
+                    <option value="">Seleccionar País...</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Mexico">México</option>
+                    <option value="Peru">Perú</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="España">España</option>
+                    <option value="USA">Estados Unidos</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Tipo de Impuesto</label>
+                  <select [(ngModel)]="currentTax.tipo" name="tipo" class="form-control">
+                    <option value="">Seleccionar Tipo...</option>
+                    <option value="IVA">IVA / VAT</option>
+                    <option value="Consumo">Impuesto al Consumo / Sales Tax</option>
+                    <option value="Retencion">Retención / Withholding</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </div>
               <div class="form-group">
                 <label>Porcentaje (%)</label>
                 <input type="number" [(ngModel)]="currentTax.porcentaje" name="porcentaje" required min="0" step="0.01" class="form-control">
@@ -93,13 +123,14 @@ import { CatalogService, Tax } from '@core/services/catalog.service';
     .btn-add svg { width: 16px; height: 16px; }
     
     .data-table { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; }
-    .table-header, .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 1rem; padding: 1rem 1.25rem; align-items: center; }
+    .table-header, .table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr; gap: 1rem; padding: 1rem 1.25rem; align-items: center; }
     .table-header { background: rgba(255, 255, 255, 0.05); font-size: 0.8rem; font-weight: 600; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; }
     .table-row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
     .table-row:last-child { border: none; }
     
     .cell-main { font-weight: 500; color: white; }
-    .cell-secondary { color: rgba(255, 255, 255, 0.6); }
+    .cell-secondary { color: rgba(255, 255, 255, 0.6); display: flex; align-items: center; gap: 0.5rem; }
+    .badge-mini { background: rgba(99, 102, 241, 0.2); color: #818cf8; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; }
     .cell-badge { padding: 0.25rem 0.75rem; background: rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 0.8rem; color: white; display: inline-block; }
     .cell-badge.is-default { background: rgba(16, 185, 129, 0.2); color: #10B981; }
     .cell-status { padding: 0.25rem 0.75rem; background: rgba(239, 68, 68, 0.2); border-radius: 6px; font-size: 0.8rem; color: #EF4444; }
@@ -137,7 +168,9 @@ export class TaxConfigComponent implements OnInit {
     nombre: '',
     porcentaje: 0,
     esDefault: false,
-    activo: true
+    activo: true,
+    pais: '',
+    tipo: ''
   };
 
   ngOnInit() {
@@ -153,7 +186,7 @@ export class TaxConfigComponent implements OnInit {
 
   openDialog() {
     this.editingTax.set(null);
-    this.currentTax = { nombre: '', porcentaje: 0, esDefault: false, activo: true };
+    this.currentTax = { nombre: '', porcentaje: 0, esDefault: false, activo: true, pais: '', tipo: '' };
     this.showDialog.set(true);
   }
 
