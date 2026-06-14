@@ -101,13 +101,14 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
            <span class="search-icon">🔍</span>
            <input 
              type="text" 
-             [(ngModel)]="searchQuery" 
+             [ngModel]="searchQuery()"
+             (ngModelChange)="searchQuery.set($event)"
              placeholder="Buscar por nombre, SKU o escanear código..." 
              class="search-input w-full"
              #searchInput
            />
-           @if (searchQuery) {
-             <button class="search-clear" (click)="searchQuery = ''">✕</button>
+           @if (searchQuery()) {
+             <button class="search-clear" (click)="searchQuery.set('')">✕</button>
            }
            <button class="search-scanner-btn" (click)="openSearchScanner()" title="Escanear Código de Barras">
              <i class="pi pi-camera"></i>
@@ -138,12 +139,14 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
          } @else {
             @if (filterMode() === 'movements') {
                <!-- MOVEMENTS VIEW -->
-               <div class="movements-timeline-container">
-                  <div class="movements-timeline">
-                     @for (group of groupedMovements(); track group.date) {
-                        <div class="timeline-day-header">
-                           <span class="day-badge">{{ group.date }}</span>
-                        </div>
+               <div class="movements-layout">
+                  <!-- Timeline -->
+                  <div class="movements-timeline-container">
+                     <div class="movements-timeline">
+                        @for (group of groupedMovements(); track group.date) {
+                           <div class="timeline-day-header" [id]="'day-' + group.date">
+                              <span class="day-badge">{{ group.date }}</span>
+                           </div>
                         @for (mov of group.items; track mov.id) {
                            <div class="timeline-item" [class.positive]="isPositive(mov.tipo)" [class.negative]="!isPositive(mov.tipo)">
                               <div class="timeline-icon">
@@ -171,12 +174,56 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
                         }
                      }
                   </div>
-                  @if (filteredMovements().length === 0) {
+                  @if (groupedMovements().length === 0) {
                      <div class="empty-state">
-                        <div class="icon">📋</div>
-                        <h3>No hay movimientos recientes</h3>
+                        <i class="pi pi-inbox"></i>
+                        <p>No hay movimientos registrados</p>
                      </div>
                   }
+                  </div>
+
+                  <!-- Sticky Calendar Sidebar -->
+                  <div class="movements-calendar-sidebar">
+                     <div class="calendar-card">
+                        <div class="calendar-header">
+                           <button class="btn-nav" (click)="prevMonth()">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                 <path d="M15 19l-7-7 7-7"/>
+                              </svg>
+                           </button>
+                           <h3>{{ currentMonthName() }} {{ currentYear() }}</h3>
+                           <button class="btn-nav" (click)="nextMonth()">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                 <path d="M9 5l7 7-7 7"/>
+                              </svg>
+                           </button>
+                        </div>
+                        <div class="calendar-grid">
+                           <div class="calendar-weekdays">
+                              @for (day of weekdays; track day) {
+                                 <span>{{ day }}</span>
+                              }
+                           </div>
+                           <div class="calendar-days">
+                              @for (day of calendarDays(); track day.date.toISOString()) {
+                                 <button 
+                                    class="calendar-day"
+                                    [class.other-month]="!day.isCurrentMonth"
+                                    [class.today]="day.isToday"
+                                    [class.has-movements]="day.hasMovements"
+                                    (click)="scrollToDate(day.date)"
+                                    [disabled]="!day.hasMovements"
+                                 >
+                                    <span class="day-number">{{ day.dayNumber }}</span>
+                                    @if (day.hasMovements && day.isCurrentMonth) {
+                                       <span class="day-indicator"></span>
+                                    }
+                                 </button>
+                              }
+                           </div>
+                        </div>
+                     </div>
+                  </div>
                </div>
             } @else {
                <!-- STOCK VIEW -->
@@ -493,7 +540,7 @@ export class InventoryComponent implements OnInit {
   private stockService = inject(StockService);
   private offlineService = inject(OfflineService);
   private branchContext = inject(BranchContextService);
-  private branchService = inject(BranchService);
+private branchService = inject(BranchService);
   private catalogService = inject(CatalogService);
 
   // Signals
@@ -506,7 +553,7 @@ export class InventoryComponent implements OnInit {
   categories = signal<any[]>([]);
   currentBranchName = computed(() => this.branchContext.activeBranch()?.nombre || '');
 
-  searchQuery = '';
+  searchQuery = signal('');
   scanningMode = false;
   showScannerModal = false;
   scannerTarget: 'search' | 'newProduct' = 'newProduct';
@@ -563,8 +610,8 @@ export class InventoryComponent implements OnInit {
       items = items.filter(i => i.stockBajo);
     }
 
-    if (!this.searchQuery.trim()) return items;
-    const q = this.searchQuery.toLowerCase();
+    if (!this.searchQuery().trim()) return items;
+    const q = this.searchQuery().toLowerCase();
     return items.filter(s =>
       s.productName.toLowerCase().includes(q) ||
       s.variantSku.toLowerCase().includes(q)
@@ -572,8 +619,8 @@ export class InventoryComponent implements OnInit {
   });
 
   filteredMovements = computed(() => {
-    if (!this.searchQuery.trim()) return this.movements();
-    const q = this.searchQuery.toLowerCase();
+    if (!this.searchQuery().trim()) return this.movements();
+    const q = this.searchQuery().toLowerCase();
     return this.movements().filter(m =>
       m.productName.toLowerCase().includes(q) ||
       m.variantSku.toLowerCase().includes(q)
@@ -587,21 +634,91 @@ export class InventoryComponent implements OnInit {
     // Agrupar por fecha local
     movements.forEach(m => {
       const dateObj = new Date(m.createdAt);
-      // Formato "Día, DD de Mes" ej. "Lunes, 14 de Junio"
-      const dateStr = dateObj.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Santiago' });
-      // Capitalizar la primera letra
-      const capitalizedDateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+      const dateStr = this.formatDateStrForId(dateObj);
       
-      const existingGroup = groups.find(g => g.date === capitalizedDateStr);
+      const existingGroup = groups.find(g => g.date === dateStr);
       if (existingGroup) {
         existingGroup.items.push(m);
       } else {
-        groups.push({ date: capitalizedDateStr, items: [m] });
+        groups.push({ date: dateStr, items: [m] });
       }
     });
     
     return groups;
   });
+
+  // --- Calendar Navigation Logic ---
+  currentCalendarDate = signal(new Date());
+  weekdays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
+
+  formatDateStrForId(date: Date): string {
+    const dateStr = date.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Santiago' });
+    return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  }
+
+  currentMonthName = computed(() => {
+    const d = this.currentCalendarDate();
+    const str = d.toLocaleDateString('es-CL', { month: 'long' });
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  });
+  
+  currentYear = computed(() => this.currentCalendarDate().getFullYear());
+
+  calendarDays = computed(() => {
+    const year = this.currentCalendarDate().getFullYear();
+    const month = this.currentCalendarDate().getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // getDay() is 0 for Sunday, 1 for Monday. We want 0=Monday, 6=Sunday.
+    let startDay = firstDay.getDay() - 1;
+    if (startDay === -1) startDay = 6;
+
+    const days: any[] = [];
+    const today = new Date();
+
+    // Previous month days
+    for (let i = startDay - 1; i >= 0; i--) {
+      const date = new Date(year, month, -i);
+      days.push(this.createDayData(date, false, today));
+    }
+
+    // Current month days
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      const date = new Date(year, month, i);
+      days.push(this.createDayData(date, true, today));
+    }
+
+    return days;
+  });
+
+  private createDayData(date: Date, isCurrentMonth: boolean, today: Date) {
+    return {
+      date,
+      dayNumber: date.getDate(),
+      isCurrentMonth,
+      isToday: date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate(),
+      hasMovements: this.groupedMovements().some(g => g.date === this.formatDateStrForId(date))
+    };
+  }
+
+  prevMonth() {
+    const current = this.currentCalendarDate();
+    this.currentCalendarDate.set(new Date(current.getFullYear(), current.getMonth() - 1, 1));
+  }
+
+  nextMonth() {
+    const current = this.currentCalendarDate();
+    this.currentCalendarDate.set(new Date(current.getFullYear(), current.getMonth() + 1, 1));
+  }
+
+  scrollToDate(date: Date) {
+    const idStr = 'day-' + this.formatDateStrForId(date);
+    const el = document.getElementById(idStr);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   // --- Barcode Scanner Listener ---
   private buffer = '';
@@ -632,7 +749,7 @@ export class InventoryComponent implements OnInit {
 
   handleScan(code: string) {
     console.log('Scanned:', code);
-    this.searchQuery = code;
+    this.searchQuery.set(code);
     const match = this.stock().find(s => s.variantSku === code || s.productName.includes(code));
     if (match) {
       // Optional: auto-action
@@ -641,7 +758,7 @@ export class InventoryComponent implements OnInit {
 
   onBarcodeScanned(code: string) {
     if (this.scannerTarget === 'search') {
-      this.searchQuery = code;
+      this.searchQuery.set(code);
     } else {
       this.newProductForm.sku = code;
     }
