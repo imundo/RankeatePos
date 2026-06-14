@@ -685,8 +685,31 @@ export class CompanyManagementComponent implements OnInit {
         primaryColor: this.primaryColor,
         secondaryColor: this.secondaryColor
       });
+      
+      // Sync currency and country to authService tenant (pos_tenant)
+      const currentTenant = this.authService.tenant();
+      if (currentTenant && data.currency) {
+        const localeMap: Record<string, string> = {
+          'CLP': 'es-CL',
+          'VES': 'es-VE',
+          'USD': 'en-US',
+          'PEN': 'es-PE',
+          'MXN': 'es-MX',
+          'COP': 'es-CO',
+          'ARS': 'es-AR'
+        };
+        const updatedTenant = { 
+          ...currentTenant, 
+          currency: data.currency,
+          locale: localeMap[data.currency] || 'es-CL',
+          country: data.country
+        };
+        localStorage.setItem('pos_tenant', JSON.stringify(updatedTenant));
+      }
+      
       await new Promise(r => setTimeout(r, 500)); // Brief delay for UX
       console.log('Saved:', this.companyInfo());
+      window.location.reload(); // Reload to apply currency changes to the UI globally
     } finally {
       this.saving.set(false);
     }

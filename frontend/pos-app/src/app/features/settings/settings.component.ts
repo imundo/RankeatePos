@@ -101,7 +101,7 @@ interface User {
               </div>
               <div class="info-row">
                 <span class="label">Moneda Principal</span>
-                <select class="tax-select" [(ngModel)]="selectedCurrency" (change)="saveBusinessInfo()">
+                <select class="tax-select" [(ngModel)]="selectedCurrency">
                   <option value="CLP">Peso Chileno (CLP)</option>
                   <option value="VES">Bolívar Venezolano (VES)</option>
                   <option value="USD">Dólar (USD)</option>
@@ -109,6 +109,11 @@ interface User {
                   <option value="MXN">Peso Mexicano (MXN)</option>
                 </select>
               </div>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+              <button class="btn btn-primary" (click)="saveBusinessInfo()" [disabled]="isLoading()">
+                @if(isLoading()) { Guardando... } @else { 💾 Guardar Configuración }
+              </button>
             </div>
           </section>
 
@@ -591,6 +596,29 @@ interface User {
 
       .tax-select {
         width: 100%;
+        padding: 0.5rem;
+        background: #1e293b;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+      }
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+      }
+      .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
       }
     }
   `]

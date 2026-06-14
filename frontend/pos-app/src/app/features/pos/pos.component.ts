@@ -335,7 +335,7 @@ interface CartItem {
                 <span>{{ formatPrice(subtotal()) }}</span>
               </div>
               <div class="summary-row">
-                <span>IVA (19%)</span>
+                <span>Impuestos</span>
                 <span>{{ formatPrice(taxTotal()) }}</span>
               </div>
               <div class="summary-row total">
@@ -413,7 +413,7 @@ interface CartItem {
                 <span>{{ formatPrice(subtotalCheckout()) }}</span>
               </div>
               <div class="total-row">
-                <span>IVA (19%):</span>
+                <span>Impuestos:</span>
                 <span>{{ formatPrice(taxCheckout()) }}</span>
               </div>
               @if (loyaltyDiscount() > 0) {
@@ -694,7 +694,7 @@ interface CartItem {
                     <span>{{ formatPrice(subtotalCheckout()) }}</span>
                   </div>
                   <div class="total-row">
-                    <span>IVA (19%):</span>
+                    <span>Impuestos:</span>
                     <span>{{ formatPrice(taxCheckout()) }}</span>
                   </div>
                   <div class="total-row bold">
@@ -836,11 +836,11 @@ interface CartItem {
                <div class="receipt-totals">
                  <div class="total-row">
                    <span>Neto:</span>
-                   <span>{{ formatPrice(Math.round(lastSaleTotal / 1.19)) }}</span>
+                   <span>{{ formatPrice(lastSaleNeto()) }}</span>
                  </div>
                  <div class="total-row">
-                   <span>IVA (19%):</span>
-                   <span>{{ formatPrice(lastSaleTotal - Math.round(lastSaleTotal / 1.19)) }}</span>
+                   <span>Impuestos:</span>
+                   <span>{{ formatPrice(lastSaleTotal - lastSaleNeto()) }}</span>
                  </div>
                  <div class="total-row bold">
                    <span>TOTAL:</span>
@@ -3737,23 +3737,47 @@ export class PosComponent implements OnInit {
 
   total = computed(() => Math.max(0, this.grossTotal() - this.loyaltyDiscount()));
 
-  subtotal = computed(() =>
-    Math.round(this.total() / 1.19) // Calculate net amount from total
-  );
+  subtotal = computed(() => {
+    let netSum = 0;
+    for (const item of this.cartItems()) {
+      const taxRate = item.impuestoPorcentaje || 0; // Default to 0 if not set, though usually 19
+      netSum += item.subtotal / (1 + taxRate / 100);
+    }
+    
+    // Apply loyalty discount proportionally to the net amount
+    const tGross = this.grossTotal();
+    if (tGross > 0) {
+       const discountRatio = this.total() / tGross;
+       netSum *= discountRatio;
+    }
+    return Math.round(netSum);
+  });
 
   taxTotal = computed(() =>
     this.total() - this.subtotal() // Difference is the tax
   );
 
-  // For checkout modal
-  subtotalCheckout = computed(() => {
-    const totalAmount = this.total();
-    return Math.round(totalAmount / 1.19); // Remove IVA
+  lastSaleNeto = computed(() => {
+    let netSum = 0;
+    for (const item of this.lastSaleItems()) {
+      const taxRate = item.impuestoPorcentaje || 0;
+      netSum += item.subtotal / (1 + taxRate / 100);
+    }
+    
+    // Approximate discount ratio if total differs from gross sum of items
+    const grossItems = this.lastSaleItems().reduce((sum, item) => sum + item.subtotal, 0);
+    if (grossItems > 0 && this.lastSaleTotal < grossItems) {
+      const discountRatio = this.lastSaleTotal / grossItems;
+      netSum *= discountRatio;
+    }
+    
+    return Math.round(netSum);
   });
 
-  taxCheckout = computed(() => {
-    return this.total() - this.subtotalCheckout(); // IVA 19%
-  });
+  // For checkout modal
+  subtotalCheckout = computed(() => this.subtotal());
+
+  taxCheckout = computed(() => this.taxTotal());
 
   // Permissions Helper
   canAccess(moduleId: string): boolean {
