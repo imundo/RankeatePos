@@ -669,7 +669,7 @@ export class WhatsappComponent implements OnInit {
         const tenant = this.authService.tenant();
         const locale = tenant?.locale || 'es-CL';
         const currency = tenant?.currency || 'CLP';
-        return new Intl.NumberFormat(locale, { style: 'currency', currency: currency, minimumFractionDigits: 0 }).format(amount);
+        return new Intl.NumberFormat(locale, { style: 'currency', currency: ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP'), minimumFractionDigits: 0 }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
     }
 
     formatTime(date: Date): string {

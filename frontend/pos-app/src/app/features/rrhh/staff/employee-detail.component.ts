@@ -551,7 +551,7 @@ export class EmployeeDetailComponent implements OnInit {
 
   formatMoney(amount: number): string {
     if (!amount) return '$0';
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 
   formatDate(date: string | undefined): string {

@@ -24,6 +24,7 @@ import { StockService } from '@core/services/stock.service';
 import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
+import { CompanyService } from '@core/services/company.service';
 import { LoyaltyService, LoyaltyCustomer } from '@core/services/loyalty.service';
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
 import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
@@ -78,6 +79,17 @@ interface CartItem {
           <app-branch-switcher class="ml-4"></app-branch-switcher>
         </div>
         <div class="header-right">
+          <!-- Documents Notifications -->
+          @if (expiringDocumentsCount() > 0) {
+            <button class="notification-badge docs-alert" routerLink="/settings" title="Documentos por vencer o vencidos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="badge-count">{{ expiringDocumentsCount() }}</span>
+            </button>
+          }
+
           <!-- WhatsApp Notifications -->
           @if (whatsappNotifications() > 0) {
             <button class="notification-badge whatsapp" routerLink="/whatsapp" title="Mensajes de WhatsApp">
@@ -3359,6 +3371,7 @@ export class PosComponent implements OnInit {
   private salesEventService = inject(SalesEventService);
   private loyaltyService = inject(LoyaltyService);
   private branchContext = inject(BranchContextService);
+  private companyService = inject(CompanyService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -3636,6 +3649,10 @@ export class PosComponent implements OnInit {
   whatsappNotifications = signal(3);
   reservationsToday = signal(5);
   kdsOrders = signal(3);
+  
+  expiringDocumentsCount = computed(() => 
+    this.companyService.documents().filter(d => d.estado === 'POR_VENCER' || d.estado === 'VENCIDO').length
+  );
 
   filteredProducts = computed(() => {
     let result = this.products();
@@ -3857,6 +3874,9 @@ export class PosComponent implements OnInit {
     this.whatsappNotifications.set(counts.whatsapp);
     this.reservationsToday.set(counts.reservations);
     this.kdsOrders.set(counts.kds);
+
+    // Load documents for notifications
+    this.companyService.loadDocuments();
   }
 
   loadPendingSales(): void {
@@ -4329,9 +4349,9 @@ export class PosComponent implements OnInit {
     const currency = tenant?.currency || 'CLP';
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: currency,
+      currency: ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP'),
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 
   logout(): void {

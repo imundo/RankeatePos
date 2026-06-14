@@ -71,117 +71,111 @@ export class CompanyService {
         };
     }
 
+
     // ========== BRANDING ==========
 
     loadBranding(): void {
         this.loading.set(true);
-
-        // Try localStorage first
-        const cached = localStorage.getItem(STORAGE_KEY);
-        if (cached) {
-            try {
-                const data = JSON.parse(cached);
-                this.branding.set({ ...this.getDefaultBranding(), ...data });
-            } catch (e) {
-                console.error('Error parsing cached branding:', e);
+        this.http.get<any>(`${environment.apiUrl}/tenants/current`).subscribe({
+            next: (tenant) => {
+                this.branding.update(b => ({
+                    ...this.getDefaultBranding(),
+                    ...tenant,
+                    nombre: tenant.nombreFantasia || tenant.razonSocial || b.nombre,
+                    logoUrl: tenant.logoUrl || b.logoUrl,
+                    primaryColor: tenant.primaryColor || b.primaryColor,
+                    secondaryColor: tenant.secondaryColor || b.secondaryColor,
+                    accentColor: tenant.accentColor || b.accentColor
+                }));
+                this.applyBrandingStyles(this.branding());
+                this.loading.set(false);
+            },
+            error: (err) => {
+                console.error('Error loading branding:', err);
+                this.loading.set(false);
             }
-        }
-
-        // Also load from tenant info
-        const tenant = this.authService.tenant();
-        if (tenant) {
-            this.branding.update(b => ({
-                ...b,
-                nombre: tenant.nombre || b.nombre,
-                rut: tenant.rut || b.rut
-            }));
-        }
-
-        this.loading.set(false);
+        });
     }
 
     saveBranding(data: Partial<CompanyBranding>): Observable<CompanyBranding> {
-        const updated = { ...this.branding(), ...data };
-
-        // Save to localStorage immediately
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        this.branding.set(updated);
-
-        // Apply CSS variables
-        this.applyBrandingStyles(updated);
-
-        return of(updated);
+        const payload = {
+            logoUrl: data.logoUrl,
+            primaryColor: data.primaryColor,
+            secondaryColor: data.secondaryColor,
+            accentColor: data.accentColor
+        };
+        
+        return this.http.put<any>(`${environment.apiUrl}/tenants/current/branding`, payload).pipe(
+            tap(updated => {
+                this.branding.update(b => ({
+                    ...b,
+                    primaryColor: updated.primaryColor || b.primaryColor,
+                    secondaryColor: updated.secondaryColor || b.secondaryColor,
+                    accentColor: updated.accentColor || b.accentColor,
+                    logoUrl: updated.logoUrl || b.logoUrl
+                }));
+                this.applyBrandingStyles(this.branding());
+            })
+        );
     }
 
     updateLogo(logoDataUrl: string): void {
-        this.branding.update(b => ({ ...b, logoUrl: logoDataUrl }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.branding()));
+        this.saveBranding({ logoUrl: logoDataUrl }).subscribe();
     }
 
     removeLogo(): void {
-        this.branding.update(b => ({ ...b, logoUrl: '' }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.branding()));
+        this.saveBranding({ logoUrl: '' }).subscribe();
     }
 
     updateColors(primaryColor: string, secondaryColor: string, accentColor?: string): void {
-        this.branding.update(b => ({
-            ...b,
-            primaryColor,
-            secondaryColor,
-            accentColor: accentColor || b.accentColor
-        }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.branding()));
-        this.applyBrandingStyles(this.branding());
+        this.saveBranding({ primaryColor, secondaryColor, accentColor }).subscribe();
     }
 
     private applyBrandingStyles(branding: CompanyBranding): void {
         const root = document.documentElement;
-        root.style.setProperty('--brand-primary', branding.primaryColor);
-        root.style.setProperty('--brand-secondary', branding.secondaryColor);
-        root.style.setProperty('--brand-accent', branding.accentColor);
+        if (branding.primaryColor) {
+            root.style.setProperty('--primary-color', branding.primaryColor);
+            // Derive a gradient based on the primary color if we want it to be fully dynamic, 
+            // for now, we just apply the primary color to the first stop.
+            root.style.setProperty('--brand-primary', branding.primaryColor); 
+        }
+        if (branding.secondaryColor) {
+            root.style.setProperty('--secondary-color', branding.secondaryColor);
+            root.style.setProperty('--brand-secondary', branding.secondaryColor);
+        }
+        if (branding.accentColor) {
+            root.style.setProperty('--brand-accent', branding.accentColor);
+        }
     }
 
     // ========== DOCUMENTS ==========
 
     loadDocuments(): void {
-        // Load from localStorage
-        const cached = localStorage.getItem(DOCS_STORAGE_KEY);
-        if (cached) {
-            try {
-                this.documents.set(JSON.parse(cached));
-            } catch (e) {
-                console.error('Error parsing cached documents:', e);
-                this.documents.set([]);
-            }
-        }
+        this.http.get<CompanyDocument[]>(`${environment.apiUrl}/tenants/current/documents`).subscribe({
+            next: (docs) => {
+                this.documents.set(docs);
+            },
+            error: (err) => console.error('Error loading documents:', err)
+        });
     }
 
-    addDocument(doc: Omit<CompanyDocument, 'id'>): CompanyDocument {
-        const newDoc: CompanyDocument = {
-            ...doc,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString()
-        };
-
-        this.documents.update(docs => [...docs, newDoc]);
-        localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(this.documents()));
-
-        return newDoc;
-    }
-
-    updateDocument(id: string, data: Partial<CompanyDocument>): void {
-        this.documents.update(docs =>
-            docs.map(d => d.id === id ? { ...d, ...data } : d)
+    addDocument(doc: Omit<CompanyDocument, 'id' | 'estado' | 'createdAt'>): Observable<CompanyDocument> {
+        return this.http.post<CompanyDocument>(`${environment.apiUrl}/tenants/current/documents`, doc).pipe(
+            tap(newDoc => {
+                this.documents.update(docs => [...docs, newDoc]);
+            })
         );
-        localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(this.documents()));
     }
 
-    deleteDocument(id: string): void {
-        this.documents.update(docs => docs.filter(d => d.id !== id));
-        localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(this.documents()));
+    deleteDocument(id: string): Observable<void> {
+        return this.http.delete<void>(`${environment.apiUrl}/tenants/current/documents/${id}`).pipe(
+            tap(() => {
+                this.documents.update(docs => docs.filter(d => d.id !== id));
+            })
+        );
     }
 
-    // Check document expiration status
+    // Check document expiration status locally for immediate UI feedback
     checkDocumentStatus(doc: CompanyDocument): 'VIGENTE' | 'POR_VENCER' | 'VENCIDO' {
         if (!doc.fechaVencimiento) return 'VIGENTE';
 
@@ -198,7 +192,5 @@ export class CompanyService {
         this.documents.update(docs =>
             docs.map(d => ({ ...d, estado: this.checkDocumentStatus(d) }))
         );
-        localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(this.documents()));
     }
 }
-

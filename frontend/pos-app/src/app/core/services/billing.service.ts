@@ -320,7 +320,7 @@ export class BillingService {
             style: 'currency',
             currency: 'CLP',
             minimumFractionDigits: 0
-        }).format(value);
+        }).format(value) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
     }
     // ========== REPORTES ==========
 

@@ -1042,6 +1042,6 @@ export class SmartPosComponent implements OnInit, OnDestroy {
     const tenant = this.authService.tenant();
     const locale = tenant?.locale || 'es-CL';
     const currency = tenant?.currency || 'CLP';
-    return new Intl.NumberFormat(locale, { style: 'currency', currency: currency, minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP'), minimumFractionDigits: 0 }).format(value) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 }

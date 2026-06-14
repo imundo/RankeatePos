@@ -23,6 +23,7 @@ public class TenantService {
 
     private final TenantRepository tenantRepository;
     private final com.poscl.auth.domain.repository.ModuleRepository moduleRepository;
+    private final com.poscl.auth.infrastructure.repository.TenantDocumentRepository documentRepository;
 
     /**
      * Cuenta total de tenants
@@ -200,5 +201,60 @@ public class TenantService {
             tenant.setPlan(request.getPlan());
 
         return tenantRepository.save(tenant);
+    }
+
+    /**
+     * Actualiza el branding de la empresa
+     */
+    public Tenant updateBranding(UUID id, String logoUrl, String primaryColor, String secondaryColor, String accentColor) {
+        Tenant tenant = findById(id);
+        if (logoUrl != null) tenant.setLogoUrl(logoUrl);
+        if (primaryColor != null) tenant.setPrimaryColor(primaryColor);
+        if (secondaryColor != null) tenant.setSecondaryColor(secondaryColor);
+        if (accentColor != null) tenant.setAccentColor(accentColor);
+        return tenantRepository.save(tenant);
+    }
+
+    /**
+     * Documentos
+     */
+    public java.util.List<com.poscl.auth.domain.entity.TenantDocument> getDocuments(UUID tenantId) {
+        java.util.List<com.poscl.auth.domain.entity.TenantDocument> docs = documentRepository.findByTenantId(tenantId);
+        // Actualizar estado dinámicamente si es necesario
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        for (com.poscl.auth.domain.entity.TenantDocument doc : docs) {
+            if (doc.getFechaVencimiento() != null) {
+                if (doc.getFechaVencimiento().isBefore(hoy)) {
+                    doc.setEstado("VENCIDO");
+                } else if (doc.getFechaVencimiento().isBefore(hoy.plusDays(30))) {
+                    doc.setEstado("POR_VENCER");
+                } else {
+                    doc.setEstado("VIGENTE");
+                }
+            }
+        }
+        return docs;
+    }
+
+    public com.poscl.auth.domain.entity.TenantDocument addDocument(UUID tenantId, com.poscl.auth.api.dto.TenantDocumentDto dto) {
+        Tenant tenant = findById(tenantId);
+        com.poscl.auth.domain.entity.TenantDocument doc = com.poscl.auth.domain.entity.TenantDocument.builder()
+                .tenant(tenant)
+                .nombre(dto.nombre())
+                .tipo(dto.tipo())
+                .fechaVencimiento(dto.fechaVencimiento())
+                .archivoUrl(dto.archivoUrl())
+                .estado(dto.estado() != null ? dto.estado() : "VIGENTE")
+                .build();
+        return documentRepository.save(doc);
+    }
+
+    public void deleteDocument(UUID tenantId, UUID documentId) {
+        com.poscl.auth.domain.entity.TenantDocument doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+        if (!doc.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("El documento no pertenece a este tenant");
+        }
+        documentRepository.delete(doc);
     }
 }

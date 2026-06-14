@@ -951,7 +951,7 @@ export class LoyaltyComponent implements OnInit {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 
   formatDate(dateStr: string): string {

@@ -705,7 +705,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 
   formatTimeAgo(date: Date | string): string {

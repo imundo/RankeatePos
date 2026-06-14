@@ -71,6 +71,15 @@ public class Tenant {
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 
+    @Column(name = "primary_color", length = 7)
+    private String primaryColor;
+
+    @Column(name = "secondary_color", length = 7)
+    private String secondaryColor;
+
+    @Column(name = "accent_color", length = 7)
+    private String accentColor;
+
     // Configuración
     @Enumerated(EnumType.STRING)
     @Column(name = "business_type", nullable = false, length = 50)

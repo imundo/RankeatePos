@@ -715,7 +715,7 @@ export class LeaveRequestsComponent implements OnInit {
   }
 
   formatMoney(amount: number): string {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 
   private getEmptyForm(): CreateLeaveRequest {

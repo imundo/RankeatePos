@@ -205,45 +205,54 @@ type CompanyInfo = CompanyBranding;
         </section>
       }
 
-      <!-- Add Document Modal -->
+      <!-- Add Document Modal Premium UX -->
       @if (showAddDocument) {
         <div class="modal-overlay" (click)="showAddDocument = false">
-          <div class="modal-content" (click)="$event.stopPropagation()">
-            <h2>Agregar Documento</h2>
+          <div class="modal-content glass-panel" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Añadir Documento</h2>
+              <button class="btn-close" (click)="showAddDocument = false">✕</button>
+            </div>
             
             <div class="form-group">
               <label>Nombre del Documento</label>
               <input type="text" [(ngModel)]="newDocument.nombre" placeholder="Ej: Patente Comercial">
             </div>
             
-            <div class="form-group">
-              <label>Tipo de Documento</label>
-              <select [(ngModel)]="newDocument.tipo">
-                <option value="PATENTE">Patente Comercial</option>
-                <option value="SANITARIO">Permiso Sanitario</option>
-                <option value="BOMBEROS">Certificado Bomberos</option>
-                <option value="MUNICIPAL">Permiso Municipal</option>
-                <option value="TRIBUTARIO">Documento Tributario</option>
-                <option value="OTRO">Otro</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>Fecha de Vencimiento (opcional)</label>
-              <input type="date" [(ngModel)]="newDocument.fechaVencimiento">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Tipo de Documento</label>
+                <select [(ngModel)]="newDocument.tipo">
+                  <option value="PATENTE">Patente Comercial</option>
+                  <option value="SANITARIO">Permiso Sanitario</option>
+                  <option value="BOMBEROS">Certificado Bomberos</option>
+                  <option value="MUNICIPAL">Permiso Municipal</option>
+                  <option value="TRIBUTARIO">Documento Tributario</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Fecha de Vencimiento (opcional)</label>
+                <input type="date" [(ngModel)]="newDocument.fechaVencimiento">
+              </div>
             </div>
             
             <div class="form-group">
               <label>Archivo</label>
-              <label class="file-upload">
-                <input type="file" accept=".pdf,.jpg,.png" hidden>
-                📎 Seleccionar archivo
-              </label>
+              <div class="drag-drop-area">
+                <input type="file" accept=".pdf,.jpg,.png" hidden id="docUpload">
+                <div class="upload-icon">📄</div>
+                <p>Arrastra y suelta tu archivo aquí</p>
+                <label class="btn-outline" for="docUpload">
+                  Explorar Archivos
+                </label>
+              </div>
             </div>
             
             <div class="modal-actions">
               <button class="btn-cancel" (click)="showAddDocument = false">Cancelar</button>
-              <button class="btn-confirm" (click)="addDocument()">Agregar</button>
+              <button class="btn-confirm" (click)="addDocument()">Añadir Documento</button>
             </div>
           </div>
         </div>
@@ -578,37 +587,93 @@ type CompanyInfo = CompanyBranding;
       p { margin: 0 0 1.5rem; }
     }
 
-    /* Modal */
+    /* Modal Premium UX */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 1rem;
       z-index: 100;
+      animation: fadeIn 0.2s ease-out;
     }
 
-    .modal-content {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 1.5rem;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content.glass-panel {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
       width: 100%;
-      max-width: 450px;
-      
-      h2 { margin: 0 0 1.5rem; font-size: 1.25rem; }
+      max-width: 500px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .file-upload {
-      display: block;
-      padding: 0.875rem 1rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      text-align: center;
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      
+      h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+      
+      .btn-close {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color 0.2s;
+        
+        &:hover { color: white; }
+      }
+    }
+
+    .drag-drop-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      transition: all 0.2s;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(99, 102, 241, 0.5);
+      }
+      
+      .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+      p { margin: 0 0 1rem; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+    }
+
+    .btn-outline {
+      padding: 0.6rem 1.25rem;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      font-size: 0.85rem;
       cursor: pointer;
-      color: rgba(255, 255, 255, 0.7);
+      transition: background 0.2s;
+      
+      &:hover { background: rgba(255, 255, 255, 0.1); }
     }
 
     .modal-actions {
@@ -747,15 +812,15 @@ export class CompanyManagementComponent implements OnInit {
     this.companyService.addDocument({
       nombre: this.newDocument.nombre,
       tipo: this.newDocument.tipo,
-      fechaVencimiento: this.newDocument.fechaVencimiento || undefined,
-      estado: 'VIGENTE'
+      fechaVencimiento: this.newDocument.fechaVencimiento || undefined
+    }).subscribe(() => {
+      this.showAddDocument = false;
+      this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '' };
     });
-    this.showAddDocument = false;
-    this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '' };
   }
 
   deleteDocument(id: string) {
-    this.companyService.deleteDocument(id);
+    this.companyService.deleteDocument(id).subscribe();
   }
 
   getDocumentIcon(tipo: string): string {

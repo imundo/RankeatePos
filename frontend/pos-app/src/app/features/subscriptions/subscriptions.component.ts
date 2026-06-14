@@ -753,9 +753,9 @@ export class SubscriptionsComponent implements OnInit {
         const currency = tenant?.currency || 'CLP';
         return new Intl.NumberFormat(locale, {
             style: 'currency',
-            currency: currency,
+            currency: ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP'),
             minimumFractionDigits: 0
-        }).format(amount);
+        }).format(amount) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
     }
 
     formatDate(dateStr: string): string {

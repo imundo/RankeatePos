@@ -23,6 +23,7 @@ public class TenantController {
 
     private final TenantRepository tenantRepository;
     private final com.poscl.auth.application.service.TenantConfigService tenantConfigService;
+    private final com.poscl.auth.application.service.TenantService tenantService;
 
     /**
      * Obtiene los datos del tenant actual
@@ -138,7 +139,51 @@ public class TenantController {
                 .logoUrl(tenant.getLogoUrl())
                 .activo(tenant.getActivo())
                 .country(tenant.getCountry())
+                .primaryColor(tenant.getPrimaryColor())
+                .secondaryColor(tenant.getSecondaryColor())
+                .accentColor(tenant.getAccentColor())
                 .build();
+    }
+
+    /**
+     * Actualiza el branding
+     */
+    @PutMapping("/current/branding")
+    public ResponseEntity<TenantDto> updateBranding(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestBody UpdateBrandingRequest request) {
+        Tenant updated = tenantService.updateBranding(tenantId, request.getLogoUrl(), request.getPrimaryColor(), request.getSecondaryColor(), request.getAccentColor());
+        return ResponseEntity.ok(toDto(updated));
+    }
+
+    /**
+     * Documentos
+     */
+    @GetMapping("/current/documents")
+    public ResponseEntity<java.util.List<com.poscl.auth.api.dto.TenantDocumentDto>> getDocuments(
+            @RequestHeader("X-Tenant-Id") UUID tenantId) {
+        return ResponseEntity.ok(tenantService.getDocuments(tenantId).stream()
+                .map(doc -> new com.poscl.auth.api.dto.TenantDocumentDto(
+                        doc.getId(), doc.getNombre(), doc.getTipo(), doc.getFechaVencimiento(), doc.getArchivoUrl(), doc.getEstado()
+                )).toList());
+    }
+
+    @PostMapping("/current/documents")
+    public ResponseEntity<com.poscl.auth.api.dto.TenantDocumentDto> addDocument(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestBody com.poscl.auth.api.dto.TenantDocumentDto dto) {
+        com.poscl.auth.domain.entity.TenantDocument doc = tenantService.addDocument(tenantId, dto);
+        return ResponseEntity.ok(new com.poscl.auth.api.dto.TenantDocumentDto(
+                doc.getId(), doc.getNombre(), doc.getTipo(), doc.getFechaVencimiento(), doc.getArchivoUrl(), doc.getEstado()
+        ));
+    }
+
+    @DeleteMapping("/current/documents/{id}")
+    public ResponseEntity<Void> deleteDocument(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @PathVariable UUID id) {
+        tenantService.deleteDocument(tenantId, id);
+        return ResponseEntity.noContent().build();
     }
 
     @Data
@@ -160,6 +205,19 @@ public class TenantController {
         private String logoUrl;
         private Boolean activo;
         private String country;
+        private String primaryColor;
+        private String secondaryColor;
+        private String accentColor;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateBrandingRequest {
+        private String logoUrl;
+        private String primaryColor;
+        private String secondaryColor;
+        private String accentColor;
     }
 
     @Data

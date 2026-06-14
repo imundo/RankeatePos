@@ -830,6 +830,6 @@ export class CertificacionComponent implements OnInit {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value) + ' ' + ((this as any).authService ? ((this as any).authService.tenant()?.currency || 'CLP') : 'CLP');
   }
 }
