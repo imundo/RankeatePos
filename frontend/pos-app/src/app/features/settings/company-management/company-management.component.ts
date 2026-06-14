@@ -60,6 +60,27 @@ type CompanyInfo = CompanyBranding;
               <label>Giro Comercial</label>
               <input type="text" [(ngModel)]="companyInfo().giro" placeholder="Elaboración y venta de productos de panadería">
             </div>
+            <div class="form-group">
+              <label>País</label>
+              <select [(ngModel)]="companyInfo().country">
+                <option value="CL">Chile</option>
+                <option value="PE">Perú</option>
+                <option value="MX">México</option>
+                <option value="CO">Colombia</option>
+                <option value="AR">Argentina</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Moneda Base</label>
+              <select [(ngModel)]="companyInfo().currency">
+                <option value="CLP">CLP - Peso Chileno</option>
+                <option value="PEN">PEN - Sol Peruano</option>
+                <option value="MXN">MXN - Peso Mexicano</option>
+                <option value="COP">COP - Peso Colombiano</option>
+                <option value="ARS">ARS - Peso Argentino</option>
+                <option value="USD">USD - Dólar Estadounidense</option>
+              </select>
+            </div>
             <div class="form-group full-width">
               <label>Dirección</label>
               <input type="text" [(ngModel)]="companyInfo().direccion" placeholder="Av. Principal 123">

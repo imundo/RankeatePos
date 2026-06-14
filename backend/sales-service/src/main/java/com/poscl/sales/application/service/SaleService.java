@@ -408,9 +408,11 @@ public class SaleService {
     }
 
     private void emitirBoleta(UUID tenantId, UUID userId, Sale sale) {
-        log.info("Iniciando emisiÃ³n automÃ¡tica de boleta para venta {}", sale.getNumero());
+        log.info("Iniciando emisión automática de boleta para venta {}", sale.getNumero());
 
         try {
+            validateDteRequest(sale);
+
             // Construir payload
             Map<String, Object> request = new HashMap<>();
 
@@ -472,8 +474,21 @@ public class SaleService {
 
         } catch (Exception e) {
             log.error("Error emitiendo boleta para venta {}: {}", sale.getNumero(), e.getMessage());
-            // No propagamos la excepciÃ³n para no romper la venta, ya que es un proceso
+            // No propagamos la excepción para no romper la venta, ya que es un proceso
             // post-venta
+            throw new RuntimeException("Error emitiendo boleta: " + e.getMessage());
+        }
+    }
+
+    private void validateDteRequest(Sale sale) {
+        if (sale.getTotal() == null || sale.getTotal() <= 0) {
+            throw new DomainException("INVALID_DTE_AMOUNT", "El monto de la venta debe ser mayor a 0 para emitir un DTE");
+        }
+        
+        // Basic RUT validation (if provided)
+        if (sale.getCustomerId() != null && sale.getCustomerNombre() != null) {
+            // Validar RUT si existe (en un caso real, esto usaría una librería de RUT)
+            // Por ahora, asumimos que el cliente tiene los datos correctos o usamos el genérico
         }
     }
 
@@ -867,6 +882,9 @@ public class SaleService {
     @Value("${services.operations.url:}")
     private String operationsServiceUrl;
 
+    @Value("${services.accounting.url:http://accounting-service:8089}")
+    private String accountingServiceUrl;
+
     private void publishSaleCompletedEvent(Sale sale) {
         if (operationsServiceUrl == null || operationsServiceUrl.isBlank()) {
             log.debug("Operations service URL no configurada, omitiendo notificación");
@@ -892,6 +910,8 @@ public class SaleService {
                                     .total(i.getTotal() != null ? BigDecimal.valueOf(i.getTotal()) : BigDecimal.ZERO);
                             return b.build();
                         }).collect(Collectors.toList()))
+                        .netAmount(BigDecimal.valueOf(sale.getSubtotal() - sale.getDescuento()))
+                        .taxAmount(BigDecimal.valueOf(sale.getImpuestos()))
                         .build();
 
                 restTemplate.postForEntity(operationsServiceUrl + "/api/loyalty/sale-completed", event, Void.class);
@@ -900,6 +920,12 @@ public class SaleService {
                 log.warn("No se pudo notificar a operations-service para venta {}: {}", sale.getNumero(),
                         e.getMessage());
             }
+                try {
+                    restTemplate.postForEntity(accountingServiceUrl + "/api/accounting/events/sale-completed", event, Void.class);
+                    log.info("Notificación de venta enviada a accounting-service para venta {}", sale.getNumero());
+                } catch (Exception e) {
+                    log.warn("No se pudo notificar a accounting-service para venta {}: {}", sale.getNumero(), e.getMessage());
+                }
         }).start();
     }
 }

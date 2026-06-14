@@ -15,6 +15,8 @@ import java.util.UUID;
 @Repository
 public interface BankTransactionRepository extends JpaRepository<BankTransaction, UUID> {
 
+    List<BankTransaction> findByTenantId(UUID tenantId);
+
     Page<BankTransaction> findByBankAccountIdOrderByTransactionDateDescCreatedAtDesc(
         UUID bankAccountId, Pageable pageable);
 
@@ -33,3 +35,4 @@ public interface BankTransactionRepository extends JpaRepository<BankTransaction
     @Query("SELECT COUNT(bt) FROM BankTransaction bt WHERE bt.bankAccount.id = :bankAccountId AND bt.reconciliationStatus = 'PENDING'")
     Long countPendingReconciliation(UUID bankAccountId);
 }
+

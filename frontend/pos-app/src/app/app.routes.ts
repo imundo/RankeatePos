@@ -73,6 +73,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
+        path: 'impuestos',
+        loadComponent: () => import('./features/settings/tax-config.component').then(m => m.TaxConfigComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'company',
         loadComponent: () => import('./features/settings/company-management/company-management.component').then(m => m.CompanyManagementComponent),
         canActivate: [authGuard]
@@ -126,6 +131,16 @@ export const routes: Routes = [
     {
         path: 'admin/login',
         loadComponent: () => import('./features/admin/admin-login.component').then(m => m.AdminLoginComponent)
+    },
+    {
+        path: 'auditoria/bitacora',
+        loadComponent: () => import('./features/auditoria/bitacora.component').then(m => m.BitacoraComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'auditoria/aprobaciones',
+        loadComponent: () => import('./features/auditoria/aprobaciones.component').then(m => m.AprobacionesComponent),
+        canActivate: [authGuard]
     },
     {
         path: 'admin',
@@ -278,3 +293,5 @@ export const routes: Routes = [
         redirectTo: 'pos'
     }
 ];
+
+

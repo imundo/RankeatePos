@@ -15,6 +15,10 @@ export const FACTURACION_ROUTES: Routes = [
         loadComponent: () => import('./pages/emitir-documento.component').then(m => m.EmitirDocumentoComponent)
     },
     {
+        path: 'recibidos',
+        loadComponent: () => import('./pages/documentos-recibidos.component').then(m => m.DocumentosRecibidosComponent)
+    },
+    {
         path: 'documentos',
         loadComponent: () => import('./pages/lista-documentos.component').then(m => m.ListaDocumentosComponent)
     },
@@ -39,3 +43,4 @@ export const FACTURACION_ROUTES: Routes = [
         loadComponent: () => import('./pages/certificacion.component').then(m => m.CertificacionComponent)
     }
 ];
+

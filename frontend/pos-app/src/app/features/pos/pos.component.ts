@@ -1017,7 +1017,6 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">POS por Servicio</span>
-                <span class="item-badge new">Mesas</span>
               </button>
               <button *ngIf="canAccess('pos')" class="menu-item" routerLink="/smart-pos" (click)="showMenu = false">
                 <div class="item-icon lime">
@@ -1027,7 +1026,6 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">POS Inteligente</span>
-                <span class="item-badge new">Nuevo</span>
               </button>
               <button *ngIf="canAccess('sales-history')" class="menu-item" routerLink="/sales-history" (click)="showMenu = false">
                 <div class="item-icon purple">
@@ -1036,33 +1034,6 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">Historial Ventas</span>
-              </button>
-              <button *ngIf="canAccess('cash-close')" class="menu-item" routerLink="/earnings" (click)="showMenu = false">
-                <div class="item-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-                  </svg>
-                </div>
-                <span class="item-text">Ganancias Diarias</span>
-                <span class="item-badge new">Cierre</span>
-              </button>
-              <button *ngIf="canAccess('catalog')" class="menu-item" routerLink="/catalog" (click)="showMenu = false">
-                <div class="item-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                  </svg>
-                </div>
-                <span class="item-text">Catálogo</span>
-              </button>
-              <button *ngIf="canAccess('inventory')" class="menu-item" routerLink="/inventory" (click)="showMenu = false">
-                <div class="item-icon teal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-                  </svg>
-                </div>
-                <span class="item-text">Inventario</span>
               </button>
               <button *ngIf="canAccess('quotes')" class="menu-item" routerLink="/cotizaciones" (click)="showMenu = false">
                 <div class="item-icon pink">
@@ -1084,7 +1055,6 @@ interface CartItem {
                   </svg>
                 </div>
                 <span class="item-text">Reservas</span>
-                <span class="item-badge new">Nuevo</span>
               </button>
             </div>
 
@@ -1099,8 +1069,33 @@ interface CartItem {
                     <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
                 </div>
-                <span class="item-text">Facturación</span>
-                <span class="item-badge new">SII</span>
+                <span class="item-text">Documentos Emitidos</span>
+              </button>
+              <button *ngIf="canAccess('billing')" class="menu-item" routerLink="/facturacion/recibidos" (click)="showMenu = false">
+                <div class="item-icon teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+                  </svg>
+                </div>
+                <span class="item-text">Documentos Recibidos</span>
+              </button>
+              <button *ngIf="canAccess('crm')" class="menu-item" routerLink="/crm/clientes" (click)="showMenu = false">
+                <div class="item-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <span class="item-text">Clientes</span>
+              </button>
+              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/suppliers" (click)="showMenu = false">
+                <div class="item-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18M5 21V7l8-4 8 4v14M5 10a2 2 0 002-2V6a2 2 0 00-2-2m0 4h14m-14 4h14m-14 4h14"/>
+                  </svg>
+                </div>
+                <span class="item-text">Proveedores</span>
               </button>
             </div>
 
@@ -1113,23 +1108,7 @@ interface CartItem {
                     <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
                   </svg>
                 </div>
-                <span class="item-text">Dashboard</span>
-              </button>
-              <button *ngIf="canAccess('collections')" class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
-                <div class="item-icon blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-                  </svg>
-                </div>
-                <span class="item-text">Cobros y Pagos</span>
-              </button>
-              <button *ngIf="canAccess('cashflow')" class="menu-item" routerLink="/flujo-caja" (click)="showMenu = false">
-                <div class="item-icon teal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
-                  </svg>
-                </div>
-                <span class="item-text">Flujo de Caja</span>
+                <span class="item-text">Dashboard Financiero</span>
               </button>
               <button *ngIf="canAccess('accounting')" class="menu-item" routerLink="/contabilidad" (click)="showMenu = false">
                 <div class="item-icon emerald">
@@ -1139,6 +1118,22 @@ interface CartItem {
                 </div>
                 <span class="item-text">Contabilidad</span>
               </button>
+              <button *ngIf="canAccess('collections')" class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
+                <div class="item-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                  </svg>
+                </div>
+                <span class="item-text">Tesorería</span>
+              </button>
+              <button *ngIf="canAccess('accounting')" class="menu-item" routerLink="/impuestos" (click)="showMenu = false">
+                <div class="item-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>
+                  </svg>
+                </div>
+                <span class="item-text">Impuestos</span>
+              </button>
               <button *ngIf="canAccess('budget')" class="menu-item" routerLink="/presupuesto" (click)="showMenu = false">
                 <div class="item-icon purple">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1146,7 +1141,7 @@ interface CartItem {
                     <line x1="6" y1="20" x2="6" y2="14"/>
                   </svg>
                 </div>
-                <span class="item-text">Presupuesto</span>
+                <span class="item-text">Control Financiero</span>
               </button>
               <button *ngIf="canAccess('analytics')" class="menu-item" routerLink="/reports" (click)="showMenu = false">
                 <div class="item-icon gray">
@@ -1156,267 +1151,28 @@ interface CartItem {
                     <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
                 </div>
-                <span class="item-text">Reportes</span>
+                <span class="item-text">Reportes Financieros</span>
               </button>
             </div>
 
-            <!-- MARKETING & CRM -->
+            <!-- ADMINISTRACIÓN -->
             <div class="menu-section">
-              <span class="section-title">Marketing & CRM</span>
-              <button *ngIf="canAccess('crm')" class="menu-item" routerLink="/crm/cuentas-por-cobrar" (click)="showMenu = false">
-                <div class="item-icon green">
-                  <i class="pi pi-book"></i>
-                </div>
-                <span class="item-text">Cuentas por Cobrar</span>
-              </button>
-              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/crm" (click)="showMenu = false">
-                <div class="item-icon blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-                  </svg>
-                </div>
-                <span class="item-text">CRM Clientes</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/email" (click)="showMenu = false">
-                <div class="item-icon pink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                </div>
-                <span class="item-text">Email Marketing</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/promotions" (click)="showMenu = false">
-                <div class="item-icon amber">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
-                    <line x1="7" y1="7" x2="7.01" y2="7"/>
-                  </svg>
-                </div>
-                <span class="item-text">Promociones</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('loyalty')" class="menu-item" routerLink="/loyalty" (click)="showMenu = false">
-                <div class="item-icon red">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                </div>
-                <span class="item-text">Programa Lealtad</span>
-              </button>
-              <button *ngIf="canAccess('whatsapp')" class="menu-item" routerLink="/whatsapp" (click)="showMenu = false">
-                <div class="item-icon whatsapp">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                  </svg>
-                </div>
-                <span class="item-text">WhatsApp</span>
-              </button>
-              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/reviews" (click)="showMenu = false">
-                <div class="item-icon yellow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                </div>
-                <span class="item-text">Reviews</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing/referrals" (click)="showMenu = false">
-                <div class="item-icon cyan">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                  </svg>
-                </div>
-                <span class="item-text">Referidos</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-            </div>
-
-            <!-- COMPRAS -->
-            <div class="menu-section">
-              <span class="section-title">Compras</span>
-              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/suppliers" (click)="showMenu = false">
-                <div class="item-icon purple">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 21h18M5 21V7l8-4 8 4v14M5 10a2 2 0 002-2V6a2 2 0 00-2-2m0 4h14m-14 4h14m-14 4h14"/>
-                  </svg>
-                </div>
-                <span class="item-text">Proveedores</span>
-              </button>
-              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/compras" (click)="showMenu = false">
-                <div class="item-icon blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-                  </svg>
-                </div>
-                <span class="item-text">Órdenes de Compra</span>
-              </button>
-              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/purchase-requests" (click)="showMenu = false">
-                <div class="item-icon teal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
-                  </svg>
-                </div>
-                <span class="item-text">Solicitudes</span>
-                <span class="item-badge new">NUEVO</span>
-              </button>
-              <button *ngIf="canAccess('purchases')" class="menu-item" routerLink="/reception" (click)="showMenu = false">
-                <div class="item-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
-                  </svg>
-                </div>
-                <span class="item-text">Recepción</span>
-              </button>
-            </div>
-
-            <!-- RRHH -->
-            <div class="menu-section">
-              <span class="section-title">RRHH</span>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/rrhh/dashboard" (click)="showMenu = false">
-                <div class="item-icon indigo">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="9"></rect>
-                    <rect x="14" y="3" width="7" height="5"></rect>
-                    <rect x="14" y="12" width="7" height="9"></rect>
-                    <rect x="3" y="16" width="7" height="5"></rect>
-                  </svg>
-                </div>
-                <span class="item-text">Dashboard</span>
-                <span class="item-badge new">Pro</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/staff" (click)="showMenu = false">
-                <div class="item-icon gray">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                   <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-                  </svg>
-                </div>
-                <span class="item-text">Personal</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/attendance" (click)="showMenu = false">
-                <div class="item-icon cyan">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                </div>
-                <span class="item-text">Asistencia</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/rrhh/attendance-admin" (click)="showMenu = false">
-                <div class="item-icon teal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                    <line x1="8" y1="21" x2="16" y2="21"/>
-                    <line x1="12" y1="17" x2="12" y2="21"/>
-                    <path d="M12 8v4"/><path d="M10 10h4"/>
-                  </svg>
-                </div>
-                <span class="item-text">Control Asistencia</span>
-                <span class="item-badge new">Admin</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/remuneraciones" (click)="showMenu = false">
-                <div class="item-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
-                  </svg>
-                </div>
-                <span class="item-text">Remuneraciones</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/rrhh/shifts" (click)="showMenu = false">
-                <div class="item-icon purple">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                    <path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/>
-                    <path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>
-                  </svg>
-                </div>
-                <span class="item-text">Turnos</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/rrhh/leaves" (click)="showMenu = false">
-                <div class="item-icon amber">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="5"/>
-                    <line x1="12" y1="1" x2="12" y2="3"/>
-                    <line x1="12" y1="21" x2="12" y2="23"/>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                    <line x1="1" y1="12" x2="3" y2="12"/>
-                    <line x1="21" y1="12" x2="23" y2="12"/>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                  </svg>
-                </div>
-                <span class="item-text">Vacaciones</span>
-                <span class="item-badge new">Nuevo</span>
-              </button>
-              <button *ngIf="canAccess('hr')" class="menu-item" routerLink="/rrhh/reviews" (click)="showMenu = false">
-                <div class="item-icon pink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                </div>
-                <span class="item-text">Evaluaciones</span>
-                <span class="item-badge new">Beta</span>
-              </button>
-            </div>
-
-            <!-- INNOVACIÓN -->
-            <div class="menu-section">
-              <span class="section-title">Innovación</span>
-              <button *ngIf="canAccess('kds')" class="menu-item" routerLink="/kds" (click)="showMenu = false">
-                <div class="item-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                    <line x1="8" y1="21" x2="16" y2="21"/>
-                    <line x1="12" y1="17" x2="12" y2="21"/>
-                  </svg>
-                </div>
-                <span class="item-text">Cocina (KDS)</span>
-              </button>
-              <button *ngIf="canAccess('subscriptions')" class="menu-item" routerLink="/subscriptions" (click)="showMenu = false">
-                <div class="item-icon blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12a9 9 0 01-9 9m0 0a9 9 0 01-9-9m18 0a9 9 0 00-9-9m0 18V3"/>
-                    <polyline points="16 17 12 21 8 17"/>
-                  </svg>
-                </div>
-                <span class="item-text">Suscripciones</span>
-              </button>
-              <button *ngIf="canAccess('menu-generator')" class="menu-item" routerLink="/menu-generator" (click)="showMenu = false">
-                <div class="item-icon purple">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/>
-                    <line x1="9" y1="17" x2="11" y2="17"/>
-                  </svg>
-                </div>
-                <span class="item-text">Generador de Carta</span>
-                <span class="item-badge new">Premium</span>
-              </button>
-            </div>
-
-            <!-- CONFIGURACIÓN -->
-            <div class="menu-section">
-              <span class="section-title">Configuración</span>
+              <span class="section-title">Administración</span>
               <button *ngIf="canAccess('settings')" class="menu-item" routerLink="/company" (click)="showMenu = false">
                 <div class="item-icon indigo">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/>
                   </svg>
                 </div>
-                <span class="item-text">Gestión Empresa</span>
+                <span class="item-text">Empresa, País y Moneda</span>
+              </button>
+              <button *ngIf="canAccess('settings')" class="menu-item" routerLink="/settings/users" (click)="showMenu = false">
+                <div class="item-icon teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <span class="item-text">Usuarios y Roles</span>
               </button>
               <button *ngIf="canAccess('settings')" class="menu-item" routerLink="/settings" (click)="showMenu = false">
                 <div class="item-icon gray">
@@ -1425,7 +1181,28 @@ interface CartItem {
                     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
                   </svg>
                 </div>
-                <span class="item-text">Configuración</span>
+                <span class="item-text">Parámetros Generales</span>
+              </button>
+            </div>
+
+            <!-- AUDITORÍA -->
+            <div class="menu-section">
+              <span class="section-title">Auditoría</span>
+              <button *ngIf="canAccess('settings')" class="menu-item" routerLink="/auditoria/bitacora" (click)="showMenu = false">
+                <div class="item-icon lime">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <span class="item-text">Bitácora de Eventos</span>
+              </button>
+              <button *ngIf="canAccess('settings')" class="menu-item" routerLink="/auditoria/aprobaciones" (click)="showMenu = false">
+                <div class="item-icon cyan">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <span class="item-text">Aprobaciones</span>
               </button>
             </div>
           </nav>
@@ -4605,3 +4382,4 @@ export class PosComponent implements OnInit {
     }
   }
 }
+

@@ -5,6 +5,8 @@ import { AuthService } from '../auth/auth.service';
 import { environment } from '@env/environment';
 
 export interface CompanyBranding {
+  country?: string;
+  currency?: string;
     id?: string;
     tenantId?: string;
     nombre: string;
@@ -199,3 +201,4 @@ export class CompanyService {
         localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(this.documents()));
     }
 }
+

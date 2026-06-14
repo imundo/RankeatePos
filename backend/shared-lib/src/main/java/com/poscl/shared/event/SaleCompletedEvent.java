@@ -19,6 +19,8 @@ public class SaleCompletedEvent {
     private UUID tenantId;
     private UUID customerId;
     private BigDecimal totalAmount;
+    private BigDecimal netAmount;
+    private BigDecimal taxAmount;
     private Instant timestamp;
     private List<SaleItemEventDto> items;
 
