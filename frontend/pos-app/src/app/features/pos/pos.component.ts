@@ -3976,7 +3976,7 @@ export class PosComponent implements OnInit {
       const [productsResponse, categoriesResponse, stockResponse] = await Promise.all([
         this.http.get<any[]>(`${environment.catalogUrl}/products/sync`, { headers }).toPromise(),
         this.http.get<any[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise().catch(() => []),
-        this.stockService.getStockByBranch(activeBranchId).toPromise().catch(() => [])
+        this.stockService.getStockByBranch(activeBranchId || '').toPromise().catch(() => [])
       ]);
 
       // Create stock map
