@@ -29,6 +29,7 @@ import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/botto
 import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
 import { ClientSearchModalComponent, Client } from '@shared/components/modals/client-search-modal.component';
 import { BranchContextService } from '@core/services/branch-context.service';
+import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barcode-scanner.component';
 
 
 interface CartItem {
@@ -59,7 +60,8 @@ interface CartItem {
     BranchSwitcherComponent,
     BottomNavComponent,
     WeightInputModalComponent,
-    ClientSearchModalComponent
+    ClientSearchModalComponent,
+    BarcodeScannerComponent
   ],
   providers: [MessageService],
   template: `
@@ -161,6 +163,9 @@ interface CartItem {
               @if (searchQuery) {
                 <button class="search-clear" (click)="searchQuery = ''">✕</button>
               }
+              <button class="search-scanner-btn" (click)="showScannerModal = true" title="Escanear Código de Barras">
+                <i class="pi pi-camera"></i>
+              </button>
             </div>
 
             <!-- Filters and Actions Row -->
@@ -400,6 +405,14 @@ interface CartItem {
         (onSelect)="onClientSelected($event)"
         (onCancel)="showClientModal = false">
       </app-client-search-modal>
+
+      <!-- Barcode Scanner Modal -->
+      @if (showScannerModal) {
+         <app-barcode-scanner 
+            (scanSuccess)="onBarcodeScanned($event)" 
+            (close)="showScannerModal = false">
+         </app-barcode-scanner>
+      }
 
       <!-- Premium Payment Dialog -->
       <p-dialog 
@@ -3289,6 +3302,7 @@ export class PosComponent implements OnInit {
   isLoading = signal(false);
   cartItems = signal<CartItem[]>([]);
   searchQuery = '';
+  showScannerModal = false;
   showPaymentDialog = false;
   showMenu = false;
   fabOpen = false;  // Floating Action Button state
@@ -3844,6 +3858,12 @@ export class PosComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  onBarcodeScanned(code: string): void {
+    this.showScannerModal = false;
+    this.searchQuery = code;
+    this.onSearch();
   }
 
   onSearch(): void {

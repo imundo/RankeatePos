@@ -829,42 +829,85 @@ input[type="number"] {
 
 .search-container {
   position: relative;
+  display: flex;
+  align-items: center;
 
   .search-icon {
     position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 1.25rem;
     color: var(--text-muted);
     font-size: 1.25rem;
   }
 
   .search-input {
-    padding-left: 3rem;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
+    width: 100%;
+    padding: 1.25rem 3rem 1.25rem 3.5rem;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    color: white;
+    font-size: 1.1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
 
     &:focus {
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(0, 0, 0, 0.2);
+      outline: none;
+    }
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4);
     }
   }
 
   .search-clear {
     position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--surface-border);
+    right: 4.5rem;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     cursor: pointer;
     color: var(--text-muted);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
-      background: var(--danger-color);
-      color: white;
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      transform: scale(1.1);
+    }
+  }
+  
+  .search-scanner-btn {
+    position: absolute;
+    right: 0.75rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    color: white;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+
+    &:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+    
+    &:active {
+      transform: translateY(0) scale(0.95);
     }
   }
 }
