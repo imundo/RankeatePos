@@ -44,11 +44,12 @@ public class AccountingService {
         JournalEntry entry = JournalEntry.builder()
                 .tenantId(tenantId)
                 .branchId(branchId)
-                .date(LocalDate.now())
+                .entryDate(LocalDate.now())
                 .description("Ingreso por Venta de Mercadería - Ticket " + saleId)
                 .referenceId(saleId)
                 .referenceType("SALE")
-                .status(JournalEntry.JournalEntryStatus.POSTED)
+                .type(JournalEntry.JournalType.STANDARD)
+                .status(JournalEntry.JournalStatus.POSTED)
                 .build();
 
         // DEBIT: Caja (Total amount)
@@ -80,7 +81,9 @@ public class AccountingService {
             entry.addLine(line3);
         }
 
-        entry.validateBalance();
+        if (!entry.isBalanced()) {
+            throw new IllegalStateException("El asiento contable no cuadra");
+        }
         journalEntryRepository.save(entry);
         
         log.info("Journal entry created successfully for sale {}", saleId);

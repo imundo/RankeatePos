@@ -26,12 +26,12 @@ public class FinancialDashboardController {
         List<BankTransaction> transactions = bankTransactionRepository.findByTenantId(tenantId);
         
         BigDecimal ingresos = transactions.stream()
-                .filter(t -> t.getType() == BankTransaction.TransactionType.DEPOSIT)
+                .filter(t -> t.getTransactionType() == BankTransaction.TransactionType.DEPOSIT)
                 .map(BankTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal egresos = transactions.stream()
-                .filter(t -> t.getType() == BankTransaction.TransactionType.WITHDRAWAL)
+                .filter(t -> t.getTransactionType() == BankTransaction.TransactionType.WITHDRAWAL)
                 .map(BankTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

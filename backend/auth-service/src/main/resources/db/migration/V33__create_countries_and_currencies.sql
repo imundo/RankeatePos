@@ -14,7 +14,7 @@ CREATE TABLE currencies (
     code VARCHAR(3) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     symbol VARCHAR(10),
-    decimals INTEGER NOT NULL DEFAULT 0,
+    decimal_places INTEGER NOT NULL DEFAULT 0,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE
@@ -28,7 +28,7 @@ INSERT INTO countries (id, iso_code, name, tax_id_format, tax_id_name) VALUES
 (gen_random_uuid(), 'CO', 'Colombia', 'XXXXXXXXXX-X', 'NIT'),
 (gen_random_uuid(), 'AR', 'Argentina', 'XX-XXXXXXXX-X', 'CUIT');
 
-INSERT INTO currencies (id, code, name, symbol, decimals) VALUES
+INSERT INTO currencies (id, code, name, symbol, decimal_places) VALUES
 (gen_random_uuid(), 'CLP', 'Peso Chileno', '$', 0),
 (gen_random_uuid(), 'PEN', 'Sol Peruano', 'S/', 2),
 (gen_random_uuid(), 'MXN', 'Peso Mexicano', '$', 2),

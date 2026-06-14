@@ -31,19 +31,17 @@ public class TreasuryService {
                 .orElseGet(() -> createDefaultBankAccount(tenantId));
 
         BankTransaction transaction = BankTransaction.builder()
-                .tenantId(tenantId)
                 .bankAccount(defaultAccount)
-                .type(BankTransaction.TransactionType.DEPOSIT)
+                .transactionType(BankTransaction.TransactionType.DEPOSIT)
                 .amount(amount)
-                .date(LocalDate.now())
+                .transactionDate(LocalDate.now())
                 .description("Ingreso por Venta POS - " + saleId)
-                .referenceId(saleId)
-                .referenceType("SALE")
-                .status(BankTransaction.TransactionStatus.COMPLETED)
+                .referenceNumber(saleId.toString())
+                .reconciliationStatus(BankTransaction.ReconciliationStatus.PENDING)
                 .build();
 
         // Update balance
-        defaultAccount.addBalance(amount);
+        defaultAccount.setCurrentBalance(defaultAccount.getCurrentBalance() != null ? defaultAccount.getCurrentBalance().add(amount) : amount);
         bankAccountRepository.save(defaultAccount);
         
         bankTransactionRepository.save(transaction);
@@ -54,7 +52,7 @@ public class TreasuryService {
         BankAccount account = BankAccount.builder()
                 .tenantId(tenantId)
                 .bankName("Caja Principal")
-                .accountType("CASH")
+                .accountType(BankAccount.BankAccountType.CHECKING)
                 .accountNumber("CAJA-01")
                 .currency("CLP")
                 .currentBalance(BigDecimal.ZERO)

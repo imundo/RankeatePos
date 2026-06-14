@@ -35,6 +35,7 @@ public class AccountDtos {
         private Account.AccountNature nature;
 
         private UUID parentId;
+        @Builder.Default
         private Boolean allowsMovements = true;
     }
 
