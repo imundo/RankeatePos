@@ -737,27 +737,28 @@ interface CartItem {
             </div>
           </section>
         </div>
-
-        <!-- Footer Actions -->
-        <div class="checkout-footer">
-          <button 
-            class="btn-cancel"
-            (click)="showPaymentDialog = false">
-            Cancelar
-          </button>
-          <button 
-            class="btn-confirm"
-            [disabled]="!canCompleteSale() || processingPayment()"
-            (click)="completeSale()">
-            @if (processingPayment()) {
-              <span class="spinner-btn"></span> Procesando...
-            } @else {
-              <i class="pi pi-check-circle"></i>
-              Cobrar e Imprimir
-              <span class="confirm-amount">{{ formatPrice(total()) }}</span>
-            }
-          </button>
-        </div>
+        <ng-template pTemplate="footer">
+          <!-- Footer Actions -->
+          <div class="checkout-footer">
+            <button 
+              class="btn-cancel"
+              (click)="showPaymentDialog = false">
+              Cancelar
+            </button>
+            <button 
+              class="btn-confirm"
+              [disabled]="!canCompleteSale() || processingPayment()"
+              (click)="completeSale()">
+              @if (processingPayment()) {
+                <span class="spinner-btn"></span> Procesando...
+              } @else {
+                <i class="pi pi-check-circle"></i>
+                Cobrar e Imprimir
+                <span class="confirm-amount">{{ formatPrice(total()) }}</span>
+              }
+            </button>
+          </div>
+        </ng-template>
       </p-dialog>
 
 
@@ -1257,7 +1258,9 @@ interface CartItem {
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      overflow: hidden;
     }
 
     .pos-header {
