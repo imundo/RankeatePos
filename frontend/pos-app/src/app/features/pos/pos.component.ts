@@ -2177,7 +2177,8 @@ interface CartItem {
 
     /* Out of Stock Product Card */
     .product-card.out-of-stock {
-      opacity: 0.8; /* Increased opacity slightly for visibility */
+      opacity: 0.6; /* Grayscale layout for out of stock */
+      filter: grayscale(100%);
       /* pointer-events: none; REMOVED to allow clicking for management */
       
       .product-image::after {
@@ -3932,19 +3933,33 @@ export class PosComponent implements OnInit {
     const cached = await this.offlineService.getCachedProducts();
     if (cached.length > 0) {
       this.products.set(cached);
+      
+      // Load categories from cache so they appear immediately
+      const uniqueCategories = new Map();
+      cached.forEach(p => {
+        if (p.categoryId && p.categoryName && !uniqueCategories.has(p.categoryId)) {
+          uniqueCategories.set(p.categoryId, { id: p.categoryId, nombre: p.categoryName });
+        }
+      });
+      this.categories.set(Array.from(uniqueCategories.values()));
+      
+      // Sync silently in background
+      this.syncProducts(true);
     } else {
-      this.syncProducts();
+      this.syncProducts(false);
     }
   }
 
-  async syncProducts(): Promise<void> {
+  async syncProducts(silent: boolean = false): Promise<void> {
     try {
-      this.isLoading.set(true);
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Sincronizando...',
-        life: 2000
-      });
+      if (!silent) {
+        this.isLoading.set(true);
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sincronizando...',
+          life: 2000
+        });
+      }
 
       // Get headers from auth service
       const tenantId = this.authService.tenant()?.id;
