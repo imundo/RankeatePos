@@ -28,12 +28,17 @@ interface QuickAction {
     <div class="dashboard-container">
       <!-- Header -->
       <header class="dashboard-header">
-        <div class="header-content">
+        <div class="header-content" style="display: flex; gap: 1rem; align-items: center;">
+          <button class="btn-back" routerLink="/pos" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
           <div class="header-title">
             <h1>📊 Contabilidad</h1>
             <p class="subtitle">Gestión contable y financiera</p>
           </div>
-          <div class="header-actions">
+          <div class="header-actions" style="margin-left: auto;">
             <button class="btn btn-primary" routerLink="asientos/nuevo">
               <span class="btn-icon">➕</span>
               Nuevo Asiento

@@ -9,11 +9,12 @@ import { BranchContextService } from '@core/services/branch-context.service';
 import { BranchService } from '@core/services/branches.service';
 import { CatalogService, ProductRequest, Tax } from '@core/services/catalog.service';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
+import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BranchSwitcherComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BranchSwitcherComponent, BarcodeScannerComponent],
   template: `
     <div class="inventory-container">
       <!-- Header -->
@@ -83,6 +84,14 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                <span class="label">Ganancia Proyectada</span>
             </div>
          </div>
+
+         <div class="stat-card" style="background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.2);">
+            <div class="stat-icon" style="color: #ec4899;">🏛️</div>
+            <div class="stat-info">
+               <span class="value" style="color: #ec4899;">{{ calculateTotalTaxes() }}</span>
+               <span class="label">Impuestos Acumulados</span>
+            </div>
+         </div>
       </div>
 
       <!-- Toolbar -->
@@ -116,25 +125,38 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
          } @else {
             @if (filterMode() === 'movements') {
                <!-- MOVEMENTS VIEW -->
-               <div class="stock-grid">
-                  @for (mov of filteredMovements(); track mov.id) {
-                     <div class="product-card">
-                        <div class="card-header">
-                           <div class="product-icon">{{ getMovementIcon(mov.tipo) }}</div>
-                           <div class="card-title">
-                              <h3>{{ mov.productName }}</h3>
-                              <span class="sku">{{ formatMovementType(mov.tipo) }} • {{ formatDate(mov.createdAt) }}</span>
+               <div class="movements-timeline-container">
+                  <div class="movements-timeline">
+                     @for (mov of filteredMovements(); track mov.id) {
+                        <div class="timeline-item" [class.positive]="isPositive(mov.tipo)" [class.negative]="!isPositive(mov.tipo)">
+                           <div class="timeline-icon">
+                              {{ getMovementIcon(mov.tipo) }}
                            </div>
-                           <div class="movement-amount" [style.color]="isPositive(mov.tipo) ? '#10b981' : '#ef4444'">
-                              {{ isPositive(mov.tipo) ? '+' : '-' }}{{ mov.cantidad }}
+                           <div class="timeline-content">
+                              <div class="timeline-header">
+                                 <div class="timeline-title-group">
+                                    <h3>{{ mov.productName }}</h3>
+                                    <span class="movement-badge">{{ formatMovementType(mov.tipo) }}</span>
+                                 </div>
+                                 <span class="timeline-date">{{ formatDate(mov.createdAt) }}</span>
+                              </div>
+                              <div class="timeline-body">
+                                 <div class="stock-change-box">
+                                    <span class="amount">{{ isPositive(mov.tipo) ? '+' : '-' }}{{ mov.cantidad }}</span>
+                                    <span class="stock-flow">{{ mov.stockAnterior }} ➝ {{ mov.stockNuevo }}</span>
+                                 </div>
+                                 <div class="timeline-note">
+                                    <span>📝 {{ mov.motivo || 'Sin nota de movimiento' }}</span>
+                                 </div>
+                              </div>
                            </div>
                         </div>
-                        <div class="stock-status">
-                           <div class="status-header">
-                              <span>Stock: {{ mov.stockAnterior }} ➝ {{ mov.stockNuevo }}</span>
-                              <span>{{ mov.motivo || 'Sin nota' }}</span>
-                           </div>
-                        </div>
+                     }
+                  </div>
+                  @if (filteredMovements().length === 0) {
+                     <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <h3>No hay movimientos recientes</h3>
                      </div>
                   }
                </div>
@@ -437,6 +459,14 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
             </div>
          </div>
       }
+
+      <!-- Barcode Scanner Modal -->
+      @if (showScannerModal) {
+         <app-barcode-scanner 
+            (scanSuccess)="onBarcodeScanned($event)" 
+            (close)="showScannerModal = false">
+         </app-barcode-scanner>
+      }
     </div>
   `,
   styleUrls: ['./inventory.component.scss']
@@ -461,6 +491,7 @@ export class InventoryComponent implements OnInit {
 
   searchQuery = '';
   scanningMode = false;
+  showScannerModal = false;
 
   // Modal State
   showAdjustModal = false;
@@ -565,6 +596,11 @@ export class InventoryComponent implements OnInit {
     if (match) {
       // Optional: auto-action
     }
+  }
+
+  onBarcodeScanned(code: string) {
+    this.newProductForm.sku = code;
+    this.showScannerModal = false;
   }
 
   toggleScanMode() {
@@ -803,9 +839,7 @@ export class InventoryComponent implements OnInit {
   }
 
   scanBarcodeForNewProduct() {
-    const mockBarcode = '780' + Math.floor(100000000 + Math.random() * 900000000);
-    alert('Escáner activado. Código simulado capturado: ' + mockBarcode);
-    this.newProductForm.sku = mockBarcode;
+    this.showScannerModal = true;
   }
 
   onFileSelected(event: any) {
@@ -1086,13 +1120,22 @@ export class InventoryComponent implements OnInit {
     return '$' + Math.round(value).toLocaleString();
   }
 
-  calculateTotalProfit(): string {
-    const profit = this.stock().reduce((acc, i: any) => {
-      const costo = i.costo || 0;
-      const precioNeto = i.precioNeto || 0;
-      return acc + (i.cantidadDisponible > 0 ? i.cantidadDisponible * (precioNeto - costo) : 0);
+  calculateTotalProfit() {
+    const total = this.stock().reduce((sum, item) => {
+      const costo = (item as any).costo || 0;
+      const precioNeto = (item as any).precioNeto || 0;
+      return sum + (precioNeto - costo) * item.cantidadDisponible;
     }, 0);
-    return '$' + Math.round(profit).toLocaleString();
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(total);
+  }
+
+  calculateTotalTaxes() {
+    const total = this.stock().reduce((sum, item) => {
+      const precioBruto = (item as any).precioBruto || 0;
+      const precioNeto = (item as any).precioNeto || 0;
+      return sum + (precioBruto - precioNeto) * item.cantidadDisponible;
+    }, 0);
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(total);
   }
 
   calculateProgress(item: StockDto): number {

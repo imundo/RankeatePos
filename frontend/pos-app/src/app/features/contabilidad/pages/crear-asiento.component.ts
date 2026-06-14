@@ -17,8 +17,12 @@ interface AccountOption {
     <div class="page-container">
       <!-- Header -->
       <header class="page-header">
-        <div class="header-left">
-          <a routerLink="/contabilidad/libro-diario" class="back-link">← Volver al Libro Diario</a>
+        <div class="header-left" style="display: flex; gap: 1rem; align-items: center;">
+          <button class="btn-back" routerLink="/contabilidad" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
           <h1>➕ Nuevo Asiento Contable</h1>
         </div>
       </header>

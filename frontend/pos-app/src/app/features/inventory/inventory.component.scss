@@ -645,3 +645,173 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Timeline Movements Styles */
+.movements-timeline-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.movements-timeline {
+    position: relative;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 28px;
+        height: 100%;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+    }
+}
+
+.timeline-item {
+    position: relative;
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    
+    &:last-child {
+        margin-bottom: 0;
+    }
+    
+    .timeline-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        background: rgba(30, 41, 59, 1);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        z-index: 2;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    &.positive .timeline-icon {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+    }
+    
+    &.negative .timeline-icon {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+    
+    .timeline-content {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: transform 0.2s, background 0.2s;
+        
+        &:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            
+            .timeline-title-group {
+                h3 {
+                    margin: 0 0 0.25rem;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: white;
+                }
+                
+                .movement-badge {
+                    display: inline-block;
+                    font-size: 0.75rem;
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 4px;
+                    background: rgba(255, 255, 255, 0.1);
+                    color: #cbd5e1;
+                }
+            }
+            
+            .timeline-date {
+                font-size: 0.85rem;
+                color: #94a3b8;
+            }
+        }
+        
+        .timeline-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            
+            .stock-change-box {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 0.75rem;
+                background: rgba(0,0,0,0.2);
+                border-radius: 12px;
+                
+                .amount {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                }
+                
+                .stock-flow {
+                    font-size: 0.9rem;
+                    color: #cbd5e1;
+                }
+            }
+            
+            .timeline-note {
+                font-size: 0.9rem;
+                color: #94a3b8;
+                font-style: italic;
+            }
+        }
+    }
+    
+    &.positive .timeline-content .stock-change-box .amount {
+        color: #10b981;
+    }
+    
+    &.negative .timeline-content .stock-change-box .amount {
+        color: #ef4444;
+    }
+}
+
+@media (max-width: 768px) {
+    .movements-timeline-container {
+        padding: 0;
+    }
+    
+    .movements-timeline::before {
+        left: 20px;
+    }
+    
+    .timeline-item {
+        gap: 1rem;
+        
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+        
+        .timeline-content {
+            padding: 1rem;
+            
+            .timeline-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    }
+}

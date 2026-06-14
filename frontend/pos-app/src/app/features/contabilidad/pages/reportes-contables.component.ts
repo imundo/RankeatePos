@@ -9,7 +9,11 @@ import { RouterModule } from '@angular/router';
     template: `
     <div class="page-container">
       <header class="page-header">
-        <a routerLink="/contabilidad" class="back-link">← Volver</a>
+        <button class="btn-back" routerLink="/contabilidad" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
         <h1>📈 Reportes Contables</h1>
       </header>
 
