@@ -160,7 +160,8 @@ export class AuthService {
     }
 
     hasRole(role: string): boolean {
-        return this.userSignal()?.roles?.includes(role) ?? false;
+        const roles = this.userSignal()?.roles?.map(r => r.toUpperCase()) ?? [];
+        return roles.includes(role.toUpperCase());
     }
 
     hasPermission(permission: string): boolean {
