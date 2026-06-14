@@ -23,7 +23,7 @@ public class FinancialDashboardController {
     public ResponseEntity<Map<String, Object>> getFinancialSummary(
             @RequestHeader("X-Tenant-Id") UUID tenantId) {
 
-        List<BankTransaction> transactions = bankTransactionRepository.findByTenantId(tenantId);
+        List<BankTransaction> transactions = bankTransactionRepository.findByBankAccountTenantId(tenantId);
         
         BigDecimal ingresos = transactions.stream()
                 .filter(t -> t.getTransactionType() == BankTransaction.TransactionType.DEPOSIT)
