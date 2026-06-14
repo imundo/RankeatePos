@@ -6,6 +6,8 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '@core/auth/auth.service';
 import { environment } from '@env/environment';
 import { BranchesComponent } from '../admin/branches.component';
+import { TaxConfigComponent } from './tax-config.component';
+import { CategoryConfigComponent } from './category-config.component';
 
 interface User {
   id: string;
@@ -18,7 +20,7 @@ interface User {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BranchesComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BranchesComponent, TaxConfigComponent, CategoryConfigComponent],
   template: `
     <div class="settings-container">
       <header class="settings-header">
@@ -51,6 +53,9 @@ interface User {
         </button>
         <button class="tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
           <span>🧾</span> Impuestos
+        </button>
+        <button class="tab" [class.active]="activeTab() === 'categories'" (click)="activeTab.set('categories')">
+          <span>🗂️</span> Categorías
         </button>
       </div>
 
@@ -232,66 +237,14 @@ interface User {
           </section>
         }
 
-        <!-- Taxes Tab -->
+        <!-- Taxes Tab using Component -->
         @if (activeTab() === 'taxes') {
-          <section class="section">
-            <div class="section-header">
-              <h3>🧾 Configuración de Impuestos</h3>
-            </div>
-            
-            <div class="settings-card">
-              <div class="tax-config">
-                <div class="tax-row">
-                  <span class="tax-label">País</span>
-                  <select class="tax-select" [(ngModel)]="selectedCountry" (change)="saveCountry()">
-                    <option value="Chile">🇨🇱 Chile</option>
-                    <option value="Argentina">🇦🇷 Argentina</option>
-                    <option value="Peru">🇵🇪 Perú</option>
-                    <option value="Colombia">🇨🇴 Colombia</option>
-                    <option value="Mexico">🇲🇽 México</option>
-                    <option value="Ecuador">🇪🇨 Ecuador</option>
-                  </select>
-                </div>
-                <div class="tax-row">
-                  <span class="tax-label">Impuesto Principal</span>
-                  <span class="tax-value">
-                    @switch (selectedCountry) {
-                      @case ('Chile') { IVA 19% }
-                      @case ('Argentina') { IVA 21% }
-                      @case ('Peru') { IGV 18% }
-                      @case ('Colombia') { IVA 19% }
-                      @case ('Mexico') { IVA 16% }
-                      @case ('Ecuador') { IVA 12% }
-                      @default { Variable }
-                    }
-                  </span>
-                </div>
-                <div class="tax-row">
-                  <span class="tax-label">Moneda</span>
-                  <span class="tax-value">
-                    @switch (selectedCountry) {
-                      @case ('Chile') { CLP ($) }
-                      @case ('Argentina') { ARS ($) }
-                      @case ('Peru') { PEN (S/) }
-                      @case ('Colombia') { COP ($) }
-                      @case ('Mexico') { MXN ($) }
-                      @case ('Ecuador') { USD ($) }
-                      @default { USD ($) }
-                    }
-                  </span>
-                </div>
-                <div class="tax-row">
-                  <span class="tax-label">Zona Horaria</span>
-                  <span class="tax-value">America/Santiago</span>
-                </div>
-              </div>
-            </div>
+          <app-tax-config></app-tax-config>
+        }
 
-            <div class="info-box">
-              <span class="info-icon">ℹ️</span>
-              <p>La configuración de impuestos y moneda se actualiza automáticamente al cambiar el país.</p>
-            </div>
-          </section>
+        <!-- Categories Tab using Component -->
+        @if (activeTab() === 'categories') {
+          <app-category-config></app-category-config>
         }
       </div>
     </div>
@@ -638,7 +591,7 @@ export class SettingsComponent implements OnInit {
   private router = inject(Router);
   private baseUrl = environment.apiUrl;
 
-  activeTab = signal<'general' | 'users' | 'branches' | 'taxes' | 'integrations'>('general');
+  activeTab = signal<'general' | 'users' | 'branches' | 'taxes' | 'integrations' | 'categories'>('general');
   users = signal<User[]>([]);
   selectedCountry = 'CL';
 

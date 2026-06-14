@@ -72,7 +72,15 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
             <div class="stat-icon">💰</div>
             <div class="stat-info">
                <span class="value">{{ calculateTotalValue() }}</span>
-               <span class="label">Valor Inventario</span>
+               <span class="label">Costo Inventario</span>
+            </div>
+         </div>
+
+         <div class="stat-card" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2);">
+            <div class="stat-icon" style="color: #8B5CF6;">📈</div>
+            <div class="stat-info">
+               <span class="value" style="color: #8B5CF6;">{{ calculateTotalProfit() }}</span>
+               <span class="label">Ganancia Proyectada</span>
             </div>
          </div>
       </div>
@@ -181,6 +189,7 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                         <div class="card-actions">
                            <button class="btn-restock" (click)="quickRestock(item, $event)">Reponer</button>
                            <button class="btn-edit-small" (click)="openEditProductModal(item, $event)">Editar</button>
+                           <button class="btn-delete-small" style="background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 500; cursor: pointer;" (click)="deleteProduct(item, $event)">Eliminar</button>
                         </div>
                      </div>
                   }
@@ -263,6 +272,16 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                <div class="form-group">
                   <label>Nombre del Artículo</label>
                   <input type="text" [(ngModel)]="newProductForm.nombre" placeholder="Ej: Coca Cola Zero 500ml" autofocus>
+               </div>
+
+               <div class="form-group">
+                  <label>Categoría</label>
+                  <select [(ngModel)]="newProductForm.categoryId" name="categoryId">
+                     <option value="">Sin categoría</option>
+                     @for (cat of categories(); track cat.id) {
+                        <option [value]="cat.id">{{ cat.icono || '📁' }} {{ cat.nombre }}</option>
+                     }
+                  </select>
                </div>
 
                <div class="form-group">
@@ -350,6 +369,16 @@ import { BranchSwitcherComponent } from '@shared/components/branch-switcher/bran
                </div>
 
                <div class="form-group">
+                  <label>Categoría</label>
+                  <select [(ngModel)]="editProductForm.categoryId" name="categoryId">
+                     <option value="">Sin categoría</option>
+                     @for (cat of categories(); track cat.id) {
+                        <option [value]="cat.id">{{ cat.icono || '📁' }} {{ cat.nombre }}</option>
+                     }
+                  </select>
+               </div>
+
+               <div class="form-group">
                   <label>Código (SKU)</label>
                   <input type="text" [ngModel]="editProductForm.sku" disabled style="opacity: 0.7; cursor: not-allowed;">
                </div>
@@ -427,6 +456,7 @@ export class InventoryComponent implements OnInit {
   loading = signal(false);
   filterMode = signal<'all' | 'low' | 'movements'>('all');
   taxes = signal<Tax[]>([]);
+  categories = signal<any[]>([]);
   currentBranchName = computed(() => this.branchContext.activeBranch()?.nombre || '');
 
   searchQuery = '';
@@ -449,7 +479,9 @@ export class InventoryComponent implements OnInit {
   selectedFile: File | null = null;
   newProductForm = {
     nombre: '',
+    descripcion: '',
     sku: '',
+    categoryId: '',
     imageUrl: '',
     costo: 0,
     precioNeto: 0,
@@ -465,6 +497,7 @@ export class InventoryComponent implements OnInit {
     id: '',
     nombre: '',
     sku: '',
+    categoryId: '',
     imageUrl: '',
     originalVariantId: '',
     costo: 0,
@@ -545,6 +578,7 @@ export class InventoryComponent implements OnInit {
   ngOnInit() {
     this.loadData();
     this.loadTaxes();
+    this.loadCategories();
   }
 
   async loadTaxes() {
@@ -553,6 +587,18 @@ export class InventoryComponent implements OnInit {
       this.taxes.set(taxes || []);
     } catch (e) {
       console.warn('Failed to load taxes', e);
+    }
+  }
+
+  async loadCategories() {
+    try {
+      const categories = await this.catalogService.getCategories().toPromise();
+      if (categories) {
+         categories.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+         this.categories.set(categories);
+      }
+    } catch (e) {
+      console.warn('Failed to load categories', e);
     }
   }
 
@@ -616,44 +662,60 @@ export class InventoryComponent implements OnInit {
         this.stock.set(mapped);
         this.lowStockCount.set(mapped.filter(x => x.stockBajo).length);
         console.log('Loaded inventory from cache:', mapped.length);
-        // Do not return early, fetch API in background to ensure fresh data
-        // return; 
       }
 
-      // 2. Fallback to API 
+      // 2. Load stock from API
       const stockData = await this.stockService.getStockByBranch(branchId).toPromise().catch(e => {
         console.warn('Failed to load stock from API', e);
         return [];
       });
 
-      // 3. Enrich stock with images and prices from catalog
-      let enrichedStock = stockData || [];
+      const stockMap = new Map<string, any>();
+      if (stockData) {
+        stockData.forEach(s => stockMap.set(s.variantSku, s));
+      }
+
+      // 3. Fetch catalog and merge with stock
+      let finalStock: StockDto[] = [];
       try {
-        const productsRes = await this.catalogService.getProducts(0, 200).toPromise();
+        const productsRes = await this.catalogService.getProducts(0, 500).toPromise();
         if (productsRes && productsRes.content) {
-          const productMap = new Map<string, any>();
           for (const p of productsRes.content) {
             if (p.variants) {
               for (const v of p.variants) {
-                productMap.set(v.sku, { imagenUrl: p.imagenUrl, precioBruto: v.precioBruto, precioNeto: v.precioNeto, costo: v.costo, marginPercentage: v.marginPercentage });
+                const s = stockMap.get(v.sku);
+                finalStock.push({
+                  id: s?.id || `virtual-${v.id}`,
+                  variantId: v.id,
+                  variantSku: v.sku,
+                  productName: `${p.nombre} ${v.nombre && v.nombre !== 'Default' ? v.nombre : ''}`.trim(),
+                  branchId: branchId,
+                  cantidadActual: s?.cantidadActual || 0,
+                  cantidadReservada: s?.cantidadReservada || 0,
+                  cantidadDisponible: s?.cantidadDisponible || 0,
+                  stockMinimo: v.stockMinimo || 5,
+                  stockBajo: (s?.cantidadDisponible || 0) <= (v.stockMinimo || 5),
+                  updatedAt: s?.updatedAt || new Date().toISOString(),
+                  imageUrl: p.imagenUrl,
+                  precioBruto: (v as any).precioBruto || 0,
+                  precioNeto: (v as any).precioNeto || 0,
+                  costo: (v as any).costo || 0,
+                  marginPercentage: (v as any).marginPercentage || 0
+                });
               }
             }
           }
-          enrichedStock = enrichedStock.map(s => {
-            const catalogInfo = productMap.get(s.variantSku);
-            if (catalogInfo) {
-              return { ...s, imageUrl: catalogInfo.imagenUrl || s.imageUrl, precioBruto: catalogInfo.precioBruto, precioNeto: catalogInfo.precioNeto, costo: catalogInfo.costo, marginPercentage: catalogInfo.marginPercentage };
-            }
-            return s;
-          });
         }
+
+        this.stock.set(finalStock);
+        const manualCount = finalStock.filter(i => i.stockBajo).length;
+        this.lowStockCount.set(manualCount);
+
       } catch (e) {
         console.warn('Failed to enrich stock with catalog data', e);
+        // Fallback to stockData
+        this.stock.set(stockData || []);
       }
-
-      this.stock.set(enrichedStock);
-      const manualCount = enrichedStock.filter(i => i.stockBajo).length;
-      this.lowStockCount.set(manualCount);
 
     } catch (e) {
       console.error('Critical error loading inventory', e);
@@ -715,7 +777,7 @@ export class InventoryComponent implements OnInit {
   // --- New Product Logic ---
   openNewProductModal() {
     const defaultTax = this.taxes().find(t => t.esDefault);
-    this.newProductForm = { nombre: '', sku: '', imageUrl: '', costo: 0, precioNeto: 0, precioBruto: 0, taxId: defaultTax?.id || '', margen: '0%', stockInicial: 0 };
+    this.newProductForm = { nombre: '', descripcion: '', sku: '', categoryId: '', imageUrl: '', costo: 0, precioNeto: 0, precioBruto: 0, taxId: defaultTax?.id || '', margen: '0%', stockInicial: 0 };
     this.selectedFile = null;
     this.showNewProductModal = true;
   }
@@ -741,7 +803,6 @@ export class InventoryComponent implements OnInit {
   }
 
   scanBarcodeForNewProduct() {
-    // Basic implementation for demo. In a real app, this would open a camera scanner modal.
     const mockBarcode = '780' + Math.floor(100000000 + Math.random() * 900000000);
     alert('Escáner activado. Código simulado capturado: ' + mockBarcode);
     this.newProductForm.sku = mockBarcode;
@@ -755,7 +816,7 @@ export class InventoryComponent implements OnInit {
         return;
       }
       this.selectedFile = file;
-      this.newProductForm.imageUrl = URL.createObjectURL(file); // Preview temporal
+      this.newProductForm.imageUrl = URL.createObjectURL(file);
     }
   }
 
@@ -767,21 +828,18 @@ export class InventoryComponent implements OnInit {
     
     this.loading.set(true);
     try {
-        let finalImageUrl = '';
-
-        // 1. Subir imagen si hay un archivo seleccionado
+        let imageUrl = '';
         if (this.selectedFile) {
             const uploadRes = await this.catalogService.uploadImage(this.selectedFile).toPromise();
-            if (uploadRes && uploadRes.url) {
-                finalImageUrl = uploadRes.url;
-            }
+            if (uploadRes && uploadRes.url) imageUrl = uploadRes.url;
         }
 
-        // 2. Crear producto en CatalogService
         const productReq: ProductRequest = {
             sku: this.newProductForm.sku,
             nombre: this.newProductForm.nombre,
-            imagenUrl: finalImageUrl || undefined,
+            descripcion: this.newProductForm.descripcion,
+            categoryId: this.newProductForm.categoryId || undefined,
+            imagenUrl: imageUrl,
             variants: [{
                 sku: this.newProductForm.sku,
                 nombre: 'Default',
@@ -796,7 +854,6 @@ export class InventoryComponent implements OnInit {
 
         const createdProduct = await this.catalogService.createProduct(productReq).toPromise();
 
-        // 3. Crear stock inicial en InventoryService si hay stock > 0
         if (createdProduct && this.newProductForm.stockInicial > 0) {
             const branchId = this.branchContext.activeBranchId();
             if (branchId && createdProduct.variants && createdProduct.variants.length > 0) {
@@ -814,7 +871,7 @@ export class InventoryComponent implements OnInit {
 
         alert('Producto creado exitosamente');
         this.closeNewProductModal();
-        this.loadData(true); // recargar de la API
+        this.loadData(true);
     } catch (e: any) {
         console.error(e);
         alert('Error al crear producto: ' + (e.error?.message || e.message));
@@ -828,7 +885,6 @@ export class InventoryComponent implements OnInit {
     event.stopPropagation();
     this.loading.set(true);
     try {
-        // Fetch full product by searching SKU to get the main Product ID
         const res = await this.catalogService.getProducts(0, 1, item.variantSku).toPromise();
         if (res && res.content && res.content.length > 0) {
             const product = res.content[0];
@@ -845,6 +901,7 @@ export class InventoryComponent implements OnInit {
                 id: product.id,
                 nombre: product.nombre,
                 sku: product.sku,
+                categoryId: product.categoryId || '',
                 imageUrl: product.imagenUrl || '',
                 originalVariantId: item.variantId,
                 costo,
@@ -911,14 +968,13 @@ export class InventoryComponent implements OnInit {
             }
         }
 
-        // We need the existing product to update it without losing variants
         const currentProduct = await this.catalogService.getProduct(this.editProductForm.id).toPromise();
         if (!currentProduct) throw new Error('Producto no encontrado');
 
         const productReq: ProductRequest = {
             sku: currentProduct.sku,
             nombre: this.editProductForm.nombre,
-            categoryId: currentProduct.categoryId,
+            categoryId: this.editProductForm.categoryId || currentProduct.categoryId,
             unitId: currentProduct.unitId, 
             imagenUrl: finalImageUrl,
             variants: currentProduct.variants.map(v => ({
@@ -946,6 +1002,29 @@ export class InventoryComponent implements OnInit {
     }
   }
 
+  async deleteProduct(item: StockDto, event: Event) {
+    event.stopPropagation();
+    if (confirm(`¿Seguro que desea eliminar el producto ${item.productName} del catálogo? Esta acción es irreversible.`)) {
+        this.loading.set(true);
+        try {
+            const res = await this.catalogService.getProducts(0, 1, item.variantSku).toPromise();
+            if (res && res.content && res.content.length > 0) {
+                const productId = res.content[0].id;
+                await this.catalogService.deleteProduct(productId).toPromise();
+                alert('Producto eliminado exitosamente');
+                this.loadData(true);
+            } else {
+                alert('No se pudo encontrar el ID del producto para eliminar.');
+            }
+        } catch (e: any) {
+            console.error('Error eliminando producto:', e);
+            alert('Error al eliminar producto: ' + (e.error?.message || e.message));
+        } finally {
+            this.loading.set(false);
+        }
+    }
+  }
+
   searchProducts() {
     if (!this.productSearch) { this.searchedProducts.set([]); return; }
     const q = this.productSearch.toLowerCase();
@@ -961,17 +1040,14 @@ export class InventoryComponent implements OnInit {
 
   onBranchChanged(branch: any) {
     console.log('Branch changed manually to:', branch.nombre);
-    // Force reload from API to get fresh stock for this branch
     this.loadData(true);
   }
 
   async submitAdjustment() {
     if (!this.selectedStockItem) return;
 
-    // Ensure we have an active branch
     let branchId = this.branchContext.activeBranchId();
     if (!branchId) {
-      // Should have been set by loadData, but safe guard
       alert('No hay sucursal seleccionada. Recargando...');
       this.loadData(true);
       return;
@@ -991,11 +1067,7 @@ export class InventoryComponent implements OnInit {
       const updatedStock = await this.stockService.adjustStock(req).toPromise();
 
       if (updatedStock) {
-        console.log('Adjustment success, updating UI for variant:', updatedStock.variantId);
-
-        console.log('Clearing local cache to force refresh...');
         await this.offlineService.clearCache();
-
         this.stock.update(items => items.map(i => i.variantId === updatedStock.variantId ? updatedStock : i));
       }
 
@@ -1007,7 +1079,20 @@ export class InventoryComponent implements OnInit {
 
   // Helpers
   calculateTotalValue(): string {
-    return '$' + (this.stock().reduce((acc, i) => acc + i.cantidadDisponible, 0) * 1000).toLocaleString();
+    const value = this.stock().reduce((acc, i: any) => {
+      const costo = i.costo || 0;
+      return acc + (i.cantidadDisponible > 0 ? i.cantidadDisponible * costo : 0);
+    }, 0);
+    return '$' + Math.round(value).toLocaleString();
+  }
+
+  calculateTotalProfit(): string {
+    const profit = this.stock().reduce((acc, i: any) => {
+      const costo = i.costo || 0;
+      const precioNeto = i.precioNeto || 0;
+      return acc + (i.cantidadDisponible > 0 ? i.cantidadDisponible * (precioNeto - costo) : 0);
+    }, 0);
+    return '$' + Math.round(profit).toLocaleString();
   }
 
   calculateProgress(item: StockDto): number {

@@ -21,6 +21,7 @@ export interface Category {
     parentName?: string;
     orden: number;
     activa: boolean;
+    icono?: string;
     children?: Category[];
 }
 
@@ -29,6 +30,7 @@ export interface CategoryRequest {
     descripcion?: string;
     parentId?: string;
     orden?: number;
+    icono?: string;
 }
 
 export interface ProductVariant {
@@ -231,6 +233,24 @@ export class CatalogService {
 
     getTaxes(): Observable<Tax[]> {
         return this.http.get<Tax[]>(`${this.baseUrl}/taxes`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    createTax(request: Partial<Tax>): Observable<Tax> {
+        return this.http.post<Tax>(`${this.baseUrl}/taxes`, request, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateTax(id: string, request: Partial<Tax>): Observable<Tax> {
+        return this.http.put<Tax>(`${this.baseUrl}/taxes/${id}`, request, {
+            headers: this.getHeaders()
+        });
+    }
+
+    deleteTax(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/taxes/${id}`, {
             headers: this.getHeaders()
         });
     }

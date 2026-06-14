@@ -81,6 +81,7 @@ public class CategoryService {
                 .tenantId(tenantId)
                 .nombre(request.getNombre())
                 .descripcion(request.getDescripcion())
+                .icono(request.getIcono())
                 .parent(parent)
                 .orden(request.getOrden() != null ? request.getOrden() : 0)
                 .activa(true)
@@ -118,6 +119,7 @@ public class CategoryService {
 
         category.setNombre(request.getNombre());
         category.setDescripcion(request.getDescripcion());
+        category.setIcono(request.getIcono());
         category.setParent(parent);
         if (request.getOrden() != null) {
             category.setOrden(request.getOrden());
@@ -169,6 +171,7 @@ public class CategoryService {
                 .id(category.getId())
                 .nombre(category.getNombre())
                 .descripcion(category.getDescripcion())
+                .icono(category.getIcono())
                 .parentId(category.getParentId())
                 .parentName(category.getParent() != null ? category.getParent().getNombre() : null)
                 .orden(category.getOrden())

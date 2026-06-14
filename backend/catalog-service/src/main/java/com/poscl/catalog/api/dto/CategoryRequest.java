@@ -24,5 +24,7 @@ public class CategoryRequest {
     
     private UUID parentId;
     
+    private String icono;
+    
     private Integer orden;
 }

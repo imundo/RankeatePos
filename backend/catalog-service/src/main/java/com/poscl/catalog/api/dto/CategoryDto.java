@@ -19,6 +19,7 @@ public class CategoryDto {
     private String descripcion;
     private UUID parentId;
     private String parentName;
+    private String icono;
     private Integer orden;
     private Boolean activa;
     private List<CategoryDto> children;

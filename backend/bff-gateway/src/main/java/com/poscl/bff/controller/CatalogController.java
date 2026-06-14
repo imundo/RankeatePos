@@ -249,17 +249,60 @@ public class CatalogController {
                                 .bodyToMono(Map.class);
         }
 
-        // =====================================================
-        // TAXES ENDPOINTS
-        // =====================================================
+        @PostMapping("/api/categories")
+        @Operation(summary = "Create category", description = "Create a new category")
+        public Mono<Map> createCategory(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestBody Map<String, Object> request) {
 
+                return catalogWebClient.post()
+                                .uri("/api/categories")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @PutMapping("/api/categories/{id}")
+        @Operation(summary = "Update category", description = "Update an existing category")
+        public Mono<Map> updateCategory(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id,
+                        @RequestBody Map<String, Object> request) {
+
+                return catalogWebClient.put()
+                                .uri("/api/categories/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @DeleteMapping("/api/categories/{id}")
+        @Operation(summary = "Delete category", description = "Delete a category")
+        public Mono<Void> deleteCategory(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id) {
+
+                return catalogWebClient.delete()
+                                .uri("/api/categories/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .retrieve()
+                                .bodyToMono(Void.class);
+        }
         @GetMapping("/api/taxes")
         @Operation(summary = "List taxes", description = "Get all taxes for tenant")
         public Mono<List> listTaxes(
                         @RequestHeader(value = "Authorization", required = false) String authHeader,
                         @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId) {
 
-                if (tenantId == null || tenantId.isEmpty()) {
+                if (tenantId == null) {
                         return Mono.just(Collections.emptyList());
                 }
 
@@ -269,7 +312,55 @@ public class CatalogController {
                                 .header("X-Tenant-Id", tenantId)
                                 .retrieve()
                                 .bodyToMono(List.class)
+                                .doOnError(e -> log.error("Error fetching taxes: {}", e.getMessage()))
                                 .onErrorReturn(Collections.emptyList());
         }
 
+        @PostMapping("/api/taxes")
+        @Operation(summary = "Create tax", description = "Create a new tax")
+        public Mono<Map> createTax(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @RequestBody Map<String, Object> request) {
+
+                return catalogWebClient.post()
+                                .uri("/api/taxes")
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @PutMapping("/api/taxes/{id}")
+        @Operation(summary = "Update tax", description = "Update an existing tax")
+        public Mono<Map> updateTax(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id,
+                        @RequestBody Map<String, Object> request) {
+
+                return catalogWebClient.put()
+                                .uri("/api/taxes/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .bodyValue(request)
+                                .retrieve()
+                                .bodyToMono(Map.class);
+        }
+
+        @DeleteMapping("/api/taxes/{id}")
+        @Operation(summary = "Delete tax", description = "Delete a tax")
+        public Mono<Void> deleteTax(
+                        @RequestHeader(value = "Authorization", required = false) String authHeader,
+                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+                        @PathVariable String id) {
+
+                return catalogWebClient.delete()
+                                .uri("/api/taxes/" + id)
+                                .header("Authorization", authHeader != null ? authHeader : "")
+                                .header("X-Tenant-Id", tenantId != null ? tenantId : "")
+                                .retrieve()
+                                .bodyToMono(Void.class);
+        }
 }

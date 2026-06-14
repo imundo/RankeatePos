@@ -18,6 +18,10 @@ export interface StockDto {
     stockBajo: boolean;
     updatedAt: string;
     imageUrl?: string;
+    precioBruto?: number;
+    precioNeto?: number;
+    costo?: number;
+    marginPercentage?: number;
 }
 
 export interface StockMovementDto {
