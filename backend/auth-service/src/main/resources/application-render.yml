@@ -33,16 +33,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics
       base-path: /actuator
   endpoint:
     health:
       show-details: always
       probes:
         enabled: true
-  metrics:
-    tags:
-      application: ${spring.application.name}
 
 jwt:
   secret: ${JWT_SECRET:render-super-secret-key-2024-min-32-chars}
