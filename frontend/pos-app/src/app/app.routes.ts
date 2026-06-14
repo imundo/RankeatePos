@@ -166,6 +166,11 @@ export const routes: Routes = [
         canActivate: [authGuard, moduleGuard('collections')]
     },
     {
+        path: 'proveedores',
+        loadComponent: () => import('./features/compras/pages/proveedores.component').then(m => m.ProveedoresComponent),
+        canActivate: [authGuard, moduleGuard('suppliers')]
+    },
+    {
         path: 'compras',
         loadChildren: () => import('./features/compras/compras.module').then(m => m.ComprasModule),
         canActivate: [authGuard, moduleGuard('purchases')]

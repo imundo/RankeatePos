@@ -1119,7 +1119,7 @@ interface CartItem {
                 </div>
                 <span class="item-text">Clientes</span>
               </button>
-              <button *ngIf="canAccess('suppliers')" class="menu-item" routerLink="/proveedores" (click)="showMenu = false">
+              <button *ngIf="canAccess('suppliers')" class="menu-item" routerLink="/compras/proveedores" (click)="showMenu = false">
                 <div class="item-icon purple">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 21h18M5 21V7l8-4 8 4v14M5 10a2 2 0 002-2V6a2 2 0 00-2-2m0 4h14m-14 4h14m-14 4h14"/>
@@ -3739,6 +3739,8 @@ export class PosComponent implements OnInit {
   }
 
   async loadCachedProducts(): Promise<void> {
+    // Always sync from server on init to ensure fresh data
+    // Show cached products only as a brief fallback while syncing
     const cached = await this.offlineService.getCachedProducts();
     if (cached.length > 0) {
       this.products.set(cached);
@@ -3751,12 +3753,9 @@ export class PosComponent implements OnInit {
         }
       });
       this.categories.set(Array.from(uniqueCategories.values()));
-      
-      // Sync silently in background
-      this.syncProducts(true);
-    } else {
-      this.syncProducts(false);
     }
+    // Always do a full (non-silent) sync on load to get fresh data
+    this.syncProducts(false);
   }
 
   async syncProducts(silent: boolean = false): Promise<void> {

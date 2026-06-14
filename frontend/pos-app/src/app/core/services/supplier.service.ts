@@ -5,14 +5,40 @@ import { environment } from '../../../environments/environment';
 
 export interface Supplier {
     id: string;
-    nombre: string;
     rut: string;
+    businessName: string;
+    fantasyName: string;
+    name: string;
+    giro: string;
     email: string;
-    telefono: string;
-    direccion: string;
-    contacto: string;
-    plazoPago: string;
-    activo: boolean;
+    phone: string;
+    website: string;
+    address: string;
+    city: string;
+    contactName: string;
+    paymentTerms: number;
+    discountPercentage: number;
+    currency: string;
+    bankAccount: string;
+    bankName: string;
+    category: string;
+    deliveryType: string;
+    avgDeliveryDays: number;
+    trustRating: number;
+    totalOrders: number;
+    onTimeDeliveries: number;
+    totalSpent: number;
+    status: string;
+    notes: string;
+    isActive: boolean;
+    createdAt: string;
+    // Legacy compat
+    nombre?: string;
+    contacto?: string;
+    telefono?: string;
+    direccion?: string;
+    plazoPago?: string;
+    activo?: boolean;
 }
 
 export interface SupplierProduct {
@@ -24,6 +50,12 @@ export interface SupplierProduct {
     lastCost: number;
 }
 
+export interface SupplierStats {
+    totalActive: number;
+    totalAll: number;
+    avgRating: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -32,7 +64,7 @@ export class SupplierService {
 
     constructor(private http: HttpClient) { }
 
-    getSuppliers(filter?: string, page = 0, size = 10): Observable<any> {
+    getSuppliers(filter?: string, page = 0, size = 50): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
@@ -45,7 +77,7 @@ export class SupplierService {
     }
 
     getActiveSuppliers(): Observable<Supplier[]> {
-        return this.http.get<Supplier[]>(`${this.apiUrl}/active`);
+        return this.http.get<Supplier[]>(`${this.apiUrl}?active=true`);
     }
 
     getSupplier(id: string): Observable<Supplier> {
@@ -60,8 +92,16 @@ export class SupplierService {
         return this.http.put<Supplier>(`${this.apiUrl}/${id}`, supplier);
     }
 
+    updateRating(id: string, rating: number): Observable<Supplier> {
+        return this.http.patch<Supplier>(`${this.apiUrl}/${id}/rating`, { rating });
+    }
+
     deleteSupplier(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    }
+
+    getStats(): Observable<SupplierStats> {
+        return this.http.get<SupplierStats>(`${this.apiUrl}/stats`);
     }
 
     // Supplier Products
