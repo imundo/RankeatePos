@@ -151,43 +151,81 @@ import { AdminService, Role, ModuleConfig } from '../../core/services/admin.serv
     </div>
 
     <!-- Permissions Editor Modal -->
-    <div *ngIf="showPermissionsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 class="text-lg font-semibold text-slate-800">
-            Permisos: {{ selectedRole?.nombre }}
-          </h3>
-          <button (click)="closePermissionsModal()" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+    <div *ngIf="showPermissionsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col transform transition-all">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 rounded-t-2xl shrink-0">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="pi pi-shield text-indigo-600"></i> Permisos del Rol: <span class="text-indigo-600">{{ selectedRole?.nombre }}</span>
+            </h3>
+            <p class="text-sm text-slate-500 mt-1">Configura el acceso a los diferentes módulos y funciones.</p>
+          </div>
+          <button (click)="closePermissionsModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
         </div>
         
-        <div class="p-6 overflow-y-auto flex-1">
-          <div *ngFor="let category of permissionCategories" class="mb-6">
-            <h4 class="font-medium text-slate-700 mb-3 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-              {{ category.name }}
-            </h4>
-            <div class="grid grid-cols-2 gap-2">
-              <label *ngFor="let perm of category.permissions" 
-                     class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
-                <input type="checkbox" 
-                       [checked]="isPermissionSelected(perm.code)"
-                       (change)="togglePermission(perm.code)"
-                       class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                <span class="text-sm text-slate-700">{{ perm.name }}</span>
-              </label>
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto flex-1 bg-slate-50/50">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div *ngFor="let category of permissionCategories" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between" [ngClass]="category.headerBgClass">
+                <h4 class="font-semibold text-slate-800 flex items-center gap-3 m-0">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm" [ngClass]="category.iconBgClass">
+                    <i class="pi {{ category.icon }}"></i>
+                  </div>
+                  {{ category.name }}
+                </h4>
+                <div class="text-xs font-bold px-2.5 py-1 rounded-full" [ngClass]="category.badgeClass">
+                  {{ category.permissions.length }} permisos
+                </div>
+              </div>
+              <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 items-start content-start">
+                <label *ngFor="let perm of category.permissions" 
+                       class="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:border-slate-200"
+                       [class.bg-indigo-50]="isPermissionSelected(perm.code)"
+                       [class.border-indigo-200]="isPermissionSelected(perm.code)"
+                       [class.hover:bg-slate-50]="!isPermissionSelected(perm.code)">
+                  <div class="relative flex items-center pt-0.5 shrink-0">
+                    <input type="checkbox" 
+                           [checked]="isPermissionSelected(perm.code)"
+                           (change)="togglePermission(perm.code)"
+                           class="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-all checked:bg-indigo-600 checked:border-indigo-600">
+                    <svg class="absolute inset-0 w-5 h-5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <span class="text-sm font-medium transition-colors mt-0.5 leading-tight"
+                        [class.text-indigo-900]="isPermissionSelected(perm.code)"
+                        [class.text-slate-600]="!isPermissionSelected(perm.code)">
+                    {{ perm.name }}
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
         
-        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
-          <button (click)="closePermissionsModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-            Cancelar
-          </button>
-          <button (click)="savePermissions()" 
-                  [disabled]="saving"
-                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
-            {{ saving ? 'Guardando...' : 'Guardar Permisos' }}
-          </button>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-between items-center bg-white rounded-b-2xl shrink-0">
+          <div class="text-sm text-slate-500 font-medium">
+            <span class="text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-md">{{ selectedPermissions.size }}</span> permisos seleccionados
+          </div>
+          <div class="flex gap-3">
+            <button (click)="closePermissionsModal()" class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+              Cancelar
+            </button>
+            <button (click)="savePermissions()" 
+                    [disabled]="saving"
+                    class="px-6 py-2.5 text-sm font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-100 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2">
+              <svg *ngIf="saving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ saving ? 'Guardando...' : 'Guardar Permisos' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -214,36 +252,76 @@ export class RoleManagerComponent implements OnInit {
     // Permission categories for the permissions editor
     permissionCategories = [
         {
-            name: 'Ventas',
+            name: 'Punto de Venta',
+            icon: 'pi-shopping-cart',
+            iconBgClass: 'bg-amber-100 text-amber-600',
+            headerBgClass: 'bg-amber-50/50',
+            badgeClass: 'bg-amber-100 text-amber-700',
             permissions: [
                 { code: 'pos.access', name: 'Acceso al POS' },
                 { code: 'pos.discount', name: 'Aplicar Descuentos' },
                 { code: 'pos.void', name: 'Anular Ventas' },
-                { code: 'sales.view', name: 'Ver Historial' },
+                { code: 'sales.view', name: 'Ver Historial Ventas' },
                 { code: 'sales.refund', name: 'Realizar Devoluciones' },
                 { code: 'cashier.close', name: 'Cierre de Caja' }
             ]
         },
         {
-            name: 'Inventario',
+            name: 'Inventario y Catálogo',
+            icon: 'pi-box',
+            iconBgClass: 'bg-blue-100 text-blue-600',
+            headerBgClass: 'bg-blue-50/50',
+            badgeClass: 'bg-blue-100 text-blue-700',
             permissions: [
                 { code: 'products.view', name: 'Ver Productos' },
                 { code: 'products.create', name: 'Crear Productos' },
                 { code: 'products.edit', name: 'Editar Productos' },
                 { code: 'products.delete', name: 'Eliminar Productos' },
                 { code: 'stock.adjust', name: 'Ajustar Stock' },
-                { code: 'stock.transfer', name: 'Transferir Stock' }
+                { code: 'purchases.manage', name: 'Gestionar Compras/Proveedores' }
             ]
         },
         {
-            name: 'Configuración',
+            name: 'Contabilidad y Finanzas',
+            icon: 'pi-chart-line',
+            iconBgClass: 'bg-emerald-100 text-emerald-600',
+            headerBgClass: 'bg-emerald-50/50',
+            badgeClass: 'bg-emerald-100 text-emerald-700',
+            permissions: [
+                { code: 'accounting.view', name: 'Ver Contabilidad' },
+                { code: 'accounting.manage', name: 'Gestionar Contabilidad' },
+                { code: 'treasury.view', name: 'Ver Tesorería' },
+                { code: 'treasury.manage', name: 'Gestionar Tesorería' },
+                { code: 'budget.manage', name: 'Control Financiero' },
+                { code: 'billing.manage', name: 'Facturación Electrónica' }
+            ]
+        },
+        {
+            name: 'Marketing y Clientes',
+            icon: 'pi-users',
+            iconBgClass: 'bg-pink-100 text-pink-600',
+            headerBgClass: 'bg-pink-50/50',
+            badgeClass: 'bg-pink-100 text-pink-700',
+            permissions: [
+                { code: 'crm.view', name: 'Ver Clientes' },
+                { code: 'crm.manage', name: 'Gestionar Clientes' },
+                { code: 'marketing.manage', name: 'Campañas de Marketing' },
+                { code: 'loyalty.manage', name: 'Programa de Lealtad' }
+            ]
+        },
+        {
+            name: 'Configuración y Roles',
+            icon: 'pi-cog',
+            iconBgClass: 'bg-slate-200 text-slate-700',
+            headerBgClass: 'bg-slate-50',
+            badgeClass: 'bg-slate-200 text-slate-800',
             permissions: [
                 { code: 'settings.view', name: 'Ver Configuración' },
                 { code: 'settings.edit', name: 'Editar Configuración' },
-                { code: 'users.view', name: 'Ver Usuarios' },
+                { code: 'users.view', name: 'Ver Usuarios y Roles' },
                 { code: 'users.manage', name: 'Gestionar Usuarios' },
                 { code: 'branches.manage', name: 'Gestionar Sucursales' },
-                { code: 'reports.view', name: 'Ver Reportes' }
+                { code: 'reports.view', name: 'Ver Reportes y Analíticas' }
             ]
         }
     ];

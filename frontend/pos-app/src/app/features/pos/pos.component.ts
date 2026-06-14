@@ -1058,6 +1058,36 @@ interface CartItem {
               </button>
             </div>
 
+            <!-- OPERACIÓN Y MARKETING -->
+            <div class="menu-section">
+              <span class="section-title">Operación y Marketing</span>
+              <button *ngIf="canAccess('inventory')" class="menu-item" routerLink="/inventory" (click)="showMenu = false">
+                <div class="item-icon amber">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                  </svg>
+                </div>
+                <span class="item-text">Control de Inventario</span>
+              </button>
+              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/marketing" (click)="showMenu = false">
+                <div class="item-icon pink">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                  </svg>
+                </div>
+                <span class="item-text">Marketing</span>
+              </button>
+              <button *ngIf="canAccess('marketing')" class="menu-item" routerLink="/loyalty" (click)="showMenu = false">
+                <div class="item-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                </div>
+                <span class="item-text">Programa de Lealtad</span>
+              </button>
+            </div>
+
             <!-- FACTURACIÓN -->
             <div class="menu-section">
               <span class="section-title">Facturación</span>
