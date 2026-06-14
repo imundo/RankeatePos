@@ -128,7 +128,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             // 1. Calculate Weighted Average Cost
             // New Cost = ((Current Stock * Current Cost) + (New Stock * New Cost)) / Total
             // Stock
-            int currentStock = variant.getStock();
+            // TODO: Fetch actual stock from inventory-service
+            int currentStock = 0;
             // Handle null cost (treat as 0)
             int currentCost = variant.getCosto() != null ? variant.getCosto() : 0;
             int newQuantity = item.getQuantity();
@@ -140,7 +141,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             int newWeightedCost = totalStock > 0 ? (int) (totalValue / totalStock) : newUnitCost;
 
             // Update Variant
-            variant.setStock(totalStock);
+            // TODO: Send stock update to inventory-service
             variant.setCosto(newWeightedCost);
             productVariantRepository.save(variant);
 
