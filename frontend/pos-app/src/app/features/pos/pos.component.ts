@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -3359,6 +3359,18 @@ export class PosComponent implements OnInit {
   isLoading = signal(false);
   cartItems = signal<CartItem[]>([]);
   searchQuery = '';
+
+  constructor() {
+    // Re-sync products automatically when the active branch changes
+    effect(() => {
+      const branchId = this.branchContext.activeBranchId();
+      // Only sync if we have a valid branch selected
+      if (branchId) {
+        this.syncProducts(false);
+      }
+    });
+  }
+
   showScannerModal = false;
   showPaymentDialog = false;
   showMenu = false;
@@ -3415,8 +3427,6 @@ export class PosComponent implements OnInit {
   restockItem: CachedProduct | null = null;
   restockAmount = 10;
   restockLoading = false;
-
-
 
   // Document expiry alerts (demo data)
   expiringDocs = signal<any[]>([
@@ -3509,7 +3519,6 @@ export class PosComponent implements OnInit {
     this.loyaltyPointsToRedeem.set(pointsToUse);
   }
   // ----------------------
-
 
   openSpecialOrder() {
     this.messageService.add({ severity: 'info', summary: 'Próximamente', detail: 'Gestión de pedidos especiales' });
@@ -3722,10 +3731,6 @@ export class PosComponent implements OnInit {
     this.generatePreviewBarcodes();
   }
 
-
-
-
-
   subtotal = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.subtotal, 0)
   );
@@ -3825,8 +3830,6 @@ export class PosComponent implements OnInit {
       });
       this.categories.set(Array.from(uniqueCategories.values()));
     }
-    // Always do a full (non-silent) sync on load to get fresh data
-    this.syncProducts(false);
   }
 
   async syncProducts(silent: boolean = false): Promise<void> {
