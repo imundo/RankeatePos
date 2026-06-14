@@ -270,43 +270,7 @@ interface CartItem {
             }
           </div>
 
-          <!-- Floating Action Button (FAB) with Quick Actions - Desktop Only -->
-          <div class="fab-container desktop-only" [class.fab-open]="fabOpen">
-            <!-- Sub Actions (expand from main FAB) -->
-            @if (fabOpen) {
-              <div class="fab-submenu">
-                <button class="fab-action" (click)="openWeightInput(); fabOpen = false" title="Pesar">
-                  <span class="fab-icon">⚖️</span>
-                  <span class="fab-label">Pesar</span>
-                </button>
-                <button class="fab-action" (click)="openSpecialOrder(); fabOpen = false" title="Pedido">
-                  <span class="fab-icon">📦</span>
-                  <span class="fab-label">Pedido</span>
-                </button>
-                <button class="fab-action" (click)="applyPromotion(); fabOpen = false" title="Promoción">
-                  <span class="fab-icon">🎁</span>
-                  <span class="fab-label">Promo</span>
-                </button>
-                <button class="fab-action" (click)="openClientSearch(); fabOpen = false" title="Cliente">
-                  <span class="fab-icon">👤</span>
-                  <span class="fab-label">Cliente</span>
-                </button>
-                <button class="fab-action" (click)="savePending(); fabOpen = false" title="Guardar">
-                  <span class="fab-icon">💾</span>
-                  <span class="fab-label">Guardar</span>
-                </button>
-              </div>
-            }
-            
-            <!-- Main FAB Button -->
-            <button class="fab-main" (click)="fabOpen = !fabOpen" [class.active]="fabOpen">
-              @if (fabOpen) {
-                <span class="fab-main-icon">✕</span>
-              } @else {
-                <span class="fab-main-icon">⚡</span>
-              }
-            </button>
-          </div>
+
         </section>
 
         <!-- Cart Section - Desktop Only -->
@@ -3913,7 +3877,7 @@ export class PosComponent implements OnInit {
       items.push({
         variantId: variant.id,
         productSku: variant.sku,
-        productNombre: variant.nombre || product.nombre,
+        productNombre: (!variant.nombre || variant.nombre.toLowerCase() === 'default') ? product.nombre : `${product.nombre} - ${variant.nombre}`,
         cantidad: 1,
         precioUnitario: variant.precioBruto,
         descuento: 0,

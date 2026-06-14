@@ -1844,6 +1844,10 @@ $bp-xl: 1280px;
 // ============================================
 
 .premium-checkout-dialog {
+  --border-radius: 4px !important;
+  --border-radius-sm: 4px !important;
+  --border-radius-full: 4px !important;
+
   .p-dialog-content {
     padding: 0 !important;
     overflow: hidden;
@@ -2457,8 +2461,8 @@ $bp-xl: 1280px;
   .premium-checkout-container {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0 !important;
-    padding: 0 !important;
+    gap: 16px !important;
+    padding: 16px !important;
     min-height: auto !important;
     max-height: none !important;
     overflow: visible !important;
@@ -2491,7 +2495,7 @@ $bp-xl: 1280px;
       padding: 8px !important;
       margin-bottom: 6px !important;
       background: rgba(255, 255, 255, 0.03);
-      border-radius: 10px;
+      border-radius: 4px !important;
 
       .item-thumbnail {
         width: 40px !important;
@@ -2524,7 +2528,7 @@ $bp-xl: 1280px;
     .order-totals {
       padding: 12px !important;
       background: rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
+      border-radius: 4px !important;
 
       .total-row {
         display: flex !important;
@@ -2575,7 +2579,7 @@ $bp-xl: 1280px;
         flex: 0 0 auto !important;
         padding: 10px 16px !important;
         font-size: 0.8rem !important;
-        border-radius: 12px !important;
+        border-radius: 4px !important;
         white-space: nowrap;
         min-height: 44px;
 
@@ -2610,9 +2614,10 @@ $bp-xl: 1280px;
       gap: 10px !important;
 
       .payment-card {
-        padding: 16px 10px !important;
-        min-height: 90px !important;
-        border-radius: 14px !important;
+        padding: 12px !important;
+        min-height: 80px !important;
+        gap: 8px !important;
+        border-radius: 4px !important;
 
         .card-icon {
           font-size: 1.75rem !important;
@@ -2658,12 +2663,10 @@ $bp-xl: 1280px;
         margin-bottom: 12px;
 
         .quick-btn {
-          flex: 1 1 calc(33.33% - 8px) !important;
-          min-width: 80px !important;
-          min-height: 44px !important;
           padding: 10px !important;
           font-size: 0.85rem !important;
-          border-radius: 12px !important;
+          border-radius: 4px !important;
+          min-height: 44px !important;
         }
       }
 
@@ -2701,12 +2704,15 @@ $bp-xl: 1280px;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     z-index: 200 !important;
 
+    .btn-cancel,
+    .btn-confirm {
+      min-height: 54px !important;
+      font-size: 1rem !important;
+      border-radius: 4px !important;
+    }
+
     .btn-cancel {
       flex: 0 0 auto !important;
-      padding: 12px 16px !important;
-      min-height: 48px !important;
-      font-size: 0.875rem !important;
-      border-radius: 12px !important;
     }
 
     .btn-confirm {
