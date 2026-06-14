@@ -28,6 +28,7 @@ import { LoyaltyService, LoyaltyCustomer } from '@core/services/loyalty.service'
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
 import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
 import { ClientSearchModalComponent, Client } from '@shared/components/modals/client-search-modal.component';
+import { BranchContextService } from '@core/services/branch-context.service';
 
 
 interface CartItem {
@@ -3472,6 +3473,7 @@ export class PosComponent implements OnInit {
   private barcodeService = inject(BarcodeService);
   private salesEventService = inject(SalesEventService);
   private loyaltyService = inject(LoyaltyService);
+  private branchContext = inject(BranchContextService);
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -3968,11 +3970,13 @@ export class PosComponent implements OnInit {
         'X-User-Id': this.authService.user()?.id || ''
       };
 
+      const activeBranchId = this.branchContext.activeBranchId() || tenantId;
+
       // Load products, categories, and stock in parallel
       const [productsResponse, categoriesResponse, stockResponse] = await Promise.all([
         this.http.get<any[]>(`${environment.catalogUrl}/products/sync`, { headers }).toPromise(),
         this.http.get<any[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise().catch(() => []),
-        this.stockService.getStockByBranch(tenantId || '').toPromise().catch(() => [])
+        this.http.get<any[]>(`${environment.inventoryUrl}/stock/branch/${activeBranchId}`, { headers }).toPromise().catch(() => [])
       ]);
 
       // Create stock map
