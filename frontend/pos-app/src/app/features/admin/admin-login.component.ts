@@ -34,7 +34,7 @@ import { AuthService } from '@core/auth/auth.service';
               type="email" 
               [(ngModel)]="email" 
               name="email"
-              placeholder="admin@smartpos.cl"
+              placeholder="superadmin@smartpos.cl"
               required
               autocomplete="username">
           </div>
@@ -398,13 +398,7 @@ export class AdminLoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        if (err.status === 401) {
-          this.error.set('Credenciales inválidas');
-        } else if (err.status === 403) {
-          this.error.set('Acceso denegado');
-        } else {
-          this.error.set('Error de conexión. Intente nuevamente.');
-        }
+        this.error.set(err.message || 'Error de conexión. Intente nuevamente.');
       }
     });
   }

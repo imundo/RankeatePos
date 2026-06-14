@@ -1148,7 +1148,7 @@ interface CartItem {
                 </div>
                 <span class="item-text">Contabilidad</span>
               </button>
-              <button *ngIf="canAccess('collections')" class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
+              <button *ngIf="canAccess('treasury')" class="menu-item" routerLink="/cobros-pagos" (click)="showMenu = false">
                 <div class="item-icon blue">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>

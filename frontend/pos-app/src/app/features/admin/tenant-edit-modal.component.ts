@@ -46,7 +46,7 @@ import { CardModule } from 'primeng/card';
         [resizable]="false"
         [dismissableMask]="true"
         [breakpoints]="{'960px': '90vw', '640px': '100vw'}"
-        [style]="{width: '900px', maxHeight: '90vh'}"
+        [style]="{width: '1100px', maxHeight: '90vh'}"
         [contentStyle]="{'overflow': 'auto', 'padding': '0'}"
         styleClass="admin-modal"
         (onHide)="close()">
@@ -409,7 +409,7 @@ import { CardModule } from 'primeng/card';
         
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1rem;
         }
         
@@ -765,6 +765,8 @@ export class TenantEditModalComponent implements OnInit, OnChanges {
         { id: 'mod-reports', code: 'reports', name: 'Reportes', description: 'Analytics y exportaciones', icon: '📈', category: 'Admin', sortOrder: 20 },
         { id: 'mod-users', code: 'users', name: 'Usuarios', description: 'Gestión de equipo', icon: '👤', category: 'Admin', sortOrder: 21 },
         { id: 'mod-billing', code: 'billing', name: 'Facturación', description: 'DTE y documentos tributarios', icon: '🧾', category: 'Admin', sortOrder: 22 },
+        { id: 'mod-accounting', code: 'accounting', name: 'Contabilidad', description: 'Asientos y libro diario', icon: '📓', category: 'Finanzas', sortOrder: 43 },
+        { id: 'mod-treasury', code: 'treasury', name: 'Tesorería', description: 'Cajas y bancos', icon: '💰', category: 'Finanzas', sortOrder: 44 },
         { id: 'mod-settings', code: 'settings', name: 'Configuración', description: 'Ajustes del sistema', icon: '⚙️', category: 'Admin', sortOrder: 23 },
         { id: 'mod-integrations', code: 'integrations', name: 'Integraciones', description: 'APIs y conexiones', icon: '🔌', category: 'Admin', sortOrder: 24 }
     ];
