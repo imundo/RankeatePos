@@ -893,9 +893,7 @@ export class InventoryComponent implements OnInit {
     this.newProductForm.sku = 'ART-' + Math.floor(1000 + Math.random() * 9000);
   }
 
-  scanBarcodeForNewProduct() {
-    this.showScannerModal = true;
-  }
+
 
   async compressImage(file: File, maxSizeMB: number): Promise<File> {
     return new Promise((resolve, reject) => {

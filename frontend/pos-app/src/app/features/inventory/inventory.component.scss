@@ -823,12 +823,15 @@
             }
             
             .timeline-note {
-    &.positive .timeline-content .stock-change-box .amount {
-        color: #10b981;
-    }
-    
-    &.negative .timeline-content .stock-change-box .amount {
-        color: #ef4444;
+                color: #94a3b8;
+                font-size: 0.95rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding-left: 0.5rem;
+                border-left: 2px solid rgba(255, 255, 255, 0.1);
+            }
+        }
     }
 }
 
