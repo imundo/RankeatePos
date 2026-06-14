@@ -68,7 +68,7 @@ public class Tenant {
     @Column(name = "sitio_web", length = 300)
     private String sitioWeb;
 
-    @Column(name = "logo_url", length = 500)
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
     @Column(name = "primary_color", length = 7)

@@ -37,7 +37,7 @@ public class TenantDocument {
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
-    @Column(name = "archivo_url", length = 1000)
+    @Column(name = "archivo_url", columnDefinition = "TEXT")
     private String archivoUrl;
 
     @Column(nullable = false, length = 20)

@@ -1,9 +1,10 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { CompanyService, CompanyBranding, CompanyDocument } from '@core/services/company.service';
+import { MessageService } from 'primeng/api';
 
 // CompanyInfo is an alias for CompanyBranding display purposes
 type CompanyInfo = CompanyBranding;
@@ -239,14 +240,17 @@ type CompanyInfo = CompanyBranding;
             </div>
             
             <div class="form-group">
-              <label>Archivo</label>
-              <div class="drag-drop-area">
-                <input type="file" accept=".pdf,.jpg,.png" hidden id="docUpload">
+              <label>Archivo (PDF, max 200KB)</label>
+              <div class="drag-drop-area" [class.file-ready]="newDocument.archivoUrl">
+                <input type="file" accept=".pdf" hidden id="docUpload" (change)="onDocumentFileSelected($event)">
                 <div class="upload-icon">📄</div>
-                <p>Arrastra y suelta tu archivo aquí</p>
-                <label class="btn-outline" for="docUpload">
-                  Explorar Archivos
-                </label>
+                @if (newDocument.archivoUrl) {
+                  <p class="text-green-500">¡Archivo listo para subir!</p>
+                  <label class="btn-outline" for="docUpload">Cambiar Archivo</label>
+                } @else {
+                  <p>Arrastra y suelta tu archivo aquí</p>
+                  <label class="btn-outline" for="docUpload">Explorar Archivos</label>
+                }
               </div>
             </div>
             
@@ -355,6 +359,7 @@ type CompanyInfo = CompanyBranding;
     }
 
     .form-group {
+      margin-bottom: 1.5rem;
       &.full-width { grid-column: 1 / -1; }
       
       label {
@@ -707,6 +712,7 @@ type CompanyInfo = CompanyBranding;
 export class CompanyManagementComponent implements OnInit {
   private authService = inject(AuthService);
   private companyService = inject(CompanyService);
+  private messageService = inject(MessageService);
 
   activeTab: 'info' | 'branding' | 'documents' = 'info';
   saving = signal(false);
@@ -723,8 +729,15 @@ export class CompanyManagementComponent implements OnInit {
   newDocument = {
     nombre: '',
     tipo: 'PATENTE',
-    fechaVencimiento: ''
+    fechaVencimiento: '',
+    archivoUrl: ''
   };
+
+  constructor() {
+    effect(() => {
+      this.loadCompanyData();
+    });
+  }
 
   ngOnInit() {
     this.loadCompanyData();
@@ -796,9 +809,57 @@ export class CompanyManagementComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      const sizeKB = file.size / 1024;
+      
+      if (sizeKB < 15 || sizeKB > 50) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'El logo debe pesar entre 15KB y 50KB.'
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         this.companyService.updateLogo(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onDocumentFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const sizeKB = file.size / 1024;
+      
+      if (file.type !== 'application/pdf') {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'El documento debe ser formato PDF.'
+        });
+        return;
+      }
+
+      if (sizeKB > 200) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'El documento no debe exceder 200KB.'
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.newDocument.archivoUrl = e.target?.result as string;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Archivo adjuntado correctamente.'
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -812,10 +873,25 @@ export class CompanyManagementComponent implements OnInit {
     this.companyService.addDocument({
       nombre: this.newDocument.nombre,
       tipo: this.newDocument.tipo,
-      fechaVencimiento: this.newDocument.fechaVencimiento || undefined
-    }).subscribe(() => {
-      this.showAddDocument = false;
-      this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '' };
+      fechaVencimiento: this.newDocument.fechaVencimiento || undefined,
+      archivoUrl: this.newDocument.archivoUrl || undefined
+    }).subscribe({
+      next: () => {
+        this.showAddDocument = false;
+        this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '', archivoUrl: '' };
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Documento añadido correctamente.'
+        });
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo añadir el documento.'
+        });
+      }
     });
   }
 
