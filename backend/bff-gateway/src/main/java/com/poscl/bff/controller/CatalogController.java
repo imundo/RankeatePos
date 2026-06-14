@@ -302,22 +302,7 @@ public class CatalogController {
                                 .retrieve()
                                 .bodyToMono(Void.class);
         }
-        @GetMapping("/api/taxes")
-        @Operation(summary = "List taxes", description = "Get all taxes for tenant")
-        public Mono<List> listTaxes(
-                        @RequestHeader(value = "Authorization", required = false) String authHeader,
-                        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId) {
 
-                if (tenantId == null) {
-                        return Mono.just(Collections.emptyList());
-                }
-
-                return catalogWebClient.get()
-                                .uri("/api/taxes")
-                                .header("Authorization", authHeader != null ? authHeader : "")
-                                .header("X-Tenant-Id", tenantId)
-                                .retrieve()
-        }
         @GetMapping("/api/taxes")
         @Operation(summary = "List taxes", description = "Get all taxes for tenant")
         public Mono<List> listTaxes(
