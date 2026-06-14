@@ -3366,7 +3366,7 @@ export class PosComponent implements OnInit {
       const branchId = this.branchContext.activeBranchId();
       // Only sync if we have a valid branch selected
       if (branchId) {
-        this.syncProducts(false);
+        setTimeout(() => this.syncProducts(false), 0);
       }
     });
   }
