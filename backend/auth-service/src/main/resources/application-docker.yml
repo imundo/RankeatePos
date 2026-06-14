@@ -26,6 +26,7 @@ logging:
     com.poscl: INFO
     org.springframework.security: WARN
 
+
 management:
   endpoints:
     web:

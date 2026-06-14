@@ -25,6 +25,7 @@ logging:
     org.springframework.web: INFO
 
 
+
 management:
   endpoints:
     web:

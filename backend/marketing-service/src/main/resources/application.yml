@@ -45,21 +45,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-      base-path: /
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
-  health:
-    db:
-      enabled: true
-    diskspace:
-      enabled: false
 
 springdoc:
   api-docs:

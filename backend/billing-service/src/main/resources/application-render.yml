@@ -32,7 +32,6 @@ spring:
 server:
   port: ${PORT:10000}
 
-# Actuator endpoints - simplified health check
 management:
   endpoints:
     web:
@@ -47,16 +46,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: never
-  health:
-    db:
-      enabled: false
 
 # SII Configuration for Render
 sii:

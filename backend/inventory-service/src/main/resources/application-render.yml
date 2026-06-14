@@ -31,7 +31,6 @@ spring:
 server:
   port: ${PORT:10000}
 
-# Actuator endpoints
 management:
   endpoints:
     web:
@@ -46,16 +45,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: never
-  health:
-    db:
-      enabled: false
 
 logging:
   level:

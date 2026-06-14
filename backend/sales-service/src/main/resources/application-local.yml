@@ -45,6 +45,7 @@ logging:
   level:
     com.poscl: DEBUG
 
+
 management:
   endpoints:
     web:

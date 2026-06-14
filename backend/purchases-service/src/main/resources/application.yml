@@ -39,3 +39,11 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Trigger deployment

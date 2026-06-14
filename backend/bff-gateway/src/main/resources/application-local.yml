@@ -30,6 +30,7 @@ logging:
     com.poscl.bff: DEBUG
     org.springframework.web: INFO
 
+
 management:
   endpoints:
     web:

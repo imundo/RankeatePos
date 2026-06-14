@@ -21,6 +21,7 @@ logging:
   level:
     com.poscl: INFO
 
+
 management:
   endpoints:
     web:

@@ -1,7 +1,6 @@
 server:
   port: ${PORT:8080}
 
-# Actuator configuration for health checks
 management:
   endpoints:
     web:
@@ -16,18 +15,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
-  server:
-    port: ${PORT:8080}
 
 spring:
   application:

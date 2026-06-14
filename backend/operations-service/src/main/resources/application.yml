@@ -48,13 +48,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
 
 springdoc:
   api-docs:
