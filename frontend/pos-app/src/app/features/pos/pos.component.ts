@@ -334,10 +334,12 @@ interface CartItem {
                 <span>Subtotal</span>
                 <span>{{ formatPrice(subtotal()) }}</span>
               </div>
-              <div class="summary-row">
-                <span>Impuestos</span>
-                <span>{{ formatPrice(taxTotal()) }}</span>
-              </div>
+              @for (tax of taxBreakdown(); track tax.name) {
+                <div class="summary-row">
+                  <span>{{ tax.name }}</span>
+                  <span>{{ formatPrice(tax.amount) }}</span>
+                </div>
+              }
               <div class="summary-row total">
                 <span>Total</span>
                 <span>{{ formatPrice(total()) }}</span>
@@ -412,10 +414,12 @@ interface CartItem {
                 <span>Subtotal:</span>
                 <span>{{ formatPrice(subtotalCheckout()) }}</span>
               </div>
-              <div class="total-row">
-                <span>Impuestos:</span>
-                <span>{{ formatPrice(taxCheckout()) }}</span>
-              </div>
+              @for (tax of taxBreakdown(); track tax.name) {
+                <div class="total-row">
+                  <span>{{ tax.name }}:</span>
+                  <span>{{ formatPrice(tax.amount) }}</span>
+                </div>
+              }
               @if (loyaltyDiscount() > 0) {
                 <div class="total-row" style="color: #34d399;">
                   <span>Descuento Puntos:</span>
@@ -693,10 +697,12 @@ interface CartItem {
                     <span>Neto:</span>
                     <span>{{ formatPrice(subtotalCheckout()) }}</span>
                   </div>
-                  <div class="total-row">
-                    <span>Impuestos:</span>
-                    <span>{{ formatPrice(taxCheckout()) }}</span>
-                  </div>
+                  @for (tax of taxBreakdown(); track tax.name) {
+                    <div class="total-row">
+                      <span>{{ tax.name }}:</span>
+                      <span>{{ formatPrice(tax.amount) }}</span>
+                    </div>
+                  }
                   <div class="total-row bold">
                     <span>TOTAL:</span>
                     <span>{{ formatPrice(total()) }}</span>
@@ -838,10 +844,12 @@ interface CartItem {
                    <span>Neto:</span>
                    <span>{{ formatPrice(lastSaleNeto()) }}</span>
                  </div>
-                 <div class="total-row">
-                   <span>Impuestos:</span>
-                   <span>{{ formatPrice(lastSaleTotal - lastSaleNeto()) }}</span>
-                 </div>
+                 @for (tax of lastSaleTaxBreakdown(); track tax.name) {
+                    <div class="total-row">
+                      <span>{{ tax.name }}:</span>
+                      <span>{{ formatPrice(tax.amount) }}</span>
+                    </div>
+                  }
                  <div class="total-row bold">
                    <span>TOTAL:</span>
                    <span>{{ formatPrice(lastSaleTotal) }}</span>
@@ -3359,6 +3367,7 @@ export class PosComponent implements OnInit {
   isLoading = signal(false);
   cartItems = signal<CartItem[]>([]);
   searchQuery = '';
+  taxesMap = signal<Map<number, string>>(new Map());
 
   constructor() {
     // Re-sync products automatically when the active branch changes
@@ -3757,6 +3766,40 @@ export class PosComponent implements OnInit {
     this.total() - this.subtotal() // Difference is the tax
   );
 
+  taxBreakdown = computed(() => {
+    const breakdown = new Map<number, number>();
+    for (const item of this.cartItems()) {
+      const taxRate = item.impuestoPorcentaje || 0;
+      if (taxRate === 0) continue;
+      const taxAmount = item.subtotal - (item.subtotal / (1 + taxRate / 100));
+      breakdown.set(taxRate, (breakdown.get(taxRate) || 0) + taxAmount);
+    }
+    
+    const result: { name: string, amount: number }[] = [];
+    breakdown.forEach((amount, rate) => {
+      const name = this.taxesMap().get(rate) || `Impuesto`;
+      result.push({ name: `${name} (${rate}%)`, amount: Math.round(amount) });
+    });
+    return result;
+  });
+
+  lastSaleTaxBreakdown = computed(() => {
+    const breakdown = new Map<number, number>();
+    for (const item of this.lastSaleItems()) {
+      const taxRate = item.impuestoPorcentaje || 0;
+      if (taxRate === 0) continue;
+      const taxAmount = item.subtotal - (item.subtotal / (1 + taxRate / 100));
+      breakdown.set(taxRate, (breakdown.get(taxRate) || 0) + taxAmount);
+    }
+    
+    const result: { name: string, amount: number }[] = [];
+    breakdown.forEach((amount, rate) => {
+      const name = this.taxesMap().get(rate) || `Impuesto`;
+      result.push({ name: `${name} (${rate}%)`, amount: Math.round(amount) });
+    });
+    return result;
+  });
+
   lastSaleNeto = computed(() => {
     let netSum = 0;
     for (const item of this.lastSaleItems()) {
@@ -3880,11 +3923,12 @@ export class PosComponent implements OnInit {
 
       const activeBranchId = this.branchContext.activeBranchId() || tenantId;
 
-      // Load products, categories, and stock in parallel
-      const [productsResponse, categoriesResponse, stockResponse] = await Promise.all([
+      // Load products, categories, stock, and taxes in parallel
+      const [productsResponse, categoriesResponse, stockResponse, taxesResponse] = await Promise.all([
         this.http.get<any[]>(`${environment.catalogUrl}/products/sync`, { headers }).toPromise(),
         this.http.get<any[]>(`${environment.catalogUrl}/categories`, { headers }).toPromise().catch(() => []),
-        this.stockService.getStockByBranch(activeBranchId || '').toPromise().catch(() => [])
+        this.stockService.getStockByBranch(activeBranchId || '').toPromise().catch(() => []),
+        this.http.get<any[]>(`${environment.catalogUrl}/taxes`, { headers }).toPromise().catch(() => [])
       ]);
 
       // Create stock map
@@ -3899,6 +3943,13 @@ export class PosComponent implements OnInit {
           id: c.id,
           nombre: c.nombre
         })));
+      }
+
+      // Set taxes map
+      if (taxesResponse && taxesResponse.length > 0) {
+        const tMap = new Map<number, string>();
+        taxesResponse.forEach((t: any) => tMap.set(t.porcentaje, t.nombre));
+        this.taxesMap.set(tMap);
       }
 
       // Set products
