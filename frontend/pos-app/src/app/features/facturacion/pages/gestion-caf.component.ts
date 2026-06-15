@@ -800,6 +800,7 @@ export class GestionCafComponent implements OnInit {
         for (const ext of extras) {
           merged.push({
             ...ext,
+            tipoDteDescripcion: ext.tipoDteDescripcion || ext.tipoDte,
             isConfigured: true
           });
         }
