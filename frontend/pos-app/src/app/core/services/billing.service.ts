@@ -177,13 +177,16 @@ export class BillingService {
 
     // ========== CONSULTA ==========
 
-    getDtes(tipoDte?: string, estado?: string, page = 0, size = 20, branchId?: string): Observable<any> {
+    getDtes(tipoDte?: string, estado?: string, page = 0, size = 20, branchId?: string, query?: string, desde?: string, hasta?: string): Observable<any> {
         let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
 
         if (tipoDte) params = params.set('tipoDte', tipoDte);
         if (estado) params = params.set('estado', estado);
+        if (query) params = params.set('query', query);
+        if (desde) params = params.set('desde', desde);
+        if (hasta) params = params.set('hasta', hasta);
 
         const headers = this.getHeaders();
         // If specific branch requested, override header

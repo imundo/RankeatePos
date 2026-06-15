@@ -68,4 +68,19 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
 
     @Query("SELECT SUM(d.montoTotal) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado = com.poscl.billing.domain.enums.EstadoDte.PENDIENTE")
     Optional<java.math.BigDecimal> sumVentasPendientesMes(UUID tenantId, LocalDate desde, LocalDate hasta);
+
+    @Query("SELECT d FROM Dte d WHERE d.tenantId = :tenantId " +
+           "AND (:tipoDte IS NULL OR d.tipoDte = :tipoDte) " +
+           "AND (:estado IS NULL OR d.estado = :estado) " +
+           "AND (:query IS NULL OR CAST(d.folio AS text) LIKE CONCAT('%', :query, '%') OR d.receptorRut LIKE CONCAT('%', :query, '%')) " +
+           "AND (CAST(:desde as date) IS NULL OR d.fechaEmision >= :desde) " +
+           "AND (CAST(:hasta as date) IS NULL OR d.fechaEmision <= :hasta)")
+    Page<DteSummary> searchDtesWithFilters(
+        @org.springframework.data.repository.query.Param("tenantId") UUID tenantId, 
+        @org.springframework.data.repository.query.Param("tipoDte") TipoDte tipoDte, 
+        @org.springframework.data.repository.query.Param("estado") EstadoDte estado, 
+        @org.springframework.data.repository.query.Param("query") String query, 
+        @org.springframework.data.repository.query.Param("desde") LocalDate desde, 
+        @org.springframework.data.repository.query.Param("hasta") LocalDate hasta, 
+        Pageable pageable);
 }

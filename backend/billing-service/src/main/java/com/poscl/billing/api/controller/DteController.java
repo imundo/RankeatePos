@@ -186,6 +186,15 @@ public class DteController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
+        @PostMapping("/send-pending")
+        @Operation(summary = "Enviar DTEs pendientes masivamente")
+        public ResponseEntity<java.util.Map<String, Integer>> sendPending(
+                        @RequestHeader("X-Tenant-Id") UUID tenantId) {
+                log.info("POST /api/billing/dte/send-pending - Tenant: {}", tenantId);
+                int sentCount = dteService.enviarDtesPendientes(tenantId);
+                return ResponseEntity.ok(java.util.Map.of("sentCount", sentCount));
+        }
+
         @GetMapping
         @Operation(summary = "Listar DTEs")
         public ResponseEntity<Page<DteResponse>> listarDtes(
@@ -193,14 +202,15 @@ public class DteController {
                         @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestParam(required = false) TipoDte tipoDte,
                         @RequestParam(required = false) EstadoDte estado,
+                        @RequestParam(required = false) String query,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
                         @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
                 log.info("GET /api/billing/dte - Tenant: {}, Branch: {}, Tipo: {}, Estado: {}", tenantId, branchId,
                                 tipoDte, estado);
 
-                Page<DteResponse> dtes = dteService.listarDtes(tenantId, branchId, tipoDte, estado, pageable);
-                log.info("Retrieved {} DTEs for tenant {}", dtes.getTotalElements(), tenantId);
-                return ResponseEntity.ok(dtes);
+                return ResponseEntity.ok(dteService.listarDtes(tenantId, branchId, tipoDte, estado, query, desde, hasta, pageable));
         }
 
         @GetMapping("/{id}")

@@ -86,9 +86,9 @@ import { AuthService } from '@core/auth/auth.service';
                 </div>
               </td>
               <td>
-                <div class="receptor-info">
+                <div class="receptor-info flex flex-col">
                   <span class="name text-sm font-bold text-white">{{ doc.receptorRazonSocial || 'Consumidor Final' }}</span>
-                  <span class="rut text-xs text-secondary">{{ doc.receptorRut }}</span>
+                  <span class="rut text-xs text-secondary mt-1">{{ doc.receptorRut || '' }}</span>
                 </div>
               </td>
               <td class="font-bold text-xl text-right text-green-400">{{ formatMoney(doc.montoTotal) }}</td>
@@ -715,8 +715,17 @@ export class ListaDocumentosComponent {
     const page = event ? Math.floor(event.first / event.rows) : 0;
     const size = event ? event.rows : 10;
     const branchId = this.currentBranchId;
+    
+    const query = this.folioFilter() || undefined;
+    let desde: string | undefined = undefined;
+    let hasta: string | undefined = undefined;
+    
+    if (this.dateRange() && this.dateRange()!.length > 0) {
+      if (this.dateRange()![0]) desde = this.dateRange()![0].toISOString().split('T')[0];
+      if (this.dateRange()![1]) hasta = this.dateRange()![1].toISOString().split('T')[0];
+    }
 
-    this.billingService.getDtes(undefined, undefined, page, size, branchId).subscribe({
+    this.billingService.getDtes(undefined, undefined, page, size, branchId, query, desde, hasta).subscribe({
       next: (response: any) => {
         let content = [];
         let total = 0;

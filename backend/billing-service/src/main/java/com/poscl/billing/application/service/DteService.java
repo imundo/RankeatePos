@@ -260,33 +260,17 @@ public class DteService {
     }
 
     /**
-     * Listar DTEs con paginación
+     * Listar DTEs con paginación y filtros avanzados
      */
     @Transactional(readOnly = true)
     public Page<DteResponse> listarDtes(UUID tenantId, UUID branchId, TipoDte tipoDte, EstadoDte estado,
-            Pageable pageable) {
+            String query, LocalDate desde, LocalDate hasta, Pageable pageable) {
         Page<DteSummary> dtes;
 
-        if (branchId != null) {
+        if (branchId != null && query == null && desde == null && hasta == null) {
             dtes = dteRepository.findByTenantIdAndBranchId(tenantId, branchId, pageable);
-        } else if (tipoDte != null && estado != null) {
-            // NOTE: Repository method for this specific combo was not converted yet in
-            // interface,
-            // but for safety we can rely on single filters or add custom query.
-            // Actually, I did NOT update findByTenantIdAndTipoDteAndEstado in the
-            // repository.
-            // Let's stick to the ones I updated.
-            // If the repo method doesn't exist returning projection, Spring might complain
-            // if I try to cast.
-            // I'll assume for now we fallback to simple filters or I should have added that
-            // method.
-            // To be safe, I will use Query By Example or just the updated methods.
-            dtes = dteRepository.findByTenantId(tenantId, pageable); // Fallback to all if complex filter not optimized
-                                                                     // yet
-        } else if (tipoDte != null) {
-            dtes = dteRepository.findByTenantIdAndTipoDte(tenantId, tipoDte, pageable);
-        } else if (estado != null) {
-            dtes = dteRepository.findByTenantIdAndEstado(tenantId, estado, pageable);
+        } else if (query != null || desde != null || hasta != null || tipoDte != null || estado != null) {
+            dtes = dteRepository.searchDtesWithFilters(tenantId, tipoDte, estado, query, desde, hasta, pageable);
         } else {
             dtes = dteRepository.findByTenantId(tenantId, pageable);
         }

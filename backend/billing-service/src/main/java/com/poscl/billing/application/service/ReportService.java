@@ -38,19 +38,33 @@ public class ReportService {
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Libro de Ventas");
+            
+            // Freeze top row
+            sheet.createFreezePane(0, 1);
 
             // Header Style
             CellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
             headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.getIndex());
             headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            headerStyle.setBorderBottom(BorderStyle.MEDIUM);
+            headerStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+
+            // Money Style
+            CellStyle moneyStyle = workbook.createCellStyle();
+            DataFormat format = workbook.createDataFormat();
+            moneyStyle.setDataFormat(format.getFormat("$ #,##0"));
 
             // Create Header
             Row header = sheet.createRow(0);
-            String[] headers = { "Tipo Doc", "Folio", "Fecha", "RUT Receptor", "Razón Social", "Monto Neto",
-                    "Monto IVA", "Monto Total", "Estado" };
+            header.setHeight((short) 400); // Taller header
+            String[] headers = { "Tipo Doc", "Folio", "Fecha Emisión", "RUT Receptor", "Razón Social", "Monto Neto",
+                    "Monto IVA", "Monto Total", "Estado SII" };
             for (int i = 0; i < headers.length; i++) {
                 org.apache.poi.ss.usermodel.Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -61,24 +75,32 @@ public class ReportService {
             int rowIdx = 1;
             for (Dte dte : dtes) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(dte.getTipoDte().getCodigo());
+                row.createCell(0).setCellValue(dte.getTipoDte().getDescripcion());
                 row.createCell(1).setCellValue(dte.getFolio());
                 row.createCell(2).setCellValue(dte.getFechaEmision().format(DATE_FMT));
                 row.createCell(3).setCellValue(dte.getReceptorRut() != null ? dte.getReceptorRut() : "—");
                 row.createCell(4)
-                        .setCellValue(dte.getReceptorRazonSocial() != null ? dte.getReceptorRazonSocial() : "—");
+                        .setCellValue(dte.getReceptorRazonSocial() != null ? dte.getReceptorRazonSocial() : "Consumidor Final");
 
-                // Handle BigDecimals for Excel (double)
-                row.createCell(5).setCellValue(dte.getMontoNeto() != null ? dte.getMontoNeto().doubleValue() : 0.0);
-                row.createCell(6).setCellValue(dte.getMontoIva() != null ? dte.getMontoIva().doubleValue() : 0.0);
-                row.createCell(7).setCellValue(dte.getMontoTotal() != null ? dte.getMontoTotal().doubleValue() : 0.0);
+                org.apache.poi.ss.usermodel.Cell netoCell = row.createCell(5);
+                netoCell.setCellValue(dte.getMontoNeto() != null ? dte.getMontoNeto().doubleValue() : 0.0);
+                netoCell.setCellStyle(moneyStyle);
 
-                row.createCell(8).setCellValue(dte.getEstado().name());
+                org.apache.poi.ss.usermodel.Cell ivaCell = row.createCell(6);
+                ivaCell.setCellValue(dte.getMontoIva() != null ? dte.getMontoIva().doubleValue() : 0.0);
+                ivaCell.setCellStyle(moneyStyle);
+
+                org.apache.poi.ss.usermodel.Cell totalCell = row.createCell(7);
+                totalCell.setCellValue(dte.getMontoTotal() != null ? dte.getMontoTotal().doubleValue() : 0.0);
+                totalCell.setCellStyle(moneyStyle);
+
+                row.createCell(8).setCellValue(dte.getEstado().getNombre());
             }
 
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
+                sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1024); // Add padding
             }
 
             workbook.write(out);
