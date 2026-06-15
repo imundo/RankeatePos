@@ -193,7 +193,7 @@ public class DteController {
                         @RequestHeader(value = "X-Branch-Id", required = false) UUID branchId,
                         @RequestParam(required = false) TipoDte tipoDte,
                         @RequestParam(required = false) EstadoDte estado,
-                        @PageableDefault(size = 20) Pageable pageable) {
+                        @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
                 log.info("GET /api/billing/dte - Tenant: {}, Branch: {}, Tipo: {}, Estado: {}", tenantId, branchId,
                                 tipoDte, estado);
