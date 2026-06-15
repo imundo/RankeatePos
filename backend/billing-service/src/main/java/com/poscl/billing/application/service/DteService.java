@@ -399,7 +399,7 @@ public class DteService {
         BigDecimal exento = BigDecimal.ZERO;
 
         for (EmitirDteRequest.ItemDto item : items) {
-            BigDecimal cantidad = item.getCantidad() != null ? BigDecimal.valueOf(item.getCantidad()) : BigDecimal.ONE;
+            BigDecimal cantidad = item.getCantidad() != null ? item.getCantidad() : BigDecimal.ONE;
             BigDecimal montoItem = cantidad
                     .multiply(item.getPrecioUnitario())
                     .setScale(0, RoundingMode.HALF_UP);

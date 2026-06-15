@@ -123,7 +123,7 @@ public class ChileDteValidator {
             }
 
             // Cantidad > 0
-            if (item.getCantidad() == null || item.getCantidad() <= 0) {
+            if (item.getCantidad() == null || item.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
                 errors.add(prefix + "Cantidad debe ser mayor a 0");
             }
 
@@ -140,7 +140,7 @@ public class ChileDteValidator {
             // Validar que monto = cantidad * precio
             if (item.getCantidad() != null && item.getPrecioUnitario() != null && item.getMontoTotal() != null) {
                 BigDecimal expectedTotal = item.getPrecioUnitario()
-                        .multiply(BigDecimal.valueOf(item.getCantidad()))
+                        .multiply(item.getCantidad())
                         .setScale(0, java.math.RoundingMode.HALF_UP);
 
                 if (expectedTotal.compareTo(item.getMontoTotal()) != 0) {
