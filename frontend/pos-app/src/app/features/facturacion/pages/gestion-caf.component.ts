@@ -1,7 +1,25 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BillingService, CafInfo } from '../../../core/services/billing.service';
+
+export interface ExtendedCafInfo extends Partial<CafInfo> {
+  tipoDte: string;
+  tipoDteDescripcion: string;
+  isConfigured: boolean;
+}
+
+const STANDARD_DTES: { tipoDte: string; descripcion: string }[] = [
+  { tipoDte: 'FACTURA_ELECTRONICA', descripcion: 'Factura Electrónica' },
+  { tipoDte: 'FACTURA_EXENTA_ELECTRONICA', descripcion: 'Factura No Afecta o Exenta Electrónica' },
+  { tipoDte: 'BOLETA_ELECTRONICA', descripcion: 'Boleta Electrónica' },
+  { tipoDte: 'BOLETA_EXENTA_ELECTRONICA', descripcion: 'Boleta Exenta Electrónica' },
+  { tipoDte: 'LIQUIDACION_FACTURA_ELECTRONICA', descripcion: 'Liquidación-Factura Electrónica' },
+  { tipoDte: 'FACTURA_COMPRA_ELECTRONICA', descripcion: 'Factura de Compra Electrónica' },
+  { tipoDte: 'GUIA_DESPACHO_ELECTRONICA', descripcion: 'Guía de Despacho Electrónica' },
+  { tipoDte: 'NOTA_DEBITO', descripcion: 'Nota de Débito Electrónica' },
+  { tipoDte: 'NOTA_CREDITO', descripcion: 'Nota de Crédito Electrónica' }
+];
 
 @Component({
   selector: 'app-gestion-caf',
@@ -88,73 +106,88 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
         </div>
       }
 
-      <!-- Lista de CAFs -->
+      <!-- Lista de CAFs (Grid) -->
       <div class="cafs-grid">
-        @for (caf of cafs(); track caf.id) {
-          <div class="caf-card" [class.warning]="caf.porcentajeUso > 80" [class.danger]="caf.vencido || caf.agotado">
+        @for (caf of cafs(); track caf.tipoDte) {
+          <div class="caf-card" 
+               [class.unconfigured]="!caf.isConfigured"
+               [class.warning]="caf.isConfigured && (caf.porcentajeUso || 0) > 80" 
+               [class.danger]="caf.isConfigured && (caf.vencido || caf.agotado)">
+            
+            <!-- HEADER -->
             <div class="caf-header">
               <span class="caf-tipo">{{ caf.tipoDteDescripcion }}</span>
-              @if (caf.vencido) {
+              <div class="dropdown-container">
+                <button class="dropdown-trigger" (click)="toggleMenu(caf.tipoDte, $event)">
+                  ⋮
+                </button>
+                @if (openMenuId() === caf.tipoDte) {
+                  <div class="caf-actions-dropdown">
+                    <button (click)="actionCargarCaf(caf)">Cargar Archivo de Folio</button>
+                    <button (click)="actionObtenerSII(caf)">Obtener Folios desde SII</button>
+                    <button (click)="actionAnular(caf)">Anular Folios</button>
+                    <button (click)="actionConfigurar(caf)">Configurar Carga Automática</button>
+                    <button (click)="actionHistorial(caf)">Historial de Carga de Folios</button>
+                    <button (click)="actionTrazabilidad(caf)">Trazabilidad</button>
+                    @if (caf.isConfigured && !caf.vencido && !caf.agotado) {
+                      <div class="dropdown-divider"></div>
+                      <button class="danger-text" (click)="desactivar(caf)">Desactivar CAF</button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- ESTADO -->
+            <div class="caf-estado-row">
+              <span class="estado-label">Estado</span>
+              @if (!caf.isConfigured) {
+                <span class="caf-badge inactive">Sin Configurar</span>
+              } @else if (caf.vencido) {
                 <span class="caf-badge danger">Vencido</span>
               } @else if (caf.agotado) {
                 <span class="caf-badge danger">Agotado</span>
-              } @else if (caf.porcentajeUso > 80) {
+              } @else if ((caf.porcentajeUso || 0) > 80) {
                 <span class="caf-badge warning">Bajo</span>
               } @else {
                 <span class="caf-badge success">Activo</span>
               }
             </div>
 
-            <div class="caf-stats">
-              <div class="stat-main">
-                <span class="stat-number">{{ caf.foliosDisponibles }}</span>
-                <span class="stat-label">disponibles</span>
+            <hr class="card-divider" />
+
+            <!-- CUERPO CENTRAL -->
+            <div class="caf-body-main">
+              <div class="folios-disponibles-container">
+                <span class="label-muted">Folios disponibles</span>
+                <div class="big-number" [class.inactive]="!caf.isConfigured">{{ caf.foliosDisponibles || 0 }}</div>
               </div>
-              <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
-                  [style.width.%]="caf.porcentajeUso"
-                  [class.warning]="caf.porcentajeUso > 80"
-                  [class.danger]="caf.porcentajeUso > 95">
+              
+              <div class="folios-actual-proximo">
+                <div class="folio-col">
+                  <span class="label-muted">Folio actual</span>
+                  <span class="folio-value">{{ caf.folioActual || 0 }}</span>
+                </div>
+                <div class="folio-col right-align">
+                  <span class="label-muted">Próximo folio</span>
+                  <span class="folio-value">{{ (caf.folioActual || 0) + (caf.isConfigured ? 1 : 0) }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="caf-details">
-              <div class="detail-row">
-                <span>Rango:</span>
-                <span>{{ caf.folioDesde }} - {{ caf.folioHasta }}</span>
+            <hr class="card-divider" />
+
+            <!-- FOOTER: UMBRAL -->
+            <div class="caf-footer">
+              <div class="umbral-info">
+                <span class="umbral-label">Umbral de carga automática de folios</span>
+                <span class="umbral-value">No activado</span>
               </div>
-              <div class="detail-row">
-                <span>Actual:</span>
-                <span>{{ caf.folioActual }}</span>
+              <div class="umbral-icon" title="Carga automática inactiva">
+                ⚙️
               </div>
-              <div class="detail-row">
-                <span>Autorizado:</span>
-                <span>{{ formatDate(caf.fechaAutorizacion) }}</span>
-              </div>
-              @if (caf.fechaVencimiento) {
-                <div class="detail-row" [class.danger]="caf.vencido">
-                  <span>Vence:</span>
-                  <span>{{ formatDate(caf.fechaVencimiento) }}</span>
-                </div>
-              }
             </div>
 
-            <div class="caf-actions">
-              @if (!caf.vencido && !caf.agotado) {
-                <button class="action-btn danger" (click)="desactivar(caf)" title="Desactivar CAF">
-                  🗑️ Desactivar
-                </button>
-              }
-            </div>
-          </div>
-        } @empty {
-          <div class="empty-state">
-            <span class="icon">📭</span>
-            <h3>No hay CAFs cargados</h3>
-            <p>Sube tu primer CAF para comenzar a emitir documentos</p>
-            <button class="btn-primary" (click)="abrirUpload()">Subir CAF</button>
           </div>
         }
       </div>
@@ -190,6 +223,7 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
       min-height: 100vh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
+      font-family: 'Inter', sans-serif;
     }
 
     .page-header {
@@ -397,10 +431,10 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
       color: #6366F1;
     }
 
-    /* CAF Cards */
+    /* CAF Cards (New Redesign) */
     .cafs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -410,19 +444,27 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
-      padding: 1.5rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
       transition: all 0.3s;
+      position: relative;
     }
 
     .caf-card:hover {
-      transform: translateY(-4px);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255,255,255,0.2);
     }
 
-    .caf-card.warning {
-      border-color: rgba(249, 115, 22, 0.5);
+    .caf-card.unconfigured {
+      opacity: 0.8;
+    }
+    
+    .caf-card.unconfigured:hover {
+      opacity: 1;
     }
 
+    .caf-card.warning { border-color: rgba(249, 115, 22, 0.5); }
     .caf-card.danger {
       border-color: rgba(239, 68, 68, 0.5);
       background: rgba(239, 68, 68, 0.1);
@@ -432,144 +474,200 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
+      position: relative;
     }
 
     .caf-tipo {
       font-weight: 600;
+      font-size: 1rem;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 1rem;
+    }
+
+    .dropdown-container {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .dropdown-trigger:hover {
       color: white;
     }
 
-    .caf-badge {
-      padding: 0.35rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .caf-badge.success { background: rgba(34, 197, 94, 0.2); color: #22C55E; }
-    .caf-badge.warning { background: rgba(249, 115, 22, 0.2); color: #F97316; }
-    .caf-badge.danger { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
-
-    .caf-stats {
-      margin-bottom: 1rem;
-    }
-
-    .stat-main {
+    .caf-actions-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.5rem 0;
+      min-width: 220px;
+      z-index: 100;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
+      flex-direction: column;
+    }
+
+    .caf-actions-dropdown button {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.8);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      width: 100%;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .caf-actions-dropdown button:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 0.25rem 0;
+    }
+
+    .danger-text {
+      color: #EF4444 !important;
+    }
+    .danger-text:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .caf-estado-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 0.5rem;
     }
 
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #6366F1;
-    }
-
-    .caf-card.warning .stat-number { color: #F97316; }
-    .caf-card.danger .stat-number { color: #EF4444; }
-
-    .stat-label {
-      color: rgba(255, 255, 255, 0.5);
+    .estado-label {
       font-size: 0.875rem;
+      color: rgba(255,255,255,0.6);
     }
 
-    .progress-bar {
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      overflow: hidden;
+    .caf-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366F1, #8B5CF6);
-      transition: width 0.3s;
+    .caf-badge.success { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+    .caf-badge.warning { background: rgba(249, 115, 22, 0.2); color: #F97316; }
+    .caf-badge.danger { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+    .caf-badge.inactive { background: rgba(255, 255, 255, 0.1); color: rgba(255,255,255,0.5); }
+
+    .card-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 1rem 0;
+      width: 100%;
     }
 
-    .progress-fill.warning {
-      background: linear-gradient(90deg, #F97316, #FB923C);
-    }
-
-    .progress-fill.danger {
-      background: linear-gradient(90deg, #EF4444, #F87171);
-    }
-
-    .caf-details {
-      margin-bottom: 1rem;
-    }
-
-    .detail-row {
+    .caf-body-main {
       display: flex;
-      justify-content: space-between;
-      font-size: 0.875rem;
-      padding: 0.25rem 0;
+      flex-direction: column;
+      gap: 1.5rem;
     }
 
-    .detail-row span:first-child {
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    .detail-row span:last-child {
-      color: white;
-    }
-
-    .detail-row.danger span:last-child {
-      color: #EF4444;
-    }
-
-    .caf-actions {
+    .folios-disponibles-container {
       display: flex;
+      flex-direction: column;
+      align-items: center;
       gap: 0.5rem;
     }
 
-    .action-btn {
-      flex: 1;
-      padding: 0.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
+    .label-muted {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .big-number {
+      font-size: 2.5rem;
+      font-weight: 700;
       color: white;
+      line-height: 1;
     }
 
-    .action-btn.danger:hover {
-      border-color: rgba(239, 68, 68, 0.5);
-      background: rgba(239, 68, 68, 0.1);
-      color: #EF4444;
+    .big-number.inactive {
+      color: rgba(255,255,255,0.2);
     }
 
-    /* Empty state */
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 4rem 2rem;
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(12px);
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .folios-actual-proximo {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 1rem;
     }
 
-    .empty-state .icon {
-      font-size: 4rem;
-      display: block;
-      margin-bottom: 1rem;
+    .folio-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .folio-col.right-align {
+      align-items: flex-end;
+    }
+
+    .folio-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .caf-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: auto;
+    }
+
+    .umbral-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .umbral-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 600;
+    }
+
+    .umbral-value {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .umbral-icon {
+      font-size: 1.25rem;
       opacity: 0.5;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
 
-    .empty-state h3 {
-      margin: 0 0 0.5rem;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .empty-state p {
-      color: rgba(255, 255, 255, 0.5);
-      margin: 0 0 1.5rem;
+    .umbral-icon:hover {
+      opacity: 1;
     }
 
     /* Guide */
@@ -651,13 +749,22 @@ import { BillingService, CafInfo } from '../../../core/services/billing.service'
 export class GestionCafComponent implements OnInit {
   private billingService = inject(BillingService);
 
-  cafs = signal<CafInfo[]>([]);
+  cafs = signal<ExtendedCafInfo[]>([]);
   showUpload = signal(false);
   selectedFile = signal<File | null>(null);
   uploading = signal(false);
   isDragover = false;
 
   cafsBajos = signal<CafInfo[]>([]);
+  openMenuId = signal<string | null>(null);
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.caf-actions-dropdown') && !target.closest('.dropdown-trigger')) {
+      this.openMenuId.set(null);
+    }
+  }
 
   ngOnInit() {
     this.cargarCafs();
@@ -666,13 +773,85 @@ export class GestionCafComponent implements OnInit {
   cargarCafs() {
     this.billingService.getCafs().subscribe({
       next: (cafs: CafInfo[]) => {
-        this.cafs.set(cafs);
+        const merged: ExtendedCafInfo[] = STANDARD_DTES.map(std => {
+          const existing = cafs.find(c => c.tipoDte === std.tipoDte);
+          if (existing) {
+            return {
+              ...existing,
+              tipoDte: std.tipoDte,
+              tipoDteDescripcion: std.descripcion,
+              isConfigured: true
+            };
+          }
+          return {
+            tipoDte: std.tipoDte,
+            tipoDteDescripcion: std.descripcion,
+            isConfigured: false,
+            foliosDisponibles: 0,
+            folioActual: 0,
+            folioDesde: 0,
+            folioHasta: 0,
+            porcentajeUso: 0
+          };
+        });
+        
+        // Add any uploaded CAFs that might not be in the STANDARD list just in case
+        const extras = cafs.filter(c => !STANDARD_DTES.find(s => s.tipoDte === c.tipoDte));
+        for (const ext of extras) {
+          merged.push({
+            ...ext,
+            isConfigured: true
+          });
+        }
+
+        this.cafs.set(merged);
         this.cafsBajos.set(cafs.filter(c => c.porcentajeUso > 80 && !c.vencido && !c.agotado));
       },
       error: (err: any) => console.error('Error cargando CAFs', err)
     });
   }
 
+  toggleMenu(tipoDte: string, event: Event) {
+    event.stopPropagation();
+    if (this.openMenuId() === tipoDte) {
+      this.openMenuId.set(null);
+    } else {
+      this.openMenuId.set(tipoDte);
+    }
+  }
+
+  // Dropdown actions
+  actionCargarCaf(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    this.abrirUpload();
+  }
+
+  actionObtenerSII(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    alert('Próximamente: Obtener folios automáticamente desde el SII.');
+  }
+
+  actionAnular(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    alert('Próximamente: Anulación masiva de folios en el SII.');
+  }
+
+  actionConfigurar(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    alert('Próximamente: Configurar umbral de recarga automática de folios.');
+  }
+
+  actionHistorial(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    alert('Próximamente: Historial de CAFs cargados previamente.');
+  }
+
+  actionTrazabilidad(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    alert('Próximamente: Trazabilidad de folios consumidos.');
+  }
+
+  // Upload Logic
   abrirUpload() {
     this.showUpload.set(true);
     this.selectedFile.set(null);
@@ -714,7 +893,7 @@ export class GestionCafComponent implements OnInit {
         this.uploading.set(false);
         this.cerrarUpload();
         this.cargarCafs();
-        alert('CAF subido exitosamente');
+        // Optional alert
       },
       error: (err: any) => {
         this.uploading.set(false);
@@ -724,12 +903,14 @@ export class GestionCafComponent implements OnInit {
     });
   }
 
-  desactivar(caf: CafInfo) {
-    if (confirm(`¿Seguro que deseas desactivar este CAF? Los folios restantes ya no podrán usarse.`)) {
+  desactivar(caf: ExtendedCafInfo) {
+    this.openMenuId.set(null);
+    if (!caf.id) return;
+    
+    if (confirm(`¿Seguro que deseas desactivar este CAF (${caf.tipoDteDescripcion})? Los folios restantes ya no podrán usarse.`)) {
       this.billingService.desactivarCaf(caf.id).subscribe({
         next: () => {
           this.cargarCafs();
-          alert('CAF desactivado');
         },
         error: (err: any) => {
           console.error('Error desactivando CAF', err);
