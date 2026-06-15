@@ -476,6 +476,15 @@ public class SaleService {
                 if (item.getDescuento() > 0) {
                     itemMap.put("descuentoMonto", item.getDescuento());
                 }
+                // Calculate montoTotal for item: (precioUnitario * cantidad) - descuentoMonto
+                BigDecimal cantidad = item.getCantidad() != null ? item.getCantidad() : BigDecimal.ONE;
+                BigDecimal montoTotalItem = cantidad.multiply(BigDecimal.valueOf(item.getPrecioUnitario() != null ? item.getPrecioUnitario() : 0))
+                        .setScale(0, java.math.RoundingMode.HALF_UP);
+                if (item.getDescuento() > 0) {
+                    montoTotalItem = montoTotalItem.subtract(BigDecimal.valueOf(item.getDescuento()));
+                }
+                itemMap.put("montoTotal", montoTotalItem);
+                
                 // Boleta siempre es afecta (exento=false) por defecto en retail simple, salvo
                 // items especÃ­ficos
                 // Aqui asumimos que si impuesto_porcentaje es 0, es exento
@@ -484,6 +493,12 @@ public class SaleService {
                 items.add(itemMap);
             }
             request.put("items", items);
+            
+            // Totales
+            request.put("total", sale.getTotal());
+
+            // Fecha Emision
+            request.put("fechaEmision", java.time.LocalDate.now().toString());
 
             // Referencia a venta POS
             request.put("ventaId", sale.getId());
