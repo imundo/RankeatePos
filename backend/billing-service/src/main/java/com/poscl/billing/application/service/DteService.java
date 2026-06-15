@@ -335,6 +335,28 @@ public class DteService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtener estadísticas de DTEs para el mes actual
+     */
+    @Transactional(readOnly = true)
+    public com.poscl.billing.api.dto.DteStatsDto getStats(UUID tenantId) {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioMes = hoy.withDayOfMonth(1);
+        LocalDate finMes = hoy.withDayOfMonth(hoy.lengthOfMonth());
+
+        long totalMes = dteRepository.countDtesMes(tenantId, inicioMes, finMes);
+        long aceptados = dteRepository.countDtesAceptadosMes(tenantId, inicioMes, finMes);
+        long pendientes = dteRepository.countDtesPendientesMes(tenantId, inicioMes, finMes);
+        BigDecimal totalVentas = dteRepository.sumVentasMes(tenantId, inicioMes, finMes).orElse(BigDecimal.ZERO);
+
+        return com.poscl.billing.api.dto.DteStatsDto.builder()
+                .totalMes(totalMes)
+                .aceptados(aceptados)
+                .pendientes(pendientes)
+                .totalVentas(totalVentas)
+                .build();
+    }
+
     // --- Métodos privados ---
 
     private Integer obtenerSiguienteFolio(UUID tenantId, TipoDte tipoDte) {

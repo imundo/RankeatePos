@@ -258,6 +258,15 @@ public class DteController {
                 return ResponseEntity.ok(dtes);
         }
 
+        @GetMapping("/stats")
+        @Operation(summary = "Obtener estadísticas de DTEs del mes actual")
+        public ResponseEntity<com.poscl.billing.api.dto.DteStatsDto> getStats(
+                        @RequestHeader("X-Tenant-Id") UUID tenantId) {
+
+                log.info("GET /api/billing/dte/stats - Tenant: {}", tenantId);
+                return ResponseEntity.ok(dteService.getStats(tenantId));
+        }
+
         @GetMapping("/ping")
         @Operation(summary = "Health Check Simple")
         public ResponseEntity<String> ping() {

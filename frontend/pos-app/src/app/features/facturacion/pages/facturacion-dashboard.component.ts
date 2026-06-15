@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { BillingService, CafInfo, Dte } from '../../../core/services/billing.service';
+import { BillingService, CafInfo, Dte, DteStats } from '../../../core/services/billing.service';
 
 @Component({
   selector: 'app-facturacion-dashboard',
@@ -229,7 +229,7 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ documentos().length }}</span>
+            <span class="stat-value">{{ stats()?.totalMes || 0 }}</span>
             <span class="stat-label">DTEs este mes</span>
           </div>
         </div>
@@ -241,7 +241,7 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ getAceptados() }}</span>
+            <span class="stat-value">{{ stats()?.aceptados || 0 }}</span>
             <span class="stat-label">Aceptados SII</span>
           </div>
         </div>
@@ -254,7 +254,7 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ getPendientes() }}</span>
+            <span class="stat-value">{{ stats()?.pendientes || 0 }}</span>
             <span class="stat-label">Pendientes</span>
           </div>
         </div>
@@ -267,7 +267,7 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ getTotalVentas() }}</span>
+            <span class="stat-value">{{ billingService.formatCurrency(stats()?.totalVentas || 0) }}</span>
             <span class="stat-label">Total ventas</span>
           </div>
         </div>
@@ -407,12 +407,18 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
     .docs-table { display: flex; flex-direction: column; gap: 0.5rem; }
     .doc-row {
       display: grid; grid-template-columns: 140px 1fr 120px 110px; align-items: center;
-      gap: 1rem; padding: 0.875rem 1rem; background: rgba(255, 255, 255, 0.03);
-      border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.2s; animation: fadeInUp 0.3s ease forwards; opacity: 0;
-      &:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(99, 102, 241, 0.3); }
+      gap: 1rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+      border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); animation: fadeInUp 0.4s ease forwards; opacity: 0;
+      position: relative; overflow: hidden;
+      &:hover { 
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.08)); 
+        border-color: rgba(99, 102, 241, 0.4); 
+        transform: translateX(4px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
     }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
     .doc-info { display: flex; flex-direction: column; }
     .doc-type { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -435,18 +441,34 @@ import { BillingService, CafInfo, Dte } from '../../../core/services/billing.ser
       display: flex; align-items: center; gap: 1rem; padding: 1.25rem;
       background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px);
       border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      &:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4);
+        border-color: rgba(255,255,255,0.2);
+        &::after { transform: translateX(100%); }
+      }
+      &::after {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        transform: translateX(-100%); transition: transform 0.6s ease;
+      }
     }
     .stat-icon {
-      width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;
-      svg { width: 24px; height: 24px; }
-      &.blue { background: rgba(59, 130, 246, 0.2); svg { stroke: #3B82F6; } }
-      &.green { background: rgba(34, 197, 94, 0.2); svg { stroke: #22C55E; } }
-      &.orange { background: rgba(249, 115, 22, 0.2); svg { stroke: #F97316; } }
-      &.purple { background: rgba(139, 92, 246, 0.2); svg { stroke: #8B5CF6; } }
+      width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 14px;
+      transition: all 0.3s;
+      svg { width: 26px; height: 26px; }
+      &.blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(59, 130, 246, 0.3); svg { stroke: #60A5FA; } }
+      &.green { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); svg { stroke: #4ADE80; } }
+      &.orange { background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.05)); border: 1px solid rgba(249, 115, 22, 0.3); svg { stroke: #FB923C; } }
+      &.purple { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3); svg { stroke: #A78BFA; } }
     }
-    .stat-content { display: flex; flex-direction: column; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; }
-    .stat-label { font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
+    .stat-card:hover .stat-icon { transform: scale(1.1) rotate(5deg); }
+    .stat-content { display: flex; flex-direction: column; z-index: 1; }
+    .stat-value { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.2rem; }
 
     .empty-folios, .empty-docs { text-align: center; padding: 2rem; grid-column: 1 / -1; }
     .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.5; }
@@ -472,6 +494,7 @@ export class FacturacionDashboardComponent implements OnInit {
   readonly billingService = inject(BillingService);
   readonly cafs = signal<CafInfo[]>([]);
   readonly documentos = signal<Dte[]>([]);
+  readonly stats = signal<DteStats | null>(null);
 
   ngOnInit() { this.loadData(); }
 
@@ -482,6 +505,11 @@ export class FacturacionDashboardComponent implements OnInit {
         console.error('Error cargando CAFs', err);
         this.cafs.set([]); // Fallback empty
       }
+    });
+
+    this.billingService.getDteStats().subscribe({
+      next: (s: DteStats) => this.stats.set(s),
+      error: (err: any) => console.error('Error cargando stats', err)
     });
 
     this.billingService.getDtes(undefined, undefined, 0, 5).subscribe({
@@ -499,12 +527,5 @@ export class FacturacionDashboardComponent implements OnInit {
         this.documentos.set([]); // Fallback empty
       }
     });
-  }
-
-  getAceptados(): number { return this.documentos().filter(d => d.estado === 'ACEPTADO').length; }
-  getPendientes(): number { return this.documentos().filter(d => d.estado === 'PENDIENTE').length; }
-  getTotalVentas(): string {
-    const total = this.documentos().reduce((sum, d) => sum + (d.montoTotal || 0), 0);
-    return this.billingService.formatCurrency(total);
   }
 }

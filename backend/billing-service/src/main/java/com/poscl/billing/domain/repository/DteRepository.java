@@ -53,4 +53,16 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
 
     @Query("SELECT MAX(d.folio) FROM Dte d WHERE d.tenantId = :tenantId AND d.tipoDte = :tipoDte")
     Integer findMaxFolioByTenantAndTipo(UUID tenantId, TipoDte tipoDte);
+
+    @Query("SELECT COUNT(d) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta")
+    long countDtesMes(UUID tenantId, LocalDate desde, LocalDate hasta);
+
+    @Query("SELECT COUNT(d) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado = 'ACEPTADO'")
+    long countDtesAceptadosMes(UUID tenantId, LocalDate desde, LocalDate hasta);
+
+    @Query("SELECT COUNT(d) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado = 'PENDIENTE'")
+    long countDtesPendientesMes(UUID tenantId, LocalDate desde, LocalDate hasta);
+
+    @Query("SELECT SUM(d.montoTotal) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado IN ('ACEPTADO', 'ACEPTADO_CON_REPAROS')")
+    Optional<java.math.BigDecimal> sumVentasMes(UUID tenantId, LocalDate desde, LocalDate hasta);
 }

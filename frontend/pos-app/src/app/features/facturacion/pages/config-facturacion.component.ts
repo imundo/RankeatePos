@@ -2,8 +2,10 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TaxTerminologyService, CountryCode } from '../../../core/services/tax-terminology.service';
 
 interface ConfigEmpresa {
+  country: CountryCode;
   rut: string;
   razonSocial: string;
   giro: string;
@@ -48,10 +50,28 @@ interface ConfigEmpresa {
         </div>
         <div class="status-line" [class.completed]="tieneCertificado()"></div>
         <div class="status-item" [class.completed]="tieneCaf()">
+        <div class="status-item" [class.completed]="tieneCaf()">
           <span class="status-icon">{{ tieneCaf() ? '✓' : '3' }}</span>
-          <span>CAFs Cargados</span>
+          <span>{{ terms().authorizationName }}s Cargados</span>
         </div>
       </div>
+
+      <!-- Selector Rápido de Jurisdicción (Mock/Demo) -->
+      <section class="card mb-4" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-color: rgba(99,102,241,0.3);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #a5b4fc;">🌍 Selector de Jurisdicción (Demo)</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.9rem;">Prueba en tiempo real cómo la plataforma se adapta a cada país.</p>
+          </div>
+          <select [ngModel]="currentCountry()" (ngModelChange)="onCountryChange($event)" class="country-select">
+            <option value="CL">🇨🇱 Chile (SII)</option>
+            <option value="PE">🇵🇪 Perú (SUNAT)</option>
+            <option value="VE">🇻🇪 Venezuela (SENIAT)</option>
+            <option value="AR">🇦🇷 Argentina (AFIP)</option>
+            <option value="GENERIC">🌐 Genérico</option>
+          </select>
+        </div>
+      </section>
 
       <div class="config-grid">
         <!-- Datos de la empresa -->
@@ -67,8 +87,8 @@ interface ConfigEmpresa {
             <form [formGroup]="empresaForm" (ngSubmit)="guardarEmpresa()">
               <div class="form-grid">
                 <div class="form-group">
-                  <label>RUT Empresa *</label>
-                  <input type="text" formControlName="rut" placeholder="12.345.678-9">
+                  <label>{{ terms().taxIdName }} Empresa *</label>
+                  <input type="text" formControlName="rut" placeholder="Ej: 12345678-9">
                 </div>
                 <div class="form-group">
                   <label>Razón Social *</label>
@@ -99,7 +119,7 @@ interface ConfigEmpresa {
                   <input type="email" formControlName="email" placeholder="contacto@empresa.cl">
                 </div>
                 <div class="form-group">
-                  <label>N° Resolución SII</label>
+                  <label>N° Resolución {{ terms().taxAuthority }}</label>
                   <input type="text" formControlName="resolucionSii" placeholder="0">
                 </div>
                 <div class="form-group">
@@ -124,7 +144,7 @@ interface ConfigEmpresa {
               @if (config()) {
                 <div class="info-grid">
                   <div class="info-item">
-                    <span class="label">RUT</span>
+                    <span class="label">{{ terms().taxIdName }}</span>
                     <span class="value">{{ config()!.rut }}</span>
                   </div>
                   <div class="info-item">
@@ -162,7 +182,7 @@ interface ConfigEmpresa {
               </div>
               <div class="cert-details">
                 <p><strong>{{ certificado()!.nombre }}</strong></p>
-                <p>RUT: {{ certificado()!.rut }}</p>
+                <p>{{ terms().taxIdName }}: {{ certificado()!.rut }}</p>
                 <p>Válido hasta: {{ certificado()!.vencimiento }}</p>
               </div>
               <button class="btn-secondary" (click)="cambiarCertificado()">Cambiar Certificado</button>
@@ -197,7 +217,7 @@ interface ConfigEmpresa {
 
         <!-- Ambiente -->
         <section class="card ambiente-section">
-          <h2>🌐 Ambiente SII</h2>
+          <h2>🌐 Ambiente {{ terms().taxAuthority }}</h2>
           
           <div class="ambiente-selector">
             <label class="ambiente-option" [class.selected]="ambiente() === 'certificacion'">
@@ -221,7 +241,7 @@ interface ConfigEmpresa {
 
           @if (!puedeProduccion()) {
             <div class="ambiente-notice">
-              <span>⚠️</span> Para pasar a producción necesitas completar la configuración y el set de pruebas SII
+              <span>⚠️</span> Para pasar a producción necesitas completar la configuración y el set de pruebas {{ terms().taxAuthority }}
             </div>
           }
         </section>
@@ -250,15 +270,15 @@ interface ConfigEmpresa {
           <div class="links-grid">
             <a routerLink="../caf" class="quick-link">
               <span class="link-icon">🔢</span>
-              <span class="link-text">Gestionar CAFs</span>
+              <span class="link-text">Gestionar {{ terms().authorizationName }}s</span>
             </a>
-            <a href="https://www.sii.cl" target="_blank" class="quick-link">
+            <a href="javascript:void(0)" class="quick-link">
               <span class="link-icon">🏛️</span>
-              <span class="link-text">Portal SII</span>
+              <span class="link-text">Portal {{ terms().taxAuthority }}</span>
             </a>
-            <a href="https://maullin.sii.cl" target="_blank" class="quick-link">
+            <a href="javascript:void(0)" class="quick-link">
               <span class="link-icon">🧪</span>
-              <span class="link-text">SII Certificación</span>
+              <span class="link-text">{{ terms().taxAuthority }} Certificación</span>
             </a>
           </div>
         </section>
@@ -740,10 +760,29 @@ interface ConfigEmpresa {
     input:checked + .slider:before { transform: translateX(22px); }
     .slider.round { border-radius: 34px; }
     .slider.round:before { border-radius: 50%; }
+
+    .country-select {
+      background: rgba(15, 23, 42, 0.8);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .country-select:focus {
+      border-color: #6366F1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+    }
   `]
 })
 export class ConfigFacturacionComponent implements OnInit {
   private fb = inject(FormBuilder);
+  readonly taxTerminology = inject(TaxTerminologyService);
+
+  readonly terms = this.taxTerminology.term;
+  readonly currentCountry = this.taxTerminology.country;
 
   config = signal<ConfigEmpresa | null>(null);
   certificado = signal<{ nombre: string; rut: string; vencimiento: string } | null>(null);
@@ -779,7 +818,18 @@ export class ConfigFacturacionComponent implements OnInit {
       const config = JSON.parse(stored);
       this.config.set(config);
       this.empresaForm.patchValue(config);
+      if (config.country) {
+        this.taxTerminology.setCountry(config.country);
+      }
     }
+  }
+
+  onCountryChange(newCountry: CountryCode) {
+    this.taxTerminology.setCountry(newCountry);
+    // Persist mock
+    const current = this.config() || {} as any;
+    current.country = newCountry;
+    localStorage.setItem('config_empresa', JSON.stringify(current));
   }
 
   tieneConfigBasica(): boolean {

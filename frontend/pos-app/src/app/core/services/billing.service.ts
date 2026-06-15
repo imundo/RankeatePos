@@ -93,6 +93,13 @@ export interface CafInfo {
     agotado: boolean;
 }
 
+export interface DteStats {
+    totalMes: number;
+    aceptados: number;
+    pendientes: number;
+    totalVentas: number;
+}
+
 import { BranchContextService } from '@core/services/branch-context.service';
 
 @Injectable({
@@ -131,6 +138,14 @@ export class BillingService {
             'X-Emisor-Comuna': tenant?.comuna || '',
             'X-Emisor-Logo-Url': tenant?.logoUrl || ''
         };
+    }
+
+    // ========== DTE ==========
+
+    getDteStats(): Observable<DteStats> {
+        return this.http.get<DteStats>(`${this.baseUrl}/billing/dte/stats`, {
+            headers: this.getHeaders()
+        });
     }
 
     // ========== EMISION ==========

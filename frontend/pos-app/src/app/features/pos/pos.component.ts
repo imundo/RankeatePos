@@ -25,6 +25,7 @@ import { BarcodeService } from '@core/services/barcode.service';
 import { environment } from '@env/environment';
 import { BranchSwitcherComponent } from '@shared/components/branch-switcher/branch-switcher.component';
 import { CompanyService } from '@core/services/company.service';
+import { TaxTerminologyService } from '@core/services/tax-terminology.service';
 import { LoyaltyService, LoyaltyCustomer } from '@core/services/loyalty.service';
 import { BottomNavComponent, NavItem } from '@shared/components/bottom-nav/bottom-nav.component';
 import { WeightInputModalComponent } from '@shared/components/modals/weight-input-modal.component';
@@ -528,12 +529,10 @@ interface CartItem {
               <div class="client-data-form fade-in-up">
                 <h4 class="form-subtitle">Datos del Cliente</h4>
                 <div class="form-grid">
-                  <input 
-                    type="text" 
-                    [(ngModel)]="clienteRut"
-                    placeholder="RUT (ej: 12.345.678-9)"
-                    class="premium-input"
-                    (blur)="formatClienteRut()">
+                  <div class="form-group">
+                    <label>{{ terms().taxIdName }} *</label>
+                    <input pInputText [(ngModel)]="clienteRut" placeholder="Ej: 12345678-9" class="premium-input" (blur)="formatClienteRut()">
+                  </div>
                   <input 
                     type="text" 
                     [(ngModel)]="clienteRazonSocial"
@@ -785,7 +784,7 @@ interface CartItem {
           <div class="document-info">
             @if (lastSaleDocumento) {
               <span class="doc-badge">{{ lastSaleDocumento.tipo }}</span>
-              <span class="doc-folio">Folio N° {{ lastSaleDocumento.folio }}</span>
+              <span class="doc-folio">{{ terms().documentIdName }} N° {{ lastSaleDocumento.folio }}</span>
             } @else {
               <span class="doc-badge warning">DTE En Proceso</span>
               <span class="doc-folio">Generando documento...</span>
@@ -813,7 +812,7 @@ interface CartItem {
              <div class="thermal-receipt">
                 <div class="receipt-header">
                   <img [src]="tenantLogo()" alt="Logo" class="receipt-logo-img" />
-                  <div class="receipt-title">{{ lastSaleDocumento ? 'BOLETA ELECTRÓNICA' : 'COMPROBANTE DE VENTA' }}</div>
+                  <div class="receipt-title">{{ lastSaleDocumento ? (tipoDocumento === 'BOLETA' ? 'BOLETA' : 'FACTURA') : 'COMPROBANTE DE VENTA' }}</div>
                   <div class="receipt-folio">N° {{ lastSaleDocumento?.folio || 'PENDIENTE' }}</div>
                   <div class="receipt-date">{{ today | date:'dd/MM/yyyy HH:mm' }}</div>
                  
@@ -3420,6 +3419,9 @@ export class PosComponent implements OnInit {
   private loyaltyService = inject(LoyaltyService);
   private branchContext = inject(BranchContextService);
   private companyService = inject(CompanyService);
+  readonly taxTerminology = inject(TaxTerminologyService);
+
+  readonly terms = this.taxTerminology.term;
 
   // State
   products = signal<CachedProduct[]>([]);
@@ -4257,7 +4259,7 @@ export class PosComponent implements OnInit {
             id: undefined,
             tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
             tipoDte: this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA',
-            folio: 0 // Template renders 0 as 'PENDIENTE'
+            folio: Math.floor(Math.random() * 9000) + 1000 // Generar folio temporal para UI (1000-9999)
           };
 
           this.messageService.add({
