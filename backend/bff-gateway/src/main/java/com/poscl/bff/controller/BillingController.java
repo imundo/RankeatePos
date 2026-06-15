@@ -215,7 +215,18 @@ public class BillingController {
         String url = billingServiceUrl + "/api/billing/dte/" + id;
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        try {
+            return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            log.error("BFF: Upstream error getting DTE {}: {}", id, e.getMessage());
+            return ResponseEntity.status(e.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("BFF: Internal error getting DTE {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error calling Billing Service\", \"details\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping(value = "/dte/{id}/xml", produces = MediaType.APPLICATION_XML_VALUE)
@@ -304,7 +315,18 @@ public class BillingController {
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
         headers.setContentType(MediaType.APPLICATION_XML);
 
-        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(xmlContent, headers), Object.class);
+        try {
+            return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(xmlContent, headers), Object.class);
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            log.error("BFF: Upstream error uploading CAF XML: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("BFF: Internal error uploading CAF XML: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error calling Billing Service", "details", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/caf/{id}")
