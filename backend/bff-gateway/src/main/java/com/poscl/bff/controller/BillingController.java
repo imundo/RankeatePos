@@ -34,7 +34,7 @@ public class BillingController {
 
     // ==================== EMISION DE DTEs ====================
 
-    @PostMapping("/boleta")
+    @PostMapping("/dte/boleta")
     public ResponseEntity<String> emitirBoleta(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -55,7 +55,6 @@ public class BillingController {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST,
                     new HttpEntity<>(request, headers), String.class);
             String body = response.getBody();
-            int length = body != null ? body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length : 0;
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
                     .body(body);
@@ -66,7 +65,7 @@ public class BillingController {
         }
     }
 
-    @PostMapping("/factura")
+    @PostMapping("/dte/factura")
     public ResponseEntity<?> emitirFactura(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -86,7 +85,7 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
 
-    @PostMapping("/nota-credito")
+    @PostMapping("/dte/nota-credito")
     public ResponseEntity<?> emitirNotaCredito(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -106,7 +105,7 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
 
-    @PostMapping("/nota-debito")
+    @PostMapping("/dte/nota-debito")
     public ResponseEntity<?> emitirNotaDebito(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -126,7 +125,7 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
 
-    @PostMapping("/send-pending")
+    @PostMapping("/dte/send-pending")
     public ResponseEntity<?> enviarPendientes(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
