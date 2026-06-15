@@ -1,4 +1,7 @@
-import { Component, signal, inject, effect } from '@angular/core';
+import { Component, signal, inject, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { BillingService, Dte } from '../../../core/services/billing.service';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
@@ -38,7 +41,7 @@ import { AuthService } from '@core/auth/auth.service';
       <div class="filters-bar glass-panel mb-4">
         <span class="p-input-icon-left search-wrapper">
           <i class="pi pi-search text-gray-400"></i>
-          <input pInputText placeholder="Buscar Folio o RUT..." class="premium-input w-full" [(ngModel)]="folioFilter" (keyup.enter)="loadDocuments()" />
+          <input pInputText placeholder="Buscar Folio o RUT..." class="premium-input w-full" [(ngModel)]="folioFilter" (input)="onSearchInput()" />
         </span>
         
         <div class="date-filters">
@@ -50,11 +53,12 @@ import { AuthService } from '@core/auth/auth.service';
              styleClass="premium-calendar"
              inputStyleClass="premium-input"
              [appendTo]="'body'"
+             (onSelect)="onDateSelect()"
+             (onClearClick)="onDateSelect()"
+             [showClear]="true"
              [baseZIndex]="9999">
            </p-calendar>
         </div>
-        
-        <button pButton icon="pi pi-search" class="search-btn" (click)="loadDocuments()"></button>
       </div>
 
       <div class="glass-panel table-wrapper">
@@ -71,7 +75,7 @@ import { AuthService } from '@core/auth/auth.service';
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-doc>
-            <tr class="hover-row">
+            <tr class="hover-row glass-row">
               <td class="font-bold text-lg">#{{ doc.folio }}</td>
               <td>
                 <span class="doc-type-badge" [class.boleta]="doc.tipoDte === 'BOLETA_ELECTRONICA'" [class.factura]="doc.tipoDte === 'FACTURA_ELECTRONICA'">
@@ -91,9 +95,9 @@ import { AuthService } from '@core/auth/auth.service';
                   <span class="rut text-xs text-secondary mt-1">{{ doc.receptorRut || '' }}</span>
                 </div>
               </td>
-              <td class="font-bold text-xl text-right text-green-400">{{ formatMoney(doc.montoTotal) }}</td>
+              <td class="font-bold text-xl text-right text-green-400 amount-cell">{{ formatMoney(doc.montoTotal) }}</td>
               <td>
-                <p-tag [value]="doc.estado" [severity]="getSeverity(doc.estado)" styleClass="premium-tag"></p-tag>
+                <span class="neon-tag" [ngClass]="doc.estado.toLowerCase()">{{ doc.estado }}</span>
               </td>
               <td class="text-center">
                 <div class="action-buttons">
@@ -238,12 +242,13 @@ import { AuthService } from '@core/auth/auth.service';
 
     /* Glass Panels */
     .glass-panel {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 32px rgba(255, 255, 255, 0.02);
     }
     
     /* Filters Bar */
@@ -264,26 +269,18 @@ import { AuthService } from '@core/auth/auth.service';
     
     .premium-input {
         width: 100%;
-        background: rgba(15, 23, 42, 0.6) !important;
+        background: rgba(15, 23, 42, 0.4) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         color: white !important;
         border-radius: 12px !important;
         padding: 0.75rem 1rem 0.75rem 2.5rem !important;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
     
     .premium-input:focus {
         border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-    }
-    
-    .search-btn {
-        background: rgba(59, 130, 246, 0.1) !important;
-        color: #60a5fa !important;
-        border: 1px solid rgba(59, 130, 246, 0.2) !important;
-        border-radius: 12px !important;
-        width: 48px;
-        height: 48px;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
     /* Premium Buttons */
@@ -321,25 +318,51 @@ import { AuthService } from '@core/auth/auth.service';
     
     :host ::ng-deep .premium-table .p-datatable-header,
     :host ::ng-deep .premium-table .p-datatable-thead > tr > th {
-        background: #1e293b !important;
+        background: transparent !important;
         color: #94a3b8 !important;
         border: none !important;
-        padding: 1rem !important;
-        font-weight: 600;
+        padding: 1.5rem 1rem !important;
+        font-weight: 700;
         text-transform: uppercase;
         font-size: 0.75rem;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
     }
     
     :host ::ng-deep .premium-table .p-datatable-tbody > tr {
         background: transparent !important;
         color: #e2e8f0 !important;
-        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-        transition: background 0.2s;
+        border-bottom: 1px solid rgba(255,255,255,0.02) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     :host ::ng-deep .premium-table .p-datatable-tbody > tr:hover {
-        background: rgba(59, 130, 246, 0.05) !important;
+        background: rgba(59, 130, 246, 0.03) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        border-color: rgba(255,255,255,0.05) !important;
+    }
+    
+    .neon-tag {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        text-transform: uppercase;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .neon-tag.pendiente { background: rgba(245, 158, 11, 0.1); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+    .neon-tag.aceptado { background: rgba(16, 185, 129, 0.1); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+    .neon-tag.rechazado, .neon-tag.anulado { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+    
+    .amount-cell {
+        background: linear-gradient(to right, #4ade80, #10b981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 1.15rem;
     }
     
     .date-badge {
@@ -647,10 +670,28 @@ export class ListaDocumentosComponent {
   tenantLogo = signal('');
 
   sendingPending = signal(false);
-  exporting = signal(false); // New state
+  exporting = signal(false);
+
+  searchSubject = new Subject<string>();
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
     this.tenantLogo.set(this.authService.tenant()?.logoUrl || '');
+    this.loadDocuments();
+
+    this.searchSubject.pipe(
+      debounceTime(300),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.loadDocuments();
+    });
+  }
+
+  onSearchInput() {
+    this.searchSubject.next(this.folioFilter() || '');
+  }
+
+  onDateSelect() {
     this.loadDocuments();
   }
 
