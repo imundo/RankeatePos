@@ -145,7 +145,7 @@ public class DteService {
         // 4. Agregar detalles
         AtomicInteger lineaNum = new AtomicInteger(1);
         request.getItems().forEach(item -> {
-            BigDecimal cantidad = item.getCantidad() != null ? BigDecimal.valueOf(item.getCantidad()) : BigDecimal.ONE;
+            BigDecimal cantidad = item.getCantidad() != null ? item.getCantidad() : BigDecimal.ONE;
             BigDecimal montoItem = cantidad
                     .multiply(item.getPrecioUnitario())
                     .setScale(0, RoundingMode.HALF_UP);

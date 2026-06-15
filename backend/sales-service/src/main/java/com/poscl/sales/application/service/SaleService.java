@@ -180,6 +180,7 @@ public class SaleService {
             try {
                 emitirDteParaVenta(tenantId, userId, sale);
                 // Si fue exitoso, el DTE se emitirá y los datos se guardarán en la venta
+                sale.setDteStatus(Sale.DteStatus.SENT);
                 saleRepository.save(sale);
                 log.info("Venta {} guardada. Facturación síncrona exitosa (DteStatus=SENT)", sale.getNumero());
             } catch (Exception e) {

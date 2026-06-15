@@ -103,7 +103,7 @@ public class EmitirDteRequest {
 
         @NotNull(message = "La cantidad es requerida")
         @Positive(message = "La cantidad debe ser positiva")
-        private Integer cantidad;
+        private BigDecimal cantidad;
 
         private BigDecimal montoTotal;
 
