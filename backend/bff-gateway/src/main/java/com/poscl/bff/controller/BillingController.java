@@ -146,6 +146,26 @@ public class BillingController {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    @GetMapping("/dte/stats")
+    public ResponseEntity<?> getStats(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        String url = billingServiceUrl + "/api/billing/dte/stats";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+
+        try {
+            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response.getBody());
+        } catch (Exception e) {
+            log.error("BFF: Error fetching DTE stats: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "BFF Error getting stats", "detail", e.getMessage()));
+        }
+    }
+
     @GetMapping(value = "/dte", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> listarDtes(
             @RequestHeader("Authorization") String authHeader,
