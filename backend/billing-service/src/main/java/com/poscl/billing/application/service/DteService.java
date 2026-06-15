@@ -360,6 +360,10 @@ public class DteService {
     // --- Métodos privados ---
 
     private Integer obtenerSiguienteFolio(UUID tenantId, TipoDte tipoDte) {
+        // Obtenemos el folio máximo actual en la BD (para evitar colisiones con demos previos)
+        Integer maxFolioDB = dteRepository.findMaxFolioByTenantAndTipo(tenantId, tipoDte);
+        int maxFolio = maxFolioDB != null ? maxFolioDB : 0;
+
         // Try to get folio from CAF
         var cafOpt = cafRepository.findCafDisponible(tenantId, tipoDte);
 
@@ -368,7 +372,17 @@ public class DteService {
 
             if (caf.isVencido()) {
                 log.warn("CAF vencido para {} - usando modo demo", tipoDte);
-                return generarFolioDemo(tenantId, tipoDte);
+                return maxFolio + 1;
+            }
+
+            // Sincronizar el CAF si hay folios demo previos que colisionan con el rango del CAF
+            while (caf.getFolioActual() <= maxFolio && caf.tieneFoliosDisponibles()) {
+                caf.siguienteFolio();
+            }
+
+            if (!caf.tieneFoliosDisponibles()) {
+                log.warn("CAF agotado después de sincronizar con BD para {} - usando modo demo", tipoDte);
+                return maxFolio + 1;
             }
 
             Integer folio = caf.siguienteFolio();
@@ -382,7 +396,7 @@ public class DteService {
 
         // Demo mode: Generate sequential folio without CAF
         log.info("Sin CAF configurado para {} - generando folio demo", tipoDte);
-        return generarFolioDemo(tenantId, tipoDte);
+        return maxFolio + 1;
     }
 
     /**
