@@ -54,7 +54,6 @@ public class EmitirDteRequest {
     @Size(max = 20, message = "Ciudad del receptor no puede exceder 20 caracteres")
     private String receptorCiudad;
 
-    @Email(message = "Email del receptor debe ser válido")
     @Size(max = 80)
     private String receptorEmail;
 

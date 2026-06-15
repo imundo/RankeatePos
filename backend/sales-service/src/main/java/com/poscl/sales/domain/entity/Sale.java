@@ -110,19 +110,19 @@ public class Sale {
     @Column(name = "tipo_documento", length = 50)
     private String tipoDocumento;
 
-    @Column(name = "cliente_rut", length = 12)
+    @Column(name = "cliente_rut", length = 20)
     private String clienteRut;
 
-    @Column(name = "cliente_razon_social", length = 100)
+    @Column(name = "cliente_razon_social", length = 255)
     private String clienteRazonSocial;
 
-    @Column(name = "cliente_giro", length = 80)
+    @Column(name = "cliente_giro", length = 255)
     private String clienteGiro;
 
-    @Column(name = "cliente_direccion", length = 70)
+    @Column(name = "cliente_direccion", length = 255)
     private String clienteDireccion;
 
-    @Column(name = "cliente_email", length = 80)
+    @Column(name = "cliente_email", length = 255)
     private String clienteEmail;
 
     @Column(name = "dte_id")
