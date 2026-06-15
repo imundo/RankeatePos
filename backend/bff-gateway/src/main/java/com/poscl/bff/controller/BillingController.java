@@ -294,6 +294,31 @@ public class BillingController {
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, headers), Object.class);
     }
 
+    @PostMapping(value = "/caf/xml", consumes = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<?> uploadCafXml(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody String xmlContent) {
+
+        String url = billingServiceUrl + "/api/billing/caf/xml";
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+        headers.setContentType(MediaType.APPLICATION_XML);
+
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(xmlContent, headers), Object.class);
+    }
+
+    @DeleteMapping("/caf/{id}")
+    public ResponseEntity<?> deleteCaf(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+
+        String url = billingServiceUrl + "/api/billing/caf/" + id;
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(headers), Object.class);
+    }
+
     // ==================== LIBRO DE VENTAS ====================
 
     @GetMapping("/libro-ventas")
