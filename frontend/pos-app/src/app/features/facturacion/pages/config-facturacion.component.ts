@@ -542,8 +542,8 @@ interface ConfigEmpresa {
 })
 export class ConfigFacturacionComponent implements OnInit {
   readonly terminology = inject(TaxTerminologyService);
-  terms = this.terminology.terms;
-  currentCountry = this.terminology.currentCountry;
+  terms = this.terminology.term;
+  currentCountry = this.terminology.country;
 
   fb = inject(FormBuilder);
 
