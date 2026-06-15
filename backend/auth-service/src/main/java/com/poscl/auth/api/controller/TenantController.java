@@ -80,6 +80,8 @@ public class TenantController {
             tenant.setCurrency(request.getCurrency());
         if (request.getLocale() != null)
             tenant.setLocale(request.getLocale());
+        if (request.getDiasAlertaDocumentos() != null)
+            tenant.setDiasAlertaDocumentos(request.getDiasAlertaDocumentos());
 
         tenant = tenantRepository.save(tenant);
         log.info("Tenant actualizado: {}", tenant.getDisplayName());
@@ -148,6 +150,7 @@ public class TenantController {
                 .primaryColor(tenant.getPrimaryColor())
                 .secondaryColor(tenant.getSecondaryColor())
                 .accentColor(tenant.getAccentColor())
+                .diasAlertaDocumentos(tenant.getDiasAlertaDocumentos())
                 .build();
     }
 
@@ -179,6 +182,17 @@ public class TenantController {
             @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestBody com.poscl.auth.api.dto.TenantDocumentDto dto) {
         com.poscl.auth.domain.entity.TenantDocument doc = tenantService.addDocument(tenantId, dto);
+        return ResponseEntity.ok(new com.poscl.auth.api.dto.TenantDocumentDto(
+                doc.getId(), doc.getNombre(), doc.getTipo(), doc.getFechaVencimiento(), doc.getArchivoUrl(), doc.getEstado()
+        ));
+    }
+
+    @PutMapping("/current/documents/{id}")
+    public ResponseEntity<com.poscl.auth.api.dto.TenantDocumentDto> updateDocument(
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @PathVariable UUID id,
+            @RequestBody com.poscl.auth.api.dto.TenantDocumentDto dto) {
+        com.poscl.auth.domain.entity.TenantDocument doc = tenantService.updateDocument(tenantId, id, dto);
         return ResponseEntity.ok(new com.poscl.auth.api.dto.TenantDocumentDto(
                 doc.getId(), doc.getNombre(), doc.getTipo(), doc.getFechaVencimiento(), doc.getArchivoUrl(), doc.getEstado()
         ));
@@ -216,6 +230,7 @@ public class TenantController {
         private String primaryColor;
         private String secondaryColor;
         private String accentColor;
+        private Integer diasAlertaDocumentos;
     }
 
     @Data
@@ -246,6 +261,7 @@ public class TenantController {
         private String country;
         private String currency;
         private String locale;
+        private Integer diasAlertaDocumentos;
     }
 
     @Data

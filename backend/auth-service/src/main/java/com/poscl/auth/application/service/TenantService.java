@@ -218,19 +218,29 @@ public class TenantService {
     /**
      * Documentos
      */
+    private String calculateDocumentStatus(java.time.LocalDate expiryDate, Integer diasAlerta) {
+        if (expiryDate == null) return "VIGENTE";
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        int daysToAlert = diasAlerta != null ? diasAlerta : 30;
+        
+        if (expiryDate.isBefore(hoy)) {
+            return "VENCIDO";
+        } else if (expiryDate.isBefore(hoy.plusDays(daysToAlert))) {
+            return "POR_VENCER";
+        }
+        return "VIGENTE";
+    }
+
     public java.util.List<com.poscl.auth.domain.entity.TenantDocument> getDocuments(UUID tenantId) {
+        Tenant tenant = findById(tenantId);
         java.util.List<com.poscl.auth.domain.entity.TenantDocument> docs = documentRepository.findByTenantId(tenantId);
         // Actualizar estado dinámicamente si es necesario
-        java.time.LocalDate hoy = java.time.LocalDate.now();
         for (com.poscl.auth.domain.entity.TenantDocument doc : docs) {
-            if (doc.getFechaVencimiento() != null) {
-                if (doc.getFechaVencimiento().isBefore(hoy)) {
-                    doc.setEstado("VENCIDO");
-                } else if (doc.getFechaVencimiento().isBefore(hoy.plusDays(30))) {
-                    doc.setEstado("POR_VENCER");
-                } else {
-                    doc.setEstado("VIGENTE");
-                }
+            String status = calculateDocumentStatus(doc.getFechaVencimiento(), tenant.getDiasAlertaDocumentos());
+            if (!status.equals(doc.getEstado())) {
+                doc.setEstado(status);
+                // Opcional: guardarlo para no recalcular siempre
+                documentRepository.save(doc);
             }
         }
         return docs;
@@ -238,14 +248,38 @@ public class TenantService {
 
     public com.poscl.auth.domain.entity.TenantDocument addDocument(UUID tenantId, com.poscl.auth.api.dto.TenantDocumentDto dto) {
         Tenant tenant = findById(tenantId);
+        String estadoCalculado = calculateDocumentStatus(dto.fechaVencimiento(), tenant.getDiasAlertaDocumentos());
+        
         com.poscl.auth.domain.entity.TenantDocument doc = com.poscl.auth.domain.entity.TenantDocument.builder()
                 .tenant(tenant)
                 .nombre(dto.nombre())
                 .tipo(dto.tipo())
                 .fechaVencimiento(dto.fechaVencimiento())
                 .archivoUrl(dto.archivoUrl())
-                .estado(dto.estado() != null ? dto.estado() : "VIGENTE")
+                .estado(estadoCalculado)
                 .build();
+        return documentRepository.save(doc);
+    }
+
+    public com.poscl.auth.domain.entity.TenantDocument updateDocument(UUID tenantId, UUID docId, com.poscl.auth.api.dto.TenantDocumentDto dto) {
+        Tenant tenant = findById(tenantId);
+        com.poscl.auth.domain.entity.TenantDocument doc = documentRepository.findById(docId)
+                .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+                
+        if (!doc.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("No tiene permisos para editar este documento");
+        }
+
+        String estadoCalculado = calculateDocumentStatus(dto.fechaVencimiento(), tenant.getDiasAlertaDocumentos());
+        
+        doc.setNombre(dto.nombre());
+        doc.setTipo(dto.tipo());
+        doc.setFechaVencimiento(dto.fechaVencimiento());
+        doc.setEstado(estadoCalculado);
+        if (dto.archivoUrl() != null && !dto.archivoUrl().isBlank()) {
+            doc.setArchivoUrl(dto.archivoUrl());
+        }
+        
         return documentRepository.save(doc);
     }
 

@@ -64,6 +64,10 @@ type CompanyInfo = CompanyBranding;
               <input type="text" [(ngModel)]="companyInfo().giro" placeholder="Elaboración y venta de productos de panadería">
             </div>
             <div class="form-group">
+              <label>Días de Alerta de Documentos (Urgent)</label>
+              <input type="number" [(ngModel)]="diasAlerta" placeholder="30" min="1">
+            </div>
+            <div class="form-group">
               <label>País</label>
               <select [(ngModel)]="companyInfo().country">
                 <option value="CL">Chile</option>
@@ -197,7 +201,7 @@ type CompanyInfo = CompanyBranding;
         <section class="tab-content">
           <div class="documents-header">
             <h3>Permisos y Documentos</h3>
-            <button class="btn-primary" (click)="showAddDocument = true">
+            <button class="btn-primary" (click)="openAddDocument()">
               ➕ Agregar Documento
             </button>
           </div>
@@ -221,8 +225,10 @@ type CompanyInfo = CompanyBranding;
                   </span>
                 </div>
                 <div class="doc-actions">
-                  <button class="btn-icon-sm" title="Ver">👁️</button>
-                  <button class="btn-icon-sm" title="Editar">✏️</button>
+                  @if (doc.archivoUrl) {
+                    <button class="btn-icon-sm" title="Ver" (click)="viewDocument(doc)">👁️</button>
+                  }
+                  <button class="btn-icon-sm" title="Editar" (click)="editDocument(doc)">✏️</button>
                   <button class="btn-icon-sm danger" title="Eliminar" (click)="deleteDocument(doc.id)">🗑️</button>
                 </div>
               </div>
@@ -232,20 +238,20 @@ type CompanyInfo = CompanyBranding;
               <div class="empty-documents">
                 <span>📄</span>
                 <p>No hay documentos registrados</p>
-                <button class="btn-primary" (click)="showAddDocument = true">Agregar primer documento</button>
+                <button class="btn-primary" (click)="openAddDocument()">Agregar primer documento</button>
               </div>
             }
           </div>
         </section>
       }
 
-      <!-- Add Document Modal Premium UX -->
+      <!-- Add/Edit Document Modal Premium UX -->
       @if (showAddDocument) {
-        <div class="modal-overlay" (click)="showAddDocument = false">
+        <div class="modal-overlay" (click)="closeDocumentModal()">
           <div class="modal-content glass-panel" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <h2>Añadir Documento</h2>
-              <button class="btn-close" (click)="showAddDocument = false">✕</button>
+              <h2>{{ editingDocId ? 'Editar Documento' : 'Añadir Documento' }}</h2>
+              <button class="btn-close" (click)="closeDocumentModal()">✕</button>
             </div>
             
             <div class="form-group">
@@ -288,8 +294,8 @@ type CompanyInfo = CompanyBranding;
             </div>
             
             <div class="modal-actions">
-              <button class="btn-cancel" (click)="showAddDocument = false">Cancelar</button>
-              <button class="btn-confirm" (click)="addDocument()">Añadir Documento</button>
+              <button class="btn-cancel" (click)="closeDocumentModal()">Cancelar</button>
+              <button class="btn-confirm" (click)="saveDocument()">{{ editingDocId ? 'Guardar Cambios' : 'Añadir Documento' }}</button>
             </div>
           </div>
         </div>
@@ -870,6 +876,8 @@ export class CompanyManagementComponent implements OnInit {
     fechaVencimiento: '',
     archivoUrl: ''
   };
+  editingDocId: string | null = null;
+  diasAlerta = 30;
 
   constructor() {
     effect(() => {
@@ -890,6 +898,11 @@ export class CompanyManagementComponent implements OnInit {
     const branding = this.companyService.branding();
     this.primaryColor = branding.primaryColor || '#6366F1';
     this.secondaryColor = branding.secondaryColor || '#EC4899';
+    
+    const tenant = this.authService.tenant();
+    if (tenant && (tenant as any).diasAlertaDocumentos) {
+      this.diasAlerta = (tenant as any).diasAlertaDocumentos;
+    }
   }
 
   async saveChanges() {
@@ -929,7 +942,8 @@ export class CompanyManagementComponent implements OnInit {
         sitioWeb: data.website,
         country: data.country,
         currency: data.currency,
-        locale: locale
+        locale: locale,
+        diasAlertaDocumentos: this.diasAlerta
       };
 
       const token = this.authService.getToken();
@@ -950,17 +964,13 @@ export class CompanyManagementComponent implements OnInit {
                 ...currentTenant, 
                 ...updatePayload 
               };
-              localStorage.setItem('pos_tenant', JSON.stringify(updatedTenant));
+              this.authService.setTenant(updatedTenant);
               
               this.messageService.add({
                 severity: 'success',
                 summary: 'Éxito',
                 detail: 'Configuración guardada correctamente.'
               });
-              
-              setTimeout(() => {
-                window.location.reload(); // Reload to apply currency changes to the UI globally
-              }, 1000);
             },
             error: (err) => {
               console.error('Error saving tenant info', err);
@@ -1055,31 +1065,93 @@ export class CompanyManagementComponent implements OnInit {
   removeLogo() {
     this.companyService.removeLogo();
   }
+  openAddDocument() {
+    this.editingDocId = null;
+    this.newDocument = {
+      nombre: '',
+      tipo: 'PATENTE',
+      fechaVencimiento: '',
+      archivoUrl: ''
+    };
+    this.showAddDocument = true;
+  }
 
-  addDocument() {
-    this.companyService.addDocument({
-      nombre: this.newDocument.nombre,
-      tipo: this.newDocument.tipo,
-      fechaVencimiento: this.newDocument.fechaVencimiento || undefined,
-      archivoUrl: this.newDocument.archivoUrl || undefined
-    }).subscribe({
-      next: () => {
-        this.showAddDocument = false;
-        this.newDocument = { nombre: '', tipo: 'PATENTE', fechaVencimiento: '', archivoUrl: '' };
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Documento añadido correctamente.'
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo añadir el documento.'
-        });
+  editDocument(doc: any) {
+    this.editingDocId = doc.id;
+    this.newDocument = {
+      nombre: doc.nombre,
+      tipo: doc.tipo,
+      fechaVencimiento: doc.fechaVencimiento || '',
+      archivoUrl: doc.archivoUrl || ''
+    };
+    this.showAddDocument = true;
+  }
+
+  closeDocumentModal() {
+    this.showAddDocument = false;
+    this.editingDocId = null;
+  }
+
+  viewDocument(doc: any) {
+    if (doc.archivoUrl) {
+      if (doc.archivoUrl.startsWith('data:')) {
+        const win = window.open();
+        if (win) {
+          win.document.write(`<iframe src="${doc.archivoUrl}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        }
+      } else {
+        window.open(doc.archivoUrl, '_blank');
       }
-    });
+    }
+  }
+
+  saveDocument() {
+    if (!this.newDocument.nombre || !this.newDocument.tipo) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'El nombre y el tipo son obligatorios'
+      });
+      return;
+    }
+
+    if (this.editingDocId) {
+      this.companyService.updateDocument(this.editingDocId, this.newDocument).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Documento actualizado'
+          });
+          this.closeDocumentModal();
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo actualizar el documento.'
+          });
+        }
+      });
+    } else {
+      this.companyService.addDocument(this.newDocument).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Documento añadido'
+          });
+          this.closeDocumentModal();
+        },
+        error: (err) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo añadir el documento.'
+          });
+        }
+      });
+    }
   }
 
   deleteDocument(id: string) {

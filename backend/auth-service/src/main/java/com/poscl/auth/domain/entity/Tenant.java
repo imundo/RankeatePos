@@ -101,6 +101,10 @@ public class Tenant {
     @Builder.Default
     private Boolean precioConIva = true;
 
+    @Column(name = "dias_alerta_documentos")
+    @Builder.Default
+    private Integer diasAlertaDocumentos = 30;
+
     // Estado
     @Column(nullable = false)
     @Builder.Default

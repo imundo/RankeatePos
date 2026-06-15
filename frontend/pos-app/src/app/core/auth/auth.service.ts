@@ -122,6 +122,11 @@ export class AuthService {
         );
     }
 
+    setTenant(tenant: AuthTenant): void {
+        this.tenantSignal.set(tenant);
+        localStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+    }
+
     logout(): void {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_TOKEN_KEY);

@@ -115,6 +115,15 @@ export class CompanyService {
                     logoUrl: updated.logoUrl || b.logoUrl
                 }));
                 this.applyBrandingStyles(this.branding());
+
+                // Sincronizar el logo en la sesión del usuario si cambió
+                const currentTenant = this.authService.tenant();
+                if (currentTenant && data.logoUrl !== undefined) {
+                    this.authService.setTenant({
+                        ...currentTenant,
+                        logoUrl: updated.logoUrl
+                    });
+                }
             })
         );
     }
@@ -163,6 +172,14 @@ export class CompanyService {
         return this.http.post<CompanyDocument>(`${environment.apiUrl}/tenants/current/documents`, doc).pipe(
             tap(newDoc => {
                 this.documents.update(docs => [...docs, newDoc]);
+            })
+        );
+    }
+
+    updateDocument(id: string, doc: Partial<CompanyDocument>): Observable<CompanyDocument> {
+        return this.http.put<CompanyDocument>(`${environment.apiUrl}/tenants/current/documents/${id}`, doc).pipe(
+            tap(updatedDoc => {
+                this.documents.update(docs => docs.map(d => d.id === id ? updatedDoc : d));
             })
         );
     }

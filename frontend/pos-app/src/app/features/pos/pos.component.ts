@@ -79,17 +79,6 @@ interface CartItem {
           <app-branch-switcher class="ml-4"></app-branch-switcher>
         </div>
         <div class="header-right">
-          <!-- Documents Notifications -->
-          @if (expiringDocumentsCount() > 0) {
-            <button class="notification-badge docs-alert" routerLink="/settings" title="Documentos por vencer o vencidos">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-              <span class="badge-count">{{ expiringDocumentsCount() }}</span>
-            </button>
-          }
-
           <!-- WhatsApp Notifications -->
           @if (whatsappNotifications() > 0) {
             <button class="notification-badge whatsapp" routerLink="/whatsapp" title="Mensajes de WhatsApp">
@@ -1782,79 +1771,138 @@ interface CartItem {
     .docs-modal {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 1rem;
+      padding: 0.5rem;
       
       .doc-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        gap: 1.25rem;
+        padding: 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
         
-        &.warning { border-left: 3px solid #eab308; }
-        &.urgent { border-left: 3px solid #ef4444; }
+        &:hover {
+          background: rgba(255, 255, 255, 0.06);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.3);
+        }
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+          border-radius: 4px 0 0 4px;
+        }
+        
+        &.warning {
+          border-color: rgba(234, 179, 8, 0.3);
+          background: linear-gradient(90deg, rgba(234, 179, 8, 0.05) 0%, transparent 100%);
+          &::before { background: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+          .doc-icon { background: rgba(234, 179, 8, 0.15); color: #fde047; }
+        }
+        
+        &.urgent {
+          border-color: rgba(239, 68, 68, 0.3);
+          background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+          &::before { background: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+          .doc-icon { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+        }
       }
       
       .doc-icon {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(99, 102, 241, 0.2);
-        border-radius: 10px;
-        color: #a5b4fc;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s ease;
         
-        svg { width: 20px; height: 20px; }
+        svg { width: 24px; height: 24px; }
       }
       
       .doc-info {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.35rem;
       }
       
       .doc-name {
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.95);
       }
       
       .doc-expiry {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
       }
       
       .status-badge {
-        padding: 0.25rem 0.6rem;
-        border-radius: 6px;
-        font-size: 0.7rem;
-        font-weight: 600;
+        padding: 0.35rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         
         &.warning {
           background: rgba(234, 179, 8, 0.2);
-          color: #fbbf24;
+          color: #fde047;
+          border: 1px solid rgba(234, 179, 8, 0.3);
         }
         
         &.urgent {
           background: rgba(239, 68, 68, 0.2);
-          color: #f87171;
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         &.expired {
-          background: rgba(239, 68, 68, 0.3);
+          background: rgba(220, 38, 38, 0.3);
           color: #fca5a5;
+          border: 1px solid rgba(220, 38, 38, 0.5);
+          animation: pulse-danger 2s infinite;
         }
       }
       
       .empty-docs {
         text-align: center;
-        padding: 2rem;
+        padding: 3rem 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
         color: rgba(255, 255, 255, 0.6);
         
-        span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+        span { 
+          font-size: 2.5rem; 
+          display: inline-block; 
+          margin-bottom: 1rem;
+          opacity: 0.8;
+        }
+        p { margin: 0; font-size: 1.1rem; }
       }
+    }
+
+    @keyframes pulse-danger {
+      0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
     }
 
     .pos-main {
@@ -3450,14 +3498,29 @@ export class PosComponent implements OnInit {
   restockAmount = 10;
   restockLoading = false;
 
-  // Document expiry alerts (demo data)
-  expiringDocs = signal<any[]>([
-    { id: 'doc-1', nombre: 'Patente Comercial', daysLeft: 5 },
-    { id: 'doc-2', nombre: 'Permiso Sanitario', daysLeft: 28 },
-    { id: 'doc-3', nombre: 'Certificado SII', daysLeft: 0 },
-  ]);
+  // Document expiry alerts
+  expiringDocs = computed(() => {
+    return this.companyService.documents()
+      .filter(doc => doc.estado === 'POR_VENCER' || doc.estado === 'VENCIDO')
+      .map(doc => {
+        let daysLeft = 0;
+        if (doc.fechaVencimiento) {
+          const expiry = new Date(doc.fechaVencimiento);
+          const today = new Date();
+          daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        }
+        return {
+          id: doc.id,
+          nombre: doc.nombre,
+          tipo: doc.tipo,
+          daysLeft: daysLeft < 0 ? 0 : daysLeft,
+          estado: doc.estado
+        };
+      })
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  });
 
-  hasUrgentDocs = () => this.expiringDocs().some(d => d.daysLeft <= 7);
+  hasUrgentDocs = computed(() => this.expiringDocs().some(d => d.estado === 'VENCIDO' || d.daysLeft <= 7));
 
   // Modal States
   showWeightModal = false;
@@ -3649,10 +3712,6 @@ export class PosComponent implements OnInit {
   whatsappNotifications = signal(3);
   reservationsToday = signal(5);
   kdsOrders = signal(3);
-  
-  expiringDocumentsCount = computed(() => 
-    this.companyService.documents().filter(d => d.estado === 'POR_VENCER' || d.estado === 'VENCIDO').length
-  );
 
   filteredProducts = computed(() => {
     let result = this.products();
