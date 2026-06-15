@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from, switchMap } from 'rxjs';
 import { environment } from '@env/environment';
 import { AuthService } from '../auth/auth.service';
 
@@ -267,11 +267,16 @@ export class BillingService {
     // ========== CAF MANAGEMENT ==========
 
     subirCaf(file: File): Observable<CafInfo> {
-        const formData = new FormData();
-        formData.append('file', file);
-        return this.http.post<CafInfo>(`${this.baseUrl}/billing/caf`, formData, {
-            headers: this.getHeaders() // Headers needed for auth
-        });
+        return from(file.text()).pipe(
+            switchMap(xmlContent => {
+                return this.http.post<CafInfo>(`${this.baseUrl}/billing/caf/xml`, xmlContent, {
+                    headers: {
+                        ...this.getHeaders(),
+                        'Content-Type': 'application/xml'
+                    }
+                });
+            })
+        );
     }
 
     desactivarCaf(id: string): Observable<void> {
