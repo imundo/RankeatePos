@@ -88,7 +88,16 @@ public class SaleService {
                 .descuentoPorcentaje(request.getDescuentoPorcentaje())
                 .estado(Sale.Estado.COMPLETADA)
                 .createdBy(userId)
+                .tipoDocumento(request.getTipoDocumento())
                 .build();
+                
+        if (request.getCliente() != null) {
+            sale.setClienteRut(request.getCliente().getRut());
+            sale.setClienteRazonSocial(request.getCliente().getRazonSocial());
+            sale.setClienteGiro(request.getCliente().getGiro());
+            sale.setClienteDireccion(request.getCliente().getDireccion());
+            sale.setClienteEmail(request.getCliente().getEmail());
+        }
 
         // Agregar items
         for (CreateSaleRequest.SaleItemRequest itemReq : request.getItems()) {
@@ -166,15 +175,22 @@ public class SaleService {
         // Propagamos la excepción para hacer rollback si falla el inventario
         deductStock(tenantId, userId, sale);
 
-        // Marcar para envío diferido de boleta/factura
-        // Por defecto para retail asumimos que todas las ventas completadas requieren
-        // boleta
-        // A menos que sea "Sin Documento" (que podría modelarse con DteStatus.NONE)
-        sale.setDteStatus(Sale.DteStatus.PENDING);
-        sale = saleRepository.save(sale); // Update status
-
-        // NO emitimos boleta síncronamente aquí. El Scheduler se encarga.
-        log.info("Venta {} guardada. Encolada para facturación (DteStatus=PENDING)", sale.getNumero());
+        // Intentar emitir DTE síncronamente
+        if (sale.getTipoDocumento() != null && !sale.getTipoDocumento().equals("SIN_DOCUMENTO")) {
+            try {
+                emitirDteParaVenta(tenantId, userId, sale);
+                // Si fue exitoso, el DTE se emitirá y los datos se guardarán en la venta
+                saleRepository.save(sale);
+                log.info("Venta {} guardada. Facturación síncrona exitosa (DteStatus=SENT)", sale.getNumero());
+            } catch (Exception e) {
+                log.warn("Fallo emisión síncrona para venta {}: {}. Quedará en PENDING.", sale.getNumero(), e.getMessage());
+                sale.setDteStatus(Sale.DteStatus.PENDING);
+                saleRepository.save(sale);
+            }
+        } else {
+            sale.setDteStatus(Sale.DteStatus.NONE);
+            saleRepository.save(sale);
+        }
 
         // TODO: Publicar evento SaleCreated para inventory-service
         publishSaleCompletedEvent(sale);
@@ -356,7 +372,7 @@ public class SaleService {
 
         // Emitir Boleta ElectrÃ³nica (IntegraciÃ³n Billing)
         try {
-            emitirBoleta(tenantId, userId, sale);
+            emitirDteParaVenta(tenantId, userId, sale);
         } catch (Exception e) {
             log.error("Failed to emit DTE for sale {}: {}", sale.getNumero(), e.getMessage());
         }
@@ -407,8 +423,8 @@ public class SaleService {
         }
     }
 
-    private void emitirBoleta(UUID tenantId, UUID userId, Sale sale) {
-        log.info("Iniciando emisión automática de boleta para venta {}", sale.getNumero());
+    private void emitirDteParaVenta(UUID tenantId, UUID userId, Sale sale) {
+        log.info("Iniciando emisión de DTE para venta {}", sale.getNumero());
 
         try {
             validateDteRequest(sale);
@@ -416,20 +432,37 @@ public class SaleService {
             // Construir payload
             Map<String, Object> request = new HashMap<>();
 
-            // Receptor (Cliente o GenÃ©rico)
-            if (sale.getCustomerId() != null) {
-                // TODO: Obtener datos reales cliente si es necesario
-                // Por ahora usamos datos bÃ¡sicos si no tenemos el objeto cliente completo
+            // Determinar tipo de documento
+            String tipoDteStr = "BOLETA_ELECTRONICA";
+            String endpoint = "/api/billing/dte/boleta";
+            
+            if ("FACTURA".equalsIgnoreCase(sale.getTipoDocumento())) {
+                tipoDteStr = "FACTURA_ELECTRONICA";
+                endpoint = "/api/billing/dte/factura";
+            }
+            
+            // Receptor
+            if (sale.getClienteRut() != null) {
+                request.put("receptorRut", sale.getClienteRut());
+                request.put("receptorRazonSocial", sale.getClienteRazonSocial());
+                request.put("receptorGiro", sale.getClienteGiro());
+                request.put("receptorDireccion", sale.getClienteDireccion());
+                request.put("receptorEmail", sale.getClienteEmail());
+                request.put("receptorComuna", "Santiago"); // default or parse
+                request.put("receptorCiudad", "Santiago");
+            } else if (sale.getCustomerId() != null) {
                 request.put("receptorRut", "66.666.666-6");
-                request.put("receptorRazonSocial",
-                        sale.getCustomerNombre() != null ? sale.getCustomerNombre() : "Cliente Ocasional");
+                request.put("receptorRazonSocial", sale.getCustomerNombre() != null ? sale.getCustomerNombre() : "Cliente Ocasional");
+                request.put("receptorDireccion", "Sin Direccion");
+                request.put("receptorComuna", "Santiago");
+                request.put("receptorCiudad", "Santiago");
             } else {
                 request.put("receptorRut", "66.666.666-6");
                 request.put("receptorRazonSocial", "Cliente Ocasional");
+                request.put("receptorDireccion", "Sin Direccion");
+                request.put("receptorComuna", "Santiago");
+                request.put("receptorCiudad", "Santiago");
             }
-            request.put("receptorDireccion", "Sin Direccion");
-            request.put("receptorComuna", "Santiago");
-            request.put("receptorCiudad", "Santiago");
 
             // Items
             List<Map<String, Object>> items = new ArrayList<>();
@@ -453,7 +486,7 @@ public class SaleService {
 
             // Referencia a venta POS
             request.put("ventaId", sale.getId());
-            request.put("tipoDte", "BOLETA_ELECTRONICA"); // Enum name mapping
+            request.put("tipoDte", tipoDteStr); // Enum name mapping
 
             // Llamada HTTP
             org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
@@ -467,16 +500,25 @@ public class SaleService {
             org.springframework.http.HttpEntity<Map<String, Object>> entity = new org.springframework.http.HttpEntity<>(
                     request, headers);
 
-            String url = billingServiceUrl + "/api/billing/dte/boleta";
-            restTemplate.postForObject(url, entity, Object.class);
+            String url = billingServiceUrl + endpoint;
+            
+            // Usamos Map.class para recibir la respuesta y extraer DTE ID y Folio
+            Map response = restTemplate.postForObject(url, entity, Map.class);
 
-            log.info("Boleta emitida exitosamente para venta {}", sale.getNumero());
+            if (response != null && response.containsKey("id")) {
+                sale.setDteId(UUID.fromString(response.get("id").toString()));
+                if (response.containsKey("folio")) {
+                    sale.setDteFolio(((Number) response.get("folio")).intValue());
+                }
+            }
+
+            log.info("DTE emitido exitosamente para venta {}", sale.getNumero());
 
         } catch (Exception e) {
-            log.error("Error emitiendo boleta para venta {}: {}", sale.getNumero(), e.getMessage());
+            log.error("Error emitiendo DTE para venta {}: {}", sale.getNumero(), e.getMessage());
             // No propagamos la excepción para no romper la venta, ya que es un proceso
             // post-venta
-            throw new RuntimeException("Error emitiendo boleta: " + e.getMessage());
+            throw new RuntimeException("Error emitiendo DTE: " + e.getMessage());
         }
     }
 
@@ -755,7 +797,7 @@ public class SaleService {
                     log.info("Processing DTE for sale {} (Retry: {})", sale.getNumero(),
                             status == Sale.DteStatus.ERROR);
 
-                    emitirBoleta(tenantId, userId, sale);
+                    emitirDteParaVenta(tenantId, userId, sale);
 
                     sale.setDteStatus(Sale.DteStatus.SENT);
                     sale.setDteError(null);
@@ -816,9 +858,9 @@ public class SaleService {
 
         for (Sale sale : pending) {
             try {
-                emitirBoleta(tenantId, sale.getCreatedBy(), sale);
-                // Si emitirBoleta no lanza excepcion, asumimos éxito (o al menos enviado)
-                // emitirBoleta usa RestTemplate simple. Si falla, cae al catch.
+                emitirDteParaVenta(tenantId, sale.getCreatedBy(), sale);
+                // Si emitirDteParaVenta no lanza excepcion, asumimos éxito (o al menos enviado)
+                // emitirDteParaVenta usa RestTemplate simple. Si falla, cae al catch.
 
                 sale.setDteStatus(Sale.DteStatus.SENT);
                 sale.setDteError(null);
@@ -876,6 +918,10 @@ public class SaleService {
                 .createdBy(sale.getCreatedBy())
                 .anuladaAt(sale.getAnuladaAt())
                 .anulacionMotivo(sale.getAnulacionMotivo())
+                .dteStatus(sale.getDteStatus() != null ? sale.getDteStatus().name() : null)
+                .dteId(sale.getDteId())
+                .dteFolio(sale.getDteFolio())
+                .dteTipo(sale.getTipoDocumento())
                 .build();
     }
 

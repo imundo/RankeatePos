@@ -37,6 +37,11 @@ public class SaleDto {
     private Instant anuladaAt;
     private String anulacionMotivo;
     
+    private String dteStatus;
+    private UUID dteId;
+    private Integer dteFolio;
+    private String dteTipo;
+    
     private List<SaleItemDto> items;
     private List<SalePaymentDto> payments;
     

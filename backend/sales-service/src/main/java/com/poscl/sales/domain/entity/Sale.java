@@ -98,7 +98,7 @@ public class Sale {
     @Column(name = "aprobada_por")
     private UUID aprobadaPor;
 
-    // Billing Integration (Queue)
+    // Billing Integration (Queue & Sync)
     @Enumerated(EnumType.STRING)
     @Column(name = "dte_status", length = 20)
     @Builder.Default
@@ -106,6 +106,30 @@ public class Sale {
 
     @Column(name = "dte_error", columnDefinition = "TEXT")
     private String dteError;
+
+    @Column(name = "tipo_documento", length = 50)
+    private String tipoDocumento;
+
+    @Column(name = "cliente_rut", length = 12)
+    private String clienteRut;
+
+    @Column(name = "cliente_razon_social", length = 100)
+    private String clienteRazonSocial;
+
+    @Column(name = "cliente_giro", length = 80)
+    private String clienteGiro;
+
+    @Column(name = "cliente_direccion", length = 70)
+    private String clienteDireccion;
+
+    @Column(name = "cliente_email", length = 80)
+    private String clienteEmail;
+
+    @Column(name = "dte_id")
+    private UUID dteId;
+
+    @Column(name = "dte_folio")
+    private Integer dteFolio;
 
     // Items y pagos
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)

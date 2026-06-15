@@ -39,6 +39,22 @@ public class CreateSaleRequest {
     private Integer descuento;
     private BigDecimal descuentoPorcentaje;
 
+    // Facturación
+    private String tipoDocumento; // "BOLETA", "FACTURA", "SIN_DOCUMENTO"
+    private ClienteFacturacionRequest cliente;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ClienteFacturacionRequest {
+        private String rut;
+        private String razonSocial;
+        private String giro;
+        private String direccion;
+        private String email;
+    }
+
     @Data
     @Builder
     @NoArgsConstructor

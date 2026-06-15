@@ -4248,26 +4248,26 @@ export class PosComponent implements OnInit {
           saleData
         ).toPromise();
 
-        // 2. Emitir documento tributario si corresponde
-        // UPDATE: Ya no llamamos al backend síncronamente aquí.
-        // El backend `sales-service` encola la venta y el scheduler la procesa.
-        // Nosotros solo mostramos "En Proceso" en la UI.
-
+        // 2. Extraer el DTE devuelto por la llamada síncrona en sales-service
         if (this.tipoDocumento !== 'SIN_DOCUMENTO') {
-          // Mock pending document for UI feedback
-          this.lastSaleDocumento = {
-            id: undefined,
-            tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
-            tipoDte: this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA',
-            folio: Math.floor(Math.random() * 9000) + 1000 // Generar folio temporal para UI (1000-9999)
-          };
-
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Documento en cola',
-            detail: 'El documento se está generando en segundo plano',
-            life: 3000
-          });
+          if (saleResult && saleResult.dteFolio) {
+            this.lastSaleDocumento = {
+              id: saleResult.dteId,
+              tipo: this.tipoDocumento === 'BOLETA' ? 'Boleta Electrónica' : 'Factura Electrónica',
+              tipoDte: this.tipoDocumento === 'BOLETA' ? 'BOLETA_ELECTRONICA' : 'FACTURA_ELECTRONICA',
+              folio: saleResult.dteFolio
+            };
+          } else {
+            // Fallback si falló la emisión síncrona
+            this.lastSaleDocumento = null; // UI mostrará "En Proceso"
+            
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Documento en cola',
+              detail: 'El documento se está generando en segundo plano',
+              life: 3000
+            });
+          }
         }
       }
 
