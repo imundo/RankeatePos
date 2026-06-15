@@ -2,6 +2,8 @@ import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '@env/environment';
 import { AuthService } from '@core/auth/auth.service';
 import { CompanyService, CompanyBranding, CompanyDocument } from '@core/services/company.service';
 import { MessageService } from 'primeng/api';
@@ -147,11 +149,42 @@ type CompanyInfo = CompanyBranding;
               <div class="color-pickers">
                 <div class="color-item">
                   <label>Color Primario</label>
-                  <input type="color" [value]="primaryColor" (input)="onPrimaryColorChange($event)" />
+                  <div class="color-input-wrapper">
+                    <input type="color" [value]="primaryColor" (input)="onPrimaryColorChange($event)" />
+                    <span class="color-hex">{{ primaryColor }}</span>
+                  </div>
                 </div>
                 <div class="color-item">
                   <label>Color Secundario</label>
-                  <input type="color" [value]="secondaryColor" (input)="onSecondaryColorChange($event)" />
+                  <div class="color-input-wrapper">
+                    <input type="color" [value]="secondaryColor" (input)="onSecondaryColorChange($event)" />
+                    <span class="color-hex">{{ secondaryColor }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Preview Section -->
+              <div class="live-preview-box">
+                <h4>Vista Previa en Vivo</h4>
+                <div class="preview-content">
+                  <div class="preview-sidebar" [style.background]="'linear-gradient(135deg, ' + primaryColor + ' 0%, ' + secondaryColor + ' 100%)'">
+                    <div class="preview-logo"></div>
+                    <div class="preview-item"></div>
+                    <div class="preview-item active"></div>
+                    <div class="preview-item"></div>
+                  </div>
+                  <div class="preview-main">
+                    <div class="preview-header">
+                      <div class="preview-title" [style.color]="primaryColor">Panel Principal</div>
+                    </div>
+                    <div class="preview-body">
+                      <div class="preview-card">
+                        <button class="preview-btn" [style.background]="primaryColor">Botón Primario</button>
+                        <button class="preview-btn-outline" [style.borderColor]="primaryColor" [style.color]="primaryColor">Secundario</button>
+                      </div>
+                      <div class="preview-badge" [style.background]="secondaryColor">Nuevo</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -707,12 +740,117 @@ type CompanyInfo = CompanyBranding;
       font-weight: 500;
       cursor: pointer;
     }
+
+    /* Branding Live Preview UI */
+    .color-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      
+      input[type="color"] {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 6px;
+        padding: 0;
+        cursor: pointer;
+        background: transparent;
+        &::-webkit-color-swatch-wrapper { padding: 0; }
+        &::-webkit-color-swatch { border-radius: 6px; border: none; }
+      }
+      .color-hex {
+        font-family: monospace;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+      }
+    }
+
+    .live-preview-box {
+      margin-top: 2rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      
+      h4 { margin: 0 0 1rem; font-size: 1rem; color: rgba(255, 255, 255, 0.7); }
+    }
+
+    .preview-content {
+      display: flex;
+      height: 200px;
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .preview-sidebar {
+      width: 60px;
+      padding: 1rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      
+      .preview-logo { width: 30px; height: 30px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; }
+      .preview-item { width: 40px; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+      .preview-item.active { background: rgba(255, 255, 255, 0.4); }
+    }
+
+    .preview-main {
+      flex: 1;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .preview-header { border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.5rem; }
+    .preview-title { font-weight: 600; font-size: 1.1rem; }
+    
+    .preview-body { display: flex; gap: 1rem; align-items: flex-start; }
+    .preview-card {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .preview-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+    .preview-btn-outline {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+    .preview-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
   `]
 })
 export class CompanyManagementComponent implements OnInit {
   private authService = inject(AuthService);
   private companyService = inject(CompanyService);
   private messageService = inject(MessageService);
+  private http = inject(HttpClient);
 
   activeTab: 'info' | 'branding' | 'documents' = 'info';
   saving = signal(false);
@@ -758,36 +896,83 @@ export class CompanyManagementComponent implements OnInit {
     this.saving.set(true);
     try {
       const data = this.companyInfo();
+      
+      // 1. Sync branding colors & logo
       this.companyService.saveBranding({
         ...data,
         primaryColor: this.primaryColor,
         secondaryColor: this.secondaryColor
       });
       
-      // Sync currency and country to authService tenant (pos_tenant)
-      const currentTenant = this.authService.tenant();
-      if (currentTenant && data.currency) {
-        const localeMap: Record<string, string> = {
-          'CLP': 'es-CL',
-          'VES': 'es-VE',
-          'USD': 'en-US',
-          'PEN': 'es-PE',
-          'MXN': 'es-MX',
-          'COP': 'es-CO',
-          'ARS': 'es-AR'
-        };
-        const updatedTenant = { 
-          ...currentTenant, 
-          currency: data.currency,
-          locale: localeMap[data.currency] || 'es-CL',
-          country: data.country
-        };
-        localStorage.setItem('pos_tenant', JSON.stringify(updatedTenant));
-      }
+      // 2. Sync general tenant info (currency, locale, country, rut, address, etc.)
+      const localeMap: Record<string, string> = {
+        'CLP': 'es-CL',
+        'VES': 'es-VE',
+        'USD': 'en-US',
+        'PEN': 'es-PE',
+        'MXN': 'es-MX',
+        'COP': 'es-CO',
+        'ARS': 'es-AR'
+      };
+      const locale = localeMap[data.currency || 'CLP'] || 'es-CL';
       
-      await new Promise(r => setTimeout(r, 500)); // Brief delay for UX
-      console.log('Saved:', this.companyInfo());
-      window.location.reload(); // Reload to apply currency changes to the UI globally
+      const updatePayload = {
+        razonSocial: data.nombre,
+        nombreFantasia: data.nombre,
+        rut: data.rut,
+        giro: data.giro,
+        direccion: data.direccion,
+        comuna: data.comuna,
+        ciudad: data.ciudad,
+        telefono: data.telefono,
+        email: data.email,
+        sitioWeb: data.website,
+        country: data.country,
+        currency: data.currency,
+        locale: locale
+      };
+
+      const token = this.authService.getToken();
+      const currentTenant = this.authService.tenant();
+      
+      if (currentTenant) {
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Id': currentTenant.id,
+          'X-User-Id': this.authService.user()?.id || ''
+        };
+
+        this.http.put(`${environment.apiUrl}/tenants/current`, updatePayload, { headers })
+          .subscribe({
+            next: () => {
+              // Sync updated fields to localStorage (pos_tenant)
+              const updatedTenant = { 
+                ...currentTenant, 
+                ...updatePayload 
+              };
+              localStorage.setItem('pos_tenant', JSON.stringify(updatedTenant));
+              
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Éxito',
+                detail: 'Configuración guardada correctamente.'
+              });
+              
+              setTimeout(() => {
+                window.location.reload(); // Reload to apply currency changes to the UI globally
+              }, 1000);
+            },
+            error: (err) => {
+              console.error('Error saving tenant info', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo guardar la configuración.'
+              });
+            }
+          });
+      }
+
     } finally {
       this.saving.set(false);
     }
@@ -796,13 +981,15 @@ export class CompanyManagementComponent implements OnInit {
   onPrimaryColorChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.primaryColor = input.value;
-    this.companyService.updateColors(this.primaryColor, this.secondaryColor);
+    document.documentElement.style.setProperty('--primary-color', this.primaryColor);
+    document.documentElement.style.setProperty('--brand-primary', this.primaryColor);
   }
 
   onSecondaryColorChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.secondaryColor = input.value;
-    this.companyService.updateColors(this.primaryColor, this.secondaryColor);
+    document.documentElement.style.setProperty('--secondary-color', this.secondaryColor);
+    document.documentElement.style.setProperty('--brand-secondary', this.secondaryColor);
   }
 
   onLogoSelected(event: Event) {
@@ -811,11 +998,11 @@ export class CompanyManagementComponent implements OnInit {
       const file = input.files[0];
       const sizeKB = file.size / 1024;
       
-      if (sizeKB < 15 || sizeKB > 50) {
+      if (sizeKB > 50) {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'El logo debe pesar entre 15KB y 50KB.'
+          detail: 'El logo no debe exceder 50KB de peso.'
         });
         return;
       }

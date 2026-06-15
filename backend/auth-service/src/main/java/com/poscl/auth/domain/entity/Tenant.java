@@ -90,6 +90,9 @@ public class Tenant {
     @Builder.Default
     private String currency = "CLP";
 
+    @Column(length = 20)
+    private String locale;
+
     @Column(nullable = false, length = 50)
     @Builder.Default
     private String timezone = "America/Santiago";

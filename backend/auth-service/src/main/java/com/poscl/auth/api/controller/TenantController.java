@@ -76,6 +76,10 @@ public class TenantController {
             tenant.setLogoUrl(request.getLogoUrl());
         if (request.getCountry() != null)
             tenant.setCountry(request.getCountry());
+        if (request.getCurrency() != null)
+            tenant.setCurrency(request.getCurrency());
+        if (request.getLocale() != null)
+            tenant.setLocale(request.getLocale());
 
         tenant = tenantRepository.save(tenant);
         log.info("Tenant actualizado: {}", tenant.getDisplayName());
@@ -139,6 +143,8 @@ public class TenantController {
                 .logoUrl(tenant.getLogoUrl())
                 .activo(tenant.getActivo())
                 .country(tenant.getCountry())
+                .currency(tenant.getCurrency())
+                .locale(tenant.getLocale())
                 .primaryColor(tenant.getPrimaryColor())
                 .secondaryColor(tenant.getSecondaryColor())
                 .accentColor(tenant.getAccentColor())
@@ -205,6 +211,8 @@ public class TenantController {
         private String logoUrl;
         private Boolean activo;
         private String country;
+        private String currency;
+        private String locale;
         private String primaryColor;
         private String secondaryColor;
         private String accentColor;
@@ -236,6 +244,8 @@ public class TenantController {
         private String sitioWeb;
         private String logoUrl;
         private String country;
+        private String currency;
+        private String locale;
     }
 
     @Data
