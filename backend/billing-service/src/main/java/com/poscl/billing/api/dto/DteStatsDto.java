@@ -16,4 +16,5 @@ public class DteStatsDto {
     private long aceptados;
     private long pendientes;
     private BigDecimal totalVentas;
+    private BigDecimal totalVentasPendientes;
 }

@@ -98,6 +98,7 @@ export interface DteStats {
     aceptados: number;
     pendientes: number;
     totalVentas: number;
+    totalVentasPendientes: number;
 }
 
 import { BranchContextService } from '@core/services/branch-context.service';

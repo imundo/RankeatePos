@@ -63,6 +63,9 @@ public interface DteRepository extends JpaRepository<Dte, UUID> {
     @Query("SELECT COUNT(d) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado = com.poscl.billing.domain.enums.EstadoDte.PENDIENTE")
     long countDtesPendientesMes(UUID tenantId, LocalDate desde, LocalDate hasta);
 
-    @Query("SELECT SUM(d.montoTotal) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado IN (com.poscl.billing.domain.enums.EstadoDte.ACEPTADO, com.poscl.billing.domain.enums.EstadoDte.ACEPTADO_CON_REPAROS, com.poscl.billing.domain.enums.EstadoDte.PENDIENTE)")
+    @Query("SELECT SUM(d.montoTotal) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado IN (com.poscl.billing.domain.enums.EstadoDte.ACEPTADO, com.poscl.billing.domain.enums.EstadoDte.ACEPTADO_CON_REPAROS)")
     Optional<java.math.BigDecimal> sumVentasMes(UUID tenantId, LocalDate desde, LocalDate hasta);
+
+    @Query("SELECT SUM(d.montoTotal) FROM Dte d WHERE d.tenantId = :tenantId AND d.fechaEmision BETWEEN :desde AND :hasta AND d.estado = com.poscl.billing.domain.enums.EstadoDte.PENDIENTE")
+    Optional<java.math.BigDecimal> sumVentasPendientesMes(UUID tenantId, LocalDate desde, LocalDate hasta);
 }

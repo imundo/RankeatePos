@@ -53,9 +53,13 @@ import { BillingService, CafInfo, Dte, DteStats } from '../../../core/services/b
             <div class="stat-value">{{ stats()?.pendientes || 0 }}</div>
             <div class="stat-label">Pendientes</div>
           </div>
-          <div class="stat-card glow-card">
-            <div class="stat-value highlight">{{ billingService.formatCurrency(stats()?.totalVentas || 0) }}</div>
-            <div class="stat-label">Total Ventas (Mes)</div>
+          <div class="stat-card glow-card-green">
+            <div class="stat-value highlight-green">{{ billingService.formatCurrency(stats()?.totalVentas || 0) }}</div>
+            <div class="stat-label">Monto Confirmado</div>
+          </div>
+          <div class="stat-card glow-card-orange">
+            <div class="stat-value highlight-orange">{{ billingService.formatCurrency(stats()?.totalVentasPendientes || 0) }}</div>
+            <div class="stat-label">Monto Pendiente</div>
           </div>
         </div>
 
@@ -268,7 +272,7 @@ import { BillingService, CafInfo, Dte, DteStats } from '../../../core/services/b
 
     /* Bento Stats */
     .bento-stats {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem;
     }
     .stat-card {
       background: rgba(24, 24, 27, 0.6); /* zinc-900 */
@@ -290,15 +294,23 @@ import { BillingService, CafInfo, Dte, DteStats } from '../../../core/services/b
     .pulse-orange { background: #f97316; box-shadow: 0 0 10px #f97316; }
     
     .stat-value { font-size: 2.25rem; font-weight: 800; line-height: 1.2; letter-spacing: -1px; }
-    .stat-value.highlight {
-      background: linear-gradient(135deg, #a78bfa, #818cf8);
+    .stat-value.highlight-green {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-value.highlight-orange {
+      background: linear-gradient(135deg, #fb923c, #f97316);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .stat-label { color: #a1a1aa; font-size: 0.85rem; font-weight: 500; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .glow-card {
-      background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.05));
-      border: 1px solid rgba(99,102,241,0.2);
+    .glow-card-green {
+      background: linear-gradient(135deg, rgba(34,197,94,0.05), rgba(74,222,128,0.05));
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .glow-card-orange {
+      background: linear-gradient(135deg, rgba(249,115,22,0.05), rgba(251,146,60,0.05));
+      border: 1px solid rgba(249,115,22,0.2);
     }
 
     /* Workflow Grid */
@@ -489,7 +501,7 @@ import { BillingService, CafInfo, Dte, DteStats } from '../../../core/services/b
 
     /* Responsive */
     @media (max-width: 1024px) {
-      .bento-stats { grid-template-columns: repeat(2, 1fr); }
+      .bento-stats { grid-template-columns: repeat(3, 1fr); }
       .workflow-grid { grid-template-columns: 1fr; }
       .monitor-grid { grid-template-columns: 1fr; }
     }

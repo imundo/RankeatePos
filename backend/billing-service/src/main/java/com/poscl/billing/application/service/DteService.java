@@ -348,12 +348,14 @@ public class DteService {
         long aceptados = dteRepository.countDtesAceptadosMes(tenantId, inicioMes, finMes);
         long pendientes = dteRepository.countDtesPendientesMes(tenantId, inicioMes, finMes);
         BigDecimal totalVentas = dteRepository.sumVentasMes(tenantId, inicioMes, finMes).orElse(BigDecimal.ZERO);
+        BigDecimal totalVentasPendientes = dteRepository.sumVentasPendientesMes(tenantId, inicioMes, finMes).orElse(BigDecimal.ZERO);
 
         return com.poscl.billing.api.dto.DteStatsDto.builder()
                 .totalMes(totalMes)
                 .aceptados(aceptados)
                 .pendientes(pendientes)
                 .totalVentas(totalVentas)
+                .totalVentasPendientes(totalVentasPendientes)
                 .build();
     }
 
