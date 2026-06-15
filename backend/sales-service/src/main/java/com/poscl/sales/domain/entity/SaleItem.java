@@ -61,15 +61,18 @@ public class SaleItem {
     
     // Helpers
     public void calculateTotals() {
-        // Subtotal = cantidad * precio - descuento
+        // En POS-Chile, el precioUnitario viene como Precio Bruto (con impuestos incluidos)
         int bruto = cantidad.multiply(BigDecimal.valueOf(precioUnitario)).intValue();
-        this.subtotal = bruto - descuento;
+        this.total = bruto - descuento; // Total a pagar por la línea
         
-        // Impuesto
+        // Impuesto (extraer del total bruto)
         if (impuestoPorcentaje != null && impuestoPorcentaje.compareTo(BigDecimal.ZERO) > 0) {
-            this.impuestoMonto = (int) (subtotal * impuestoPorcentaje.doubleValue() / 100);
+            double rate = 1 + (impuestoPorcentaje.doubleValue() / 100);
+            this.subtotal = (int) Math.round(this.total / rate);
+            this.impuestoMonto = this.total - this.subtotal;
+        } else {
+            this.subtotal = this.total;
+            this.impuestoMonto = 0;
         }
-        
-        this.total = subtotal + impuestoMonto;
     }
 }
