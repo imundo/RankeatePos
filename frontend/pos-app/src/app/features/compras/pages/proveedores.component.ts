@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SupplierService, Supplier, SupplierProduct } from '../../../core/services/supplier.service';
+import { SupplierService, Supplier, SupplierProduct, SupplierStats, PurchaseOrder, AccountPayable } from '../../../core/services/supplier.service';
 import { CatalogService, Product } from '../../../core/services/catalog.service';
 
 @Component({
@@ -521,18 +521,17 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                 } @else {
                   <table class="mock-table" style="margin-top: 16px;">
                     <thead>
-                      <tr><th>SKU Prov</th><th>Producto</th><th>U. Medida</th><th>Costo Ref.</th></tr>
+                      <tr><th>SKU Prov</th><th>Producto</th><th>Costo Ref.</th></tr>
                     </thead>
                     <tbody>
                       @for(p of supplierProducts(); track p.id) {
                         <tr>
                           <td><span class="neon-tag pending">{{ p.supplierSku || 'N/A' }}</span></td>
                           <td class="font-bold">{{ p.productVariantName }}</td>
-                          <td><span class="tag category-tag">{{ p.unitOfMeasure || 'UN' }}</span></td>
                           <td class="text-green-400 font-bold">{{ formatCurrency(p.lastCost || 0) }}</td>
                         </tr>
                       } @empty {
-                        <tr><td colspan="4" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
+                        <tr><td colspan="3" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
                       }
                     </tbody>
                   </table>
@@ -1077,8 +1076,7 @@ export class ProveedoresComponent implements OnInit {
     this.supplierService.addSupplierProduct(sId, {
       productVariantId: this.linkForm.productVariantId,
       supplierSku: this.linkForm.supplierSku,
-      lastCost: this.linkForm.lastCost,
-      unitOfMeasure: this.linkForm.unitOfMeasure
+      lastCost: this.linkForm.lastCost
     }).subscribe({
       next: () => {
         this.linkForm = { productVariantId: '', supplierSku: '', lastCost: 0, unitOfMeasure: 'UN' };
