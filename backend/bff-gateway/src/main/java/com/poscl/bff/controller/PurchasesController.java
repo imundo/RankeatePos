@@ -12,6 +12,8 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/purchases")
+@CrossOrigin(origins = "*", maxAge = 3600)
+@Slf4j
 public class PurchasesController {
 
     private final RestTemplate restTemplate;
@@ -30,6 +32,7 @@ public class PurchasesController {
     public ResponseEntity<?> getSuppliers(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
+        log.info("BFF: GET /api/purchases/suppliers");
         String url = purchasesServiceUrl + "/api/v1/suppliers";
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
@@ -40,6 +43,7 @@ public class PurchasesController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> request) {
+        log.info("BFF: POST /api/purchases/suppliers");
         String url = purchasesServiceUrl + "/api/v1/suppliers";
         return restTemplate.exchange(url, HttpMethod.POST,
                 new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
@@ -134,6 +138,7 @@ public class PurchasesController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String supplierId) {
+        log.info("BFF: GET /api/purchases/payables/supplier/{}", supplierId);
         String url = purchasesServiceUrl + "/api/v1/accounts-payable/supplier/" + supplierId;
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
@@ -144,6 +149,7 @@ public class PurchasesController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> request) {
+        log.info("BFF: POST /api/purchases/payables");
         String url = purchasesServiceUrl + "/api/v1/accounts-payable";
         return restTemplate.exchange(url, HttpMethod.POST,
                 new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);

@@ -36,7 +36,7 @@ services:
   payments:
     url: ${PAYMENTS_SERVICE_URL:http://${PAYMENTS_SERVICE_HOST:pos-payments-service.railway.internal}:${PAYMENTS_SERVICE_PORT:8089}}
   purchases:
-    url: ${PURCHASES_SERVICE_URL:http://${PURCHASES_SERVICE_HOST:pos-purchases-service.railway.internal}:${PURCHASES_SERVICE_PORT:8090}}
+    url: ${PURCHASES_SERVICE_URL:http://${PURCHASES_SERVICE_HOST:pos-purchases-service.railway.internal}:${PURCHASES_SERVICE_PORT:8089}}
   payroll:
     url: ${PAYROLL_SERVICE_URL:http://${PAYROLL_SERVICE_HOST:pos-payroll-service.railway.internal}:${PAYROLL_SERVICE_PORT:8091}}
   crm:

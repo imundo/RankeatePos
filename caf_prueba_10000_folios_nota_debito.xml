@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<AUTORIZACION>
+  <CAF version="1.0">
+    <DA>
+      <RE>11111111-1</RE>
+      <RS>EMPRESA DE PRUEBA SPA</RS>
+      <TD>56</TD>
+      <RNG>
+        <D>1</D>
+        <H>10000</H>
+      </RNG>
+      <FA>2026-06-14</FA>
+      <FECHAV>2027-06-14</FECHAV>
+    </DA>
+    <RSAK>
+      <M>bW9jayBtb2R1bHVz</M>
+      <E>bW9jayBleHBvbmVudA==</E>
+    </RSAK>
+    <RSASK>
+      -----BEGIN PRIVATE KEY-----
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDFaEwT8Z8f5cMv
+      ... mock key ...
+      -----END PRIVATE KEY-----
+    </RSASK>
+    <RSAPK>
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxWhME/GfH+XDL+wz8n0Q
+      ... mock key ...
+      -----END PUBLIC KEY-----
+    </RSAPK>
+    <FRMA algoritmo="SHA1withRSA">mock_signature_data_here</FRMA>
+  </CAF>
+  <ALST>
+    <IDK>100</IDK>
+  </ALST>
+</AUTORIZACION>
