@@ -138,7 +138,7 @@ export class SupplierService {
         return this.http.get<SupplierProduct[]>(`${this.apiUrl}/${supplierId}/products`);
     }
 
-    addSupplierProduct(supplierId: string, dto: { productVariantId: string, supplierSku: string, lastCost: number }): Observable<void> {
+    addSupplierProduct(supplierId: string, dto: { productVariantId: string, supplierSku: string, lastCost: number, unitOfMeasure?: string }): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/${supplierId}/products`, dto);
     }
 

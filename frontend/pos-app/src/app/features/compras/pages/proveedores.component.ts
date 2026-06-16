@@ -905,9 +905,10 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
     .alert-box { padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.85rem; margin-bottom: 20px; }
     .alert-box.info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
     
-    .mock-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .mock-table th { text-align: left; padding: 10px; color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .mock-table td { padding: 12px 10px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .mock-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
+    .mock-table th { text-align: left; padding: 6px 4px; color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.8rem; }
+    .mock-table td { padding: 8px 4px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-sm { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; height: 28px; line-height: 1; }
     
     .timeline { display: flex; flex-direction: column; gap: 16px; position: relative; padding-left: 12px; }
     .timeline::before { content: ''; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.1); }
@@ -1096,7 +1097,8 @@ export class ProveedoresComponent implements OnInit {
     this.supplierService.addSupplierProduct(sId, {
       productVariantId: this.linkForm.productVariantId,
       supplierSku: this.linkForm.supplierSku,
-      lastCost: this.linkForm.lastCost
+      lastCost: this.linkForm.lastCost,
+      unitOfMeasure: this.linkForm.unitOfMeasure
     }).subscribe({
       next: () => {
         this.linkForm = { productVariantId: '', supplierSku: '', lastCost: 0, unitOfMeasure: 'UN' };

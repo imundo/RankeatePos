@@ -126,6 +126,7 @@ public class SupplierServiceImpl implements SupplierService {
                 .productVariant(variant)
                 .supplierSku(dto.getSupplierSku())
                 .lastCost(dto.getLastCost())
+                .unitOfMeasure(dto.getUnitOfMeasure())
                 .build();
 
         supplierProductRepository.save(entity);
