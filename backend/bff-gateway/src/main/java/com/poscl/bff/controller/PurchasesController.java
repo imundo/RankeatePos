@@ -151,10 +151,17 @@ public class PurchasesController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> request) {
-        log.info("BFF: POST /api/purchases/payables");
+        log.info("BFF: POST /api/purchases/payables. Payload: {}", request);
         String url = purchasesServiceUrl + "/api/v1/accounts-payable";
-        return restTemplate.exchange(url, HttpMethod.POST,
-                new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+        try {
+            ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST,
+                    new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+            log.info("BFF: POST /api/purchases/payables SUCCESS. Status: {}", response.getStatusCode());
+            return response;
+        } catch (Exception e) {
+            log.error("BFF: POST /api/purchases/payables ERROR. Type: {}, Msg: {}", e.getClass().getName(), e.getMessage());
+            throw e;
+        }
     }
 
     @PostMapping("/payables/{id}/pay")
