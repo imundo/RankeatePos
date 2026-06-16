@@ -191,8 +191,19 @@ public class DteController {
         public ResponseEntity<java.util.Map<String, Integer>> sendPending(
                         @RequestHeader("X-Tenant-Id") UUID tenantId) {
                 log.info("POST /api/billing/dte/send-pending - Tenant: {}", tenantId);
-                int sentCount = dteService.enviarDtesPendientes(tenantId);
-                return ResponseEntity.ok(java.util.Map.of("sentCount", sentCount));
+                
+                // We count how many are pending to return immediately
+                // This prevents 502/504 Gateway Timeouts on long-running processes
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    try {
+                        dteService.enviarDtesPendientes(tenantId);
+                    } catch (Exception e) {
+                        log.error("Error executing async send-pending: {}", e.getMessage(), e);
+                    }
+                });
+                
+                // Return -1 to indicate it's running asynchronously, as the exact count of successfully sent items is not known yet
+                return ResponseEntity.ok(java.util.Map.of("sentCount", -1));
         }
 
         @GetMapping

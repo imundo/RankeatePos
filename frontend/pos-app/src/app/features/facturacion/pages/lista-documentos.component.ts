@@ -739,9 +739,16 @@ export class ListaDocumentosComponent {
     this.sendingPending.set(true);
     this.billingService.enviarPendientes().subscribe({
       next: (res) => {
-        this.messageService.add({ severity: 'success', summary: 'Enviado', detail: `Proceso finalizado. Enviados: ${res.sentCount || 0}` });
-        this.loadDocuments();
-        this.sendingPending.set(false);
+        if (res.sentCount === -1) {
+          this.messageService.add({ severity: 'success', summary: 'Proceso Iniciado', detail: 'Los documentos se están enviando al SII en segundo plano.' });
+        } else {
+          this.messageService.add({ severity: 'success', summary: 'Enviado', detail: `Proceso finalizado. Enviados: ${res.sentCount || 0}` });
+        }
+        // Small delay to allow the background process to update at least some documents before reloading
+        setTimeout(() => {
+          this.loadDocuments();
+          this.sendingPending.set(false);
+        }, 1500);
       },
       error: (err) => {
         console.error('Error enviando pendientes', err);
