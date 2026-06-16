@@ -19,5 +19,6 @@ public class SupplierProductDto {
     private String productVariantName; // For display
     private String supplierSku;
     private Integer lastCost;
+    private String unitOfMeasure;
     private Instant updatedAt;
 }

@@ -40,6 +40,9 @@ public class SupplierProduct {
     @Column(name = "last_cost")
     private Integer lastCost;
 
+    @Column(name = "unit_of_measure", length = 20)
+    private String unitOfMeasure;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
