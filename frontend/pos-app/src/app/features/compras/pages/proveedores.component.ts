@@ -1298,7 +1298,8 @@ export class ProveedoresComponent implements OnInit {
     return labels[cat] || cat || 'General';
   }
 
-  getUomLabel(uom: string): string {
+  getUomLabel(uom?: string): string {
+    if (!uom) return 'Individual';
     const labels: Record<string, string> = {
       UN: 'Individual', DOZ: 'Docena', BOX: 'Caja',
       PACK: 'Pack', KG: 'Kilos', LT: 'Litros', PALLET: 'Pallet'
