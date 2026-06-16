@@ -36,8 +36,8 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId) {
         log.info("BFF: GET /api/purchases/suppliers");
         String url = purchasesServiceUrl + "/api/v1/suppliers";
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
-                Object.class);
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @PostMapping("/suppliers")
@@ -47,8 +47,8 @@ public class PurchasesController {
             @RequestBody Map<String, Object> request) {
         log.info("BFF: POST /api/purchases/suppliers");
         String url = purchasesServiceUrl + "/api/v1/suppliers";
-        return restTemplate.exchange(url, HttpMethod.POST,
-                new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @GetMapping("/suppliers/{id}")
@@ -57,8 +57,8 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
         String url = purchasesServiceUrl + "/api/v1/suppliers/" + id;
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
-                Object.class);
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @PutMapping("/suppliers/{id}/rating")
@@ -68,8 +68,9 @@ public class PurchasesController {
             @PathVariable String id,
             @RequestBody Map<String, Object> request) {
         String url = purchasesServiceUrl + "/api/v1/suppliers/" + id + "/rating";
-        return restTemplate.exchange(url, HttpMethod.PUT,
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.PUT,
                 new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     // ==================== PURCHASE ORDERS ====================
@@ -80,8 +81,9 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(required = false) String status) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders" + (status != null ? "?status=" + status : "");
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @GetMapping("/orders/supplier/{supplierId}")
@@ -90,8 +92,9 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String supplierId) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders/supplier/" + supplierId;
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @PostMapping("/orders")
@@ -100,8 +103,9 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> request) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders";
-        return restTemplate.exchange(url, HttpMethod.POST,
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST,
                 new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @GetMapping("/orders/{id}")
@@ -110,8 +114,9 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id;
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @PostMapping("/orders/{id}/approve")
@@ -120,8 +125,9 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id + "/approve";
-        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @GetMapping("/orders/summary")
@@ -129,8 +135,9 @@ public class PurchasesController {
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders/summary";
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     // ==================== ACCOUNTS PAYABLE ====================
@@ -142,8 +149,8 @@ public class PurchasesController {
             @PathVariable String supplierId) {
         log.info("BFF: GET /api/purchases/payables/supplier/{}", supplierId);
         String url = purchasesServiceUrl + "/api/v1/accounts-payable/supplier/" + supplierId;
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
-                Object.class);
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     @PostMapping("/payables")
@@ -157,7 +164,7 @@ public class PurchasesController {
             ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST,
                     new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
             log.info("BFF: POST /api/purchases/payables SUCCESS. Status: {}", response.getStatusCode());
-            return response;
+            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
         } catch (Exception e) {
             log.error("BFF: POST /api/purchases/payables ERROR. Type: {}, Msg: {}", e.getClass().getName(), e.getMessage());
             throw e;
@@ -170,8 +177,8 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String id) {
         String url = purchasesServiceUrl + "/api/v1/accounts-payable/" + id + "/pay";
-        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)),
-                Object.class);
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
     private HttpHeaders createHeaders(String authHeader, String tenantId) {
