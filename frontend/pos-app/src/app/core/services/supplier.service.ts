@@ -109,11 +109,11 @@ export class SupplierService {
         return this.http.get<SupplierProduct[]>(`${this.apiUrl}/${supplierId}/products`);
     }
 
-    addSupplierProduct(supplierId: string, product: { productVariantId: string; supplierSku: string; lastCost: number }): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/${supplierId}/products`, product);
+    addSupplierProduct(supplierId: string, dto: { productVariantId: string, supplierSku: string, lastCost: number }): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/${supplierId}/products`, dto);
     }
 
-    removeSupplierProduct(supplierId: string, productVariantId: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${supplierId}/products/${productVariantId}`);
+    removeSupplierProduct(supplierId: string, variantId: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${supplierId}/products/${variantId}`);
     }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SupplierService, Supplier, SupplierProduct } from '../../../core/services/supplier.service';
+import { CatalogService, Product } from '../../../core/services/catalog.service';
 
 @Component({
   selector: 'app-proveedores',
@@ -382,19 +383,50 @@ import { SupplierService, Supplier, SupplierProduct } from '../../../core/servic
 
             @if (detailTab() === 'productos') {
               <div class="tab-content productos-tab">
+                
+                <div class="link-product-box">
+                  <h4>Vincular Producto al Proveedor</h4>
+                  <form (ngSubmit)="linkProductToSupplier()" class="form-row three-col align-end">
+                    <div class="form-group">
+                      <label>Producto de Inventario</label>
+                      <select [(ngModel)]="linkForm.productVariantId" name="variantId" required>
+                        <option value="">-- Seleccionar --</option>
+                        @for (p of allProducts(); track p.id) {
+                          @for (v of p.variants; track v.id) {
+                            <option [value]="v.id">{{ p.nombre }} {{ v.nombre ? ' - ' + v.nombre : '' }}</option>
+                          }
+                        }
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>SKU del Proveedor</label>
+                      <input type="text" [(ngModel)]="linkForm.supplierSku" name="supSku" placeholder="Opcional">
+                    </div>
+                    <div class="form-group">
+                      <label>Costo Acordado</label>
+                      <input type="number" [(ngModel)]="linkForm.lastCost" name="lastCost" required min="0">
+                    </div>
+                    <div class="form-group" style="padding-bottom: 5px;">
+                      <button type="submit" class="btn btn-primary" [disabled]="!linkForm.productVariantId || linkingProduct()">
+                        {{ linkingProduct() ? '...' : '+ Vincular' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
                 @if (loadingProducts()) {
                   <div class="text-center p-4"><div class="spinner inline-block"></div></div>
                 } @else {
-                  <table class="mock-table">
+                  <table class="mock-table" style="margin-top: 16px;">
                     <thead>
                       <tr><th>SKU Prov</th><th>Producto</th><th>Costo Ref.</th></tr>
                     </thead>
                     <tbody>
                       @for(p of supplierProducts(); track p.id) {
                         <tr>
-                          <td>{{ p.supplierSku }}</td>
+                          <td>{{ p.supplierSku || 'N/A' }}</td>
                           <td>{{ p.productVariantName }}</td>
-                          <td class="text-green-400">{{ formatCurrency(p.lastCost) }}</td>
+                          <td class="text-green-400">{{ formatCurrency(p.lastCost || 0) }}</td>
                         </tr>
                       } @empty {
                         <tr><td colspan="3" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
@@ -790,6 +822,8 @@ import { SupplierService, Supplier, SupplierProduct } from '../../../core/servic
     .form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; cursor: pointer; }
     .form-group select option { background: #1e1e4a; color: #fff; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 16px; padding: 24px 32px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(22, 22, 55, 0.95); position: sticky; bottom: 0; z-index: 10; border-radius: 0 0 24px 24px; }
+    .link-product-box { background: rgba(99, 102, 241, 0.1); border: 1px dashed rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .link-product-box h4 { margin: 0 0 12px; font-size: 0.9rem; color: #818cf8; font-weight: 600; }
   `]
 })
 export class ProveedoresComponent implements OnInit {
@@ -810,6 +844,15 @@ export class ProveedoresComponent implements OnInit {
   detailTab = signal<'resumen' | 'compromisos' | 'ordenes' | 'productos'>('resumen');
   supplierProducts = signal<SupplierProduct[]>([]);
   loadingProducts = signal(false);
+
+  // Linking state
+  allProducts = signal<Product[]>([]);
+  linkForm = {
+    productVariantId: '',
+    supplierSku: '',
+    lastCost: 0
+  };
+  linkingProduct = signal(false);
 
   form: any = this.getEmptyForm();
 
@@ -846,10 +889,18 @@ export class ProveedoresComponent implements OnInit {
       .sort((a, b) => (b.trustRating || 0) - (a.trustRating || 0))
   );
 
-  constructor(private supplierService: SupplierService) {}
+  constructor(private supplierService: SupplierService, private catalogService: CatalogService) {}
 
   ngOnInit(): void {
     this.loadSuppliers();
+    this.loadAllProducts();
+  }
+
+  loadAllProducts(): void {
+    this.catalogService.getProductsForSync().subscribe({
+      next: (prods) => this.allProducts.set(prods || []),
+      error: (err) => console.error('Error loading products', err)
+    });
   }
 
   loadSuppliers(): void {
@@ -895,6 +946,28 @@ export class ProveedoresComponent implements OnInit {
       error: () => {
         this.supplierProducts.set([]);
         this.loadingProducts.set(false);
+      }
+    });
+  }
+
+  linkProductToSupplier() {
+    const sId = this.selectedSupplier()?.id;
+    if (!sId || !this.linkForm.productVariantId) return;
+    this.linkingProduct.set(true);
+    this.supplierService.addSupplierProduct(sId, {
+      productVariantId: this.linkForm.productVariantId,
+      supplierSku: this.linkForm.supplierSku,
+      lastCost: this.linkForm.lastCost
+    }).subscribe({
+      next: () => {
+        this.linkForm = { productVariantId: '', supplierSku: '', lastCost: 0 };
+        this.linkingProduct.set(false);
+        this.loadSupplierProducts(sId);
+      },
+      error: (err) => {
+        console.error('Error linking product', err);
+        this.linkingProduct.set(false);
+        alert('Error al vincular producto (puede que ya esté vinculado).');
       }
     });
   }
