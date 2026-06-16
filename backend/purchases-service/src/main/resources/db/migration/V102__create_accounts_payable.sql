@@ -1,6 +1,6 @@
--- V34__create_accounts_payable.sql
+-- V102__create_accounts_payable.sql
 
-CREATE TABLE accounts_payable (
+CREATE TABLE IF NOT EXISTS accounts_payable (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     supplier_id UUID NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE accounts_payable (
     CONSTRAINT fk_ap_po FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id)
 );
 
-CREATE INDEX idx_ap_tenant ON accounts_payable(tenant_id);
-CREATE INDEX idx_ap_supplier ON accounts_payable(supplier_id);
-CREATE INDEX idx_ap_po ON accounts_payable(purchase_order_id);
-CREATE INDEX idx_ap_status ON accounts_payable(status);
+CREATE INDEX IF NOT EXISTS idx_ap_tenant ON accounts_payable(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ap_supplier ON accounts_payable(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_ap_po ON accounts_payable(purchase_order_id);
+CREATE INDEX IF NOT EXISTS idx_ap_status ON accounts_payable(status);
