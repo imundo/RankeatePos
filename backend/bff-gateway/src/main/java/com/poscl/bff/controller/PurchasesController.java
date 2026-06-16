@@ -67,6 +67,16 @@ public class PurchasesController {
                 Object.class);
     }
 
+    @GetMapping("/orders/supplier/{supplierId}")
+    public ResponseEntity<?> getOrdersBySupplier(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String supplierId) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/supplier/" + supplierId;
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                Object.class);
+    }
+
     @PostMapping("/orders")
     public ResponseEntity<?> createPurchaseOrder(
             @RequestHeader("Authorization") String authHeader,
@@ -103,6 +113,38 @@ public class PurchasesController {
             @RequestHeader("X-Tenant-ID") String tenantId) {
         String url = purchasesServiceUrl + "/api/v1/purchase-orders/summary";
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                Object.class);
+    }
+
+    // ==================== ACCOUNTS PAYABLE ====================
+
+    @GetMapping("/payables/supplier/{supplierId}")
+    public ResponseEntity<?> getPayablesBySupplier(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String supplierId) {
+        String url = purchasesServiceUrl + "/api/v1/accounts-payable/supplier/" + supplierId;
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(createHeaders(authHeader, tenantId)),
+                Object.class);
+    }
+
+    @PostMapping("/payables")
+    public ResponseEntity<?> createPayable(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody Map<String, Object> request) {
+        String url = purchasesServiceUrl + "/api/v1/accounts-payable";
+        return restTemplate.exchange(url, HttpMethod.POST,
+                new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+    }
+
+    @PostMapping("/payables/{id}/pay")
+    public ResponseEntity<?> payAccountPayable(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/accounts-payable/" + id + "/pay";
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)),
                 Object.class);
     }
 

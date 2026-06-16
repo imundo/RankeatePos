@@ -42,6 +42,21 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/supplier/{supplierId}")
+    public ResponseEntity<List<Map<String, Object>>> getOrdersBySupplier(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID supplierId) {
+        
+        UUID tid = parseTenantId(tenantId);
+        List<PurchaseOrder> orders = orderService.findBySupplierId(tid, supplierId);
+        
+        List<Map<String, Object>> result = orders.stream()
+                .map(this::mapOrder)
+                .toList();
+        
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getPurchaseOrder(
             @RequestHeader("X-Tenant-Id") String tenantId,

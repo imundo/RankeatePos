@@ -26,6 +26,11 @@ public class PurchaseOrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<PurchaseOrder> findBySupplierId(UUID tenantId, UUID supplierId) {
+        return orderRepository.findByTenantIdAndSupplierIdOrderByCreatedAtDesc(tenantId, supplierId);
+    }
+
+    @Transactional(readOnly = true)
     public List<PurchaseOrder> findByStatus(UUID tenantId, PurchaseOrderStatus status) {
         return orderRepository.findByTenantIdAndStatus(tenantId, status);
     }

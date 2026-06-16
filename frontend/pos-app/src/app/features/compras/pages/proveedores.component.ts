@@ -331,63 +331,153 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
 
             @if (detailTab() === 'compromisos') {
               <div class="tab-content compromisos-tab">
-                <div class="alert-box info">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  <span>Módulo de Cuentas por Pagar (Mock). Próximamente integrado con facturas de compra reales.</span>
+                <div class="alert-box success" style="margin-bottom: 16px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Módulo de Cuentas por Pagar conectado con Base de Datos real.</span>
                 </div>
                 
-                <table class="mock-table">
-                  <thead>
-                    <tr><th>Vencimiento</th><th>Doc</th><th>Monto</th><th>Estado</th></tr>
-                  </thead>
-                  <tbody>
-                    @for(c of mockCompromisos(sup.id); track c.id) {
-                      <tr>
-                        <td>{{ c.date }}</td>
-                        <td>{{ c.doc }}</td>
-                        <td class="font-bold">{{ formatCurrency(c.amount) }}</td>
-                        <td><span class="neon-tag" [class]="c.status">{{ c.statusStr }}</span></td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                <div class="kpi-row" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                  <div class="kpi-card" style="padding: 16px;">
+                    <div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                    <div class="kpi-data">
+                      <span class="kpi-value text-amber-400" style="font-size: 1.25rem;">{{ formatCurrency(getPendingPayablesTotal()) }}</span>
+                      <span class="kpi-label">Pendiente de Pago</span>
+                    </div>
+                  </div>
+                  <div class="kpi-card" style="padding: 16px;">
+                    <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                    <div class="kpi-data">
+                      <span class="kpi-value text-green-400" style="font-size: 1.25rem;">{{ formatCurrency(getPaidPayablesTotal()) }}</span>
+                      <span class="kpi-label">Pagado Histórico</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="link-product-box" style="margin-bottom: 20px;">
+                  <h4>Registrar Nuevo Compromiso</h4>
+                  <form (ngSubmit)="createPayable()" class="form-row">
+                    <div class="form-group">
+                      <label>Tipo Doc.</label>
+                      <select [(ngModel)]="payableForm.documentType" name="docType">
+                        <option value="FACTURA">Factura</option>
+                        <option value="BOLETA">Boleta</option>
+                        <option value="RECIBO">Recibo / Otro</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Número de Documento</label>
+                      <input type="text" [(ngModel)]="payableForm.documentNumber" name="docNum" required>
+                    </div>
+                    <div class="form-group">
+                      <label>Monto</label>
+                      <input type="number" [(ngModel)]="payableForm.amount" name="amount" required min="1">
+                    </div>
+                    <div class="form-group">
+                      <label>Fecha Emisión</label>
+                      <input type="date" [(ngModel)]="payableForm.issueDate" name="issDate" required>
+                    </div>
+                    <div class="form-group">
+                      <label>Fecha Vencimiento</label>
+                      <input type="date" [(ngModel)]="payableForm.dueDate" name="dueDate" required>
+                    </div>
+                    <div class="form-group" style="padding-top: 24px;">
+                      <button type="submit" class="btn btn-primary" [disabled]="creatingPayable() || !payableForm.amount" style="width: 100%; justify-content: center;">
+                        {{ creatingPayable() ? 'Guardando...' : '+ Registrar' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                @if (loadingPayables()) {
+                  <div class="text-center py-4"><div class="spinner inline-block"></div></div>
+                } @else {
+                  <table class="mock-table">
+                    <thead>
+                      <tr><th>Vencimiento</th><th>Doc</th><th>Monto</th><th>Estado</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody>
+                      @for(c of supplierPayables(); track c.id) {
+                        <tr class="interactive-row">
+                          <td>
+                            <div style="display: flex; flex-direction: column;">
+                              <span class="font-bold">{{ c.dueDate }}</span>
+                              @if (c.status === 'PENDING') {
+                                <span class="td-muted" style="font-size: 0.75rem;">Faltan {{ getDaysLeft(c.dueDate) }} días</span>
+                              }
+                            </div>
+                          </td>
+                          <td>
+                            <div style="display: flex; flex-direction: column;">
+                              <span style="color: #818cf8; font-weight: 500;">{{ c.documentNumber }}</span>
+                              <span class="td-muted" style="font-size: 0.75rem;">{{ c.documentType }}</span>
+                            </div>
+                          </td>
+                          <td class="font-bold" [class.text-green-400]="c.status === 'PAID'">{{ formatCurrency(c.amount) }}</td>
+                          <td>
+                            @if (c.status === 'PENDING') {
+                              <span class="neon-tag pending">Pendiente</span>
+                            } @else if (c.status === 'PAID') {
+                              <span class="neon-tag active">Pagado</span>
+                            } @else {
+                              <span class="neon-tag">{{ c.status }}</span>
+                            }
+                          </td>
+                          <td>
+                            @if (c.status === 'PENDING') {
+                              <button class="btn btn-primary btn-sm" (click)="payAccountPayable(c.id)">Pagar</button>
+                            }
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="5" class="text-center py-4">No hay compromisos registrados.</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                }
               </div>
             }
 
             @if (detailTab() === 'ordenes') {
               <div class="tab-content ordenes-tab">
-                <div class="alert-box info">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  <span>Historial de Órdenes de Compra (Mock).</span>
+                <div class="alert-box success" style="margin-bottom: 16px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Historial de Órdenes de Compra (Integrado a Base de Datos).</span>
                 </div>
 
-                <div class="timeline">
-                  @for(o of mockOrdenes(sup.id); track o.id) {
-                    <div class="timeline-item">
-                      <div class="t-dot" [class]="o.status"></div>
-                      <div class="t-content">
-                        <div class="t-header">
-                          <span class="t-title">{{ o.id }}</span>
-                          <span class="t-date">{{ o.date }}</span>
-                        </div>
-                        <div class="t-body">
-                          <span>Monto: {{ formatCurrency(o.amount) }}</span>
-                          <span class="t-status">{{ o.statusStr }}</span>
+                @if (loadingOrders()) {
+                  <div class="text-center py-4"><div class="spinner inline-block"></div></div>
+                } @else {
+                  <div class="timeline">
+                    @for(o of supplierOrders(); track o.id) {
+                      <div class="timeline-item">
+                        <div class="t-dot" [class]="o.status"></div>
+                        <div class="t-content interactive-row">
+                          <div class="t-header">
+                            <span class="t-title" style="color: #818cf8; font-size: 1rem;">OC #{{ o.orderNumber }}</span>
+                            <span class="t-date">{{ o.orderDate }}</span>
+                          </div>
+                          <div class="t-body" style="margin-top: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                              <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">{{ formatCurrency(o.total) }}</span>
+                            </div>
+                            <span class="neon-tag" [class]="o.status" style="align-self: flex-start;">{{ o.status }}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  }
-                </div>
+                    } @empty {
+                      <div class="text-center py-4 td-muted">No hay órdenes registradas para este proveedor.</div>
+                    }
+                  </div>
+                }
               </div>
             }
 
             @if (detailTab() === 'productos') {
               <div class="tab-content productos-tab">
-                
                 <div class="link-product-box">
                   <h4>Vincular Producto al Proveedor</h4>
-                  <form (ngSubmit)="linkProductToSupplier()" class="form-row three-col align-end">
-                    <div class="form-group">
+                  <form (ngSubmit)="linkProductToSupplier()" class="form-row">
+                    <div class="form-group" style="grid-column: span 2;">
                       <label>Producto de Inventario</label>
                       <select [(ngModel)]="linkForm.productVariantId" name="variantId" required>
                         <option value="">-- Seleccionar --</option>
@@ -403,11 +493,23 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                       <input type="text" [(ngModel)]="linkForm.supplierSku" name="supSku" placeholder="Opcional">
                     </div>
                     <div class="form-group">
+                      <label>Unidad de Medida</label>
+                      <select [(ngModel)]="linkForm.unitOfMeasure" name="uom">
+                        <option value="UN">Individual (Unidad)</option>
+                        <option value="DOZ">Docena</option>
+                        <option value="BOX">Caja</option>
+                        <option value="PACK">Pack / Lote</option>
+                        <option value="KG">Kilogramos</option>
+                        <option value="LT">Litros</option>
+                        <option value="PALLET">Pallet</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
                       <label>Costo Acordado</label>
                       <input type="number" [(ngModel)]="linkForm.lastCost" name="lastCost" required min="0">
                     </div>
-                    <div class="form-group" style="padding-bottom: 5px;">
-                      <button type="submit" class="btn btn-primary" [disabled]="!linkForm.productVariantId || linkingProduct()">
+                    <div class="form-group" style="padding-top: 24px;">
+                      <button type="submit" class="btn btn-primary" [disabled]="!linkForm.productVariantId || linkingProduct()" style="width: 100%; justify-content: center;">
                         {{ linkingProduct() ? '...' : '+ Vincular' }}
                       </button>
                     </div>
@@ -419,17 +521,18 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                 } @else {
                   <table class="mock-table" style="margin-top: 16px;">
                     <thead>
-                      <tr><th>SKU Prov</th><th>Producto</th><th>Costo Ref.</th></tr>
+                      <tr><th>SKU Prov</th><th>Producto</th><th>U. Medida</th><th>Costo Ref.</th></tr>
                     </thead>
                     <tbody>
                       @for(p of supplierProducts(); track p.id) {
                         <tr>
-                          <td>{{ p.supplierSku || 'N/A' }}</td>
-                          <td>{{ p.productVariantName }}</td>
-                          <td class="text-green-400">{{ formatCurrency(p.lastCost || 0) }}</td>
+                          <td><span class="neon-tag pending">{{ p.supplierSku || 'N/A' }}</span></td>
+                          <td class="font-bold">{{ p.productVariantName }}</td>
+                          <td><span class="tag category-tag">{{ p.unitOfMeasure || 'UN' }}</span></td>
+                          <td class="text-green-400 font-bold">{{ formatCurrency(p.lastCost || 0) }}</td>
                         </tr>
                       } @empty {
-                        <tr><td colspan="3" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
+                        <tr><td colspan="4" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
                       }
                     </tbody>
                   </table>
@@ -843,14 +946,29 @@ export class ProveedoresComponent implements OnInit {
   selectedSupplier = signal<Supplier | null>(null);
   detailTab = signal<'resumen' | 'compromisos' | 'ordenes' | 'productos'>('resumen');
   supplierProducts = signal<SupplierProduct[]>([]);
+  supplierOrders = signal<PurchaseOrder[]>([]);
+  supplierPayables = signal<AccountPayable[]>([]);
   loadingProducts = signal(false);
+  loadingOrders = signal(false);
+  loadingPayables = signal(false);
+
+  // Payable Form
+  payableForm = {
+    documentNumber: '',
+    documentType: 'FACTURA',
+    issueDate: '',
+    dueDate: '',
+    amount: 0
+  };
+  creatingPayable = signal(false);
 
   // Linking state
   allProducts = signal<Product[]>([]);
   linkForm = {
     productVariantId: '',
     supplierSku: '',
-    lastCost: 0
+    lastCost: 0,
+    unitOfMeasure: 'UN'
   };
   linkingProduct = signal(false);
 
@@ -930,6 +1048,8 @@ export class ProveedoresComponent implements OnInit {
     this.selectedSupplier.set(supplier);
     this.detailTab.set('resumen');
     this.loadSupplierProducts(supplier.id);
+    this.loadSupplierOrders(supplier.id);
+    this.loadSupplierPayables(supplier.id);
   }
 
   closeSupplierDetails() {
@@ -957,10 +1077,11 @@ export class ProveedoresComponent implements OnInit {
     this.supplierService.addSupplierProduct(sId, {
       productVariantId: this.linkForm.productVariantId,
       supplierSku: this.linkForm.supplierSku,
-      lastCost: this.linkForm.lastCost
+      lastCost: this.linkForm.lastCost,
+      unitOfMeasure: this.linkForm.unitOfMeasure
     }).subscribe({
       next: () => {
-        this.linkForm = { productVariantId: '', supplierSku: '', lastCost: 0 };
+        this.linkForm = { productVariantId: '', supplierSku: '', lastCost: 0, unitOfMeasure: 'UN' };
         this.linkingProduct.set(false);
         this.loadSupplierProducts(sId);
       },
@@ -972,24 +1093,87 @@ export class ProveedoresComponent implements OnInit {
     });
   }
 
-  // Mocks for Logic Requirements
-  mockCompromisos(id: string) {
-    const seed = id.charCodeAt(0) % 3; // Deterministic pseudo-random based on id
-    if (seed === 0) return [];
-    return [
-      { id: 1, date: '15/06/2026', doc: 'Factura #9901', amount: 1500000, status: 'pending', statusStr: 'Pendiente' },
-      { id: 2, date: '01/06/2026', doc: 'Factura #9850', amount: 500000, status: 'paid', statusStr: 'Pagado' }
-    ];
+  loadSupplierOrders(supplierId: string) {
+    this.loadingOrders.set(true);
+    this.supplierService.getSupplierOrders(supplierId).subscribe({
+      next: (orders) => {
+        this.supplierOrders.set(orders || []);
+        this.loadingOrders.set(false);
+      },
+      error: () => {
+        this.supplierOrders.set([]);
+        this.loadingOrders.set(false);
+      }
+    });
   }
 
-  mockOrdenes(id: string) {
-    const seed = (id.charCodeAt(id.length-1)) % 4;
-    if (seed === 0) return [];
-    return [
-      { id: 'OC-2026-0045', date: '10/06/2026', amount: 450000, status: 'delivered', statusStr: 'Recibida' },
-      { id: 'OC-2026-0038', date: '05/06/2026', amount: 120000, status: 'delivered', statusStr: 'Recibida' },
-      { id: 'OC-2026-0012', date: '15/05/2026', amount: 890000, status: 'processing', statusStr: 'En Proceso' }
-    ];
+  loadSupplierPayables(supplierId: string) {
+    this.loadingPayables.set(true);
+    this.supplierService.getSupplierPayables(supplierId).subscribe({
+      next: (payables) => {
+        this.supplierPayables.set(payables || []);
+        this.loadingPayables.set(false);
+      },
+      error: () => {
+        this.supplierPayables.set([]);
+        this.loadingPayables.set(false);
+      }
+    });
+  }
+
+  createPayable() {
+    const sId = this.selectedSupplier()?.id;
+    if (!sId) return;
+    
+    this.creatingPayable.set(true);
+    this.supplierService.createPayable({
+      supplierId: sId,
+      documentNumber: this.payableForm.documentNumber,
+      documentType: this.payableForm.documentType,
+      issueDate: this.payableForm.issueDate,
+      dueDate: this.payableForm.dueDate,
+      amount: this.payableForm.amount,
+      balance: this.payableForm.amount,
+      status: 'PENDING'
+    }).subscribe({
+      next: () => {
+        this.payableForm = { documentNumber: '', documentType: 'FACTURA', issueDate: '', dueDate: '', amount: 0 };
+        this.creatingPayable.set(false);
+        this.loadSupplierPayables(sId);
+      },
+      error: (err) => {
+        console.error('Error creating payable', err);
+        this.creatingPayable.set(false);
+      }
+    });
+  }
+
+  payAccountPayable(id: string) {
+    if (!confirm('¿Marcar como pagado?')) return;
+    this.supplierService.payAccountPayable(id).subscribe({
+      next: () => {
+        const sId = this.selectedSupplier()?.id;
+        if (sId) this.loadSupplierPayables(sId);
+      },
+      error: (err) => console.error('Error paying', err)
+    });
+  }
+
+  getDaysLeft(dueDate: string): number {
+    const diff = new Date(dueDate).getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 3600 * 24)));
+  }
+
+  getPendingPayablesTotal(): number {
+    return this.supplierPayables()
+      .filter(p => p.status === 'PENDING')
+      .reduce((sum, p) => sum + p.amount, 0);
+  }
+
+  getPaidPayablesTotal(): number {
+    return this.supplierPayables()
+      .filter(p => p.status === 'PAID')
+      .reduce((sum, p) => sum + p.amount, 0);
   }
 
   // Form Modals
@@ -1075,9 +1259,11 @@ export class ProveedoresComponent implements OnInit {
 
   // Helpers
   formatCurrency(value: number): string {
-    if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
-    if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
-    return '$' + value.toFixed(0);
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0
+    }).format(value);
   }
 
   getOnTimePercent(s: Supplier): number {

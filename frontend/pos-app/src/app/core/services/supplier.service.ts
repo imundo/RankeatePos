@@ -56,11 +56,39 @@ export interface SupplierStats {
     avgRating: number;
 }
 
+export interface PurchaseOrder {
+    id: string;
+    orderNumber: number;
+    orderDate: string;
+    subtotal: number;
+    taxAmount: number;
+    total: number;
+    status: string;
+    itemsCount?: number;
+}
+
+export interface AccountPayable {
+    id: string;
+    tenantId: string;
+    supplierId: string;
+    purchaseOrderId?: string;
+    orderNumber?: number;
+    documentNumber: string;
+    documentType: string;
+    issueDate: string;
+    dueDate: string;
+    amount: number;
+    balance: number;
+    status: string;
+    daysLeft?: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
 export class SupplierService {
     private apiUrl = `${environment.apiUrl}/suppliers`;
+    private purchasesUrl = `${environment.apiUrl}/purchases`;
 
     constructor(private http: HttpClient) { }
 
@@ -115,5 +143,23 @@ export class SupplierService {
 
     removeSupplierProduct(supplierId: string, variantId: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${supplierId}/products/${variantId}`);
+    }
+
+    // Purchase Orders
+    getSupplierOrders(supplierId: string): Observable<PurchaseOrder[]> {
+        return this.http.get<PurchaseOrder[]>(`${this.purchasesUrl}/orders/supplier/${supplierId}`);
+    }
+
+    // Accounts Payable
+    getSupplierPayables(supplierId: string): Observable<AccountPayable[]> {
+        return this.http.get<AccountPayable[]>(`${this.purchasesUrl}/payables/supplier/${supplierId}`);
+    }
+
+    createPayable(payable: Partial<AccountPayable>): Observable<AccountPayable> {
+        return this.http.post<AccountPayable>(`${this.purchasesUrl}/payables`, payable);
+    }
+
+    payAccountPayable(id: string): Observable<AccountPayable> {
+        return this.http.post<AccountPayable>(`${this.purchasesUrl}/payables/${id}/pay`, {});
     }
 }

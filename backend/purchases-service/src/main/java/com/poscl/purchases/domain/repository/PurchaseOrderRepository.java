@@ -21,6 +21,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
     
     List<PurchaseOrder> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     
+    List<PurchaseOrder> findByTenantIdAndSupplierIdOrderByCreatedAtDesc(UUID tenantId, UUID supplierId);
+    
     List<PurchaseOrder> findByTenantIdAndStatus(UUID tenantId, PurchaseOrderStatus status);
     
     @Query("SELECT COALESCE(MAX(po.orderNumber), 2000) FROM PurchaseOrder po WHERE po.tenantId = :tenantId")
