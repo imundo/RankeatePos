@@ -377,7 +377,16 @@ public class BillingController {
 
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+        try {
+            ResponseEntity<Object> response = restTemplate.exchange(urlBuilder.toString(), HttpMethod.GET, new HttpEntity<>(headers), Object.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response.getBody());
+        } catch (Exception e) {
+            log.error("BFF: Error calling Billing Service getLibroVentas: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "BFF Error getting libro ventas", "detail", e.getMessage()));
+        }
     }
 
     // ==================== CERTIFICACIÓN ====================
@@ -405,7 +414,17 @@ public class BillingController {
         String url = billingServiceUrl + "/api/billing/reports/sales-book/excel?from=" + from + "&to=" + to;
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+        try {
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"libro_ventas.xlsx\"")
+                    .body(response.getBody());
+        } catch (Exception e) {
+            log.error("BFF: Error calling Billing Service downloadSalesBookExcel: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "BFF Error", "detail", e.getMessage()));
+        }
     }
 
     @GetMapping("/reports/sales-book/pdf")
@@ -418,7 +437,17 @@ public class BillingController {
         String url = billingServiceUrl + "/api/billing/reports/sales-book/pdf?from=" + from + "&to=" + to;
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
-        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+        try {
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"libro_ventas.pdf\"")
+                    .body(response.getBody());
+        } catch (Exception e) {
+            log.error("BFF: Error calling Billing Service downloadSalesBookPdf: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "BFF Error", "detail", e.getMessage()));
+        }
     }
 
     // ==================== HELPER ====================
