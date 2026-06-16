@@ -361,6 +361,8 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                       <select [(ngModel)]="payableForm.documentType" name="docType">
                         <option value="FACTURA">Factura</option>
                         <option value="BOLETA">Boleta</option>
+                        <option value="NOTA_DEBITO">Nota de Débito</option>
+                        <option value="NOTA_CREDITO">Nota de Crédito</option>
                         <option value="RECIBO">Recibo / Otro</option>
                       </select>
                     </div>
@@ -857,6 +859,13 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
     .slide-over-header { padding: 24px 24px 0; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); }
     .slide-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-actions-sm { display: flex; gap: 8px; }
+    
+    .close-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1.2rem; }
+    .close-btn:hover { background: rgba(239,68,68,0.2); color: #f87171; border-color: rgba(239,68,68,0.3); transform: scale(1.05); }
+
+    .action-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+    .action-btn:hover { background: rgba(99,102,241,0.2); color: #818cf8; border-color: rgba(99,102,241,0.3); transform: scale(1.05); }
+
     .slide-supplier-profile { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
     .slide-avatar { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
     .slide-profile-info h2 { margin: 0 0 6px 0; font-size: 1.4rem; color: #fff; }
