@@ -55,6 +55,17 @@ public class PurchasesController {
                 Object.class);
     }
 
+    @PatchMapping("/suppliers/{id}/rating")
+    public ResponseEntity<?> updateRating(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request) {
+        String url = purchasesServiceUrl + "/api/v1/suppliers/" + id + "/rating";
+        return restTemplate.exchange(url, HttpMethod.PATCH,
+                new HttpEntity<>(request, createHeaders(authHeader, tenantId)), Object.class);
+    }
+
     // ==================== PURCHASE ORDERS ====================
 
     @GetMapping("/orders")

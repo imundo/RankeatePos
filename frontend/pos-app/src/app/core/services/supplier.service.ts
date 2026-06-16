@@ -122,7 +122,7 @@ export class SupplierService {
     }
 
     updateRating(id: string, rating: number): Observable<Supplier> {
-        return this.http.patch<Supplier>(`${this.apiUrl}/${id}/rating`, { rating });
+        return this.http.patch<Supplier>(`${this.purchasesUrl}/suppliers/${id}/rating`, { rating });
     }
 
     deleteSupplier(id: string): Observable<void> {

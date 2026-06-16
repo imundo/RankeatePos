@@ -34,7 +34,15 @@ public class AccountPayableService {
     public AccountPayableDto create(UUID tenantId, AccountPayableDto dto) {
         Supplier supplier = supplierRepository.findById(dto.getSupplierId())
                 .filter(s -> s.getTenantId().equals(tenantId))
-                .orElseThrow(() -> new RuntimeException("Supplier not found"));
+                .orElseGet(() -> {
+                     Supplier newSupplier = Supplier.builder()
+                             .id(dto.getSupplierId())
+                             .tenantId(tenantId)
+                             .businessName(dto.getSupplierName() != null ? dto.getSupplierName() : "Proveedor " + dto.getSupplierId())
+                             .rut("0-0")
+                             .build();
+                     return supplierRepository.save(newSupplier);
+                });
 
         AccountPayable entity = mapper.toEntity(dto);
         entity.setTenantId(tenantId);
