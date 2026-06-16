@@ -274,6 +274,16 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                   <span class="tag category-tag">{{ getCategoryLabel(sup.category) }}</span>
                   <span class="status-dot" [class]="sup.status?.toLowerCase() || (sup.isActive ? 'active' : 'inactive')"></span>
                 </div>
+                <!-- Interactive Rating in Header -->
+                <div class="rating-row" style="margin-top: 8px;">
+                  <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-right: 6px;">Valoración:</span>
+                  <div class="stars">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <span class="star" [class.filled]="star <= (sup.trustRating || 0)" (click)="setRating(sup, star)" style="cursor: pointer;">★</span>
+                    }
+                  </div>
+                  <span class="rating-value" style="margin-left: 6px;">{{ (sup.trustRating || 0).toFixed(1) }}</span>
+                </div>
               </div>
             </div>
 
@@ -523,17 +533,18 @@ import { CatalogService, Product } from '../../../core/services/catalog.service'
                 } @else {
                   <table class="mock-table" style="margin-top: 16px;">
                     <thead>
-                      <tr><th>SKU Prov</th><th>Producto</th><th>Costo Ref.</th></tr>
+                      <tr><th>SKU Prov</th><th>Producto</th><th>U. Medida</th><th>Costo Ref.</th></tr>
                     </thead>
                     <tbody>
                       @for(p of supplierProducts(); track p.id) {
                         <tr>
                           <td><span class="neon-tag pending">{{ p.supplierSku || 'N/A' }}</span></td>
                           <td class="font-bold">{{ p.productVariantName }}</td>
+                          <td class="td-muted">{{ getUomLabel(p.unitOfMeasure) }}</td>
                           <td class="text-green-400 font-bold">{{ formatCurrency(p.lastCost || 0) }}</td>
                         </tr>
                       } @empty {
-                        <tr><td colspan="3" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
+                        <tr><td colspan="4" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
                       }
                     </tbody>
                   </table>
@@ -1285,6 +1296,14 @@ export class ProveedoresComponent implements OnInit {
       FOOD: 'Alimentos', BEVERAGES: 'Bebidas', CLEANING: 'Limpieza', OFFICE: 'Oficina'
     };
     return labels[cat] || cat || 'General';
+  }
+
+  getUomLabel(uom: string): string {
+    const labels: Record<string, string> = {
+      UN: 'Individual', DOZ: 'Docena', BOX: 'Caja',
+      PACK: 'Pack', KG: 'Kilos', LT: 'Litros', PALLET: 'Pallet'
+    };
+    return labels[uom] || uom || 'UN';
   }
 
   getDeliveryLabel(dt: string): string {
