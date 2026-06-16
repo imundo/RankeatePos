@@ -6,7 +6,10 @@ import { Supplier } from './supplier.service';
 
 export enum PurchaseOrderStatus {
     DRAFT = 'DRAFT',
+    PENDING_APPROVAL = 'PENDING_APPROVAL',
+    APPROVED = 'APPROVED',
     SENT = 'SENT',
+    PARTIAL = 'PARTIAL',
     RECEIVED = 'RECEIVED',
     CANCELLED = 'CANCELLED'
 }
@@ -51,15 +54,17 @@ export interface CreatePurchaseOrderItemRequest {
     providedIn: 'root'
 })
 export class PurchaseOrderService {
-    private apiUrl = `${environment.apiUrl}/orders`;
+    // Apuntamos al BFF Gateway en lugar del microservicio directo
+    private apiUrl = `${environment.apiUrl}/purchases/orders`;
 
     constructor(private http: HttpClient) { }
 
-    getOrders(page = 0, size = 20): Observable<any> {
-        let params = new HttpParams()
-            .set('page', page.toString())
-            .set('size', size.toString());
-        return this.http.get<any>(this.apiUrl, { params });
+    getOrders(status?: string): Observable<PurchaseOrder[]> {
+        let params = new HttpParams();
+        if (status && status !== 'ALL') {
+            params = params.set('status', status);
+        }
+        return this.http.get<PurchaseOrder[]>(this.apiUrl, { params });
     }
 
     getOrder(id: string): Observable<PurchaseOrder> {

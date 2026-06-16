@@ -127,11 +127,11 @@ export class RecepcionMercaderiaComponent implements OnInit {
 
   loadOrders() {
     this.loading.set(true);
-    this.purchaseOrderService.getOrders(0, 50).subscribe({
+    // Solo cargamos las órdenes que ya fueron ENVIADAS (SENT) o PARCIALES
+    this.purchaseOrderService.getOrders('SENT').subscribe({
       next: (data) => {
-        const allOrders: PurchaseOrder[] = data.content || [];
-        // Filter SENT orders locally for now (Better to have API filter)
-        this.pendingOrders.set(allOrders.filter(o => o.status === 'SENT'));
+        const allOrders: PurchaseOrder[] = data || [];
+        this.pendingOrders.set(allOrders);
 
         // Filter RECEIVED orders
         this.recentReceipts.set(allOrders.filter(o => o.status === 'RECEIVED')

@@ -82,11 +82,13 @@ import { environment } from '../../../../environments/environment';
             <div class="order-item">
               <div class="order-info">
                 <span class="order-number">OC-{{ order.orderNumber }}</span>
-                <span class="order-supplier">{{ order.supplierName }}</span>
+                <span class="order-supplier">{{ order.supplier?.nombre || 'Proveedor Desconocido' }}</span>
               </div>
-              <span class="order-total">{{ order.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</span>
+              <span class="order-total">{{ order.totalAmount | currency:'CLP':'symbol-narrow':'1.0-0' }}</span>
               <span class="order-status" [class]="order.status.toLowerCase()">{{ getStatusLabel(order.status) }}</span>
             </div>
+          } @empty {
+            <div class="text-center py-4" style="color: rgba(255,255,255,0.5);">No hay órdenes recientes</div>
           }
         </div>
       </section>
@@ -177,17 +179,12 @@ export class ComprasDashboardComponent implements OnInit {
     // Load recent orders
     this.http.get<any[]>(`${this.baseUrl}/orders`).subscribe({
       next: (orders) => {
-        this.recentOrders.set(orders || []);
+        // Take only top 5 recent for dashboard
+        this.recentOrders.set((orders || []).slice(0, 5));
         this.loading.set(false);
       },
       error: () => {
-        this.recentOrders.set([
-          { id: '1', orderNumber: 2045, supplierName: 'Distribuidora Nacional SpA', total: 3500000, status: 'APPROVED' },
-          { id: '2', orderNumber: 2044, supplierName: 'Importadora del Pacífico Ltda', total: 1800000, status: 'SENT' },
-          { id: '3', orderNumber: 2043, supplierName: 'Comercial Norte Grande', total: 2200000, status: 'RECEIVED' },
-          { id: '4', orderNumber: 2042, supplierName: 'Alimentos Premium Chile', total: 950000, status: 'DRAFT' },
-          { id: '5', orderNumber: 2041, supplierName: 'Tecnología y Servicios TI', total: 4500000, status: 'PARTIAL' }
-        ]);
+        this.recentOrders.set([]);
         this.loading.set(false);
       }
     });
