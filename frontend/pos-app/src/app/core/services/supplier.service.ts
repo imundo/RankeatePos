@@ -48,6 +48,7 @@ export interface SupplierProduct {
     productVariantName: string;
     supplierSku: string;
     lastCost: number;
+    unitOfMeasure?: string;
 }
 
 export interface SupplierStats {
