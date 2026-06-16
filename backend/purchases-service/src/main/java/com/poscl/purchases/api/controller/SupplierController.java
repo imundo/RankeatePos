@@ -67,7 +67,7 @@ public class SupplierController {
         return ResponseEntity.ok(mapSupplier(result));
     }
 
-    @PatchMapping("/{id}/rating")
+    @PutMapping("/{id}/rating")
     public ResponseEntity<?> updateRating(
             @RequestHeader("X-Tenant-Id") String tenantId,
             @PathVariable UUID id,
