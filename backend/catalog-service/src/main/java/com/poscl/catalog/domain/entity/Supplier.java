@@ -49,6 +49,45 @@ public class Supplier {
     @Column(name = "plazo_pago", length = 50)
     private String plazoPago;
 
+    @Column(name = "fantasy_name", length = 100)
+    private String fantasyName;
+
+    @Column(length = 100)
+    private String giro;
+
+    @Column(length = 150)
+    private String website;
+
+    @Column(length = 100)
+    private String city;
+
+    @Column(name = "discount_percentage", precision = 5, scale = 2)
+    private java.math.BigDecimal discountPercentage;
+
+    @Column(length = 10)
+    private String currency;
+
+    @Column(name = "bank_account", length = 50)
+    private String bankAccount;
+
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
+
+    @Column(length = 50)
+    private String category;
+
+    @Column(name = "delivery_type", length = 50)
+    private String deliveryType;
+
+    @Column(name = "avg_delivery_days")
+    private Integer avgDeliveryDays;
+
+    @Column(name = "payment_terms")
+    private Integer paymentTerms;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean activo = true;

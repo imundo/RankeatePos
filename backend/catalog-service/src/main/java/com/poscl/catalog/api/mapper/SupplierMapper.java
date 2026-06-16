@@ -9,8 +9,18 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface SupplierMapper {
 
+    @Mapping(target = "businessName", source = "nombre")
+    @Mapping(target = "address", source = "direccion")
+    @Mapping(target = "contactName", source = "contacto")
+    @Mapping(target = "phone", source = "telefono")
+    @Mapping(target = "isActive", source = "activo")
     SupplierDto toDto(Supplier supplier);
 
+    @Mapping(target = "nombre", source = "businessName")
+    @Mapping(target = "direccion", source = "address")
+    @Mapping(target = "contacto", source = "contactName")
+    @Mapping(target = "telefono", source = "phone")
+    @Mapping(target = "activo", source = "isActive")
     Supplier toEntity(SupplierDto dto);
 
     @Mapping(source = "productVariant.fullName", target = "productVariantName")
@@ -31,5 +41,10 @@ public interface SupplierMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "nombre", source = "businessName")
+    @Mapping(target = "direccion", source = "address")
+    @Mapping(target = "contacto", source = "contactName")
+    @Mapping(target = "telefono", source = "phone")
+    @Mapping(target = "activo", source = "isActive")
     void updateEntityFromDto(SupplierDto dto, @MappingTarget Supplier supplier);
 }
