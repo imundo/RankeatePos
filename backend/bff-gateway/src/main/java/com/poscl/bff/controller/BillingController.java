@@ -362,7 +362,7 @@ public class BillingController {
 
     // ==================== LIBRO DE VENTAS ====================
 
-    @GetMapping("/libro-ventas")
+    @GetMapping("/dte/libro-ventas")
     public ResponseEntity<?> getLibroVentas(
             @RequestHeader("Authorization") String authHeader,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -403,6 +403,19 @@ public class BillingController {
             @RequestParam String to) {
 
         String url = billingServiceUrl + "/api/billing/reports/sales-book/excel?from=" + from + "&to=" + to;
+        HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
+
+        return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+    }
+
+    @GetMapping("/reports/sales-book/pdf")
+    public ResponseEntity<?> downloadSalesBookPdf(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam String from,
+            @RequestParam String to) {
+
+        String url = billingServiceUrl + "/api/billing/reports/sales-book/pdf?from=" + from + "&to=" + to;
         HttpHeaders headers = createSimpleHeaders(authHeader, tenantId);
 
         return restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
