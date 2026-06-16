@@ -140,6 +140,56 @@ public class PurchasesController {
         return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
     }
 
+    @PostMapping("/orders/{id}/submit")
+    public ResponseEntity<?> submitPurchaseOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id + "/submit";
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+    }
+
+    @PostMapping("/orders/{id}/receive")
+    public ResponseEntity<?> receivePurchaseOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id + "/receive";
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+    }
+
+    @PostMapping("/orders/{id}/cancel")
+    public ResponseEntity<?> cancelPurchaseOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id + "/cancel";
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+    }
+
+    @PostMapping("/orders/{id}/send")
+    public ResponseEntity<?> sendPurchaseOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id + "/send";
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+    }
+
+    @DeleteMapping("/orders/{id}")
+    public ResponseEntity<?> deletePurchaseOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String id) {
+        String url = purchasesServiceUrl + "/api/v1/purchase-orders/" + id;
+        ResponseEntity<?> response = restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(createHeaders(authHeader, tenantId)), Object.class);
+        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+    }
+
     // ==================== ACCOUNTS PAYABLE ====================
 
     @GetMapping("/payables/supplier/{supplierId}")

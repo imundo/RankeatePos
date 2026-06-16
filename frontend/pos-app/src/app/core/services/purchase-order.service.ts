@@ -46,6 +46,8 @@ export interface CreatePurchaseOrderRequest {
 
 export interface CreatePurchaseOrderItemRequest {
     productVariantId: string;
+    productName: string;
+    productSku: string;
     quantity: number;
     unitCost: number;
 }
@@ -77,6 +79,10 @@ export class PurchaseOrderService {
 
     submitOrder(id: string): Observable<PurchaseOrder> {
         return this.http.post<PurchaseOrder>(`${this.apiUrl}/${id}/submit`, {});
+    }
+
+    sendOrder(id: string): Observable<PurchaseOrder> {
+        return this.http.post<PurchaseOrder>(`${this.apiUrl}/${id}/send`, {});
     }
 
     receiveOrder(id: string): Observable<PurchaseOrder> {

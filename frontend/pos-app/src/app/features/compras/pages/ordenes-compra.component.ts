@@ -343,9 +343,7 @@ export class OrdenesCompraComponent implements OnInit {
   sendOrder(order: PurchaseOrder) {
     if (!confirm('¿Marcar Orden #' + order.orderNumber + ' como enviada al proveedor?')) return;
 
-    // Assuming backend has send method mapped or we reuse submit logic
-    // Currently PurchaseOrderController has /{id}/send
-    this.purchaseOrderService.submitOrder(order.id).subscribe({
+    this.purchaseOrderService.sendOrder(order.id).subscribe({
        next: () => this.loadOrders(),
        error: (e) => alert('Error al enviar la orden.')
     });

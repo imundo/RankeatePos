@@ -270,6 +270,8 @@ export class CrearOrdenCompraComponent implements OnInit {
 
     const requestItems: CreatePurchaseOrderItemRequest[] = this.items().map(item => ({
       productVariantId: item.productVariantId,
+      productName: item.name,
+      productSku: item.sku,
       quantity: item.quantity,
       unitCost: item.unitCost
     })).filter(i => i.productVariantId); // Filter empty rows

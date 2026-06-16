@@ -71,10 +71,10 @@ public class PurchaseOrderController {
     @PostMapping
     public ResponseEntity<?> createPurchaseOrder(
             @RequestHeader("X-Tenant-Id") String tenantId,
-            @RequestBody PurchaseOrder order) {
+            @RequestBody com.poscl.purchases.api.dto.CreatePurchaseOrderRequest request) {
         
         UUID tid = parseTenantId(tenantId);
-        PurchaseOrder created = orderService.create(tid, order);
+        PurchaseOrder created = orderService.create(tid, request);
         return ResponseEntity.ok(mapOrder(created));
     }
 
@@ -106,6 +106,36 @@ public class PurchaseOrderController {
         UUID tid = parseTenantId(tenantId);
         PurchaseOrder received = orderService.receive(tid, id);
         return ResponseEntity.ok(mapOrder(received));
+    }
+
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<?> submitOrder(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder submitted = orderService.submit(tid, id);
+        return ResponseEntity.ok(mapOrder(submitted));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        PurchaseOrder cancelled = orderService.cancel(tid, id);
+        return ResponseEntity.ok(mapOrder(cancelled));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOrder(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @PathVariable UUID id) {
+        
+        UUID tid = parseTenantId(tenantId);
+        orderService.delete(tid, id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/summary")
