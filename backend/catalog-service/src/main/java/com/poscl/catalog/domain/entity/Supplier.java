@@ -28,7 +28,7 @@ public class Supplier {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "business_name", nullable = false, length = 100)
     private String nombre;
 
     @Column(length = 20)
@@ -37,16 +37,16 @@ public class Supplier {
     @Column(length = 100)
     private String email;
 
-    @Column(length = 20)
+    @Column(name = "phone", length = 20)
     private String telefono;
 
-    @Column(length = 200)
+    @Column(name = "address", length = 200)
     private String direccion;
 
-    @Column(length = 100)
+    @Column(name = "contact_name", length = 100)
     private String contacto;
 
-    @Column(name = "plazo_pago", length = 50)
+    @Transient
     private String plazoPago;
 
     @Column(name = "fantasy_name", length = 100)
@@ -88,7 +88,7 @@ public class Supplier {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean activo = true;
 
