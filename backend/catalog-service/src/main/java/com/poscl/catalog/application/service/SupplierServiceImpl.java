@@ -62,6 +62,9 @@ public class SupplierServiceImpl implements SupplierService {
     public SupplierDto createSupplier(String tenantId, SupplierDto supplierDto) {
         Supplier supplier = supplierMapper.toEntity(supplierDto);
         supplier.setTenantId(UUID.fromString(tenantId));
+        if (supplier.getActivo() == null) {
+            supplier.setActivo(true);
+        }
         return supplierMapper.toDto(supplierRepository.save(supplier));
     }
 

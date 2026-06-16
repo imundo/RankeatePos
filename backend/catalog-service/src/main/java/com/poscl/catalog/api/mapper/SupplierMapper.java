@@ -20,7 +20,7 @@ public interface SupplierMapper {
     @Mapping(target = "direccion", source = "address")
     @Mapping(target = "contacto", source = "contactName")
     @Mapping(target = "telefono", source = "phone")
-    @Mapping(target = "activo", source = "isActive")
+    @Mapping(target = "activo", source = "isActive", nullValueCheckStrategy = org.mapstruct.NullValueCheckStrategy.ALWAYS, nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     Supplier toEntity(SupplierDto dto);
 
     @Mapping(source = "productVariant.fullName", target = "productVariantName")
@@ -45,6 +45,6 @@ public interface SupplierMapper {
     @Mapping(target = "direccion", source = "address")
     @Mapping(target = "contacto", source = "contactName")
     @Mapping(target = "telefono", source = "phone")
-    @Mapping(target = "activo", source = "isActive")
+    @Mapping(target = "activo", source = "isActive", nullValueCheckStrategy = org.mapstruct.NullValueCheckStrategy.ALWAYS, nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(SupplierDto dto, @MappingTarget Supplier supplier);
 }
