@@ -313,8 +313,14 @@ public class DteService {
      */
     @Transactional(readOnly = true)
     public List<DteResponse> getLibroVentas(UUID tenantId, LocalDate desde, LocalDate hasta, TipoDte tipoDte) {
-        return dteRepository.findForLibroVentas(tenantId, desde, hasta, tipoDte)
-                .stream()
+        List<com.poscl.billing.domain.entity.Dte> dtes;
+        if (tipoDte == null) {
+            dtes = dteRepository.findAllByTenantIdAndFechaEmisionBetween(tenantId, desde, hasta);
+        } else {
+            dtes = dteRepository.findForLibroVentas(tenantId, desde, hasta, tipoDte);
+        }
+        
+        return dtes.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
