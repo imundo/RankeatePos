@@ -180,7 +180,7 @@ import { BillingService, Dte } from '../../../core/services/billing.service';
                               [ngClass]="{
                                 'aceptado': doc.estado === 'ACEPTADO',
                                 'pendiente': doc.estado === 'PENDIENTE',
-                                'rechazado': doc.estado === 'RECHAZADO' || doc.estado === 'RECHAZADO_POR_SII'
+                                'rechazado': doc.estado === 'RECHAZADO'
                               }">
                             {{ doc.estadoDescripcion || doc.estado }}
                         </span>
