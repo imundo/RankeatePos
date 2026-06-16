@@ -2,14 +2,14 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SupplierService, Supplier } from '../../../core/services/supplier.service';
+import { SupplierService, Supplier, SupplierProduct } from '../../../core/services/supplier.service';
 
 @Component({
   selector: 'app-proveedores',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="page-container">
+    <div class="page-container" [class.panel-open]="selectedSupplier() != null">
       <!-- Header -->
       <header class="page-header">
         <div class="header-left">
@@ -21,7 +21,7 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
             <span class="title-icon">🏭</span>
             Gestión de Proveedores
           </h1>
-          <p class="subtitle">Control integral de proveedores, pagos y entregas</p>
+          <p class="subtitle">Centro de Control de Compras, Pagos y Desempeño</p>
         </div>
         <div class="header-actions">
           <div class="search-box">
@@ -67,25 +67,31 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs-bar">
-        <button class="tab" [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          Lista
-        </button>
-        <button class="tab" [class.active]="activeTab === 'ranking'" (click)="activeTab = 'ranking'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Ranking
-        </button>
+      <!-- Main Tools Bar (Tabs + View Toggle) -->
+      <div class="tools-bar">
+        <div class="tabs-bar">
+          <button class="tab" [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">Directorio</button>
+          <button class="tab" [class.active]="activeTab === 'ranking'" (click)="activeTab = 'ranking'">Ranking</button>
+        </div>
+        
+        @if (activeTab === 'list') {
+          <div class="view-toggle">
+            <button class="icon-btn" [class.active]="isGridMode()" (click)="isGridMode.set(true)" title="Vista Grilla">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+            </button>
+            <button class="icon-btn" [class.active]="!isGridMode()" (click)="isGridMode.set(false)" title="Vista Tarjetas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+          </div>
+        }
       </div>
 
       @if (loading()) {
         <div class="loading-state">
           <div class="spinner"></div>
-          <p>Cargando proveedores...</p>
+          <p>Sincronizando proveedores...</p>
         </div>
       } @else {
-
         <!-- LIST TAB -->
         @if (activeTab === 'list') {
           <!-- Filter chips -->
@@ -96,95 +102,126 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
             <button class="filter-chip" [class.active]="statusFilter === 'blocked'" (click)="statusFilter = 'blocked'; onSearch()">Bloqueados</button>
           </div>
 
-          <div class="suppliers-grid">
-            @for (supplier of filteredSuppliers(); track supplier.id) {
-              <div class="supplier-card" [class.inactive]="!supplier.isActive">
-                <div class="card-header">
-                  <div class="supplier-avatar" [style.background]="getAvatarColor(supplier)">
-                    {{ (supplier.fantasyName || supplier.businessName || '?').charAt(0).toUpperCase() }}
+          <!-- GRID VIEW (TABLE) -->
+          @if (isGridMode()) {
+            <div class="grid-wrapper">
+              <table class="premium-table">
+                <thead>
+                  <tr>
+                    <th>Proveedor</th>
+                    <th>RUT</th>
+                    <th>Categoría</th>
+                    <th>Contacto</th>
+                    <th>Condiciones</th>
+                    <th>Desempeño</th>
+                    <th class="text-right">Total Compras</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (supplier of filteredSuppliers(); track supplier.id) {
+                    <tr class="interactive-row" (click)="openSupplierDetails(supplier)">
+                      <td>
+                        <div class="td-supplier-info">
+                          <div class="td-avatar" [style.background]="getAvatarColor(supplier)">
+                            {{ (supplier.fantasyName || supplier.businessName || '?').charAt(0).toUpperCase() }}
+                          </div>
+                          <div class="td-names">
+                            <span class="td-fantasy">{{ supplier.fantasyName || supplier.businessName }}</span>
+                            <span class="td-business">{{ supplier.businessName }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="td-muted">{{ supplier.rut }}</td>
+                      <td><span class="tag category-tag">{{ getCategoryLabel(supplier.category) }}</span></td>
+                      <td class="td-muted">{{ supplier.contactName || 'Sin contacto' }}<br><small>{{ supplier.phone }}</small></td>
+                      <td>
+                        <div class="td-condiciones">
+                          <span>{{ supplier.paymentTerms || 30 }} días</span>
+                          @if(supplier.discountPercentage) { <span class="badge-dcto">-{{supplier.discountPercentage}}%</span> }
+                        </div>
+                      </td>
+                      <td>
+                        <div class="td-rating">
+                          <span class="star filled">★</span> {{ (supplier.trustRating || 0).toFixed(1) }}
+                        </div>
+                      </td>
+                      <td class="text-right font-bold text-gradient">
+                        {{ formatCurrency(supplier.totalSpent || 0) }}
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">No hay proveedores que coincidan con los filtros.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- CARDS VIEW -->
+            <div class="suppliers-grid">
+              @for (supplier of filteredSuppliers(); track supplier.id) {
+                <div class="supplier-card" [class.inactive]="!supplier.isActive" (click)="openSupplierDetails(supplier)">
+                  <div class="card-header">
+                    <div class="supplier-avatar" [style.background]="getAvatarColor(supplier)">
+                      {{ (supplier.fantasyName || supplier.businessName || '?').charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="card-info">
+                      <h3>{{ supplier.fantasyName || supplier.businessName }}</h3>
+                      <span class="supplier-rut">{{ supplier.rut }}</span>
+                    </div>
+                    <div class="card-status">
+                      <span class="status-dot" [class]="supplier.status?.toLowerCase() || (supplier.isActive ? 'active' : 'inactive')"></span>
+                    </div>
                   </div>
-                  <div class="card-info">
-                    <h3>{{ supplier.fantasyName || supplier.businessName }}</h3>
-                    <span class="supplier-rut">{{ supplier.rut }}</span>
-                  </div>
-                  <div class="card-status">
-                    <span class="status-dot" [class]="supplier.status?.toLowerCase() || 'active'"></span>
-                  </div>
-                </div>
 
-                <div class="card-body">
-                  <div class="card-meta">
-                    @if (supplier.category) {
-                      <span class="tag category-tag">{{ getCategoryLabel(supplier.category) }}</span>
-                    }
-                    @if (supplier.deliveryType) {
-                      <span class="tag delivery-tag">{{ getDeliveryLabel(supplier.deliveryType) }}</span>
-                    }
-                  </div>
-
-                  <div class="card-details">
-                    @if (supplier.contactName) {
-                      <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z"/></svg> {{ supplier.contactName }}</div>
-                    }
-                    @if (supplier.phone) {
-                      <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> {{ supplier.phone }}</div>
-                    }
-                    @if (supplier.email) {
-                      <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> {{ supplier.email }}</div>
-                    }
-                  </div>
-
-                  <!-- Rating Stars -->
-                  <div class="rating-row">
-                    <div class="stars">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        <span class="star" [class.filled]="star <= (supplier.trustRating || 0)" (click)="setRating(supplier, star)">★</span>
+                  <div class="card-body">
+                    <div class="card-meta">
+                      @if (supplier.category) {
+                        <span class="tag category-tag">{{ getCategoryLabel(supplier.category) }}</span>
                       }
                     </div>
-                    <span class="rating-value">{{ (supplier.trustRating || 0).toFixed(1) }}</span>
-                  </div>
 
-                  <div class="card-metrics">
-                    <div class="metric">
-                      <span class="metric-value">{{ supplier.paymentTerms || 30 }}d</span>
-                      <span class="metric-label">Plazo pago</span>
+                    <div class="rating-row">
+                      <div class="stars">
+                        @for (star of [1,2,3,4,5]; track star) {
+                          <span class="star" [class.filled]="star <= (supplier.trustRating || 0)" (click)="$event.stopPropagation(); setRating(supplier, star)">★</span>
+                        }
+                      </div>
+                      <span class="rating-value">{{ (supplier.trustRating || 0).toFixed(1) }}</span>
                     </div>
-                    <div class="metric">
-                      <span class="metric-value">{{ supplier.avgDeliveryDays || 0 }}d</span>
-                      <span class="metric-label">Entrega</span>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-value">{{ supplier.totalOrders || 0 }}</span>
-                      <span class="metric-label">Órdenes</span>
+
+                    <div class="card-metrics">
+                      <div class="metric">
+                        <span class="metric-value">{{ supplier.paymentTerms || 30 }}d</span>
+                        <span class="metric-label">Pago</span>
+                      </div>
+                      <div class="metric">
+                        <span class="metric-value">{{ supplier.avgDeliveryDays || 0 }}d</span>
+                        <span class="metric-label">Entrega</span>
+                      </div>
+                      <div class="metric">
+                        <span class="metric-value text-green-400">{{ formatCurrency(supplier.totalSpent || 0) }}</span>
+                        <span class="metric-label">Compras</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <div class="card-actions">
-                  <button class="action-btn" title="Editar" (click)="editSupplier(supplier)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button class="action-btn danger" title="Desactivar" (click)="deleteSupplier(supplier)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                  </button>
+              } @empty {
+                <div class="empty-state">
+                  <div class="empty-icon">🏭</div>
+                  <h3>Sin proveedores</h3>
+                  <p>Agrega tu primer proveedor para comenzar a gestionar compras</p>
+                  <button class="btn btn-primary" (click)="openModal()">Agregar Proveedor</button>
                 </div>
-              </div>
-            } @empty {
-              <div class="empty-state">
-                <div class="empty-icon">🏭</div>
-                <h3>Sin proveedores</h3>
-                <p>Agrega tu primer proveedor para comenzar a gestionar compras</p>
-                <button class="btn btn-primary" (click)="openModal()">Agregar Proveedor</button>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         }
 
         <!-- RANKING TAB -->
         @if (activeTab === 'ranking') {
           <div class="ranking-list">
             @for (supplier of rankedSuppliers(); track supplier.id; let i = $index) {
-              <div class="ranking-item">
+              <div class="ranking-item" (click)="openSupplierDetails(supplier)">
                 <span class="rank-number" [class.top3]="i < 3">{{ i + 1 }}</span>
                 <div class="rank-avatar" [style.background]="getAvatarColor(supplier)">
                   {{ (supplier.fantasyName || supplier.businessName || '?').charAt(0).toUpperCase() }}
@@ -201,7 +238,7 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
                 <div class="rank-metrics">
                   <div class="rm"><span class="rm-val">{{ supplier.totalOrders || 0 }}</span><span class="rm-lbl">Órdenes</span></div>
                   <div class="rm"><span class="rm-val">{{ getOnTimePercent(supplier) }}%</span><span class="rm-lbl">Puntualidad</span></div>
-                  <div class="rm"><span class="rm-val">{{ formatCurrency(supplier.totalSpent || 0) }}</span><span class="rm-lbl">Compras</span></div>
+                  <div class="rm"><span class="rm-val text-green-400">{{ formatCurrency(supplier.totalSpent || 0) }}</span><span class="rm-lbl">Compras</span></div>
                 </div>
               </div>
             } @empty {
@@ -213,6 +250,165 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
         }
       }
 
+      <!-- DETAILS SLIDE-OVER PANEL -->
+      <div class="slide-over-backdrop" [class.visible]="selectedSupplier() != null" (click)="closeSupplierDetails()"></div>
+      <div class="slide-over-panel" [class.open]="selectedSupplier() != null">
+        @if (selectedSupplier(); as sup) {
+          <div class="slide-over-header">
+            <div class="slide-header-top">
+              <button class="close-btn" (click)="closeSupplierDetails()">✕</button>
+              <div class="header-actions-sm">
+                <button class="action-btn" title="Editar" (click)="editSupplier(sup)">✏️</button>
+              </div>
+            </div>
+            
+            <div class="slide-supplier-profile">
+              <div class="slide-avatar" [style.background]="getAvatarColor(sup)">
+                {{ (sup.fantasyName || sup.businessName || '?').charAt(0).toUpperCase() }}
+              </div>
+              <div class="slide-profile-info">
+                <h2>{{ sup.fantasyName || sup.businessName }}</h2>
+                <div class="slide-rut-row">
+                  <span class="rut">{{ sup.rut }}</span>
+                  <span class="tag category-tag">{{ getCategoryLabel(sup.category) }}</span>
+                  <span class="status-dot" [class]="sup.status?.toLowerCase() || (sup.isActive ? 'active' : 'inactive')"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide Tabs -->
+            <div class="slide-tabs">
+              <button [class.active]="detailTab() === 'resumen'" (click)="detailTab.set('resumen')">Resumen</button>
+              <button [class.active]="detailTab() === 'compromisos'" (click)="detailTab.set('compromisos')">Compromisos</button>
+              <button [class.active]="detailTab() === 'ordenes'" (click)="detailTab.set('ordenes')">Órdenes</button>
+              <button [class.active]="detailTab() === 'productos'" (click)="detailTab.set('productos')">Catálogo</button>
+            </div>
+          </div>
+
+          <div class="slide-over-body">
+            
+            @if (detailTab() === 'resumen') {
+              <div class="tab-content resumen-tab">
+                <div class="slide-kpi-grid">
+                  <div class="s-kpi">
+                    <span class="lbl">Total Comprado</span>
+                    <span class="val text-green-400">{{ formatCurrency(sup.totalSpent || 0) }}</span>
+                  </div>
+                  <div class="s-kpi">
+                    <span class="lbl">Órdenes</span>
+                    <span class="val">{{ sup.totalOrders || 0 }}</span>
+                  </div>
+                  <div class="s-kpi">
+                    <span class="lbl">Plazo Pago</span>
+                    <span class="val">{{ sup.paymentTerms || 30 }} días</span>
+                  </div>
+                  <div class="s-kpi">
+                    <span class="lbl">Puntualidad</span>
+                    <span class="val">{{ getOnTimePercent(sup) }}%</span>
+                  </div>
+                </div>
+
+                <div class="info-card">
+                  <h3>Información de Contacto</h3>
+                  <div class="info-row"><span class="i-lbl">Nombre:</span> <span class="i-val">{{ sup.contactName || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Teléfono:</span> <span class="i-val">{{ sup.phone || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Email:</span> <span class="i-val">{{ sup.email || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Dirección:</span> <span class="i-val">{{ sup.address || '—' }}, {{ sup.city || '—' }}</span></div>
+                </div>
+
+                <div class="info-card">
+                  <h3>Datos Bancarios y Comerciales</h3>
+                  <div class="info-row"><span class="i-lbl">Razón Social:</span> <span class="i-val">{{ sup.businessName }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Giro:</span> <span class="i-val">{{ sup.giro || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Moneda:</span> <span class="i-val">{{ sup.currency || 'CLP' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Banco:</span> <span class="i-val">{{ sup.bankName || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Cuenta:</span> <span class="i-val">{{ sup.bankAccount || '—' }}</span></div>
+                  <div class="info-row"><span class="i-lbl">Tipo Entrega:</span> <span class="i-val">{{ getDeliveryLabel(sup.deliveryType) }}</span></div>
+                </div>
+              </div>
+            }
+
+            @if (detailTab() === 'compromisos') {
+              <div class="tab-content compromisos-tab">
+                <div class="alert-box info">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <span>Módulo de Cuentas por Pagar (Mock). Próximamente integrado con facturas de compra reales.</span>
+                </div>
+                
+                <table class="mock-table">
+                  <thead>
+                    <tr><th>Vencimiento</th><th>Doc</th><th>Monto</th><th>Estado</th></tr>
+                  </thead>
+                  <tbody>
+                    @for(c of mockCompromisos(sup.id); track c.id) {
+                      <tr>
+                        <td>{{ c.date }}</td>
+                        <td>{{ c.doc }}</td>
+                        <td class="font-bold">{{ formatCurrency(c.amount) }}</td>
+                        <td><span class="neon-tag" [class]="c.status">{{ c.statusStr }}</span></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            @if (detailTab() === 'ordenes') {
+              <div class="tab-content ordenes-tab">
+                <div class="alert-box info">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <span>Historial de Órdenes de Compra (Mock).</span>
+                </div>
+
+                <div class="timeline">
+                  @for(o of mockOrdenes(sup.id); track o.id) {
+                    <div class="timeline-item">
+                      <div class="t-dot" [class]="o.status"></div>
+                      <div class="t-content">
+                        <div class="t-header">
+                          <span class="t-title">{{ o.id }}</span>
+                          <span class="t-date">{{ o.date }}</span>
+                        </div>
+                        <div class="t-body">
+                          <span>Monto: {{ formatCurrency(o.amount) }}</span>
+                          <span class="t-status">{{ o.statusStr }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (detailTab() === 'productos') {
+              <div class="tab-content productos-tab">
+                @if (loadingProducts()) {
+                  <div class="text-center p-4"><div class="spinner inline-block"></div></div>
+                } @else {
+                  <table class="mock-table">
+                    <thead>
+                      <tr><th>SKU Prov</th><th>Producto</th><th>Costo Ref.</th></tr>
+                    </thead>
+                    <tbody>
+                      @for(p of supplierProducts(); track p.id) {
+                        <tr>
+                          <td>{{ p.supplierSku }}</td>
+                          <td>{{ p.productVariantName }}</td>
+                          <td class="text-green-400">{{ formatCurrency(p.lastCost) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="3" class="text-center py-4">No hay productos asociados a este proveedor en el catálogo.</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+
       <!-- CREATE/EDIT MODAL -->
       @if (showModal()) {
         <div class="modal-overlay" (click)="closeModal()">
@@ -221,7 +417,7 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
               <h2>{{ editingSupplier() ? '✏️ Editar' : '➕ Nuevo' }} Proveedor</h2>
               <button class="close-btn" (click)="closeModal()">✕</button>
             </div>
-            <form (ngSubmit)="saveSupplier()" class="modal-body">
+            <form (ngSubmit)="saveSupplier()" class="modal-body form-body">
               <!-- Section: Datos Básicos -->
               <div class="form-section">
                 <h3 class="section-title">Datos de la Empresa</h3>
@@ -372,8 +568,20 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
     </div>
   `,
   styles: [`
-    :host { display: block; }
-    .page-container { padding: 24px; min-height: 100vh; background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); font-family: 'Inter', -apple-system, sans-serif; }
+    :host { display: block; overflow-x: hidden; }
+    .page-container { padding: 24px; min-height: 100vh; background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); font-family: 'Inter', -apple-system, sans-serif; transition: padding-right 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+    .page-container.panel-open { padding-right: 480px; }
+
+    /* Utilities */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+    .text-green-400 { color: #4ade80; }
+    .text-gray-500 { color: #6b7280; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    .p-4 { padding: 1rem; }
+    .inline-block { display: inline-block; }
 
     /* Header */
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
@@ -397,11 +605,14 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-secondary { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
     .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+    .icon-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .icon-btn.active { background: rgba(99,102,241,0.2); color: #818cf8; border-color: #6366f1; }
+    .icon-btn:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
 
     /* KPIs */
     .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .kpi-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; transition: all 0.3s; }
-    .kpi-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+    .kpi-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; transition: all 0.3s; backdrop-filter: blur(10px); }
+    .kpi-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
     .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .kpi-icon.green { background: rgba(16,185,129,0.15); color: #10b981; }
     .kpi-icon.blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
@@ -411,11 +622,13 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
     .kpi-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
     .kpi-label { font-size: 0.8rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Tabs */
-    .tabs-bar { display: flex; gap: 4px; margin-bottom: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.06); width: fit-content; }
-    .tab { padding: 8px 20px; border-radius: 8px; border: none; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    /* Tools Bar */
+    .tools-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .tabs-bar { display: flex; gap: 4px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.06); width: fit-content; }
+    .tab { padding: 8px 20px; border-radius: 8px; border: none; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; }
     .tab.active { background: rgba(99,102,241,0.2); color: #818cf8; }
     .tab:hover:not(.active) { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
+    .view-toggle { display: flex; gap: 8px; }
 
     /* Filters */
     .filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -423,55 +636,62 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
     .filter-chip.active { background: rgba(99,102,241,0.2); border-color: #6366f1; color: #818cf8; }
     .filter-chip:hover:not(.active) { background: rgba(255,255,255,0.08); }
 
-    /* Supplier Cards Grid */
+    /* Table Grid View */
+    .grid-wrapper { overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .premium-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .premium-table th { text-align: left; padding: 16px; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); font-weight: 600; }
+    .premium-table td { padding: 16px; color: #e2e8f0; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
+    .interactive-row { cursor: pointer; transition: all 0.2s; }
+    .interactive-row:hover { background: rgba(99,102,241,0.05); }
+    .td-supplier-info { display: flex; align-items: center; gap: 12px; }
+    .td-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; }
+    .td-names { display: flex; flex-direction: column; }
+    .td-fantasy { font-weight: 600; color: #fff; }
+    .td-business { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .td-muted { color: rgba(255,255,255,0.6); }
+    .td-condiciones { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+    .badge-dcto { background: rgba(16,185,129,0.15); color: #34d399; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .text-gradient { background: linear-gradient(135deg, #4ade80, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* Tags & Status */
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-dot.active { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+    .status-dot.inactive { background: #6b7280; }
+    .status-dot.blocked { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+    .tag { padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .category-tag { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .neon-tag { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .neon-tag.pending { background: rgba(245,158,11,0.1); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .neon-tag.paid { background: rgba(16,185,129,0.1); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .neon-tag.overdue { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .neon-tag.delivered { background: rgba(59,130,246,0.1); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+    /* Cards View */
     .suppliers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-    .supplier-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; transition: all 0.3s; }
+    .supplier-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; transition: all 0.3s; cursor: pointer; }
     .supplier-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
     .supplier-card.inactive { opacity: 0.6; }
-
     .card-header { display: flex; align-items: center; gap: 12px; padding: 16px 16px 0; }
     .supplier-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: white; flex-shrink: 0; }
     .card-info { flex: 1; min-width: 0; }
     .card-info h3 { margin: 0; font-size: 1rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .supplier-rut { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-    .card-status { }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .status-dot.active { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
-    .status-dot.inactive { background: #6b7280; }
-    .status-dot.blocked { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
-    .status-dot.pending_approval { background: #f59e0b; }
-
     .card-body { padding: 12px 16px; }
     .card-meta { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .tag { padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-    .category-tag { background: rgba(59,130,246,0.15); color: #60a5fa; }
-    .delivery-tag { background: rgba(16,185,129,0.15); color: #34d399; }
-
-    .card-details { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .detail { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
-    .detail svg { color: rgba(255,255,255,0.3); flex-shrink: 0; }
-
     .rating-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .stars { display: flex; gap: 2px; }
-    .star { font-size: 1.1rem; color: rgba(255,255,255,0.15); cursor: pointer; transition: all 0.2s; }
+    .star { font-size: 1.1rem; color: rgba(255,255,255,0.15); transition: all 0.2s; }
     .star.filled { color: #f59e0b; text-shadow: 0 0 6px rgba(245,158,11,0.5); }
-    .star:hover { transform: scale(1.2); }
     .rating-value { font-size: 0.85rem; font-weight: 600; color: #f59e0b; }
-
     .card-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .metric { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px; text-align: center; }
     .metric-value { display: block; font-size: 1rem; font-weight: 700; color: #fff; }
     .metric-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); text-transform: uppercase; }
 
-    .card-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .action-btn { width: 36px; height: 36px; border-radius: 8px; border: none; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-    .action-btn:hover { background: rgba(99,102,241,0.2); color: #818cf8; }
-    .action-btn.danger:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
-
     /* Ranking */
     .ranking-list { display: flex; flex-direction: column; gap: 8px; }
-    .ranking-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; transition: all 0.2s; }
-    .ranking-item:hover { background: rgba(255,255,255,0.06); }
+    .ranking-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; transition: all 0.2s; cursor: pointer; }
+    .ranking-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(99,102,241,0.3); }
     .rank-number { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-weight: 700; color: rgba(255,255,255,0.5); font-size: 0.9rem; flex-shrink: 0; }
     .rank-number.top3 { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
     .rank-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0; }
@@ -493,67 +713,103 @@ import { SupplierService, Supplier } from '../../../core/services/supplier.servi
     .empty-state h3 { color: rgba(255,255,255,0.7); margin: 0 0 8px; }
     .empty-state p { margin-bottom: 20px; }
 
-    /* Modal Premium UI */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 10, 25, 0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(12px); animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { background: linear-gradient(145deg, rgba(30,30,74,0.95), rgba(20,20,50,0.95)); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border-radius: 24px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; transform: translateY(0); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    /* SLIDE OVER PANEL */
+    .slide-over-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 900; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+    .slide-over-backdrop.visible { opacity: 1; pointer-events: auto; }
     
+    .slide-over-panel { position: fixed; top: 0; right: -480px; width: 480px; height: 100vh; background: linear-gradient(180deg, rgba(20,20,40,0.98) 0%, rgba(15,15,30,0.98) 100%); border-left: 1px solid rgba(255,255,255,0.1); box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 950; display: flex; flex-direction: column; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); backdrop-filter: blur(20px); }
+    .slide-over-panel.open { right: 0; }
+    
+    .slide-over-header { padding: 24px 24px 0; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); }
+    .slide-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header-actions-sm { display: flex; gap: 8px; }
+    .slide-supplier-profile { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
+    .slide-avatar { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .slide-profile-info h2 { margin: 0 0 6px 0; font-size: 1.4rem; color: #fff; }
+    .slide-rut-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+    
+    .slide-tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; }
+    .slide-tabs button { background: transparent; border: none; color: rgba(255,255,255,0.5); padding: 8px 16px; cursor: pointer; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .slide-tabs button:hover { color: rgba(255,255,255,0.8); }
+    .slide-tabs button.active { color: #818cf8; border-bottom-color: #6366f1; }
+
+    .slide-over-body { flex: 1; overflow-y: auto; padding: 24px; }
+    .tab-content { animation: fadeIn 0.3s ease; }
+    
+    .slide-kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+    .s-kpi { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; }
+    .s-kpi .lbl { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 4px; }
+    .s-kpi .val { font-size: 1.25rem; font-weight: 700; color: #fff; }
+
+    .info-card { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .info-card h3 { margin: 0 0 16px 0; font-size: 0.95rem; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 6px; }
+    .info-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .i-lbl { color: rgba(255,255,255,0.5); }
+    .i-val { color: #fff; font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+
+    .alert-box { padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.85rem; margin-bottom: 20px; }
+    .alert-box.info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+    
+    .mock-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .mock-table th { text-align: left; padding: 10px; color: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .mock-table td { padding: 12px 10px; color: #e2e8f0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    
+    .timeline { display: flex; flex-direction: column; gap: 16px; position: relative; padding-left: 12px; }
+    .timeline::before { content: ''; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.1); }
+    .timeline-item { position: relative; padding-left: 24px; }
+    .t-dot { position: absolute; left: 0; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #6366f1; border: 2px solid #1a1a3e; transform: translateX(-4px); }
+    .t-dot.delivered { background: #10b981; }
+    .t-dot.pending { background: #f59e0b; }
+    .t-dot.processing { background: #3b82f6; }
+    .t-content { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+    .t-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .t-title { font-weight: 600; color: #fff; font-size: 0.9rem; }
+    .t-date { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .t-body { display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    .t-status { font-weight: 600; }
+
+    /* Modal Form UI */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 10, 25, 0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(12px); animation: fadeIn 0.3s ease; }
+    .modal-content { background: linear-gradient(145deg, rgba(30,30,74,0.95), rgba(20,20,50,0.95)); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border-radius: 24px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; background: rgba(22, 22, 55, 0.9); backdrop-filter: blur(10px); z-index: 10; border-radius: 24px 24px 0 0; }
     .modal-header h2 { margin: 0; color: #fff; font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-    .close-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); font-size: 1.2rem; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
-    .close-btn:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #f87171; transform: scale(1.05); }
-    
-    .modal-body { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
+    .form-body { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
     .form-section { background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 24px; }
     .section-title { color: #818cf8; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 20px; display: flex; align-items: center; gap: 8px; }
     .section-title::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 10px #6366f1; }
-    
     .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 16px; }
     .form-row.three-col { grid-template-columns: repeat(3, 1fr); }
     .form-row:last-child { margin-bottom: 0; }
-    
     .form-group { display: flex; flex-direction: column; gap: 8px; }
     .form-group label { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500; }
-    .form-group input, .form-group select, .form-group textarea { padding: 12px 16px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 0.95rem; font-family: inherit; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; }
+    .form-group input, .form-group select, .form-group textarea { padding: 12px 16px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 0.95rem; font-family: inherit; transition: all 0.3s; width: 100%; box-sizing: border-box; }
     .form-group input:hover, .form-group select:hover, .form-group textarea:hover { border-color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.3); }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #818cf8; background: rgba(99,102,241,0.05); box-shadow: 0 0 0 4px rgba(99,102,241,0.15), inset 0 2px 4px rgba(0,0,0,0.1); transform: translateY(-1px); }
-    .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
-    
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #818cf8; background: rgba(99,102,241,0.05); }
     .form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; cursor: pointer; }
-    .form-group select option { background: #1e1e4a; color: #fff; padding: 12px; }
-    .form-group textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
-    
-    .modal-footer { display: flex; justify-content: flex-end; gap: 16px; padding: 24px 32px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(22, 22, 55, 0.95); position: sticky; bottom: 0; z-index: 10; border-radius: 0 0 24px 24px; backdrop-filter: blur(10px); }
-    .modal-footer .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 1rem; transition: all 0.3s ease; }
-    .modal-footer .btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
-    .modal-footer .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-    .modal-footer .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; box-shadow: 0 4px 15px rgba(99,102,241,0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-    .modal-footer .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.6); }
-    .modal-footer .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
-    
-    @media (max-width: 768px) {
-      .page-header { flex-direction: column; }
-      .header-actions { width: 100%; }
-      .search-box input { width: 100%; }
-      .suppliers-grid { grid-template-columns: 1fr; }
-      .form-row { grid-template-columns: 1fr; }
-      .form-row.three-col { grid-template-columns: 1fr; }
-      .kpi-row { grid-template-columns: repeat(2, 1fr); }
-      .rank-metrics { gap: 10px; }
-      .ranking-item { flex-wrap: wrap; }
-    }
+    .form-group select option { background: #1e1e4a; color: #fff; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 16px; padding: 24px 32px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(22, 22, 55, 0.95); position: sticky; bottom: 0; z-index: 10; border-radius: 0 0 24px 24px; }
   `]
 })
 export class ProveedoresComponent implements OnInit {
   suppliers = signal<Supplier[]>([]);
   loading = signal(true);
+  
+  // UI State
+  isGridMode = signal(true);
   showModal = signal(false);
   saving = signal(false);
   editingSupplier = signal<Supplier | null>(null);
   searchTerm = '';
   activeTab = 'list';
   statusFilter = 'all';
+
+  // Slide-over State
+  selectedSupplier = signal<Supplier | null>(null);
+  detailTab = signal<'resumen' | 'compromisos' | 'ordenes' | 'productos'>('resumen');
+  supplierProducts = signal<SupplierProduct[]>([]);
+  loadingProducts = signal(false);
 
   form: any = this.getEmptyForm();
 
@@ -568,11 +824,10 @@ export class ProveedoresComponent implements OnInit {
 
   filteredSuppliers = computed(() => {
     let result = this.suppliers();
-    // Status filter
     if (this.statusFilter === 'active') result = result.filter(s => s.isActive && s.status !== 'BLOCKED');
     else if (this.statusFilter === 'inactive') result = result.filter(s => !s.isActive || s.status === 'INACTIVE');
     else if (this.statusFilter === 'blocked') result = result.filter(s => s.status === 'BLOCKED');
-    // Search
+    
     const q = this.searchTerm.toLowerCase().trim();
     if (q) {
       result = result.filter(s =>
@@ -601,8 +856,12 @@ export class ProveedoresComponent implements OnInit {
     this.loading.set(true);
     this.supplierService.getSuppliers().subscribe({
       next: (data) => {
-        // Backend may return array directly or paginated
-        const list = Array.isArray(data) ? data : (data.content || []);
+        // Fix: Backend might not return isActive, default to true
+        const rawList = Array.isArray(data) ? data : (data.content || []);
+        const list = rawList.map((s: any) => ({
+          ...s,
+          isActive: s.isActive !== undefined ? s.isActive : true
+        }));
         this.suppliers.set(list);
         this.loading.set(false);
       },
@@ -613,10 +872,54 @@ export class ProveedoresComponent implements OnInit {
     });
   }
 
-  onSearch(): void {
-    // Filtering is done via computed, no API call needed
+  onSearch(): void {}
+
+  // Slide-over Logic
+  openSupplierDetails(supplier: Supplier) {
+    this.selectedSupplier.set(supplier);
+    this.detailTab.set('resumen');
+    this.loadSupplierProducts(supplier.id);
   }
 
+  closeSupplierDetails() {
+    this.selectedSupplier.set(null);
+  }
+
+  loadSupplierProducts(supplierId: string) {
+    this.loadingProducts.set(true);
+    this.supplierService.getSupplierProducts(supplierId).subscribe({
+      next: (prods) => {
+        this.supplierProducts.set(prods || []);
+        this.loadingProducts.set(false);
+      },
+      error: () => {
+        this.supplierProducts.set([]);
+        this.loadingProducts.set(false);
+      }
+    });
+  }
+
+  // Mocks for Logic Requirements
+  mockCompromisos(id: string) {
+    const seed = id.charCodeAt(0) % 3; // Deterministic pseudo-random based on id
+    if (seed === 0) return [];
+    return [
+      { id: 1, date: '15/06/2026', doc: 'Factura #9901', amount: 1500000, status: 'pending', statusStr: 'Pendiente' },
+      { id: 2, date: '01/06/2026', doc: 'Factura #9850', amount: 500000, status: 'paid', statusStr: 'Pagado' }
+    ];
+  }
+
+  mockOrdenes(id: string) {
+    const seed = (id.charCodeAt(id.length-1)) % 4;
+    if (seed === 0) return [];
+    return [
+      { id: 'OC-2026-0045', date: '10/06/2026', amount: 450000, status: 'delivered', statusStr: 'Recibida' },
+      { id: 'OC-2026-0038', date: '05/06/2026', amount: 120000, status: 'delivered', statusStr: 'Recibida' },
+      { id: 'OC-2026-0012', date: '15/05/2026', amount: 890000, status: 'processing', statusStr: 'En Proceso' }
+    ];
+  }
+
+  // Form Modals
   openModal(): void {
     this.editingSupplier.set(null);
     this.form = this.getEmptyForm();
@@ -658,7 +961,10 @@ export class ProveedoresComponent implements OnInit {
     const name = supplier.fantasyName || supplier.businessName;
     if (confirm(`¿Desactivar el proveedor "${name}"?`)) {
       this.supplierService.deleteSupplier(supplier.id).subscribe({
-        next: () => this.loadSuppliers(),
+        next: () => {
+          this.loadSuppliers();
+          if (this.selectedSupplier()?.id === supplier.id) this.closeSupplierDetails();
+        },
         error: (err) => console.error('Error deleting supplier', err)
       });
     }
@@ -667,8 +973,9 @@ export class ProveedoresComponent implements OnInit {
   setRating(supplier: Supplier, rating: number): void {
     this.supplierService.updateRating(supplier.id, rating).subscribe({
       next: (updated) => {
-        const list = this.suppliers().map(s => s.id === updated.id ? updated : s);
+        const list = this.suppliers().map(s => s.id === updated.id ? { ...updated, isActive: s.isActive } : s);
         this.suppliers.set(list);
+        if (this.selectedSupplier()?.id === updated.id) this.selectedSupplier.set({ ...updated, isActive: supplier.isActive });
       },
       error: (err) => console.error('Error updating rating', err)
     });
