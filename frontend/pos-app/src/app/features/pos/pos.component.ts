@@ -3414,7 +3414,7 @@ interface CartItem {
     @media (max-width: 768px) {
       .pos-header {
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 1rem;
         height: auto;
       }
       .header-left {
