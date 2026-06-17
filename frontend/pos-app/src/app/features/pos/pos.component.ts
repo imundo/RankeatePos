@@ -1327,12 +1327,7 @@ interface CartItem {
         </aside>
       }
 
-      <!-- Mobile Bottom Navigation -->
-      <app-bottom-nav 
-        [items]="mobileNavItems"
-        [showFab]="false"
-        (fabClick)="onMobileFabClick()">
-      </app-bottom-nav>
+
 
       <!-- Mobile Cart Pill (Floating) -->
       @if (cartItems().length > 0) {
