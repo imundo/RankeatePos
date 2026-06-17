@@ -128,15 +128,16 @@ export class AuthService {
     }
 
     logout(): void {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(TENANT_KEY);
-        localStorage.removeItem('pos_cached_tenant');
+        // Clear everything
+        localStorage.clear();
+        sessionStorage.clear();
+        
         this.userSignal.set(null);
         this.tenantSignal.set(null);
         this.clearOfflineCache();
-        this.router.navigate(['/auth/login']);
+        
+        // Force a hard reload to clear any memory/Angular state and prevent old cache from lingering
+        window.location.href = '/auth/login';
     }
 
     /**

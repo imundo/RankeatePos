@@ -3427,6 +3427,10 @@ interface CartItem {
         padding-bottom: 0.5rem;
         -webkit-overflow-scrolling: touch;
         justify-content: flex-start;
+        gap: 0.75rem;
+      }
+      .header-right > * {
+        flex-shrink: 0;
       }
     }
   `]

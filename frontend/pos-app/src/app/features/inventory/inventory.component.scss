@@ -641,12 +641,7 @@
     }
 
     .header-actions {
-        justify-content: stretch;
-    }
-
-    .btn-primary {
-        flex: 1;
-        justify-content: center;
+        display: none !important;
     }
 
     .dashboard-grid {
