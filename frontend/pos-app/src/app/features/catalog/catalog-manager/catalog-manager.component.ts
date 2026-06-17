@@ -34,6 +34,8 @@ interface Product {
   categoryId?: string;
   categoryName?: string;
   imagenUrl?: string;
+  unitId?: string;
+  unitCode?: string;
   activo: boolean;
   variants: ProductVariant[];
 }
