@@ -81,7 +81,7 @@ export class AppComponent {
         { route: '/inventory', icon: 'package', label: 'Inventario' },
         { route: '/compras', icon: 'shopping-cart', label: 'Compras' },
         { route: '/compras/proveedores', icon: 'truck', label: 'Proveedores' },
-        { route: '/analytics', icon: 'bar-chart-2', label: 'Analítica' },
+        { route: '/facturacion', icon: 'file-text', label: 'Documentos' },
         { route: '/settings', icon: 'settings', label: 'Config' }
     ];
 

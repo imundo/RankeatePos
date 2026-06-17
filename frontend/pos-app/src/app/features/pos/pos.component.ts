@@ -3409,6 +3409,26 @@ interface CartItem {
         display: none;
       }
     }
+
+    /* Fix header overlap on mobile */
+    @media (max-width: 768px) {
+      .pos-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        height: auto;
+      }
+      .header-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .header-right {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+      }
+    }
   `]
 })
 export class PosComponent implements OnInit {
