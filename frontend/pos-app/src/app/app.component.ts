@@ -77,11 +77,10 @@ export class AppComponent {
     });
 
     globalNavItems: NavItem[] = [
-        { route: '/pos', icon: 'monitor-smartphone', label: 'POS' },
         { route: '/dashboard', icon: 'layout-dashboard', label: 'Inicio' },
-        { route: '/catalog', icon: 'package-search', label: 'Catálogo' },
-        { route: '/inventory', icon: 'package', label: 'Stock' },
+        { route: '/inventory', icon: 'package', label: 'Inventario' },
         { route: '/compras', icon: 'shopping-cart', label: 'Compras' },
+        { route: '/compras/proveedores', icon: 'truck', label: 'Proveedores' },
         { route: '/analytics', icon: 'bar-chart-2', label: 'Analítica' },
         { route: '/settings', icon: 'settings', label: 'Config' }
     ];

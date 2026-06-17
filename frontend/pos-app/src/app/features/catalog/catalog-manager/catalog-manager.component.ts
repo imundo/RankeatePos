@@ -257,14 +257,28 @@ interface ProductVariant {
             </div>
           </div>
           
-          <div class="input-group">
-            <label class="input-label">Categoría</label>
-            <select [(ngModel)]="productForm.categoryId">
-              <option value="">Sin categoría</option>
-              @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{ cat.nombre }}</option>
-              }
-            </select>
+          <div class="form-grid">
+            <div class="input-group">
+              <label class="input-label">Categoría</label>
+              <select [(ngModel)]="productForm.categoryId">
+                <option value="">Sin categoría</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Unidad de Medida</label>
+              <select [(ngModel)]="productForm.unitId">
+                <option value="UN">Individual (Unidad)</option>
+                <option value="DOZ">Docena</option>
+                <option value="BOX">Caja</option>
+                <option value="PACK">Pack / Lote</option>
+                <option value="KG">Kilogramos</option>
+                <option value="LT">Litros</option>
+                <option value="PALLET">Pallet</option>
+              </select>
+            </div>
           </div>
 
           <div class="input-group">
@@ -569,7 +583,8 @@ export class CatalogManagerComponent implements OnInit {
     costo: 0,
     stockMinimo: 5,
     stockMaximo: 0,
-    imagenUrl: ''
+    imagenUrl: '',
+    unitId: 'UN'
   };
 
   // Category icons
@@ -701,7 +716,8 @@ export class CatalogManagerComponent implements OnInit {
       costo: product?.variants?.[0]?.costo || 0,
       stockMinimo: product?.variants?.[0]?.stockMinimo || 5,
       stockMaximo: product?.variants?.[0]?.stockMaximo || 0,
-      imagenUrl: product?.imagenUrl || ''
+      imagenUrl: product?.imagenUrl || '',
+      unitId: product?.unitId || product?.unitCode || 'UN'
     };
     this.showProductDialog = true;
   }
@@ -724,6 +740,7 @@ export class CatalogManagerComponent implements OnInit {
       nombre: this.productForm.nombre,
       descripcion: this.productForm.descripcion,
       categoryId: this.productForm.categoryId || null,
+      unitId: this.productForm.unitId || 'UN',
       imagenUrl: this.productForm.imagenUrl,
       variants: [{
         sku: this.productForm.sku,

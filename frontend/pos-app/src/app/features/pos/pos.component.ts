@@ -3241,14 +3241,25 @@ interface CartItem {
         
         .header-right {
           gap: 0.375rem;
+          flex: 1;
+          justify-content: flex-end;
+          overflow-x: auto;
+          scrollbar-width: none; /* Firefox */
+          &::-webkit-scrollbar { display: none; } /* Chrome */
         }
       }
       
-      /* Hide ALL notifications on mobile - access via menu */
+      /* Make notification badges slightly smaller on mobile to fit */
       .notification-badge,
-      .alert-badge,
+      .alert-badge {
+        width: 32px;
+        height: 32px;
+        svg { width: 16px; height: 16px; }
+      }
+      
       .badge-warning {
-        display: none !important;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
       }
       
       /* Hide tenant name */

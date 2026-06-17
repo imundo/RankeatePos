@@ -1018,7 +1018,7 @@ export class ProveedoresComponent implements OnInit {
     if (active.length === 0) return 0;
     return active.reduce((sum, s) => sum + (s.trustRating || 3), 0) / active.length;
   });
-  totalSpent = computed(() => this.suppliers().reduce((sum, s) => sum + (s.totalSpent || 0), 0));
+  totalSpent = computed(() => this.suppliers().reduce((sum, s) => sum + Number(s.totalSpent || 0), 0));
 
   filteredSuppliers = computed(() => {
     let result = this.suppliers();
@@ -1203,14 +1203,14 @@ export class ProveedoresComponent implements OnInit {
 
   getPendingPayablesTotal(): number {
     return this.supplierPayables()
-      .filter(p => p.status === 'PENDING')
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter(p => p.status?.toUpperCase() === 'PENDING')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
   }
 
   getPaidPayablesTotal(): number {
     return this.supplierPayables()
-      .filter(p => p.status === 'PAID')
-      .reduce((sum, p) => sum + p.amount, 0);
+      .filter(p => p.status?.toUpperCase() === 'PAID')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
   }
 
   // Form Modals

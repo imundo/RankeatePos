@@ -97,7 +97,7 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
       <!-- Toolbar -->
       <div class="toolbar-section">
          <!-- Search -->
-         <div class="search-container" style="flex: 1; max-width: 500px;">
+         <div class="search-container">
            <span class="search-icon">🔍</span>
            <input 
              type="text" 
@@ -124,7 +124,7 @@ import { BarcodeScannerComponent } from '@shared/components/barcode-scanner/barc
             </button>
          </div>
          
-         <button class="btn-primary" style="margin-left: auto;" (click)="openNewProductModal()">
+         <button class="btn-primary btn-new-product" (click)="openNewProductModal()">
             <span>+ Nuevo Artículo</span>
          </button>
       </div>

@@ -7,6 +7,8 @@ import com.poscl.purchases.domain.entity.PurchaseOrder.PurchaseOrderStatus;
 import com.poscl.purchases.domain.entity.Supplier;
 import com.poscl.purchases.domain.repository.PurchaseOrderRepository;
 import com.poscl.purchases.domain.repository.SupplierRepository;
+import com.poscl.purchases.domain.repository.AccountPayableRepository;
+import com.poscl.purchases.domain.entity.AccountPayable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class PurchaseOrderService {
 
     private final PurchaseOrderRepository orderRepository;
     private final SupplierRepository supplierRepository;
+    private final AccountPayableRepository accountPayableRepository;
 
     @Transactional(readOnly = true)
     public List<PurchaseOrder> findAll(UUID tenantId) {
@@ -146,11 +149,25 @@ public class PurchaseOrderService {
         
         order.setStatus(PurchaseOrderStatus.RECEIVED);
         
-        // Update Supplier KPIs
+        // Update Supplier KPIs and Create Account Payable
         Supplier supplier = order.getSupplier();
         if (supplier != null && order.getTotal() != null) {
             supplier.setTotalSpent(supplier.getTotalSpent().add(order.getTotal()));
             supplierRepository.save(supplier);
+            
+            AccountPayable payable = AccountPayable.builder()
+                .tenantId(tenantId)
+                .supplier(supplier)
+                .purchaseOrder(order)
+                .documentNumber("OC-" + order.getOrderNumber())
+                .documentType("PURCHASE_ORDER")
+                .issueDate(LocalDate.now())
+                .dueDate(LocalDate.now().plusDays(30))
+                .amount(order.getTotal())
+                .balance(order.getTotal())
+                .status(AccountPayable.AccountPayableStatus.PENDING)
+                .build();
+            accountPayableRepository.save(payable);
         }
         
         return orderRepository.save(order);
