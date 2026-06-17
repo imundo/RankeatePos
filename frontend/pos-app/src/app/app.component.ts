@@ -45,6 +45,7 @@ import { BottomNavComponent, NavItem } from './shared/components/bottom-nav/bott
       display: block;
       min-height: 100vh;
       background: var(--surface-ground);
+      --bottom-nav-height: 72px;
     }
     .app-content {
       height: 100%;
@@ -78,8 +79,11 @@ export class AppComponent {
     globalNavItems: NavItem[] = [
         { route: '/pos', icon: 'monitor-smartphone', label: 'POS' },
         { route: '/dashboard', icon: 'layout-dashboard', label: 'Inicio' },
+        { route: '/catalog', icon: 'package-search', label: 'Catálogo' },
+        { route: '/inventory', icon: 'package', label: 'Stock' },
         { route: '/compras', icon: 'shopping-cart', label: 'Compras' },
-        { route: '/inventory', icon: 'package', label: 'Stock' }
+        { route: '/analytics', icon: 'bar-chart-2', label: 'Analítica' },
+        { route: '/settings', icon: 'settings', label: 'Config' }
     ];
 
     constructor() {
